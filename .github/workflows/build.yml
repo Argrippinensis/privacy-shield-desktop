@@ -1,19 +1,32 @@
-name: Build Only
+name: Build & Release
 
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-24.04, windows-2022, macos-15]
-    runs-on: ${{matrix.os}}
+        include:
+          - os: ubuntu-24.04
+            build_flag: --linux
+          - os: windows-2022
+            build_flag: --win
+          - os: macos-15
+            build_flag: --mac
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: npm ci
-      - run: npx electron-builder --publish never
+      - run: npx electron-builder ${{ matrix.build_flag }} --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
