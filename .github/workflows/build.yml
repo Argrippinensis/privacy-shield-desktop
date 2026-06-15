@@ -19,11 +19,10 @@ jobs:
             publish: --publish always
           - os: windows-2022
             build_flag: --win
-            publish: --publish always
+            publish: --publish never
           - os: macos-14
             build_flag: --mac
             publish: --publish never
-      fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +31,5 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npx electron-builder ${{ matrix.build_flag }} ${{ matrix.publish }}
-        continue-on-error: ${{ matrix.os == 'macos-14' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
