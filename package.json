@@ -23,8 +23,7 @@
         "nsis"
       ],
       "icon": "assets/icon.png",
-      "artifactName": "PrivacyShield-Setup-${version}.${ext}",
-      "publisherName": "Alexander Arcangeli"
+      "artifactName": "PrivacyShield-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -62,5 +61,8 @@
   "dependencies": {
     "electron-updater": "^6.0.0"
   },
-  "author": "Alexander Arcangeli"
+  "author": {
+    "name": "Alexander Arcangeli",
+    "email": "alexander.arcangeli@yahoo.de"
+  }
 }
