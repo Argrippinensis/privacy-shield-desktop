@@ -18,7 +18,7 @@ jobs:
             build_flag: --linux
           - os: windows-2022
             build_flag: --win
-          - os: macos-15
+          - os: macos-14
             build_flag: --mac
     runs-on: ${{ matrix.os }}
     steps:

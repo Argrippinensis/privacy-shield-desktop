@@ -33,8 +33,7 @@
     },
     "mac": {
       "target": [
-        "zip",
-        "dmg"
+        "zip"
       ],
       "icon": "assets/icon.png",
       "artifactName": "PrivacyShield-${version}.${ext}",
