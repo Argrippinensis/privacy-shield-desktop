@@ -38,8 +38,7 @@
       "icon": "assets/icon.png",
       "artifactName": "PrivacyShield-${version}.${ext}",
       "identity": null,
-      "hardenedRuntime": false,
-      "gatekeeperAssess": false
+      "disableBrowserSandbox": true
     },
     "linux": {
       "target": [
@@ -55,7 +54,9 @@
       "repo": "privacy-shield-desktop",
       "private": false,
       "releaseType": "release"
-    }
+    },
+    "afterSign": null,
+    "forceCodeSigning": false
   },
   "devDependencies": {
     "electron": "^35.0.0",
