@@ -20,26 +20,18 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install --no-optional
+        run: npm install
 
-      - name: Build electron app
+      - name: Build for current platform
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npm run build:all
-        if: matrix.os == 'ubuntu-latest'
-        continue-on-error: false
-
-      - name: Build Windows
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npm run build:win
-        if: matrix.os == 'windows-latest'
-
-      - name: Build macOS
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npm run build:mac
-        if: matrix.os == 'macos-latest'
+          GH_TOKEN: *** secrets.GH_TOKEN }}
+        run: |
+          case "$RUNNER_OS" in
+            Linux)   npm run build:linux ;;
+            Windows) npm run build:win  ;;
+            macOS)   npm run build:mac  ;;
+          esac
+        shell: bash
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -63,4 +55,4 @@ jobs:
             privacy-shield-macos-latest/*
           generate_release_notes: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: *** secrets.GITHUB_TOKEN }}
