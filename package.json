@@ -1,0 +1,58 @@
+{
+  "name": "privacy-shield-desktop",
+  "version": "1.0.0",
+  "description": "PrivacyShield Desktop — Dokumente anonymisieren, 100% offline",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --win --mac --linux",
+    "release": "electron-builder --win --mac --linux --publish always"
+  },
+  "build": {
+    "appId": "eu.arcangeli.privacyshield",
+    "productName": "PrivacyShield",
+    "copyright": "Copyright © 2026 Alexander Arcangeli",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "assets/icon.ico",
+      "artifactName": "PrivacyShield-Setup-${version}.${ext}",
+      "publisherName": "Alexander Arcangeli"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true,
+      "createDesktopShortcut": true
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "assets/icon.icns",
+      "artifactName": "PrivacyShield-${version}.${ext}"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "assets/icon.png",
+      "artifactName": "PrivacyShield-${version}.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Argrippinensis",
+      "repo": "privacy-shield-desktop",
+      "private": false,
+      "releaseType": "release"
+    }
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.0.0"
+  }
+}

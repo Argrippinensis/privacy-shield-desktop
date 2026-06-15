@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PrivacyShield Desktop</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #f5f5f5; font-family: system-ui, sans-serif; }
+    #tool-frame { width: 100%; height: 100%; border: none; }
+    #update-banner {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #1a3a5c; color: #fff;
+      padding: 12px 24px; font-size: 14px;
+      display: none; align-items: center; justify-content: space-between; z-index: 9999;
+    }
+    #update-banner button {
+      background: #c5a059; color: #fff; border: none;
+      padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;
+    }
+    #update-banner button:hover { background: #a67c33; }
+    #forced-update-overlay {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8); z-index: 99999;
+      align-items: center; justify-content: center;
+    }
+    #forced-update-overlay > div {
+      background: #fff; padding: 48px; border-radius: 16px;
+      max-width: 440px; text-align: center;
+    }
+    #forced-update-overlay h2 { font-size: 22px; margin-bottom: 12px; }
+    #forced-update-overlay p { color: #666; margin-bottom: 24px; line-height: 1.5; }
+    #forced-update-overlay .spinner {
+      width: 40px; height: 40px; border: 4px solid #e5e5e5;
+      border-top: 4px solid #1a3a5c; border-radius: 50%;
+      animation: spin 1s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <iframe id="tool-frame" src="privacy-shield.html" allow="clipboard-read; clipboard-write"></iframe>
+
+  <!-- Update-Banner (nicht-forciert) -->
+  <div id="update-banner">
+    <span>🔒 Neue Version verfügbar</span>
+    <button onclick="restartAndUpdate()">Jetzt aktualisieren</button>
+  </div>
+
+  <!-- Forciertes Update -->
+  <div id="forced-update-overlay">
+    <div>
+      <div class="spinner"></div>
+      <h2>Update erforderlich</h2>
+      <p>Diese Version wird nicht mehr unterstützt. Die aktuelle Version wird im Hintergrund geladen und automatisch installiert.</p>
+    </div>
+  </div>
+
+  <script>
+    // IPC-Verbindung für Electron
+    if (window.electronAPI) {
+      // Update-Banner anzeigen wenn neues Update verfügbar
+      window.electronAPI.onUpdateAvailable((version) => {
+        document.getElementById('update-banner').style.display = 'flex';
+      });
+
+      // Forciertes Update beim Start prüfen
+      window.electronAPI.checkForFoUpdate().then(result => {
+        if (result.updateAvailable) {
+          document.getElementById('forced-update-overlay').style.display = 'flex';
+        }
+      });
+    }
+
+    function restartAndUpdate() {
+      if (window.electronAPI) {
+        // Das Update wurde bereits im Hintergrund geladen
+        location.reload();
+      }
+    }
+
+    // PrivacyShield IPC-Bridge: Wenn das iframe die electronAPI nutzen will
+    window.addEventListener('message', async (event) => {
+      if (event.data && event.data.type === 'electron-save-file') {
+        if (window.electronAPI) {
+          const result = await window.electronAPI.saveFile(event.data.payload);
+          if (event.source) event.source.postMessage({ type: 'electron-save-result', result }, '*');
+        }
+      }
+      if (event.data && event.data.type === 'electron-open-file') {
+        if (window.electronAPI) {
+          const result = await window.electronAPI.openFile();
+          if (event.source) event.source.postMessage({ type: 'electron-open-result', result }, '*');
+        }
+      }
+    });
+  </script>
+</body>
+</html>
