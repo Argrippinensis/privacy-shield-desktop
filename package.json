@@ -33,11 +33,14 @@
     },
     "mac": {
       "target": [
+        "zip",
         "dmg"
       ],
       "icon": "assets/icon.png",
       "artifactName": "PrivacyShield-${version}.${ext}",
-      "identity": null
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     },
     "linux": {
       "target": [
