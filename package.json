@@ -36,7 +36,8 @@
         "dmg"
       ],
       "icon": "assets/icon.png",
-      "artifactName": "PrivacyShield-${version}.${ext}"
+      "artifactName": "PrivacyShield-${version}.${ext}",
+      "identity": null
     },
     "linux": {
       "target": [
