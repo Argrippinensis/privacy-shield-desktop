@@ -23,7 +23,8 @@
         "nsis"
       ],
       "icon": "assets/icon.png",
-      "artifactName": "PrivacyShield-Setup-${version}.${ext}"
+      "artifactName": "PrivacyShield-Setup-${version}.${ext}",
+      "publisherName": "Alexander Arcangeli"
     },
     "nsis": {
       "oneClick": false,
@@ -52,8 +53,7 @@
       "repo": "privacy-shield-desktop",
       "private": false,
       "releaseType": "release"
-    },
-    "publisherName": "Alexander Arcangeli"
+    }
   },
   "devDependencies": {
     "electron": "^35.0.0",
