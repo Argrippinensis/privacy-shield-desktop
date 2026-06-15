@@ -20,6 +20,13 @@ jobs:
             build_flag: --win
           - os: macos-14
             build_flag: --mac
+            publish: --publish never
+          - os: ubuntu-24.04
+            build_flag: --linux
+            publish: --publish always
+          - os: windows-2022
+            build_flag: --win
+            publish: --publish always
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +34,6 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
-      - run: npx electron-builder ${{ matrix.build_flag }} --publish always
+      - run: npx electron-builder ${{ matrix.build_flag }} ${{ matrix.publish }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
