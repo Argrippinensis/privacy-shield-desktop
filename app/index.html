@@ -72,7 +72,9 @@
     #install-msg {
       display: none; color: #16a34a; font-size: 13px; margin-bottom: 16px; font-weight: 600;
     }
-  </style>
+  #sysstats{position:fixed;bottom:8px;right:8px;z-index:999;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);color:rgba(255,255,255,.7);font-size:10px;padding:6px 10px;border-radius:6px;font-family:monospace;line-height:1.4;pointer-events:none}
+#sysstats{position:fixed;bottom:8px;right:8px;z-index:999;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);color:rgba(255,255,255,0.7);font-size:10px;padding:6px 10px;border-radius:6px;font-family:monospace;line-height:1.4;pointer-events:none;user-select:none}
+</style>
 </head>
 <body>
   <iframe id="tool-frame" src="privacy-shield.html" allow="clipboard-read; clipboard-write"></iframe>
@@ -210,5 +212,14 @@
       }
     });
   </script>
+<div id="sysstats">RAM — | CPU — | App — MB</div>
+<script>
+setInterval(async () => {
+  try {
+    const s = await window.electronAPI.getSystemStats();
+    document.getElementById("sysstats").innerHTML = "RAM " + s.ram.used + "/" + s.ram.total + " GB (" + s.ram.percent + "%) | CPU " + s.cpu.cores + "× " + s.cpu.model.substring(0,10) + " | App " + s.app.memory + " MB";
+  } catch(e) {}
+}, 2000);
+</script>
 </body>
 </html>

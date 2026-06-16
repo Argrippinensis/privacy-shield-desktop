@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
-const path = require('path');
+const path = require("path")
+const os = require("os");
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 
@@ -93,6 +94,22 @@ ipcMain.handle('save-metadata', async (event, { data }) => {
 });
 
 ipcMain.handle('get-app-version', () => app.getVersion());
+
+ipcMain.handle("get-system-stats", () => {
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+  const usedMem = totalMem - freeMem;
+  const memPercent = Math.round((usedMem / totalMem) * 100);
+  const appMem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  const cpus = os.cpus();
+  const cpuCount = cpus.length;
+  const cpuModel = cpus[0].model.trim();
+  return {
+    ram: { total: Math.round(totalMem / 1024 / 1024 / 1024 * 10) / 10, used: Math.round(usedMem / 1024 / 1024 / 1024 * 10) / 10, percent: memPercent },
+    cpu: { model: cpuModel, cores: cpuCount },
+    app: { memory: appMem }
+  };
+});
 
 ipcMain.handle('dismiss-update', (event, version) => {
   const state = getUpdateState();

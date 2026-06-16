@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('update-downloaded', (event, version) => callback(version));
   },
   onDownloadError: (callback) => {
+  getSystemStats: () => ipcRenderer.invoke("get-system-stats"),
     ipcRenderer.on('download-error', () => callback());
   },
   platform: process.platform
