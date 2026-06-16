@@ -3,11 +3,26 @@ const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 
-// Auto-Updater Config
-autoUpdater.autoDownload = true;
-autoUpdater.autoInstallOnAppQuit = true;
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = false;
 
 let mainWindow;
+
+function getUpdateStatePath() {
+  return path.join(app.getPath('userData'), 'update-state.json');
+}
+
+function getUpdateState() {
+  try {
+    return JSON.parse(fs.readFileSync(getUpdateStatePath(), 'utf-8'));
+  } catch {
+    return { version: null, dismissCount: 0 };
+  }
+}
+
+function saveUpdateState(state) {
+  fs.writeFileSync(getUpdateStatePath(), JSON.stringify(state, null, 2), 'utf-8');
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -24,14 +39,10 @@ function createWindow() {
     }
   });
 
-  // Lade das PrivacyShield Tool
   mainWindow.loadFile('app/index.html');
-
-  // Ausblenden der Standard-Menüleiste (für sauberes Desktop-Gefühl)
   Menu.setApplicationMenu(null);
 }
 
-// IPC: Datei speichern (für PDF-Export)
 ipcMain.handle('save-file', async (event, { defaultName, data, mimeType }) => {
   const ext = mimeType === 'application/pdf' ? '.pdf' : '.png';
   const result = await dialog.showSaveDialog(mainWindow, {
@@ -48,7 +59,6 @@ ipcMain.handle('save-file', async (event, { defaultName, data, mimeType }) => {
   return { success: false };
 });
 
-// IPC: Datei öffnen (für Drag&Drop / Browse)
 ipcMain.handle('open-file', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile'],
@@ -70,7 +80,6 @@ ipcMain.handle('open-file', async () => {
   return null;
 });
 
-// IPC: Metadaten speichern (als JSON)
 ipcMain.handle('save-metadata', async (event, { data }) => {
   const result = await dialog.showSaveDialog(mainWindow, {
     defaultPath: 'metadata-export.json',
@@ -83,43 +92,75 @@ ipcMain.handle('save-metadata', async (event, { data }) => {
   return { success: false };
 });
 
-// Auto-Updater
+ipcMain.handle('get-app-version', () => app.getVersion());
+
+ipcMain.handle('dismiss-update', (event, version) => {
+  const state = getUpdateState();
+  if (state.version !== version) {
+    state.version = version;
+    state.dismissCount = 0;
+  }
+  state.dismissCount++;
+  saveUpdateState(state);
+  return { dismissCount: state.dismissCount };
+});
+
+ipcMain.handle('start-download', async () => {
+  try {
+    await autoUpdater.downloadUpdate();
+  } catch (e) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('download-error');
+    }
+  }
+});
+
+ipcMain.handle('quit-app', () => {
+  app.quit();
+});
+
 function setupAutoUpdater() {
-  // Prüfe auf Updates (nach 5 Sekunden, damit die App erst geladen ist)
   setTimeout(() => {
-    autoUpdater.checkForUpdates().catch(() => {
-      // Kein Update verfügbar oder kein Netzwerk — egal
-    });
+    autoUpdater.checkForUpdates().catch(() => {});
   }, 5000);
 
   autoUpdater.on('update-available', (info) => {
-    console.log(`Update verfügbar: ${info.version}`);
-    mainWindow.webContents.send('update-available', info.version);
+    const state = getUpdateState();
+    if (state.version !== info.version) {
+      state.version = info.version;
+      state.dismissCount = 0;
+      saveUpdateState(state);
+    }
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-available', {
+        version: info.version,
+        dismissCount: state.dismissCount
+      });
+    }
+  });
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('download-progress', Math.round(progressObj.percent));
+    }
   });
 
   autoUpdater.on('update-downloaded', (info) => {
-    console.log(`Update geladen: ${info.version}`);
-    mainWindow.webContents.send('update-downloaded', info.version);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-downloaded', info.version);
+    }
+    setTimeout(() => {
+      autoUpdater.quitAndInstall(false, true);
+    }, 2000);
   });
 
   autoUpdater.on('error', (err) => {
-    console.log('Update-Fehler (nicht kritisch):', err.message);
+    console.log('Update-Fehler:', err.message);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('download-error');
+    }
   });
 }
-
-// Forciertes Update: Prüfe auf kritische Updates beim Start
-ipcMain.handle('check-for-fo-update', async () => {
-  try {
-    const result = await autoUpdater.checkForUpdates();
-    if (result && result.updateInfo && result.updateInfo.version !== app.getVersion()) {
-      const latest = result.updateInfo.version;
-      return { updateAvailable: true, latestVersion: latest };
-    }
-  } catch (e) {
-    // Kein Netzwerk — ignorieren
-  }
-  return { updateAvailable: false };
-});
 
 app.whenReady().then(() => {
   createWindow();
