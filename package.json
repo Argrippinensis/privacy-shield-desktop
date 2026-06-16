@@ -37,8 +37,7 @@
       ],
       "icon": "assets/icon.png",
       "artifactName": "PrivacyShield-${version}.${ext}",
-      "identity": null,
-      "disableBrowserSandbox": true
+      "identity": null
     },
     "linux": {
       "target": [
