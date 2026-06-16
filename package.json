@@ -1,6 +1,7 @@
+Version 1.0.0 -> 1.0.8
 {
   "name": "privacy-shield-desktop",
-  "version": "1.0.0",
+  "version": "1.0.8",
   "description": "PrivacyShield Desktop \u2014 Dokumente anonymisieren, 100% offline",
   "main": "main.js",
   "scripts": {
