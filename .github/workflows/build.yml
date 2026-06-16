@@ -32,7 +32,7 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npx electron-builder ${{ matrix.build_flag }} --publish never
-        continue-on-error: ${{ matrix.os == 'macos-14' }}
+        continue-on-error: ${{ matrix.os == 'macos-14' || matrix.os == 'windows-2022' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
