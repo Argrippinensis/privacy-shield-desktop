@@ -36,6 +36,8 @@ jobs:
       - run: npm ci
       - run: npx electron-builder ${{ matrix.build_flag }} --publish never
         continue-on-error: ${{ matrix.os == 'macos-14' || matrix.os == 'windows-2022' }}
+      - name: List dist contents
+        run: ls -la dist/ || echo "no dist"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -54,14 +56,23 @@ jobs:
           pattern: builds-*
           merge-multiple: true
           path: dist
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
-          body: PrivacyShield ${{ github.ref_name }}
-          draft: true
-          files: dist/*
-          fail_on_unmatched_files: false
+      - name: List downloaded artifacts
+        run: ls -laR dist/ || echo "dist empty"
+      - name: Create Release
+        run: |
+          set -e
+          TAG="${{ github.ref_name }}"
+          FILES=$(find dist -maxdepth 1 -type f | tr '\n' ' ' | xargs)
+          if [ -z "$FILES" ]; then
+            echo "Keine Dateien in dist/ — erstelle Release ohne Assets"
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --notes "PrivacyShield $TAG"
+          else
+            echo "Dateien gefunden: $FILES"
+            gh release create "$TAG" $FILES \
+              --title "$TAG" \
+              --notes "PrivacyShield $TAG"
+          fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
