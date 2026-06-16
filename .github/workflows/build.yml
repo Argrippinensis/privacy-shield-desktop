@@ -36,8 +36,6 @@ jobs:
       - run: npm ci
       - run: npx electron-builder ${{ matrix.build_flag }} --publish never
         continue-on-error: ${{ matrix.os == 'macos-14' || matrix.os == 'windows-2022' }}
-      - name: List dist contents
-        run: ls -la dist/ || echo "no dist"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -56,8 +54,6 @@ jobs:
           pattern: builds-*
           merge-multiple: true
           path: dist
-      - name: List downloaded artifacts
-        run: ls -laR dist/ || echo "dist empty"
       - name: Create Release
         run: |
           set -e
