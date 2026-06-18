@@ -1,6 +1,6 @@
 {
   "name": "privacy-shield-desktop",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "PrivacyShield Desktop \u2014 Dokumente anonymisieren, 100% offline",
   "main": "main.js",
   "scripts": {
