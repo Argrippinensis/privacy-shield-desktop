@@ -132,6 +132,60 @@ ipcMain.handle('start-download', async () => {
   }
 });
 
+ipcMain.handle('check-for-updates', () => {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        cleanup();
+        resolve({ updateAvailable: false, currentVersion: app.getVersion(), timeout: true });
+      }
+    }, 30000);
+
+    const onUpdateAvailable = (info) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timeout);
+        cleanup();
+        resolve({ updateAvailable: true, version: info.version, currentVersion: app.getVersion() });
+      }
+    };
+
+    const onUpdateNotAvailable = (info) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timeout);
+        cleanup();
+        resolve({ updateAvailable: false, currentVersion: app.getVersion() });
+      }
+    };
+
+    const onError = (err) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timeout);
+        cleanup();
+        resolve({ updateAvailable: false, currentVersion: app.getVersion(), error: err.message });
+      }
+    };
+
+    const cleanup = () => {
+      autoUpdater.removeListener('update-available', onUpdateAvailable);
+      autoUpdater.removeListener('update-not-available', onUpdateNotAvailable);
+      autoUpdater.removeListener('error', onError);
+    };
+
+    autoUpdater.once('update-available', onUpdateAvailable);
+    autoUpdater.once('update-not-available', onUpdateNotAvailable);
+    autoUpdater.once('error', onError);
+
+    autoUpdater.checkForUpdates().catch((err) => {
+      console.log('checkForUpdates threw:', err.message);
+    });
+  });
+});
+
 ipcMain.handle('quit-app', () => {
   app.quit();
 });

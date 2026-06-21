@@ -1,0 +1,71 @@
+## Aufgabe: PrivacyShield Desktop CI/CD fixen und Release-Prozess stabilisieren
+
+Repo: /home/alexander/projects/privacy-shield-desktop
+Aktueller Branch: main (v1.0.7)
+
+### Problem
+
+Der Windows-Build (npx electron-builder --win --publish never) **schlägt fehl** im CI/CD auf GitHub Actions (windows-2022 runner). Linux und macOS bauen ohne Probleme.
+
+**Warum das verwirrend ist:** Das package.json wurde seit dem letzten funktionierenden Windows-Build (#24) NUR um `disableBrowserSandbox` aus dem mac-Bereich bereinigt — uneine Veränderung, die Windows betreffen sollte. Das Workflow wurde neu strukturiert (Build + Release getrennt), aber der Windows-Build-Step ist identisch zu vorher (`npx electron-builder --win --publish never`).
+
+**Mögliche Ursachen:**
+1. Node.js 20-Deprecation auf GitHub Actions (heute, 16.06.2026, live geworden — Node.js läuft jetzt auf Node 24)
+2. Electron-Builder 26.15.3 hat ein Windows-spezifisches Problem (evtl. NSIS-Komprimierung, Pfadlängen, fehlende VC++-Tools)
+3. Das `actions/setup-node@v4` verhält sich anders unter Node.js 24 auf Windows
+
+### Aktueller Setup
+
+**Workflow (build.yml):**
+- Drei separate Build-Jobs (Linux, Windows, macOS) mit `fail-fast: false`
+- Alle bauen mit `--publish never` (elektron-builder publish deaktiviert)
+- macOS hat `continue-on-error: true`
+- Jeder Job lädt Artifakte hoch via `actions/upload-artifact@v4`
+- Separater `release`-Job erstellt ein GitHub Release via `gh release create` + lädt alle Artifakte hoch
+
+**package.json — electron-builder config:**
+- macOS: target zip, identity null
+- Windows: target nsis, kein Signing
+- Linux: target AppImage + deb
+- publish provider: github (wird aktuell nicht genutzt, da --publish never)
+
+### Fehler-Log
+
+Der genaue Fehler steht in den GitHub Actions Logs von Run #29 (windows job):
+https://github.com/Argrippinensis/privacy-shield-desktop/actions/runs/27597948351
+
+Credentials: Du kannst die Logs unter `Argrippinensis/privacy-shield-desktop` auf GitHub einsehen. Der Schritt "Run npx electron-builder --win --publish never" schlägt mit Exit-Code 1 fehl. Die genaue Fehlermeldung ist nicht zugänglich ohne GitHub-Login (das Browser-Tool ist nicht authentifiziert).
+
+### Aufgaben
+
+#### 1. Analyse & Fix Windows Build
+- Analysiere das electron-builder Setup und erkunde, was auf Windows schiefläuft
+- Füge Debugging hinzu: `--verbose` Flag für electron-builder auf Windows
+- Oder ersetze den NSIS-Target mit einem einfacheren/zweiten Target (z.B. `portable` oder `zip`) als Fallback
+- Stelle sicher dass `forceCodeSigning: false` korrekt gesetzt ist
+
+#### 2. Workflow optimieren
+- Füge `continue-on-error: ${{ matrix.os == 'windows-2022' }}` hinzu (Windows darf den Release nicht blockieren)
+- Füge explizites Debugging hinzu: `dir dist/` vor dem Artifact-Upload
+- Der `release`-Job soll das Release auch erstellen wenn NUR Linux erfolgreich war (nicht nur alle erforderlich)
+
+#### 3. Electron-Builder config bereinigen
+- Entferne veraltete/ungültige Optionen
+- Prüfe ob `releaseType: "release"` im publish-Block für electron-builder 26.x noch gültig ist
+- Entferne `afterSign: null` wenn nicht benötigt
+
+#### 4. Test & Verifikation
+- Führe `npx electron-builder --linux --publish never` lokal aus (sollte auf dem MacBook funktionieren)
+- Erstelle einen neuen Tag v1.0.8 und pushe ihn, um das Workflow zu testen:
+  ```bash
+  git add .
+  git commit -m "ci: Windows debug + robuste Releases"
+  git tag v1.0.8
+  git push origin main --tags
+  ```
+- Nach dem CI-Durchlauf die Releases-Seite prüfen: https://github.com/Argrippinensis/privacy-shield-desktop/releases
+
+### Wichtige Einschränkung
+- Du läufst auf einem Linux/MacBook, **nicht auf Windows** — du kannst den Windows-Build nicht lokal testen
+- Verlass dich auf CI-Logs (falls zugänglich) oder analysiere den Code statisch
+- Nutze `gh` CLI falls authentifiziert, sonst über web_fetch auf die Logs zugreifen

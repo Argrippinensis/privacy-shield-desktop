@@ -7,7 +7,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   dismissUpdate: (version) => ipcRenderer.invoke('dismiss-update', version),
   startDownload: () => ipcRenderer.invoke('start-download'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   quitApp: () => ipcRenderer.invoke('quit-app'),
+  getSystemStats: () => ipcRenderer.invoke("get-system-stats"),
   onUpdateAvailable: (callback) => {
     ipcRenderer.on('update-available', (event, data) => callback(data));
   },
@@ -18,8 +20,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('update-downloaded', (event, version) => callback(version));
   },
   onDownloadError: (callback) => {
-  getSystemStats: () => ipcRenderer.invoke("get-system-stats"),
     ipcRenderer.on('download-error', () => callback());
+  },
+  onUpdateNotAvailable: (callback) => {
+    ipcRenderer.on('update-not-available', (event, info) => callback(info));
   },
   platform: process.platform
 });

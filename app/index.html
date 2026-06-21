@@ -74,6 +74,42 @@
     }
   #sysstats{position:fixed;bottom:8px;right:8px;z-index:999;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);color:rgba(255,255,255,.7);font-size:10px;padding:6px 10px;border-radius:6px;font-family:monospace;line-height:1.4;pointer-events:none}
 #sysstats{position:fixed;bottom:8px;right:8px;z-index:999;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);color:rgba(255,255,255,0.7);font-size:10px;padding:6px 10px;border-radius:6px;font-family:monospace;line-height:1.4;pointer-events:none;user-select:none}
+
+    #update-status-overlay {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.65); z-index: 99998;
+      align-items: center; justify-content: center;
+    }
+    #update-status-overlay .dialog {
+      background: #fff; padding: 36px 40px; border-radius: 12px;
+      max-width: 420px; width: 90%; text-align: center;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+    }
+    #update-status-overlay h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; color: #111; }
+    #update-status-overlay p { color: #555; margin-bottom: 20px; font-size: 13px; line-height: 1.5; }
+    #update-status-overlay .status-icon { font-size: 44px; margin-bottom: 8px; }
+    #update-status-overlay .btn-force-update {
+      background: #1a3a5c; color: #fff; border: none;
+      padding: 11px 28px; border-radius: 7px; cursor: pointer; font-weight: 600; font-size: 14px;
+    }
+    #update-status-overlay .btn-force-update:hover { background: #14304e; }
+    #update-status-overlay .btn-force-update:disabled { opacity: 0.6; cursor: default; }
+    #update-status-overlay .btn-close {
+      background: transparent; color: #555; border: 1px solid #ccc;
+      padding: 11px 28px; border-radius: 7px; cursor: pointer; font-size: 14px;
+    }
+    #update-status-overlay .btn-close:hover { background: #f5f5f5; }
+    #status-progress-wrap {
+      display: none; margin-bottom: 20px;
+    }
+    #status-progress-label { font-size: 12px; color: #555; margin-bottom: 6px; }
+    #status-progress-bar-bg {
+      background: #e5e7eb; border-radius: 6px; height: 8px; overflow: hidden;
+    }
+    #status-progress-bar-fill {
+      background: #1a3a5c; height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 6px;
+    }
 </style>
 </head>
 <body>
@@ -103,6 +139,24 @@
       <div class="dialog-actions" id="dialog-actions">
         <button class="btn-force-update" id="btn-force-update" onclick="handleForceUpdate()">Jetzt aktualisieren</button>
         <button class="btn-quit" id="btn-quit" onclick="handleQuit()">Programm schliessen</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="update-status-overlay">
+    <div class="dialog">
+      <div class="status-icon" id="status-icon">⏳</div>
+      <h2 id="status-title">Suche nach Updates...</h2>
+      <p id="status-message">Bitte warten Sie einen Moment.</p>
+      <div id="status-progress-wrap">
+        <div id="status-progress-label">Download... 0%</div>
+        <div id="status-progress-bar-bg"><div id="status-progress-bar-fill"></div></div>
+      </div>
+      <div id="status-error-msg" style="display:none;color:#dc2626;font-size:12px;margin-bottom:14px">Download fehlgeschlagen — bitte versuchen Sie es spater erneut.</div>
+      <div id="status-install-msg" style="display:none;color:#16a34a;font-size:13px;margin-bottom:14px;font-weight:600">Installation lauft, App wird neu gestartet...</div>
+      <div id="status-actions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-force-update" id="btn-status-update" onclick="handleStatusUpdate()" style="display:none">Jetzt aktualisieren</button>
+        <button class="btn-close" onclick="closeStatusDialog()">Schliessen</button>
       </div>
     </div>
   </div>
@@ -173,19 +227,35 @@
       });
 
       window.electronAPI.onDownloadProgress((percent) => {
+        // Update forced-update-overlay progress
         document.getElementById('progress-wrap').style.display = 'block';
         document.getElementById('progress-label').textContent = 'Download... ' + percent + '%';
         document.getElementById('progress-bar-fill').style.width = percent + '%';
+        // Update status-dialog progress if open
+        const statusOverlay = document.getElementById('update-status-overlay');
+        if (statusOverlay && statusOverlay.style.display === 'flex') {
+          document.getElementById('status-progress-label').textContent = 'Download... ' + percent + '%';
+          document.getElementById('status-progress-bar-fill').style.width = percent + '%';
+        }
       });
 
       window.electronAPI.onUpdateDownloaded((version) => {
+        // For forced-update-overlay
         document.getElementById('progress-wrap').style.display = 'none';
         document.getElementById('install-msg').style.display = 'block';
         document.getElementById('dialog-actions').style.display = 'none';
         document.getElementById('forced-update-overlay').style.display = 'flex';
+        // For status-dialog if open
+        const statusOverlay = document.getElementById('update-status-overlay');
+        if (statusOverlay && statusOverlay.style.display === 'flex') {
+          document.getElementById('status-progress-wrap').style.display = 'none';
+          document.getElementById('status-install-msg').style.display = 'block';
+          document.getElementById('status-actions').style.display = 'none';
+        }
       });
 
       window.electronAPI.onDownloadError(() => {
+        // For forced-update-overlay
         document.getElementById('progress-wrap').style.display = 'none';
         document.getElementById('download-error-msg').style.display = 'block';
         const btnForce = document.getElementById('btn-force-update');
@@ -194,6 +264,14 @@
         if (btnQuit) btnQuit.disabled = false;
         document.getElementById('dialog-actions').style.display = 'flex';
         document.getElementById('forced-update-overlay').style.display = 'flex';
+        // For status-dialog if open
+        const statusOverlay = document.getElementById('update-status-overlay');
+        if (statusOverlay && statusOverlay.style.display === 'flex') {
+          document.getElementById('status-progress-wrap').style.display = 'none';
+          document.getElementById('status-error-msg').style.display = 'block';
+          const btnStatus = document.getElementById('btn-status-update');
+          if (btnStatus) { btnStatus.disabled = false; btnStatus.textContent = 'Erneut versuchen'; btnStatus.style.display = 'inline-block'; }
+        }
       });
     }
 
@@ -210,10 +288,91 @@
           if (event.source) event.source.postMessage({ type: 'electron-open-result', result }, '*');
         }
       }
+      if (event.data && event.data.type === 'check-for-updates') {
+        checkForUpdatesManually();
+      }
     });
+
+    function closeStatusDialog() {
+      document.getElementById('update-status-overlay').style.display = 'none';
+    }
+
+    async function checkForUpdatesManually() {
+      const overlay = document.getElementById('update-status-overlay');
+      overlay.style.display = 'flex';
+      document.getElementById('status-icon').textContent = '⏳';
+      document.getElementById('status-title').textContent = 'Suche nach Updates...';
+      document.getElementById('status-message').textContent = 'Bitte warten Sie einen Moment.';
+      document.getElementById('btn-status-update').style.display = 'none';
+      document.getElementById('status-progress-wrap').style.display = 'none';
+      document.getElementById('status-error-msg').style.display = 'none';
+      document.getElementById('status-install-msg').style.display = 'none';
+      document.getElementById('status-actions').style.display = 'flex';
+
+      if (!window.electronAPI) {
+        document.getElementById('status-icon').textContent = '⚠️';
+        document.getElementById('status-title').textContent = 'Nicht verfügbar';
+        document.getElementById('status-message').textContent = 'Die Update-Prüfung ist nur in der Desktop-App möglich. Besuchen Sie arcangeli.eu für die neueste Version.';
+        return;
+      }
+
+      const result = await window.electronAPI.checkForUpdates();
+
+      if (result.updateAvailable) {
+        document.getElementById('status-icon').textContent = '🆕';
+        document.getElementById('status-title').textContent = 'Update verfügbar';
+        document.getElementById('status-message').textContent =
+          'Version ' + result.version + ' ist verfügbar. Sie verwenden Version ' + (result.currentVersion || '?') + '.';
+        document.getElementById('btn-status-update').style.display = 'inline-block';
+        document.getElementById('btn-status-update').textContent = 'Jetzt aktualisieren';
+        document.getElementById('btn-status-update').disabled = false;
+        pendingVersion = result.version;
+      } else if (result.error) {
+        document.getElementById('status-icon').textContent = '⚠️';
+        document.getElementById('status-title').textContent = 'Fehler';
+        document.getElementById('status-message').textContent = 'Update-Prüfung fehlgeschlagen: ' + result.error + '. Bitte prüfen Sie Ihre Internetverbindung.';
+      } else if (result.timeout) {
+        document.getElementById('status-icon').textContent = '⏰';
+        document.getElementById('status-title').textContent = 'Zeitüberschreitung';
+        document.getElementById('status-message').textContent = 'Die Update-Prüfung dauerte zu lange. Bitte prüfen Sie Ihre Internetverbindung.';
+      } else {
+        document.getElementById('status-icon').textContent = '✅';
+        document.getElementById('status-title').textContent = 'Kein Update verfügbar';
+        document.getElementById('status-message').textContent =
+          'Sie verwenden die neueste Version (' + (result.currentVersion || '?') + ').';
+      }
+    }
+
+    async function handleStatusUpdate() {
+      if (!window.electronAPI) return;
+      document.getElementById('btn-status-update').disabled = true;
+      document.getElementById('btn-status-update').textContent = 'Download läuft...';
+      document.getElementById('status-progress-wrap').style.display = 'block';
+      document.getElementById('status-error-msg').style.display = 'none';
+      document.getElementById('status-message').textContent = 'Update wird heruntergeladen...';
+      await window.electronAPI.startDownload();
+    }
   </script>
+
+<div id="update-check-btn" style="position:fixed;top:8px;right:8px;z-index:9998;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);padding:6px 12px;border-radius:6px;display:flex;gap:8px;align-items:center">
+  <span style="color:rgba(255,255,255,0.7);font-size:11px;font-family:system-ui,sans-serif" id="version-label">Lade...</span>
+  <button onclick="checkForUpdatesManually()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:system-ui,sans-serif">🔄 Updates</button>
+</div>
+
 <div id="sysstats">RAM — | CPU — | App — MB</div>
 <script>
+
+  // Show version in top-right
+  if (window.electronAPI) {
+    window.electronAPI.getAppVersion().then(function(v) {
+      document.getElementById('version-label').textContent = 'v' + v;
+    }).catch(function() {
+      document.getElementById('version-label').textContent = 'v?.?.?';
+    });
+  } else {
+    document.getElementById('version-label').textContent = 'v?.?.?';
+  }
+
 setInterval(async () => {
   try {
     const s = await window.electronAPI.getSystemStats();
