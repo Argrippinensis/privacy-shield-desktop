@@ -1,13 +1,20 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require("path")
 const os = require("os");
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 
+// Nur fuer Tests: Updater auch ohne gepacktes Programm ausfuehren (liest dev-app-update.yml).
+if (process.env.PS_FORCE_DEV_UPDATE === '1') autoUpdater.forceDevUpdateConfig = true;
+
 autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = false;
 
 let mainWindow;
+// Nur ein vom Nutzer gestarteter Download darf den Fehler-Dialog ausloesen.
+// Schlaegt die (automatische) Pruefung fehl, z. B. ohne Internet, laeuft die App ungestoert weiter.
+let downloadActive = false;
+let updateInfo = null;
 
 function getUpdateStatePath() {
   return path.join(app.getPath('userData'), 'update-state.json');
@@ -24,6 +31,38 @@ function getUpdateState() {
 function saveUpdateState(state) {
   fs.writeFileSync(getUpdateStatePath(), JSON.stringify(state, null, 2), 'utf-8');
 }
+
+function sendToWindow(channel, ...args) {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, ...args);
+}
+
+// Externe Links (Website, Impressum, Datenschutz) gehoeren in den System-Browser.
+// Ohne diese Regel ersetzt ein Klick den Tool-Frame durch eine leere Seite.
+function openExternalSafe(url) {
+  try {
+    const u = new URL(url);
+    if (u.protocol === 'https:' || u.protocol === 'mailto:') shell.openExternal(u.toString());
+  } catch { /* ungueltige URL ignorieren */ }
+}
+
+function isInternalUrl(url) {
+  return url.startsWith('file://') && url.includes('/app/');
+}
+
+app.on('web-contents-created', (event, contents) => {
+  contents.setWindowOpenHandler(({ url }) => {
+    openExternalSafe(url);
+    return { action: 'deny' };
+  });
+  const guard = (e, url) => {
+    if (!isInternalUrl(url)) {
+      e.preventDefault();
+      openExternalSafe(url);
+    }
+  };
+  contents.on('will-navigate', guard);
+  contents.on('will-frame-navigate', (e) => guard(e, e.url));
+});
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -123,12 +162,14 @@ ipcMain.handle('dismiss-update', (event, version) => {
 });
 
 ipcMain.handle('start-download', async () => {
+  downloadActive = true;
   try {
+    // Ohne vorherige erfolgreiche Pruefung (z. B. nach "Erneut versuchen") zuerst pruefen.
+    if (!updateInfo) await autoUpdater.checkForUpdates();
     await autoUpdater.downloadUpdate();
   } catch (e) {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('download-error');
-    }
+    downloadActive = false;
+    sendToWindow('download-error');
   }
 });
 
@@ -196,6 +237,7 @@ function setupAutoUpdater() {
   }, 5000);
 
   autoUpdater.on('update-available', (info) => {
+    updateInfo = info;
     const state = getUpdateState();
     if (state.version !== info.version) {
       state.version = info.version;
@@ -217,6 +259,7 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('update-downloaded', (info) => {
+    downloadActive = false;
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-downloaded', info.version);
     }
@@ -227,8 +270,9 @@ function setupAutoUpdater() {
 
   autoUpdater.on('error', (err) => {
     console.log('Update-Fehler:', err.message);
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('download-error');
+    if (downloadActive) {
+      downloadActive = false;
+      sendToWindow('download-error');
     }
   });
 }
