@@ -1,8 +1,9 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, protocol, session } = require('electron');
 const path = require("path")
 const os = require("os");
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
+const { Readable } = require('stream');
 
 // Nur fuer Tests: Updater auch ohne gepacktes Programm ausfuehren (liest dev-app-update.yml).
 if (process.env.PS_FORCE_DEV_UPDATE === '1') autoUpdater.forceDevUpdateConfig = true;
@@ -32,6 +33,74 @@ function saveUpdateState(state) {
   fs.writeFileSync(getUpdateStatePath(), JSON.stringify(state, null, 2), 'utf-8');
 }
 
+
+// ---------------------------------------------------------------------------
+// Eigenes Protokoll app://ps/ statt file://
+//  - Cross-Origin-Isolation (COOP/COEP): Voraussetzung fuer mehrere Rechenthreads der KI (SharedArrayBuffer)
+//  - Strikte Content-Security-Policy: nach aussen geht aus der Seite nichts mehr (connect-src 'self')
+//  - Modell und Bibliotheken kommen ausschliesslich aus der Installation (app/vendor, app/models)
+// ---------------------------------------------------------------------------
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }
+]);
+
+const APP_ORIGIN = 'app://ps/';
+const APP_ROOT = path.join(__dirname, 'app');
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.wasm': 'application/wasm',
+  '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.gz': 'application/gzip',
+  '.onnx': 'application/octet-stream', '.txt': 'text/plain; charset=utf-8'
+};
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self' data: blob:",
+  "worker-src 'self' blob:",
+  "frame-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'none'"
+].join('; ');
+
+function appResponse(request) {
+  const pathname = decodeURIComponent(new URL(request.url).pathname);
+  const rel = pathname === '/' ? '/index.html' : pathname;
+  const file = path.normalize(path.join(APP_ROOT, rel));
+  const headers = {
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Embedder-Policy': 'require-corp',
+    'Cross-Origin-Resource-Policy': 'same-origin',
+    'Content-Security-Policy': CSP,
+    'X-Content-Type-Options': 'nosniff'
+  };
+  if (!file.startsWith(APP_ROOT + path.sep)) return new Response('Forbidden', { status: 403, headers });
+  let stat;
+  try { stat = fs.statSync(file); } catch { stat = null; }
+  if (!stat || !stat.isFile()) return new Response('Not found', { status: 404, headers });
+  headers['Content-Type'] = MIME[path.extname(file).toLowerCase()] || 'application/octet-stream';
+  headers['Content-Length'] = String(stat.size);
+  return new Response(Readable.toWeb(fs.createReadStream(file)), { status: 200, headers });
+}
+
+// Blockierte Zugriffe der Seiten werden mitgezaehlt (Tests pruefen, dass die Liste leer bleibt).
+globalThis.__psBlocked = [];
+
+function lockDownNetwork() {
+  // Die Seiten (Renderer) duerfen kein Netz nutzen. Der Updater laeuft im Hauptprozess und ist davon nicht betroffen.
+  session.defaultSession.webRequest.onBeforeRequest(
+    { urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*', 'ftp://*/*'] },
+    (details, callback) => {
+      const fromPage = details.webContentsId != null;
+      if (fromPage) globalThis.__psBlocked.push(details.url);
+      callback({ cancel: fromPage });
+    }
+  );
+}
+
 function sendToWindow(channel, ...args) {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, ...args);
 }
@@ -46,7 +115,7 @@ function openExternalSafe(url) {
 }
 
 function isInternalUrl(url) {
-  return url.startsWith('file://') && url.includes('/app/');
+  return url.startsWith(APP_ORIGIN);
 }
 
 app.on('web-contents-created', (event, contents) => {
@@ -75,11 +144,12 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      sandbox: true
     }
   });
 
-  mainWindow.loadFile('app/index.html');
+  mainWindow.loadURL(APP_ORIGIN + 'index.html');
   Menu.setApplicationMenu(null);
 }
 
@@ -134,12 +204,23 @@ ipcMain.handle('save-metadata', async (event, { data }) => {
 
 ipcMain.handle('get-app-version', () => app.getVersion());
 
+// Speicher der gesamten App (Haupt-, Renderer-, GPU- und Hilfsprozesse) in MB.
+// process.memoryUsage() misst nur den Hauptprozess und zeigte so fast nichts an (ca. 7 MB statt ueber 1 GB).
+function getAppMemoryMB() {
+  try {
+    const kb = app.getAppMetrics().reduce((sum, p) => sum + ((p.memory && p.memory.workingSetSize) || 0), 0);
+    return Math.round(kb / 1024);
+  } catch {
+    return Math.round(process.memoryUsage().rss / 1024 / 1024);
+  }
+}
+
 ipcMain.handle("get-system-stats", () => {
   const totalMem = os.totalmem();
   const freeMem = os.freemem();
   const usedMem = totalMem - freeMem;
   const memPercent = Math.round((usedMem / totalMem) * 100);
-  const appMem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  const appMem = getAppMemoryMB();
   const cpus = os.cpus();
   const cpuCount = cpus.length;
   const cpuModel = cpus[0].model.trim();
@@ -278,6 +359,8 @@ function setupAutoUpdater() {
 }
 
 app.whenReady().then(() => {
+  protocol.handle('app', appResponse);
+  lockDownNetwork();
   createWindow();
   setupAutoUpdater();
 });

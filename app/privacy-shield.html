@@ -8,7 +8,6 @@
       name="description"
       content="Anonymisieren Sie sensible Daten vor der KI-Nutzung. 100% lokal im Browser. Erkennung von Namen, IBAN, Adressen & mehr."
     />
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
       html {
         scroll-behavior: smooth;
@@ -765,6 +764,8 @@
         }
       }
     </style>
+    <!-- Muss nach den Seitenstilen stehen: gleiche Kaskade wie das frueher eingesetzte Tailwind-Play-CDN -->
+    <link rel="stylesheet" href="css/tailwind.css" />
   </head>
   <body>
     <nav class="nav-glass fixed top-0 left-0 right-0 z-50" role="navigation">
@@ -1358,16 +1359,16 @@
                     style="font-size: 11px; padding: 8px 16px; gap: 6px"
                     onclick="loadAIModel()"
                   >
-                    KI-Modell laden (135 MB, einmalig)
+                    KI-Erkennung aktivieren
                   </button>
-                  <p class="text-xs" style="color: #f59e0b; margin-top: 4px">135 MB über Mobilfunk? WLAN empfohlen.</p>
                   <p class="text-xs" style="color: #999; margin-top: 6px">
-                    Erfordert moderne Browser · Funktioniert auch im Flugmodus nach Download
+                    Modell ist Teil der Installation · funktioniert ohne Internet
                   </p>
+                  <p id="aiMemHint" class="text-xs" style="color: #b45309; margin-top: 6px; line-height: 1.5; display: none"></p>
                 </div>
                 <div id="aiStatusLoading" style="display: none">
                   <p class="text-xs" style="color: #666">
-                    Lade KI-Modell <span id="aiLoadProgress" class="font-mono" style="color: #1a3a5c">0%</span>
+                    Starte KI-Modell <span id="aiLoadProgress" class="font-mono" style="color: #1a3a5c">0%</span>
                   </p>
                   <div style="height: 4px; background: #e5e5e5; border-radius: 2px; margin-top: 8px; overflow: hidden">
                     <div
@@ -1376,7 +1377,7 @@
                     ></div>
                   </div>
                   <p class="text-xs" style="color: #999; margin-top: 6px">
-                    Einmaliger Download · Wiederverwendung aus Cache
+                    Wird aus der Installation geladen · kein Download
                   </p>
                 </div>
                 <div id="aiStatusReady" style="display: none">
@@ -1384,6 +1385,10 @@
                   <p class="text-xs" style="color: #666; margin-top: 4px">
                     Erkennt automatisch Personen, Organisationen und Orte.
                   </p>
+                  <p id="aiRunProgress" class="text-xs font-mono" style="color: #1a3a5c; margin-top: 4px; min-height: 14px"></p>
+                  <button class="btn btn-ghost" style="font-size: 11px; padding: 4px 10px; margin-top: 6px" onclick="unloadAIModel()">
+                    KI-Modell entladen
+                  </button>
                 </div>
                 <div id="aiStatusError" style="display: none">
                   <p class="text-xs" style="color: #dc2626">Modell konnte nicht geladen werden.</p>
@@ -1576,7 +1581,7 @@
                   "
                 ></div>
                 <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap">
-                  <button class="btn-accent" onclick="anon()" style="font-size: 12px; padding: 10px 20px">
+                  <button id="ANONBTN" class="btn-accent" onclick="anon()" style="font-size: 12px; padding: 10px 20px">
                     Anonymisieren
                   </button>
                   <button
@@ -1972,11 +1977,11 @@
       </div>
       <div id="AMPERROR" style="display: none; margin-top: 6px; font-size: 11px; color: #ff3b30"></div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" async></script>
-    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js" async></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" async></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" async></script>
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" async></script>
+    <script src="vendor/pdfjs/pdf.min.js"></script>
+    <script src="vendor/mammoth/mammoth.browser.min.js"></script>
+    <script src="vendor/tesseract/tesseract.min.js"></script>
+    <script src="vendor/jspdf/jspdf.umd.min.js"></script>
+    <script src="vendor/jszip/jszip.min.js"></script>
     <script>
       const ENTS = [
         {
@@ -3197,22 +3202,16 @@
       function applyProfile(p) {
         ENTS.forEach((e) => (e.on = p.ents.includes(e.id)));
       }
-      function updateAIBtnLabel() {
-        const btn = document.getElementById("aiLoadBtn");
-        if (!btn) return;
-        if (localStorage.getItem("aiModelLoaded") === "true") {
-          btn.textContent = "KI-Modell laden (gecacht)";
-        }
-      }
+      function updateAIBtnLabel() {}
       function startApp() {
         const cb = document.getElementById("obSkip");
         if (cb && cb.checked) localStorage.setItem("privacyShield_onboarding_done", "true");
         document.getElementById("OB").style.display = "none";
         document.getElementById("WS").style.display = "block";
         initEL();
-        if (localStorage.getItem("aiModelLoaded") === "true") {
-          loadAIModel();
-        }
+        checkMemoryHint().then(function (lowRam) {
+          if (!lowRam && localStorage.getItem("aiModelLoaded") === "true") loadAIModel();
+        });
       }
       function showOB() {
         document.getElementById("WS").style.display = "none";
@@ -3351,10 +3350,9 @@
       }
       async function exPDF(file) {
         if (typeof pdfjsLib === "undefined") throw new Error("PDF.js nicht geladen");
-        pdfjsLib.GlobalWorkerOptions.workerSrc =
-          "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("vendor/pdfjs/pdf.worker.min.js", location.href).href;
         const buf = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        const pdf = await pdfjsLib.getDocument({ data: buf, isEvalSupported: false }).promise;
         let out = "";
         const prog = document.getElementById("aiLoadProgress");
         try {
@@ -3415,23 +3413,38 @@
         let fullText = "";
         const scale = 2;
         const maxPages = Math.min(pdf.numPages, 20);
-        for (let i = 1; i <= maxPages; i++) {
-          setP(80 + Math.round((i / maxPages) * 15));
-          if (prog) prog.textContent = "OCR: Seite " + i + "/" + maxPages;
-          const page = await pdf.getPage(i);
-          const vp = page.getViewport({ scale: scale });
-          const c = document.createElement("canvas");
-          c.width = vp.width;
-          c.height = vp.height;
-          await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
-          const { data: data } = await Tesseract.recognize(c, "deu+eng", {
-            logger: function (m) {
-              if (m.status === "recognizing text" && prog)
-                prog.textContent = "OCR Seite " + i + "/" + maxPages + ": " + Math.round(m.progress * 100) + "%";
-            },
-          });
-          fullText += data.text + "\n\n";
-          c.remove();
+        let curPage = 1;
+        const abs = (p) => new URL(p, location.href).href;
+        // Ein Worker fuer alle Seiten: Start und Sprachdaten werden nur einmal geladen.
+        const worker = await Tesseract.createWorker("deu+eng", 1, {
+          workerPath: abs("vendor/tesseract/worker.min.js"),
+          corePath: abs("vendor/tesseract/"),
+          langPath: abs("vendor/tesseract/lang"),
+          workerBlobURL: false,
+          cacheMethod: "none",
+          logger: function (m) {
+            if (m.status === "recognizing text" && prog)
+              prog.textContent = "OCR Seite " + curPage + "/" + maxPages + ": " + Math.round(m.progress * 100) + "%";
+          },
+        });
+        try {
+          for (let i = 1; i <= maxPages; i++) {
+            curPage = i;
+            setP(80 + Math.round((i / maxPages) * 15));
+            if (prog) prog.textContent = "OCR: Seite " + i + "/" + maxPages;
+            const page = await pdf.getPage(i);
+            const vp = page.getViewport({ scale: scale });
+            const c = document.createElement("canvas");
+            c.width = vp.width;
+            c.height = vp.height;
+            await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+            const { data: data } = await worker.recognize(c);
+            fullText += data.text + "\n\n";
+            c.width = c.height = 0;
+            c.remove();
+          }
+        } finally {
+          await worker.terminate();
         }
         if (prog) prog.textContent = "";
         return fullText.trim();
@@ -3745,63 +3758,142 @@
         return results;
       }
       const AI_MODEL_ID = "Xenova/distilbert-base-multilingual-cased-ner-hrl";
-      const TRANSFORMERS_CDN = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2";
       let nerPipeline = null;
       let aiCache = { key: null, spans: [] };
-      async function loadAIModel() {
-        const loadingEl = document.getElementById("aiStatusLoading");
-        const defaultEl = document.getElementById("aiStatusDefault");
-        const readyEl = document.getElementById("aiStatusReady");
-        const errorEl = document.getElementById("aiStatusError");
+      let aiLoading = false;
+
+      // Startet den KI-Worker (ner-worker.js) und liefert eine Funktion text -> Token-Liste.
+      // Die Inferenz laeuft in einem eigenen Thread, die Oberflaeche bleibt bedienbar.
+      function createNerPipeline(modelId, onProgress) {
+        return new Promise(function (resolve, reject) {
+          const worker = new Worker("ner-worker.js", { type: "module" });
+          const pending = new Map();
+          let seq = 0;
+          let ready = false;
+          function failAll(err) {
+            pending.forEach(function (p) {
+              p.rej(err);
+            });
+            pending.clear();
+          }
+          worker.onmessage = function (ev) {
+            const m = ev.data;
+            if (m.type === "progress") onProgress(m);
+            else if (m.type === "ready") {
+              ready = true;
+              const call = function (text) {
+                return new Promise(function (res, rej) {
+                  const id = ++seq;
+                  pending.set(id, { res: res, rej: rej });
+                  worker.postMessage({ type: "run", id: id, text: text });
+                });
+              };
+              call.worker = worker;
+              call.info = { threads: m.threads, isolated: m.isolated };
+              resolve(call);
+            } else if (m.type === "result") {
+              const p = pending.get(m.id);
+              if (p) {
+                pending.delete(m.id);
+                p.res(m.out);
+              }
+            } else if (m.type === "error") {
+              const err = new Error(m.message);
+              if (m.id && pending.has(m.id)) {
+                const p = pending.get(m.id);
+                pending.delete(m.id);
+                p.rej(err);
+              } else reject(err);
+            }
+          };
+          worker.onerror = function (e) {
+            const err = new Error(e.message || "KI-Worker nicht verfuegbar");
+            if (ready) failAll(err);
+            else reject(err);
+          };
+          worker.postMessage({ type: "load", modelId: modelId });
+        });
+      }
+
+      function aiSetState(state) {
+        const ids = { def: "aiStatusDefault", loading: "aiStatusLoading", ready: "aiStatusReady", error: "aiStatusError" };
+        for (const k in ids) document.getElementById(ids[k]).style.display = k === state ? "block" : "none";
         const badgeEl = document.getElementById("aiStatusBadge");
+        const look = {
+          def: ["Nicht geladen", "#f0f2f5", "#4a5568"],
+          loading: ["Lädt...", "#fffbeb", "#92400e"],
+          ready: ["Aktiv (NER-Modell)", "#ecfdf5", "#059669"],
+          error: ["Fallback (Wortlisten)", "#fffbeb", "#92400e"],
+        }[state];
+        badgeEl.textContent = look[0];
+        badgeEl.style.background = look[1];
+        badgeEl.style.color = look[2];
+      }
+
+      async function loadAIModel() {
+        if (aiLoading || nerPipeline) return;
+        aiLoading = true;
         const barEl = document.getElementById("aiLoadBar");
         const progEl = document.getElementById("aiLoadProgress");
-        defaultEl.style.display = "none";
-        errorEl.style.display = "none";
-        loadingEl.style.display = "block";
-        badgeEl.textContent = "Lädt...";
-        badgeEl.style.background = "#fffbeb";
-        badgeEl.style.color = "#92400e";
+        aiSetState("loading");
         try {
-          const TF = await import(TRANSFORMERS_CDN);
           const fileProg = {};
-          nerPipeline = await TF.pipeline("token-classification", AI_MODEL_ID, {
-            dtype: "q8",
-            device: "wasm",
-            progress_callback: function (p) {
-              if (p.status === "progress" && p.file) {
-                fileProg[p.file] = { loaded: p.loaded || 0, total: p.total || 0 };
-                let loaded = 0,
-                  total = 0;
-                for (const k in fileProg) {
-                  loaded += fileProg[k].loaded;
-                  total += fileProg[k].total;
-                }
-                const pct = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
-                if (barEl) barEl.style.width = pct + "%";
-                if (progEl) progEl.textContent = pct + "%";
-              }
-            },
+          nerPipeline = await createNerPipeline(AI_MODEL_ID, function (p) {
+            fileProg[p.file] = { loaded: p.loaded, total: p.total };
+            let loaded = 0,
+              total = 0;
+            for (const k in fileProg) {
+              loaded += fileProg[k].loaded;
+              total += fileProg[k].total;
+            }
+            const pct = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
+            if (barEl) barEl.style.width = pct + "%";
+            if (progEl) progEl.textContent = pct + "%";
           });
           localAIMode = true;
           aiCache = { key: null, spans: [] };
-          loadingEl.style.display = "none";
-          readyEl.style.display = "block";
-          badgeEl.textContent = "Aktiv (NER-Modell)";
-          badgeEl.style.background = "#ecfdf5";
-          badgeEl.style.color = "#059669";
+          aiSetState("ready");
           toast("KI-Modell geladen — bereit", "s");
           localStorage.setItem("aiModelLoaded", "true");
         } catch (err) {
           console.error("NER-Modell konnte nicht geladen werden:", err);
           nerPipeline = null;
           localAIMode = true;
-          loadingEl.style.display = "none";
-          errorEl.style.display = "block";
-          badgeEl.textContent = "Fallback (Wortlisten)";
-          badgeEl.style.background = "#fffbeb";
-          badgeEl.style.color = "#92400e";
+          aiSetState("error");
+        } finally {
+          aiLoading = false;
         }
+      }
+
+      // Gibt den Arbeitsspeicher des Modells frei (ca. 0,5 GB) und kehrt zur Wortlisten-Erkennung zurueck.
+      function unloadAIModel() {
+        if (nerPipeline && nerPipeline.worker) nerPipeline.worker.terminate();
+        nerPipeline = null;
+        aiCache = { key: null, spans: [] };
+        localStorage.setItem("aiModelLoaded", "false");
+        aiSetState("def");
+        toast("KI-Modell entladen — Speicher freigegeben", "s");
+      }
+
+      // Arbeitsspeicher des Rechners in GB (Desktop-App: exakt, sonst Naeherung des Browsers) oder null.
+      async function getTotalRamGB() {
+        try {
+          if (window.parent !== window && window.parent.electronAPI) {
+            const st = await window.parent.electronAPI.getSystemStats();
+            return st.ram.total;
+          }
+        } catch (e) {}
+        return navigator.deviceMemory || null;
+      }
+      const LOW_RAM_GB = 6;
+      async function checkMemoryHint() {
+        const gb = await getTotalRamGB();
+        const el = document.getElementById("aiMemHint");
+        if (!el || gb === null || gb >= LOW_RAM_GB) return false;
+        el.textContent =
+          "Dieser Rechner hat " + gb + " GB Arbeitsspeicher. Die KI-Erkennung belegt ca. 0,7 GB und kann das Arbeiten verlangsamen. Die Standard-Erkennung funktioniert auch ohne.";
+        el.style.display = "block";
+        return true;
       }
       function chunkTextForNER(text, maxLen) {
         const chunks = [];
@@ -3867,13 +3959,9 @@
         const plain = computePass1(text).maskedText.replace(/\x00/g, " ");
         const spans = [];
         const chunks = chunkTextForNER(plain, 1e3);
-        const progEl = document.getElementById("aiLoadProgress");
+        const progEl = document.getElementById("aiRunProgress");
         for (let ci = 0; ci < chunks.length; ci++) {
-          if (progEl && chunks.length > 3) progEl.textContent = "Analyse " + (ci + 1) + "/" + chunks.length;
-          if (ci > 0)
-            await new Promise(function (r) {
-              setTimeout(r, 0);
-            });
+          if (progEl && chunks.length > 1) progEl.textContent = "Analyse " + (ci + 1) + "/" + chunks.length;
           const out = await nerPipeline(chunks[ci].str);
           let cursor = 0;
           for (const ent of aggregateNER(out)) {
@@ -4230,7 +4318,25 @@
         });
         return final;
       }
+      let anonBusy = false;
       async function anon() {
+        if (anonBusy) {
+          toast("Analyse läuft bereits...", "s");
+          return;
+        }
+        anonBusy = true;
+        const btn = document.getElementById("ANONBTN");
+        if (btn) btn.disabled = true;
+        try {
+          await anonCore();
+        } finally {
+          anonBusy = false;
+          if (btn) btn.disabled = false;
+          const pe = document.getElementById("aiRunProgress");
+          if (pe) pe.textContent = "";
+        }
+      }
+      async function anonCore() {
         const input = document.getElementById("IT").value;
         if (!input.trim()) {
           toast("Bitte Text eingeben", "e");
@@ -4944,6 +5050,18 @@
           );
         }
       }
+    </script>
+    <script>
+      // Externe Links (Website, Impressum, Datenschutz, KI-Anbieter) im System-Browser oeffnen, nicht im Tool-Frame.
+      document.addEventListener("click", function (e) {
+        const a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+        if (!a) return;
+        const href = a.getAttribute("href") || "";
+        if (/^(https?:|mailto:)/i.test(href)) {
+          e.preventDefault();
+          window.open(href, "_blank", "noopener");
+        }
+      });
     </script>
   </body>
 </html>
