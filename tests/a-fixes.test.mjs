@@ -27,18 +27,18 @@ test('Links zu arcangeli.eu oeffnen extern und lassen das Tool intakt', async ()
   const a = await launchApp();
   try {
     const f = await toolFrame(a.win);
-    await a.app.evaluate(({ shell }) => { globalThis.__ext = []; shell.openExternal = async (u) => { globalThis.__ext.push(u); }; });
     await f.click('a[href*="arcangeli.eu"] >> nth=0');
     await a.win.waitForTimeout(2000);
     const still = a.win.frames().some((fr) => fr.url().includes('privacy-shield.html'));
     assert.ok(still, 'Tool-Frame wurde durch die Navigation ersetzt');
-    const ext = await a.app.evaluate(() => globalThis.__ext);
+    const ext = await a.app.evaluate(() => globalThis.__psExternal);
     assert.ok(ext.length === 1 && ext[0].startsWith('https://arcangeli.eu'), 'Link muss im System-Browser geoeffnet werden: ' + JSON.stringify(ext));
   } finally { await a.close(); }
 });
 
 test('Offline: ein vom Nutzer gestarteter Update-Download meldet den Fehler weiterhin', async () => {
-  const a = await launchApp({ offline: true, env: { PS_FORCE_DEV_UPDATE: '1' } });
+  // APPIMAGE gesetzt = automatischer Modus (sonst oeffnet "Aktualisieren" nur die Download-Seite)
+  const a = await launchApp({ offline: true, env: { PS_FORCE_DEV_UPDATE: '1', APPIMAGE: '/tmp/ps-fake.AppImage' } });
   try {
     await toolFrame(a.win);
     await a.win.evaluate(() => window.electronAPI.startDownload());

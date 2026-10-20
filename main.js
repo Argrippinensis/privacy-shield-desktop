@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell, protocol, session } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, protocol, session, clipboard } = require('electron');
 const path = require("path")
 const os = require("os");
 const { autoUpdater } = require('electron-updater');
@@ -8,8 +8,32 @@ const { Readable } = require('stream');
 // Nur fuer Tests: Updater auch ohne gepacktes Programm ausfuehren (liest dev-app-update.yml).
 if (process.env.PS_FORCE_DEV_UPDATE === '1') autoUpdater.forceDevUpdateConfig = true;
 
+// Nur fuer Tests: Update-Quelle ist ein lokaler Mock-Server statt GitHub.
+if (process.env.PS_UPDATE_FEED) autoUpdater.setFeedURL({ provider: 'generic', url: process.env.PS_UPDATE_FEED });
+
 autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = false;
+
+// Seite mit allen Installern; dorthin fuehrt der manuelle Update-Weg.
+const DOWNLOAD_PAGE = 'https://arcangeli.eu/desktop/';
+
+// Automatisches Installieren gibt es nur, wo es technisch funktioniert: Windows (NSIS), Linux-AppImage und ein
+// signiertes macOS-Programm (package.json: "signedMac": true). Sonst wird nur auf die neue Version hingewiesen.
+function canInstallUpdates() {
+  if (process.env.PS_FORCE_MANUAL_UPDATE === '1') return false;
+  if (process.platform === 'win32') return true;
+  if (process.platform === 'linux') return !!process.env.APPIMAGE;
+  if (process.platform === 'darwin') return require('./package.json').signedMac === true;
+  return false;
+}
+const MANUAL_UPDATE = !canInstallUpdates();
+
+// Release-Notes (Text oder Liste von { note }) als kurzer Klartext
+function plainNotes(n) {
+  if (!n) return '';
+  const raw = Array.isArray(n) ? n.map((x) => (x && x.note) || '').join('\n') : String(n);
+  return raw.replace(/<[^>]*>/g, '').trim().slice(0, 400);
+}
 
 let mainWindow;
 // Nur ein vom Nutzer gestarteter Download darf den Fehler-Dialog ausloesen.
@@ -107,10 +131,14 @@ function sendToWindow(channel, ...args) {
 
 // Externe Links (Website, Impressum, Datenschutz) gehoeren in den System-Browser.
 // Ohne diese Regel ersetzt ein Klick den Tool-Frame durch eine leere Seite.
+// PS_BLOCK_EXTERNAL=1 (Tests): nichts oeffnen, nur in globalThis.__psExternal vermerken.
+globalThis.__psExternal = [];
 function openExternalSafe(url) {
   try {
     const u = new URL(url);
-    if (u.protocol === 'https:' || u.protocol === 'mailto:') shell.openExternal(u.toString());
+    if (u.protocol !== 'https:' && u.protocol !== 'mailto:') return;
+    if (process.env.PS_BLOCK_EXTERNAL === '1') globalThis.__psExternal.push(u.toString());
+    else shell.openExternal(u.toString());
   } catch { /* ungueltige URL ignorieren */ }
 }
 
@@ -242,7 +270,43 @@ ipcMain.handle('dismiss-update', (event, version) => {
   return { dismissCount: state.dismissCount };
 });
 
+// Kleine Textmengen in die Zwischenablage (Diagnose); Laenge begrenzt
+ipcMain.handle('copy-text', (event, text) => {
+  if (typeof text === 'string' && text.length <= 5000) clipboard.writeText(text);
+});
+
+// Prueft die mitgelieferten Dateien (Modell, Bibliotheken) gegen app/vendor-manifest.json.
+// deep=true berechnet zusaetzlich die SHA-256 der Modelldateien (ca. 1 s fuer 135 MB).
+async function checkAssets(deep) {
+  let manifest;
+  try { manifest = JSON.parse(fs.readFileSync(path.join(APP_ROOT, 'vendor-manifest.json'), 'utf8')); }
+  catch { return { manifest: false, ok: true, missing: [], wrongSize: [], corrupt: [], appRoot: APP_ROOT }; }
+  const missing = [], wrongSize = [], corrupt = [];
+  for (const f of manifest.files) {
+    let st;
+    try { st = fs.statSync(path.join(APP_ROOT, f.path)); } catch { missing.push(f.path); continue; }
+    if (st.size !== f.size) { wrongSize.push({ path: f.path, expected: f.size, actual: st.size }); continue; }
+    if (deep && f.path.startsWith('models/') && f.sha256) {
+      const h = require('crypto').createHash('sha256');
+      await require('stream/promises').pipeline(fs.createReadStream(path.join(APP_ROOT, f.path)), h);
+      if (h.digest('hex') !== f.sha256) corrupt.push(f.path);
+    }
+  }
+  return { manifest: true, ok: !missing.length && !wrongSize.length && !corrupt.length, missing, wrongSize, corrupt, appRoot: APP_ROOT };
+}
+ipcMain.handle('check-assets', (event, deep) => checkAssets(!!deep));
+
+ipcMain.handle('get-update-mode', () => ({ manual: MANUAL_UPDATE }));
+
+ipcMain.handle('open-download-page', () => {
+  openExternalSafe(DOWNLOAD_PAGE);
+});
+
 ipcMain.handle('start-download', async () => {
+  if (MANUAL_UPDATE) {
+    openExternalSafe(DOWNLOAD_PAGE);
+    return;
+  }
   downloadActive = true;
   try {
     // Ohne vorherige erfolgreiche Pruefung (z. B. nach "Erneut versuchen") zuerst pruefen.
@@ -270,7 +334,7 @@ ipcMain.handle('check-for-updates', () => {
         settled = true;
         clearTimeout(timeout);
         cleanup();
-        resolve({ updateAvailable: true, version: info.version, currentVersion: app.getVersion() });
+        resolve({ updateAvailable: true, version: info.version, currentVersion: app.getVersion(), manual: MANUAL_UPDATE });
       }
     };
 
@@ -328,7 +392,9 @@ function setupAutoUpdater() {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-available', {
         version: info.version,
-        dismissCount: state.dismissCount
+        dismissCount: state.dismissCount,
+        manual: MANUAL_UPDATE,
+        notes: plainNotes(info.releaseNotes)
       });
     }
   });

@@ -2,7 +2,7 @@
 // Die App laeuft hier mit totem Proxy: jeder Netzzugriff wuerde sofort auffallen.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { launchApp, toolFrame, runAnon, makePdf, GOLDEN, SAMPLE } from './helpers.mjs';
+import { launchApp, toolFrame, runAnon, makePdf, waitFor, GOLDEN, SAMPLE } from './helpers.mjs';
 
 async function loadModel(frame) {
   const r = await frame.evaluate(async () => { await loadAIModel(); return { active: !!nerPipeline, info: nerPipeline && nerPipeline.info }; });
@@ -10,18 +10,19 @@ async function loadModel(frame) {
   return r;
 }
 
-test('Wortlisten-Erkennung unveraendert zu v1.6.2 (Golden)', async () => {
+test('Wortlisten-Erkennung entspricht dem Golden-Stand', async () => {
   const a = await launchApp({ offline: true });
   try {
     const f = await toolFrame(a.win);
     await a.win.waitForTimeout(1500);
+    await f.evaluate(() => setAIMode('off'));
     const r = await runAnon(f, SAMPLE);
     assert.equal(r.out, GOLDEN.wordlist.out);
     assert.deepEqual(r.store, GOLDEN.wordlist.store);
   } finally { await a.close(); }
 });
 
-test('KI-Modell laedt offline aus der Installation, Ergebnis wie v1.6.2 (Golden)', async () => {
+test('KI-Modell laedt offline aus der Installation, Ergebnis entspricht dem Golden-Stand', async () => {
   const a = await launchApp({ offline: true });
   try {
     const f = await toolFrame(a.win);
@@ -126,8 +127,7 @@ test('RAM-Anzeige zeigt den echten Verbrauch aller Prozesse und sinkt nach dem E
     const loaded = (await stats()).app.memory;
     assert.ok(loaded - before > 300, 'Modell muss sich im Speicher zeigen: ' + before + ' -> ' + loaded + ' MB');
     await f.evaluate(() => unloadAIModel());
-    await a.win.waitForTimeout(2500);
-    const after = (await stats()).app.memory;
+    const after = await waitFor(async () => (await stats()).app.memory, (m) => loaded - m > 200);
     console.log('  App-Speicher MB: Start', before, '| mit Modell', loaded, '| nach Entladen', after);
     assert.ok(loaded - after > 200, 'Entladen muss Speicher freigeben: ' + loaded + ' -> ' + after + ' MB');
     const shown = await a.win.evaluate(() => document.getElementById('sysstats').textContent);
@@ -136,18 +136,14 @@ test('RAM-Anzeige zeigt den echten Verbrauch aller Prozesse und sinkt nach dem E
   } finally { await a.close(); }
 });
 
-test('Hinweis bei wenig Arbeitsspeicher, kein Autostart des Modells', async () => {
+test('Hinweis bei wenig Arbeitsspeicher, kein automatisches Laden des Modells', async () => {
   const a = await launchApp({ offline: true });
   try {
     const f = await toolFrame(a.win);
     await f.evaluate(() => { window.getTotalRamGB = async () => 4; });
-    const low = await f.evaluate(() => checkMemoryHint());
-    assert.equal(low, true);
-    const txt = await f.evaluate(() => document.getElementById('aiMemHint').textContent);
-    assert.match(txt, /4 GB/);
-    // Autostart: Flag gesetzt, aber wenig RAM -> Modell bleibt aus
-    await f.evaluate(() => { localStorage.setItem('aiModelLoaded', 'true'); startApp(); });
-    await a.win.waitForTimeout(2500);
-    assert.equal(await f.evaluate(() => !!nerPipeline), false);
+    assert.equal(await f.evaluate(() => checkMemoryHint()), true);
+    assert.match(await f.evaluate(() => document.getElementById('aiMemHint').textContent), /4 GB/);
+    await runAnon(f, 'Herr Thomas Müller wohnt in München.');
+    assert.equal(await f.evaluate(() => !!nerPipeline), false, 'Modell darf bei wenig RAM nicht automatisch starten');
   } finally { await a.close(); }
 });

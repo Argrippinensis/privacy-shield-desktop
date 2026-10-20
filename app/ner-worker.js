@@ -21,15 +21,25 @@ self.onmessage = async ({ data }) => {
   try {
     if (data.type === 'load') {
       if (data.threads) env.backends.onnx.wasm.numThreads = data.threads; // nur fuer Messungen/Tests
-      ner = await pipeline('token-classification', data.modelId, {
-        dtype: 'q8',
-        device: 'wasm',
-        progress_callback: (p) => {
-          if (p.status === 'progress' && p.file) {
-            self.postMessage({ type: 'progress', file: p.file, loaded: p.loaded || 0, total: p.total || 0 });
-          }
-        },
-      });
+      const create = () =>
+        pipeline('token-classification', data.modelId, {
+          dtype: 'q8',
+          device: 'wasm',
+          progress_callback: (p) => {
+            if (p.status === 'progress' && p.file) {
+              self.postMessage({ type: 'progress', file: p.file, loaded: p.loaded || 0, total: p.total || 0 });
+            }
+          },
+        });
+      try {
+        ner = await create();
+      } catch (err) {
+        // Mehrere Rechenthreads brauchen SharedArrayBuffer und mehr Speicher: bei solchen Fehlern einmal mit einem Thread versuchen.
+        const threaded = env.backends.onnx.wasm.numThreads > 1;
+        if (!threaded || !/thread|SharedArrayBuffer|Atomics|shared|memory|alloc|WebAssembly/i.test(String((err && err.message) || err))) throw err;
+        env.backends.onnx.wasm.numThreads = 1;
+        ner = await create();
+      }
       self.postMessage({ type: 'ready', threads: env.backends.onnx.wasm.numThreads, isolated: !!self.crossOriginIsolated });
     } else if (data.type === 'run') {
       const out = await ner(data.text);

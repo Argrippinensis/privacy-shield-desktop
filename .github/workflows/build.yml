@@ -1,5 +1,6 @@
 name: Build & Release
 
+# Ein Tag vX.Y.Z baut alle Plattformen, testet jedes gebaute Programm und erstellt erst dann das Release.
 on:
   push:
     tags:
@@ -9,8 +10,9 @@ on:
 permissions:
   contents: write
 
-env:
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -28,14 +30,15 @@ jobs:
             build_flag: --mac
             artifact_name: macos
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - run: npm ci
       # Bibliotheken und KI-Modell (nicht im Git, 135 MB) bereitstellen; Pruefsummen siehe scripts/vendor.lock.json
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: |
             app/vendor
@@ -43,49 +46,79 @@ jobs:
           key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
       - run: npm run fetch-vendor
       - run: npx electron-builder ${{ matrix.build_flag }} --publish never
-        continue-on-error: ${{ matrix.os == 'macos-14' || matrix.os == 'windows-2022' }}
-      - uses: actions/upload-artifact@v4
+      # Das gebaute (entpackte) Programm testen, bevor es in ein Release geht
+      - name: Tests gegen das gebaute Programm
+        shell: bash
+        env:
+          PS_SKIP_EVAL: '1'
+        run: |
+          case "$RUNNER_OS" in
+            Linux)   BIN="$PWD/dist/linux-unpacked/privacy-shield-desktop"; PREFIX="xvfb-run -a" ;;
+            Windows) BIN="$(cygpath -w "$PWD/dist/win-unpacked/PrivacyShield.exe")"; PREFIX="" ;;
+            macOS)   BIN="$PWD/dist/mac-arm64/PrivacyShield.app/Contents/MacOS/PrivacyShield"; PREFIX="" ;;
+          esac
+          echo "Programm: $BIN"
+          PS_PACKAGED_BIN="$BIN" $PREFIX npm test
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: builds-${{ matrix.artifact_name }}
-          path: dist/*
+          path: |
+            dist/*.exe
+            dist/*.exe.blockmap
+            dist/*.zip
+            dist/*.zip.blockmap
+            dist/*.AppImage
+            dist/*.deb
+            dist/latest*.yml
           if-no-files-found: warn
 
   release:
     needs: [build]
-    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: builds-*
           merge-multiple: true
           path: dist
       - name: Alle Installer vorhanden?
-        # Verhindert ein Release ohne Windows-Installer (der Download-Link auf der Website liefe sonst ins Leere).
+        # Verhindert ein Release ohne Installer einer Plattform (Download-Links der Website liefen sonst ins Leere).
         run: |
-          for pattern in "PrivacyShield-Setup-*.exe" "PrivacyShield-*.zip" "PrivacyShield-*.AppImage" "PrivacyShield-*.deb"; do
+          for pattern in "PrivacyShield-Setup*.exe" "PrivacyShield*mac*.zip" "PrivacyShield*.AppImage" "PrivacyShield*.deb"; do
             if ! compgen -G "dist/$pattern" > /dev/null; then
               echo "FEHLT: $pattern - Build-Job erneut ausfuehren, bevor das Release erstellt wird"
               exit 1
             fi
           done
-      - name: Create Release
+      - name: Release-Text aus CHANGELOG.md
         run: |
-          set -e
-          TAG="${{ github.ref_name }}"
-          FILES=$(find dist -maxdepth 1 -type f | tr '\n' ' ' | xargs)
-          if [ -z "$FILES" ]; then
-            echo "Keine Dateien in dist/ — erstelle Release ohne Assets"
-            gh release create "$TAG" \
-              --title "$TAG" \
-              --notes "PrivacyShield $TAG"
-          else
-            echo "Dateien gefunden: $FILES"
-            gh release create "$TAG" $FILES \
-              --title "$TAG" \
-              --notes "PrivacyShield $TAG"
-          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > notes.md || true
+          if [ ! -s notes.md ]; then echo "PrivacyShield ${GITHUB_REF_NAME}" > notes.md; fi
+          cat notes.md
+      - name: Pruefsummen erstellen
+        run: |
+          cd dist
+          sha256sum PrivacyShield* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Create Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          FILES=$(find dist -maxdepth 1 -type f \( -name 'PrivacyShield*' -o -name 'latest*.yml' -o -name 'SHA256SUMS.txt' \) | tr '\n' ' ')
+          echo "Dateien: $FILES"
+          # shellcheck disable=SC2086
+          gh release create "$GITHUB_REF_NAME" $FILES --title "PrivacyShield $GITHUB_REF_NAME" --notes-file notes.md
+      - name: Download-Links pruefen
+        # Die Website verlinkt auf releases/latest/download/<fester Dateiname>; hier sicherstellen, dass sie funktionieren.
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          for f in PrivacyShield-Setup.exe PrivacyShield-mac-arm64.zip PrivacyShield-mac-x64.zip PrivacyShield.AppImage PrivacyShield.deb SHA256SUMS.txt; do
+            code=$(curl -sIL -o /dev/null -w "%{http_code}" "https://github.com/${REPO}/releases/latest/download/$f")
+            echo "$f -> HTTP $code"
+            [ "$code" = "200" ] || exit 1
+          done

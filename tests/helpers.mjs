@@ -11,15 +11,19 @@ const { _electron } = require('playwright-core');
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const electronPath = require('electron');
 
-export async function launchApp({ offline = false, env = {}, appDir = ROOT, extraArgs = [] } = {}) {
+export async function launchApp({ offline = false, env = {}, appDir = ROOT, extraArgs = [], files = {} } = {}) {
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-test-'));
+  for (const [name, content] of Object.entries(files)) fs.writeFileSync(path.join(userData, name), content);
   // PS_PACKAGED_BIN=<Pfad zur gepackten Anwendung>: Tests gegen das fertige Paket statt gegen den Quellbaum.
   const packaged = process.env.PS_PACKAGED_BIN;
   const args = [...(packaged ? [] : [appDir]), '--no-sandbox', `--user-data-dir=${userData}`, ...extraArgs];
   // Kein Netz: toter Proxy. Betrifft Chromium und electron-updater gleichermassen.
   if (offline) args.push('--proxy-server=http://127.0.0.1:9');
-  const app = await _electron.launch({ executablePath: packaged || electronPath, args, env: { ...process.env, ...env } });
+  const app = await _electron.launch({ executablePath: packaged || electronPath, args, env: { ...process.env, PS_BLOCK_EXTERNAL: '1', ...env } });
   const win = await app.firstWindow();
+  // Playwright haengt sich bei schnellem Start erst nach dem Laden ein und kennt dann den Tool-Iframe nicht
+  // (frames() liefert nur den leeren Hauptframe). Ein Reload macht die Frame-Struktur sichtbar.
+  await win.reload({ waitUntil: 'load' });
   const errors = [];
   const watch = (page) => {
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
@@ -50,13 +54,22 @@ export async function toolFrame(win, timeout = 15000) {
     }
     await win.waitForTimeout(100);
   }
-  throw new Error('Tool-Frame nicht gefunden');
+  throw new Error('Tool-Frame nicht gefunden; Frames: ' + JSON.stringify(win.frames().map((fr) => fr.url())));
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Wiederholt fn(), bis cond(Ergebnis) gilt oder die Zeit ablaeuft; liefert den letzten Wert. Fuer Speicher-Messungen,
+// die nach dem Beenden eines Workers etwas Zeit brauchen.
+export async function waitFor(fn, cond, { timeout = 15000, interval = 500 } = {}) {
+  const t0 = Date.now();
+  let v = await fn();
+  while (!cond(v) && Date.now() - t0 < timeout) { await sleep(interval); v = await fn(); }
+  return v;
+}
+
 import { readFileSync } from 'fs';
-export const GOLDEN = JSON.parse(readFileSync(path.join(ROOT, 'tests', 'golden', 'baseline-v1.6.2.json'), 'utf8'));
+export const GOLDEN = JSON.parse(readFileSync(path.join(ROOT, 'tests', 'golden', 'baseline.json'), 'utf8'));
 export const SAMPLE = readFileSync(path.join(ROOT, 'tests', 'golden', 'sample.txt'), 'utf8');
 
 // Text anonymisieren wie ein Nutzer (Eingabefeld -> anon()) und Ergebnis lesen.
@@ -78,4 +91,44 @@ export function makePdf(app, html) {
     w.destroy();
     return buf.toString('base64');
   }, html);
+}
+
+// Lokaler Update-Server (Mock) fuer Updater-Tests: liefert latest*.yml, Installer-Dateien gibt es nicht (404).
+import http from 'http';
+export function startUpdateServer({ version = '99.0.0', notes = '' } = {}) {
+  const hits = [];
+  const sha = Buffer.alloc(64, 1).toString('base64');
+  const name = `PrivacyShield-${version}.AppImage`;
+  const yml = `version: ${version}\nfiles:\n  - url: ${name}\n    sha512: ${sha}\n    size: 1000\npath: ${name}\nsha512: ${sha}\nreleaseDate: '2026-10-20T00:00:00.000Z'\n` + (notes ? `releaseNotes: ${JSON.stringify(notes)}\n` : '');
+  const server = http.createServer((req, res) => {
+    hits.push(req.url);
+    if (/latest.*\.yml$/.test(req.url.split('?')[0])) { res.writeHead(200, { 'Content-Type': 'text/yaml' }); return res.end(yml); }
+    res.writeHead(404); res.end('nicht vorhanden');
+  });
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ url: `http://127.0.0.1:${server.address().port}`, hits, close: () => new Promise((r) => server.close(r)) })));
+}
+
+// Kopie des Programms mit absichtlich beschaedigter Installation (fuer Fehlerdiagnose-Tests).
+// dropModel: Modelldatei fehlt; truncateModelTo: Modelldatei auf n Bytes gekuerzt; dropManifest: vendor-manifest.json fehlt.
+// Alles andere wird verknuepft (Verzeichnisse als "junction": unter Windows ohne Administratorrechte moeglich).
+export function makeAppVariant({ dropModel = false, truncateModelTo = null, dropManifest = false } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-variant-'));
+  for (const f of ['main.js', 'preload.js', 'package.json']) fs.copyFileSync(path.join(ROOT, f), path.join(dir, f));
+  for (const d of ['node_modules', 'assets']) fs.symlinkSync(path.join(ROOT, d), path.join(dir, d), 'junction');
+  fs.mkdirSync(path.join(dir, 'app'));
+  for (const e of fs.readdirSync(path.join(ROOT, 'app'))) {
+    if (e === 'models' || (e === 'vendor-manifest.json' && dropManifest)) continue;
+    const src = path.join(ROOT, 'app', e);
+    if (fs.statSync(src).isDirectory()) fs.symlinkSync(src, path.join(dir, 'app', e), 'junction');
+    else fs.copyFileSync(src, path.join(dir, 'app', e));
+  }
+  const rel = path.join('models', 'Xenova', 'distilbert-base-multilingual-cased-ner-hrl');
+  fs.mkdirSync(path.join(dir, 'app', rel, 'onnx'), { recursive: true });
+  for (const f of fs.readdirSync(path.join(ROOT, 'app', rel))) if (f !== 'onnx') fs.copyFileSync(path.join(ROOT, 'app', rel, f), path.join(dir, 'app', rel, f));
+  if (!dropModel) {
+    const src = path.join(ROOT, 'app', rel, 'onnx', 'model_quantized.onnx'), dst = path.join(dir, 'app', rel, 'onnx', 'model_quantized.onnx');
+    if (truncateModelTo) { const b = Buffer.alloc(truncateModelTo); const fd = fs.openSync(src, 'r'); fs.readSync(fd, b, 0, b.length, 0); fs.closeSync(fd); fs.writeFileSync(dst, b); }
+    else fs.copyFileSync(src, dst);
+  }
+  return { dir, cleanup: () => fs.rmSync(dir, { recursive: true, force: true }) };
 }

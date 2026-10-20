@@ -6,7 +6,7 @@
     <title>PrivacyShield — Datenanonymisierung | arcangeli.eu</title>
     <meta
       name="description"
-      content="Anonymisieren Sie sensible Daten vor der KI-Nutzung. 100% lokal im Browser. Erkennung von Namen, IBAN, Adressen & mehr."
+      content="Anonymisieren Sie sensible Daten vor der KI-Nutzung. 100% lokal auf Ihrem Rechner. Erkennung von Namen, IBAN, Adressen & mehr."
     />
     <style>
       html {
@@ -780,7 +780,6 @@
       </div>
     </nav>
     <div style="padding-top: 56px">
-      <p style="text-align: center; font-size: 9px; color: #bbb; margin: 4px 0 -10px 0">Empfohlen am PC/Laptop</p>
       <div class="max-w-container mx-auto px-6 pt-6">
         <div class="r" style="background: #fafafa; border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden">
           <div style="padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap">
@@ -807,8 +806,8 @@
                 100% lokal &amp; datenschutzkonform
               </div>
               <div style="font-size: 12px; color: #666; line-height: 1.6">
-                Alle Verarbeitung erfolgt ausschließlich im Arbeitsspeicher Ihres Browsers — kein Datenaustausch mit dem
-                Internet, kein Tracking, keine Cloud. Beim Schließen des Tabs sind alle Daten sofort weg.
+                Alle Verarbeitung erfolgt ausschließlich im Arbeitsspeicher dieser App — kein Datenaustausch mit dem
+                Internet, kein Tracking, keine Cloud. Beim Schließen der App sind alle Daten sofort weg.
               </div>
               <button
                 onclick="toggleInfoBlock()"
@@ -842,7 +841,7 @@
                 <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #666; line-height: 1.7">
                   <li>Verarbeitung ausschließlich im Arbeitsspeicher (RAM)</li>
                   <li>Kein Datenaustausch mit dem Internet — alles bleibt auf Ihrem Gerät</li>
-                  <li>Beim Schließen des Tabs sind alle Daten sofort weg</li>
+                  <li>Beim Schließen der App sind alle Daten sofort weg</li>
                   <li>Kein Tracking, keine Cloud, keine Server-Kontakte</li>
                   <li>Flugmodus-Betrieb möglich</li>
                 </ul>
@@ -872,14 +871,13 @@
             >
               <strong style="color: #1a3a5c">Lokale Verarbeitung — was Sie wissen sollten</strong>
               <p style="margin: 4px 0 0 0">
-                PrivacyShield arbeitet komplett in Ihrem Browser. Ihre Dokumente verlassen Ihr Gerät nicht — daher kann
+                PrivacyShield arbeitet komplett auf Ihrem Rechner. Ihre Dokumente verlassen Ihr Gerät nicht — daher kann
                 das Tool auch im Flugmodus oder ohne Internetverbindung genutzt werden. Die Verarbeitungsgeschwindigkeit
-                hängt von Ihrem Gerät ab, da die KI direkt auf Ihrer Hardware läuft. Empfohlen werden 8+ GB RAM und ein
-                aktueller Browser.
+                hängt von Ihrem Gerät ab, da die KI direkt auf Ihrer Hardware läuft. Empfohlen werden 8+ GB RAM.
               </p>
               <p style="margin: 4px 0 0 0">
-                Probieren Sie einfach aus, was Ihr Gerät leistet. Sollte die Verarbeitung ins Stocken geraten oder der
-                Browser nicht mehr reagieren, ist das ein Zeichen von Speicherüberlastung — keine Sorge: Ihre Dateien
+                Probieren Sie einfach aus, was Ihr Gerät leistet. Sollte die Verarbeitung ins Stocken geraten oder die
+                App nicht mehr reagieren, ist das ein Zeichen von Speicherüberlastung — keine Sorge: Ihre Dateien
                 werden dadurch nicht verändert oder beschädigt. Sie können bis zum Limit gehen und werden nichts falsch
                 machen. Liegt ein natives PDF vor, fällt die rechenintensive OCR weg und die Verarbeitung läuft deutlich
                 schneller.
@@ -943,7 +941,7 @@
               "
             >
               PrivacyShield ersetzt sensible Daten durch Platzhalter — bevor der Text eine externe KI erreicht. Alles
-              geschieht lokal im Browser. Kein Serverkontakt.
+              geschieht lokal auf Ihrem Rechner. Kein Serverkontakt.
             </p>
             <div
               style="
@@ -1166,7 +1164,7 @@
         <span
           class="category-label"
           style="background: #ecfdf5; color: #059669; display: inline-flex; align-items: center; gap: 5px"
-          >100% lokal im Browser</span
+          >100% lokal auf dem Rechner</span
         >
         <span
           class="category-label"
@@ -1349,21 +1347,25 @@
                 >
               </div>
               <div class="tool-panel-body">
+                <label class="text-xs" style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; cursor: pointer; line-height: 1.5">
+                  <input type="checkbox" id="aiAutoToggle" checked onchange="setAIMode(this.checked ? 'auto' : 'off')" style="margin-top: 2px" />
+                  <span>
+                    KI-Erkennung verwenden
+                    <span style="color: #999; display: block">Erkennt Personen, Organisationen und Orte. 100% lokal, funktioniert ohne Internet.</span>
+                  </span>
+                </label>
                 <div id="aiStatusDefault">
-                  <p class="text-xs" style="color: #666; margin-bottom: 10px; line-height: 1.5">
-                    Erkennt Personen, Organisationen und Orte automatisch. 100% lokal — kein Serverkontakt.
+                  <p id="aiDefaultText" class="text-xs" style="color: #666; margin-bottom: 10px; line-height: 1.5">
+                    Bereit. Das Modell startet bei der ersten Analyse (ca. 2 Sekunden) und gibt den Speicher nach 5 Minuten ohne Nutzung wieder frei.
                   </p>
                   <button
                     id="aiLoadBtn"
-                    class="btn-accent"
-                    style="font-size: 11px; padding: 8px 16px; gap: 6px"
+                    class="btn btn-ghost"
+                    style="font-size: 11px; padding: 6px 12px"
                     onclick="loadAIModel()"
                   >
-                    KI-Erkennung aktivieren
+                    Jetzt laden
                   </button>
-                  <p class="text-xs" style="color: #999; margin-top: 6px">
-                    Modell ist Teil der Installation · funktioniert ohne Internet
-                  </p>
                   <p id="aiMemHint" class="text-xs" style="color: #b45309; margin-top: 6px; line-height: 1.5; display: none"></p>
                 </div>
                 <div id="aiStatusLoading" style="display: none">
@@ -1391,10 +1393,16 @@
                   </button>
                 </div>
                 <div id="aiStatusError" style="display: none">
-                  <p class="text-xs" style="color: #dc2626">Modell konnte nicht geladen werden.</p>
-                  <p class="text-xs" style="color: #666; margin-top: 6px">
-                    Die Standard-Erkennung (Regex + Klicken) funktioniert ohne Einschränkung.
+                  <p class="text-xs" style="color: #dc2626; font-weight: 600">KI-Erkennung konnte nicht starten.</p>
+                  <p id="aiErrorReason" class="text-xs" style="color: #444; margin-top: 6px; line-height: 1.5"></p>
+                  <p class="text-xs" style="color: #666; margin-top: 6px; line-height: 1.5">
+                    Die Standard-Erkennung (Regeln und Wortlisten) läuft weiter, erkennt aber weniger, vor allem Namen,
+                    Firmen und Orte. Bitte das Ergebnis dann besonders sorgfältig prüfen.
                   </p>
+                  <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap">
+                    <button class="btn btn-ghost" style="font-size: 11px; padding: 4px 10px" onclick="retryAIModel()">Erneut versuchen</button>
+                    <button class="btn btn-ghost" style="font-size: 11px; padding: 4px 10px" onclick="copyAIErrorDetails()">Details kopieren</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1663,7 +1671,7 @@
                 <div class="tool-panel-body" style="padding: 12px">
                   <p style="font-size: 12px; color: #666; margin-bottom: 10px; line-height: 1.5">
                     Klicke auf eine Schaltfläche — der anonymisierte Text wird in die Zwischenablage kopiert und der
-                    KI-Dienst öffnet sich im neuen Tab.
+                    KI-Dienst öffnet sich im Standard-Browser.
                   </p>
                   <div style="display: flex; flex-wrap: wrap; gap: 8px">
                     <button
@@ -1852,11 +1860,11 @@
       <footer class="py-12 border-t border-[#e5e5e5]" style="margin-top: 60px">
         <div class="max-w-container mx-auto px-6 text-center">
           <p class="text-sm font-medium text-ink mb-3">
-            PrivacyShield — Deine Daten, dein Browser. Null Serverkontakt.
+            PrivacyShield — Deine Daten, dein Rechner. Null Serverkontakt.
           </p>
           <p class="text-xs text-muted mb-1">
             Kein Daten-Leakage · Kein Tracking · Keine Datenspeicherung · Flugmodus-tauglich. Alle Verarbeitung erfolgt
-            ausschließlich lokal im Browser — ohne eine einzige Serveranfrage.
+            ausschließlich lokal auf diesem Rechner — ohne eine einzige Serveranfrage.
           </p>
           <p class="text-xs text-muted">
             Alexander Arcangeli · München ·
@@ -1983,6 +1991,62 @@
     <script src="vendor/jspdf/jspdf.umd.min.js"></script>
     <script src="vendor/jszip/jszip.min.js"></script>
     <script>
+      // Begriffslisten fuer besondere Kategorien (Art. 9 und 10 DSGVO). Ein Begriff verraet die Eigenschaft einer Person
+      // (Krankheit, Religion, Gewerkschaft, Strafdaten ...). Wortlisten koennen auch in unverfaenglichen Texten treffen;
+      // deshalb nur in den Profilen "Medizin" und "Maximal" aktiv. Wortanfang muss stimmen, Endungen sind erlaubt.
+      const SENSITIVE_WORDS = [
+        // Gesundheit: Krankheiten und Zustaende
+        "Diabetes", "Krebs", "Karzinom", "Tumor", "Leukämie", "Lymphom", "Melanom", "Metastase", "Multiple Sklerose", "Parkinson",
+        "Alzheimer", "Demenz", "Epilepsie", "Depression", "Burnout", "Angststörung", "Panikattacke", "Schizophreni", "Psychose",
+        "Posttraumatische", "Autismus", "Hepatitis", "Tuberkulose", "Herzinfarkt", "Schlaganfall", "Herzinsuffizienz", "Bluthochdruck",
+        "Asthma", "Rheuma", "Arthrose", "Bandscheibenvorfall", "Osteoporose", "Migräne", "Chemotherapie", "Strahlentherapie",
+        "Dialyse", "Fehlgeburt", "Abtreibung", "Schwangerschaftsabbruch", "Unfruchtbarkeit", "Alkoholismus", "Alkoholabhängigkeit",
+        "Drogenabhängigkeit", "Suchterkrankung", "Suizid", "Selbstmord", "Essstörung", "Anorexie", "Bulimie", "Schwerbehinderung",
+        "Pflegegrad", "Arbeitsunfähigkeit", "arbeitsunfähig", "Krankschreibung", "Neurodermitis", "Endometriose", "Mukoviszidose",
+        "Hämophilie", "Morbus", "schwanger", "Schwangerschaft",
+        // Gesundheit: Wirkstoffe und Praeparate (Auswahl)
+        "Metformin", "Insulin", "Ramipril", "Sertralin", "Citalopram", "Escitalopram", "Fluoxetin", "Venlafaxin", "Duloxetin",
+        "Amitriptylin", "Mirtazapin", "Quetiapin", "Olanzapin", "Risperidon", "Aripiprazol", "Clozapin", "Haloperidol", "Lithium",
+        "Methylphenidat", "Ritalin", "Lorazepam", "Diazepam", "Tavor", "Valium", "Zolpidem", "Oxycodon", "Morphin", "Fentanyl",
+        "Methadon", "Tramadol", "Levothyroxin", "Bisoprolol", "Metoprolol", "Amlodipin", "Simvastatin", "Atorvastatin", "Pantoprazol",
+        "Omeprazol", "Marcumar", "Phenprocoumon", "Xarelto", "Rivaroxaban", "Eliquis", "Apixaban", "Prednisolon", "Cortison",
+        "Humira", "Adalimumab", "Ocrelizumab", "Interferon", "Truvada", "Biktarvy", "Tamoxifen", "Letrozol", "Cisplatin",
+        "Methotrexat", "Gabapentin", "Pregabalin", "Levodopa", "Donepezil", "Lamotrigin", "Valproat", "Carbamazepin",
+        "Levetiracetam", "Naltrexon", "Buprenorphin",
+        // Religion und Weltanschauung
+        "katholisch", "evangelisch", "evangelisch-lutherisch", "ev.-luth.", "muslimisch", "Muslim", "islamisch", "jüdisch",
+        "Judentum", "buddhistisch", "hinduistisch", "Zeugen Jehovas", "Mormonen", "Freikirche", "Konfession", "Kirchenaustritt",
+        "Kirchenmitglied", "Atheist", "konfessionslos",
+        // Politik und Gewerkschaft
+        "Die Linke", "Die Grünen", "Bündnis 90", "Freie Wähler", "Piratenpartei", "Parteimitglied", "Parteieintritt", "ver.di",
+        "IG Metall", "IG BCE", "IG BAU", "Gewerkschaftsmitglied", "Gewerkschaftszugehörigkeit",
+        // Herkunft
+        "kurdisch", "türkischstämmig", "Migrationshintergrund", "Hautfarbe", "Asylbewerber", "Spätaussiedler", "Sinti",
+        // Sexualleben
+        "homosexuell", "schwul", "lesbisch", "bisexuell", "transgender", "transsexuell", "gleichgeschlechtlich", "Sexualleben",
+        "sexuelle Orientierung", "intersexuell",
+        // Strafdaten
+        "verurteilt", "Verurteilung", "vorbestraft", "Vorstrafe", "Straftat", "Ermittlungsverfahren", "Strafverfahren",
+        "Strafbefehl", "Haftstrafe", "Freiheitsstrafe", "Bewährung", "Untersuchungshaft", "Inhaftierung", "Strafanzeige",
+        "Betrug", "Diebstahl", "Körperverletzung", "Unterschlagung", "Steuerhinterziehung", "Bußgeldbescheid", "Führungszeugnis",
+        "Strafregister",
+        // Biometrie und Genetik
+        "Fingerabdruck", "Gentest", "genetisch", "Iris-Scan", "Gesichtserkennung", "Stimmprofil", "biometrisch",
+      ];
+      // Kurzformen: nur exakt (Grossschreibung), ohne Endungen
+      const SENSITIVE_EXACT = ["HIV", "AIDS", "ADHS", "PTBS", "COPD", "DNA", "CDU", "CSU", "SPD", "FDP", "AfD", "BSW", "GEW", "EVG", "NGG", "DGB", "GdP"];
+      const SENSITIVE_RX = [
+        new RegExp(
+          "(?<![A-Za-z0-9_\\u00C0-\\u024F])(?:" +
+            SENSITIVE_WORDS.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "[ \\t]+")).join("|") +
+            ")[A-Za-zäöüß]*",
+          "gi",
+        ),
+        new RegExp("(?<![A-Za-z0-9_\\u00C0-\\u024F])(?:" + SENSITIVE_EXACT.join("|") + ")(?![A-Za-z0-9_\\u00C0-\\u024F])", "g"),
+        /\bGdB[ \t]?\d{2,3}\b/g,
+        /\b\d{1,2}\.[ \t]?SSW\b/g,
+        /\b\d{1,2}[ \t]+Punkte?[ \t]+in[ \t]+Flensburg\b/gi,
+      ];
       const ENTS = [
         {
           id: "email",
@@ -1991,7 +2055,10 @@
           col: "#06b6d4",
           on: true,
           pfx: "EMAIL",
-          rx: [/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g],
+          rx: [
+            /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g,
+            /([a-zA-Z0-9._%+\-]+[ \t]*(?:\(at\)|\[at\]|\{at\}|\(ät\)|\[ät\])[ \t]*[a-zA-Z0-9\-]+(?:[ \t]*(?:\(dot\)|\[dot\]|\(punkt\)|\.)[ \t]*[a-zA-Z0-9\-]+)*[ \t]*(?:\(dot\)|\[dot\]|\(punkt\)|\.)[ \t]*[a-zA-Z]{2,})/g,
+          ],
         },
         {
           id: "iban",
@@ -2001,9 +2068,79 @@
           on: true,
           pfx: "IBAN",
           rx: [
-            /\b([A-Z]{2}\d{2}[ \t]{0,3}\d{4}[ \t]{0,3}\d{4}[ \t]{0,3}\d{4}[ \t]{0,3}\d{4}[ \t]{0,3}\d{0,4})\b/g,
+            /\b([A-Za-z]{2}\d{2}[ \t]{1,3}[A-Za-z0-9]{4}(?![A-Za-z0-9])(?:[ \t]{1,3}(?=[A-Za-z0-9]{0,3}\d)[A-Za-z0-9]{4}(?![A-Za-z0-9])){1,6}(?:[ \t]{1,3}[\dO]{1,4}(?![A-Za-z0-9]))?)/g,
+            /\b([A-Za-z]{2}\d{2}[A-Za-z0-9]{11,30})\b/g,
             /(Konto(?:nummer|nr\.?)?[\s:]+[\d\s]{6,18}\d)/gi,
             /((?:BLZ|Bankleitzahl)[\s:]+\d{8})/gi,
+          ],
+        },
+        {
+          id: "card",
+          lbl: "Kreditkartennummern",
+          desc: "Visa, Mastercard, Amex u. a. (Prüfziffer wird geprüft)",
+          col: "#059669",
+          on: true,
+          pfx: "KARTE",
+          rx: [/\b((?:\d{4}[ \-]){3}\d{1,7}|\d{4}[ \-]\d{6}[ \-]\d{5}|\d{13,19})\b/g],
+        },
+        {
+          id: "device",
+          lbl: "Geräte-Kennungen",
+          desc: "MAC-Adresse, IMEI, UUID, Seriennummern",
+          col: "#475569",
+          on: true,
+          pfx: "GERAET",
+          rx: [
+            /(?<![0-9A-Fa-f:\-])((?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2})(?![0-9A-Fa-f:\-])/g,
+            /(?<![\d\-])(\d{2}[ \-]?\d{6}[ \-]?\d{6}[ \-]?\d)(?![\d\-])/g,
+            /\b([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\b/g,
+            /(?<=(?:Seriennummer|Serien-?Nr\.?|Gerät(?:e)?-?ID|Device-?ID|Geräte-?Nr\.?|IMEI|Chassis-?Nr\.?)[ \t:#]*)([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/g,
+          ],
+        },
+        {
+          id: "account",
+          lbl: "Benutzerkonten & Zugangsdaten",
+          desc: "Benutzernamen, @-Handles, Passwörter, API-Schlüssel, Token",
+          col: "#dc2626",
+          on: true,
+          pfx: "KONTO",
+          rx: [
+            /(?<![\w@.\/])(@[A-Za-z0-9_]{3,30})(?![\w@])/g,
+            /(?<![\w@.\/-])((?:t\.me|wa\.me|linkedin\.com\/in|instagram\.com|facebook\.com|x\.com|twitter\.com|xing\.com\/profile|tiktok\.com\/@)\/[A-Za-z0-9_.\-\/]{2,60})/gi,
+            /(?<=(?:Benutzer(?:name)?|User(?:name)?|Login|Nutzername|Account|Kennung)[ \t]*[:=][ \t]*)([A-Za-z0-9._\-@]{3,40})/g,
+            /(?<=(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer)[ \t]*[:=]?[ \t]*)(\S{4,64})/gi,
+            /\b((?:sk|pk|rk|api|key|tok|secret|ghp|gho|xox[abp])[-_][A-Za-z0-9_\-]{12,64})\b/g,
+            /\b(eyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,})\b/g,
+            /\b([0-9a-fA-F]{32}|[0-9a-fA-F]{40}|[0-9a-fA-F]{64})\b/g,
+          ],
+        },
+        {
+          id: "geo",
+          lbl: "Standortdaten",
+          desc: "GPS-Koordinaten (Dezimalgrad, Grad/Minuten/Sekunden)",
+          col: "#0d9488",
+          on: true,
+          pfx: "STANDORT",
+          rx: [
+            /(?<![\d.])(-?\d{1,2}\.\d{4,8}[ \t]*[,;][ \t]*-?\d{1,3}\.\d{4,8})(?![\d.])/g,
+            /(\d{1,3}°[ \t]?\d{1,2}['′][ \t]?\d{1,2}(?:[.,]\d+)?["″]?[ \t]?[NSOEW][ \t,;]*\d{1,3}°[ \t]?\d{1,2}['′][ \t]?\d{1,2}(?:[.,]\d+)?["″]?[ \t]?[NSOEW])/g,
+          ],
+        },
+        {
+          id: "intlid",
+          lbl: "Ausländische Kennungen",
+          desc: "Codice fiscale, PESEL, DNI/NIE, UK National Insurance, AHV, Postleitzahlen (UK, PL, NL)",
+          col: "#7c3aed",
+          on: true,
+          pfx: "KENNNR",
+          rx: [
+            /\b([A-Z]{6}\d{2}[A-EHLMPR-T]\d{2}[A-Z]\d{3}[A-Z])\b/g,
+            /(?<=PESEL[ \t:]*)(\d{11})\b/gi,
+            /\b(\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-HJ-NP-TV-Z])\b/g,
+            /\b([A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z][ ]?\d{2}[ ]?\d{2}[ ]?\d{2}[ ]?[A-D])\b/g,
+            /\b(756\.\d{4}\.\d{4}\.\d{2})\b/g,
+            /\b([A-Z]{1,2}\d[A-Z\d]?[ ]?\d[A-Z]{2})\b/g,
+            /(?<=(?:NIE|DNI|NIF|BSN|Burgerservicenummer|AHV-?Nr\.?|Sozialversicherungsnummer)[ \t:]*)([A-Z0-9][A-Z0-9.\- ]{6,16})/g,
           ],
         },
         {
@@ -2026,9 +2163,10 @@
           on: true,
           pfx: "TEL",
           rx: [
-            /((?:Tel\.?(?:efon)?|Fon|Fax|Mobil(?:e|funk)?|Handy|Rufnummer)[\s:\.]*(?:\+|00)?\d[\d\s\-\(\)\/\.]{6,24})/gi,
-            /(\+49[\s\-\.]?(?:\(0\))?[\s\-\.]?\d{2,5}[\s\-\.]?\d{3,10}(?:[\s\-\.]\d{1,5})?)/g,
-            /\b(0\d{2,4}[\s\/\-\.]?\d{3,6}(?:[\s\/\-\.]\d{1,6})?(?:[\s\/\-\.]\d{1,4})?)\b/g,
+            /((?:Tel(?:efon)?\.?(?:[ \-]?(?:Nr|Nummer)\.?)?|Fon|Fax|Mobil(?:e|funk)?|Handy|Rufnummer|Durchwahl|Zentrale)[\s:\.]*(?:\+|00)?\d[\d\s\-\(\)\/\.]{6,24})/gi,
+            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\(?\d{1,5}\)?(?:[ \t\-\.\/]?\d{2,8}){1,3})(?!\d)/g,
+            /(?<![\d\/\-\.])(\(?0[1-9]\d{1,4}\)?[ \t\/\-\.]?\d{2,10}(?:[ \t\-\.]\d{1,6}){0,3})(?!\d)/g,
+            /\b((?:(?:null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun)[ ,\-]+){6,}(?:null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun))\b/gi,
           ],
         },
         {
@@ -2054,6 +2192,8 @@
             /((?:geb(?:oren)?\.?|Geburtsdatum|geboren am|geb\. am)[\s:]*\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{2,4})/gi,
             /\b(\d{1,2}\.\d{1,2}\.(?:19|20)\d{2})\b/g,
             /\b(\d{4}-\d{2}-\d{2})\b/g,
+            /\b(\d{1,2}\/\d{1,2}\/(?:19|20)\d{2})\b/g,
+            /\b(\d{1,2}\.?[ \t]+(?:Januar|Februar|März|Maerz|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|Jan\.|Feb\.|Mär\.|Apr\.|Jun\.|Jul\.|Aug\.|Sept?\.|Okt\.|Nov\.|Dez\.|January|February|March|May|June|July|October|December)[ \t]+(?:19|20)\d{2})\b/g,
           ],
         },
         {
@@ -2064,13 +2204,16 @@
           on: true,
           pfx: "KENNNR",
           rx: [
-            /((?:Steuer(?:nummer|nr\.?|ID)|StNr\.?|St\.-?Nr\.?)[\s:]*[\d\s\/\-]{8,18})/gi,
+            /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)[ \t:]*[\d \t\/\-]{8,18})/gi,
             /((?:USt\.?-?Id(?:Nr\.?)?|Umsatzsteuer-?ID|VAT)[\s:]*[A-Z]{0,2}\d{7,12})/gi,
-            /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?)[\s:]*[A-Z0-9]{6,14})/gi,
+            /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?|Führerschein(?:nummer)?|FS-?Nr\.?|Aufenthaltstitel(?:-?Nr\.?)?)[ \t:]*[A-Z0-9]{6,14})/gi,
+            /(?<=(?:Kunden|Vertrags|Mitarbeiter|Personal|Matrikel|Versicherungs|Policen|Mandanten|Patienten|Fall|Antrags|Referenz|Bestell|Konto|Teilnehmer|Mitglieds|Lizenz|Buchungs|Sendungs|Ticket)-?(?:nummer|nr\.?|no\.?|id)[ \t:#]*)([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/gi,
             /(HR[AB]\s*(?:Nr\.?\s*)?\d{3,8})/g,
             /((?:Aktenzeichen|Az\.?)[\s:]+(?:\d{1,4}\s+[A-Z]{1,5}\s+)?[\w\/\.\-]{2,30})/g,
             /\b(\d{1,3}\s+[A-Z]{1,5}\s+\d{3,6}\/\d{2,4})\b/g,
-            /(Sozialversicherungs(?:nummer|nr\.?)?[\s:]*\d{2}[\s\-]?\d{6}[\s\-]?[A-Z]\s*\d{3})/gi,
+            /\b(\d{1,3}[ \t]?(?:Js|Ds|Cs|Gs|Ls|Ns|OWi|StVK|KLs|VRs)[ \t]?\d{1,6}\/\d{2})\b/g,
+            /\b((?:Js|Ds)[ \t]?\d{1,6}\/\d{2})\b/g,
+            /((?:Sozialversicherungs(?:nummer|nr\.?)?|SV-?(?:Nr|Nummer)\.?|Rentenversicherungs(?:nummer|nr\.?)|RVNR|SVNR)[ \t:]*\d{2}[ \t\-]?\d{6}[ \t\-]?[A-Z][ \t]?\d{3})/gi,
             /((?:ISIN|WKN)[\s:]+[A-Z0-9]{6,12})/gi,
             /(Steuerberater(?:-?Nr\.?|nummer)[\s:]*[\d\/\-]{5,15})/gi,
             /(PZN[ \t:]*\d{7,8})/gi,
@@ -2088,7 +2231,7 @@
           on: true,
           pfx: "ORG",
           rx: [
-            /\b([A-ZÜÄÖ][A-Za-züäöÄÖÜß&\.\-]{1,30}(?:[ \t]+[A-Za-züäöÄÖÜß&\.\-]{1,30}){0,4}[ \t]+(?:GmbH(?:[ \t]*&[ \t]*Co\.?[ \t]*KG)?|AG|KGaA|KG|OHG|GbR|UG(?:[ \t]*\(haftungsbeschränkt\))?|e\.V\.|eG|SE|Stiftung|Ltd\.?|Inc\.?|Corp\.?|PartG|PartGmbB|Partnerschaft))\b/g,
+            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖ][A-Za-züäöÄÖÜß&\.\-]{1,30}(?:[ \t]+[A-Za-züäöÄÖÜß&\.\-]{1,30}){0,4}[ \t]+(?:GmbH(?:[ \t]*&[ \t]*Co\.?[ \t]*KG)?|AG|KGaA|KG|OHG|GbR|UG(?:[ \t]*\(haftungsbeschränkt\))?|e\.V\.|eG|SE|Stiftung|Ltd\.?|Inc\.?|Corp\.?|PartG|PartGmbB|Partnerschaft))\b/g,
             /((?:Kanzlei|Rechtsanwaltskanzlei|Steuerberatung|Wirtschaftsprüfung|Notariat|Notarkanzlei|Praxis|Arztpraxis)[ \t]+[A-ZÜÄÖ][A-Za-züäöß &\.\-]{2,50})/g,
             /((?:Amtsgericht|Landgericht|Oberlandesgericht|Bundesgerichtshof|Verwaltungsgericht|Finanzgericht|Sozialgericht|Arbeitsgericht)[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,35})/g,
             /((?:Finanzamt|Bundesministerium|Bundesamt|Landesamt|Stadtverwaltung)[ \t]+(?:der|des|für|von)?[ \t]*[A-ZÜÄÖ][A-Za-züäöß \-]{2,40})/g,
@@ -2103,10 +2246,31 @@
           on: true,
           pfx: "ADRESSE",
           rx: [
-            /([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*\d{5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
-            /([A-ZÜÄÖ][a-züäöß \-]+(?:straße|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
+            /(?<=(?:Geburtsort|Wohnort|Standort|Einsatzort|Tatort)[ \t]*[:=][ \t]*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ.\- ]{2,40}?)(?=[,;\n]|$)/g,
+            /(\b\d{1,4}[a-z]?,?[ \t]+(?:rue|avenue|boulevard|av\.|bd|impasse|chemin)[ \t]+(?:de[ \t]+(?:la[ \t]+)?|du[ \t]+|des[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30})/g,
+            /(\b(?:via|viale|piazza|corso|vicolo)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
+            /(\b(?:calle|avenida|paseo|plaza|c\/)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4})/g,
+            /(\bul\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
+            /(\b\d{1,4}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?[ \t]+(?:Street|Road|Lane|Avenue|Drive|Way|Close|Square|Gardens)\b)/g,
+            /(\b\d{2}-\d{3}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}|(?<=,[ \t]*)\d{5}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?=[ \t]*(?:\.|$)))/g,
+            /([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*(?:[A-Z]{1,2}-)?\d{4,5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
+            /([A-ZÜÄÖ][a-züäöß \-]+(?:stra(?:ß|ss)e|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
             /(\b\d{5}[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,28})\b/g,
             /(\b[A-Z]{1,2}-\d{4}[ \t]+[A-ZÜÄÖ][a-züäöß\-]{2,25})\b/g,
+          ],
+        },
+        {
+          id: "vehicle",
+          lbl: "Kfz-Kennzeichen & Fahrgestellnummern",
+          desc: "Amtliche Kennzeichen, FIN/VIN",
+          col: "#64748b",
+          on: true,
+          pfx: "KFZ",
+          rx: [
+            /(?<=(?:Kennzeichen|Kfz-Kennzeichen|Fahrzeug|Pkw|PKW|Lkw|LKW)[ \t:]*)([A-ZÄÖÜ]{1,3}[ \t\-]{1,2}[A-Z]{1,2}[ \t\-]?\d{1,4}[EH]?)\b/g,
+            /\b((?!DIN|ISO|ENV|SAE|TÜV|ICD|ITU|RFC|BGB|SGB|StGB|ZPO|HGB|AEO|EN)[A-ZÄÖÜ]{1,3}-[A-Z]{1,2}[ \t]?\d{1,4}[EH]?)\b/g,
+            /(?<=(?:Fahrgestellnummer|FIN|VIN)[ \t:\.]*)([A-HJ-NPR-Z0-9]{17})\b/g,
+            /\b([A-HJ-NPR-Z][A-HJ-NPR-Z0-9]{10}\d{6})\b/g,
           ],
         },
         {
@@ -2117,15 +2281,20 @@
           on: true,
           pfx: "NAME",
           rx: [
-            /(?:Herr|Frau|Hr\.|Fr\.)[ \t]+((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Phys|Math|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|M\.A\.|BSc|B\.Sc\.|BA|B\.A\.|PhD|MD|RA|RAin|StB|WP|Notar(?:in)?)\.?[ \t]+)*[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*){0,3})/g,
-            /((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Math|Phys|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|PhD|MD)\.?[ \t]+){1,3}[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*){0,2})/g,
-            /\b([A-ZÜÄÖ][a-züäöß\-]{2,}[ \t]+[A-Z]\.[ \t]+[A-ZÜÄÖ][a-züäöß\-]{2,})\b/g,
-            /\b([A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?[ \t]+[A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?)\b/g,
-            /(?:(?:von|bei|durch|für|an|mit|als|gezeichnet|unterzeichnet|unterschrieben|verantwortlich|zuständig|bearbeitet|gesendet|erstellt|geprüft|genehmigt|kontaktiere(?:n|n Sie)?)\s+)([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2})/g,
-            /(?:(?:Mit freundlichen Grüßen|Mit freundlichem Gruß|Hochachtungsvoll|Viele Grüße|Liebe Grüße|Beste Grüße|Herzliche Grüße|Freundliche Grüße|Mit besten Grüßen|MfG|LG|VG|Best regards|Sincerely|Yours sincerely)\s*\n*\s*)([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2})/g,
-            /(?:Sehr geehrte(?:r)?\s+(?:Herr|Frau|Hr\.|Fr\.)\s+(?:(?:Dr|Prof|Ing|Mag)\.?\s+)*([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+(?:[A-ZÜÄÖ][a-züäöß]{2,})){0,2}))/g,
-            /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2}))/g,
-            /\b([A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?[ \t]+[A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?[ \t]+[A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?)\b/g,
+            /(?:Herr|Frau|Hr\.|Fr\.)[ \t]+((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Phys|Math|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|M\.A\.|BSc|B\.Sc\.|BA|B\.A\.|PhD|MD|RA|RAin|StB|WP|Notar(?:in)?)\.?[ \t]+)*(?:(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,3})/g,
+            /((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Math|Phys|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|PhD|MD)\.?[ \t]+){1,3}[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:[ \t]+[A-Z]\.)?(?:(?:[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?)?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,2})/g,
+            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}[ \t]+[A-Z]\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})(?![A-Za-z0-9_À-ɏ])/g,
+            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
+            /(?:(?:von|bei|durch|für|an|mit|als|gezeichnet|unterzeichnet|unterschrieben|verantwortlich|zuständig|bearbeitet|gesendet|erstellt|geprüft|genehmigt|kontaktiere(?:n|n Sie)?)\s+)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})/g,
+            /(?:(?:Mit freundlichen Grüßen|Mit freundlichem Gruß|Hochachtungsvoll|Viele Grüße|Liebe Grüße|Beste Grüße|Herzliche Grüße|Freundliche Grüße|Mit besten Grüßen|MfG|LG|VG|Best regards|Sincerely|Yours sincerely)\s*\n*\s*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})/g,
+            /(?:Sehr geehrte(?:r)?\s+(?:Herr|Frau|Hr\.|Fr\.)\s+(?:(?:Dr|Prof|Ing|Mag)\.?\s+)*([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+(?:[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})){0,2}))/g,
+            /(?<=[^\n\s][ \t])((?:[A-HJ-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
+            /(?:^|\n)[ \t]*((?:[J-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
+            /(?<![A-Za-z0-9_À-ɏ])([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?[ \t]+[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
+            /(?<=\b(?:Vorname|Nachname|Familienname|Geburtsname|Mädchenname|Rufname|Künstlername|Name|Namen|Unterzeichner|Antragsteller(?:in)?|Patient(?:in)?|Versicherte[rn]?)[ \t]*[:=][ \t]*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})?)/g,
+            /(?<=\b(?:geboren|geb\.)[ \t]+)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![\w.])/g,
+            /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2}))/g,
+            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
           ],
         },
         {
@@ -2151,12 +2320,26 @@
         },
         {
           id: "ip",
-          lbl: "IP-Adressen & URLs",
-          desc: "IPv4, Domains, Weblinks",
+          lbl: "IP-Adressen & Weblinks",
+          desc: "IPv4, IPv6, Weblinks mit Pfad oder Parametern",
           col: "#6366f1",
           on: false,
           pfx: "IP",
-          rx: [/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b/g, /(https?:\/\/[^\s<>"{}|\\^`\[\]\)\(,;]{4,})/g],
+          rx: [
+            /(?<![\d.])(?<!(?:Version|Ver\.|Build|Release|Rev\.?|v|V)[ \t]*)((?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?!\d|\.\d)/g,
+            /(?<![\w:])((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:(?:[0-9a-fA-F]{1,4})?|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})(?![\w:])/g,
+            /(https?:\/\/[^\s<>"{}|\\^`\[\]\)\(,;]{4,}[^\s<>"{}|\\^`\[\]\)\(,;.:!?])/g,
+            /(?<![\w@.\/-])(www\.[a-z0-9\-]+(?:\.[a-z0-9\-]+)+(?:\/[^\s<>"{}|\\^`\[\]\)\(,;]*[^\s<>"{}|\\^`\[\]\)\(,;.:!?])?)/gi,
+          ],
+        },
+        {
+          id: "sensitive",
+          lbl: "Besondere Kategorien (Art. 9/10 DSGVO)",
+          desc: "Gesundheit, Medikamente, Religion, Gewerkschaft, Partei, Herkunft, Sexualleben, Strafdaten (Begriffslisten)",
+          col: "#be123c",
+          on: false,
+          pfx: "SENSIBEL",
+          rx: SENSITIVE_RX,
         },
         {
           id: "med",
@@ -2168,11 +2351,21 @@
           rx: [
             /((?:Diagnose|Befund|ICD-1[01]|Erkrankung|Symptom|Medikation|Therapie)[\s:][^\n]{5,80})/gi,
             /\b([A-Z]\d{2}(?:\.\d{1,2})?)\b/g,
-            /((?:Patient(?:in)?|Pat\.?)[\s:]+[A-ZÜÄÖ][a-züäöß]+(?:\s+[A-ZÜÄÖ][a-züäöß]+)?)/gi,
+            /((?:Patient(?:in)?|Pat\.?)[ \t:]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]+){0,3})/g,
           ],
         },
       ];
       const SW = new Set([
+        "Millionen",
+        "Milliarden",
+        "Euro",
+        "Prozent",
+        "Deutschland",
+        "Deutschlands",
+        "Österreich",
+        "Schweiz",
+        "Europa",
+        "Zentrale",
         "Die",
         "Der",
         "Das",
@@ -3052,11 +3245,23 @@
         "Kreiskrankenhaus",
         "Rehabilitationszentrum",
       ]);
+      // GROSSGESCHRIEBENE Personennamen ("HANS MEIER"): nur wenn Vor- oder Nachname in den Wortlisten steht,
+      // damit Ueberschriften ("KAUFVERTRAG ZWISCHEN") nicht als Name gelten.
+      function isCapsPersonName(val) {
+        const words = val.trim().split(/[ \t]+/);
+        if (words.length < 2 || words.length > 3) return false;
+        if (!words.every((w) => /^[A-ZÄÖÜ][A-ZÄÖÜ\-]+$/.test(w))) return false;
+        const tc = (w) => w.charAt(0) + w.slice(1).toLowerCase();
+        return LOCAL_NAMES.has(tc(words[0])) || words.some((w) => w.split("-").some((p) => LOCAL_SURNAMES.has(tc(p))));
+      }
       function okName(s) {
+        const tt = s.trim();
+        if (tt === tt.toUpperCase() && /[A-ZÄÖÜ]{2}/.test(tt)) return isCapsPersonName(tt);
         return s
           .trim()
           .split(/\s+/)
           .every((p, i) => {
+            if (/^[A-ZÄÖÜ]\.$/.test(p)) return true; // Initiale
             const c = p.replace(/[^A-Za-züäöüÄÖÜß]/g, "");
             if (c.length < 2 || /^\d+$/.test(c)) return false;
             if (i === 0 && (SW.has(p) || SW.has(c))) return false;
@@ -3069,8 +3274,8 @@
           lbl: "Standard",
           badge: "Empfohlen",
           desc: "Für die meisten Anwendungsfälle. Erkennt persönliche Daten, Kontaktdaten, Finanzdaten und Identifikationsnummern.",
-          ents: ["email", "iban", "bic", "phone", "money", "date", "taxid", "addr", "org", "name"],
-          tags: ["Namen", "Adressen", "IBAN", "BIC", "Telefon", "E-Mail", "Daten", "Steuer-IDs", "Beträge"],
+          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "device", "account", "geo", "intlid", "org", "name", "ip"],
+          tags: ["Namen", "Adressen", "IBAN", "Karten", "BIC", "Telefon", "E-Mail", "Daten", "Steuer-IDs", "Beträge", "Kfz", "IP/Links"],
           note: "",
         },
         {
@@ -3078,7 +3283,7 @@
           lbl: "Finanzen & Recht",
           badge: "",
           desc: "Für Anwaltskanzleien, Steuerberatung und Banken. Wie Standard — zusätzlich mit Aktenzeichen, Handelsregisternummern und Sozialversicherungsnummern.",
-          ents: ["email", "iban", "bic", "phone", "money", "date", "taxid", "addr", "org", "name"],
+          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "device", "account", "geo", "intlid", "org", "name", "ip"],
           tags: ["+ Aktenzeichen", "+ HR-Nummern", "+ SV-Nummern", "Alle Standardfelder"],
           note: "Gleiche Kategorien wie Standard, jedoch mit erweiterten Mustern für rechtliche und steuerliche Dokumente.",
         },
@@ -3087,8 +3292,17 @@
           lbl: "Medizin & Pflege",
           badge: "",
           desc: "Für Kliniken, Praxen und Pflegedienste. Enthält zusätzlich ICD-Codes, Diagnosen und Patientendaten. Finanzdaten (IBAN, Beträge) werden nicht erkannt.",
-          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "paragraf"],
+          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "sensitive", "paragraf", "ip", "device", "account", "geo", "intlid"],
           tags: ["+ ICD-Codes", "+ Diagnosen", "+ Patientendaten", "Ohne IBAN & Beträge"],
+          note: "",
+        },
+        {
+          id: "strict",
+          lbl: "Maximal",
+          badge: "",
+          desc: "Alle Kategorien aktiv, auch besondere Kategorien (Art. 9/10 DSGVO), Funktionen und Paragraphen. Kann mehr maskieren als nötig; das Ergebnis bitte prüfen.",
+          ents: ENTS.map((e) => e.id),
+          tags: ["Alle Kategorien", "Art. 9/10 DSGVO", "Maximaler Schutz"],
           note: "",
         },
         {
@@ -3209,9 +3423,8 @@
         document.getElementById("OB").style.display = "none";
         document.getElementById("WS").style.display = "block";
         initEL();
-        checkMemoryHint().then(function (lowRam) {
-          if (!lowRam && localStorage.getItem("aiModelLoaded") === "true") loadAIModel();
-        });
+        aiRefreshUI();
+        checkMemoryHint();
       }
       function showOB() {
         document.getElementById("WS").style.display = "none";
@@ -3315,6 +3528,10 @@
       }
       async function loadF(file) {
         const ext = file.name.split(".").pop().toLowerCase();
+        if (file.size === 0) {
+          toast("Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.", "e");
+          return;
+        }
         if (file.size > 30 * 1024 * 1024) {
           toast("Datei zu groß (max 30 MB)", "e");
           return;
@@ -3696,7 +3913,7 @@
       function detectLocalEntities(text) {
         var results = [];
         var seen = new Set();
-        var nameRx = /\b([A-ZÄÖÜ][a-zäöüß]+(?:[\- \t][A-ZÄÖÜ][a-zäöüß]+)?)\b/g;
+        var nameRx = /\b([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[\- \t][A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)\b/g;
         var match;
         while ((match = nameRx.exec(text)) !== null) {
           var name = match[0].trim();
@@ -3815,12 +4032,50 @@
         });
       }
 
+      // KI-Modus: "auto" (Standard) laedt das Modell bei der ersten Analyse und entlaedt es nach Leerlauf, "off" nutzt nur Regeln + Wortlisten.
+      const AI_MODE_KEY = "ps_ai_mode";
+      let AI_IDLE_MS = 5 * 60 * 1000;
+      let aiIdleTimer = null;
+      function aiMode() {
+        const v = localStorage.getItem(AI_MODE_KEY);
+        if (v === "auto" || v === "off") return v;
+        return localStorage.getItem("aiModelLoaded") === "false" ? "off" : "auto"; // Übernahme der Einstellung aus v1.7
+      }
+      function setAIMode(mode) {
+        localStorage.setItem(AI_MODE_KEY, mode);
+        if (mode === "off") unloadAIModel(true);
+        aiRefreshUI();
+      }
+      function aiRefreshUI() {
+        const on = aiMode() === "auto";
+        const tg = document.getElementById("aiAutoToggle");
+        if (tg) tg.checked = on;
+        document.getElementById("aiDefaultText").textContent = on
+          ? "Bereit. Das Modell startet bei der ersten Analyse (ca. 2 Sekunden) und gibt den Speicher nach 5 Minuten ohne Nutzung wieder frei."
+          : "KI-Erkennung ist ausgeschaltet. Es gilt die Standard-Erkennung (Regeln und Wortlisten).";
+        document.getElementById("aiLoadBtn").style.display = on ? "inline-flex" : "none";
+        if (!nerPipeline && !aiLoading) aiSetState("def");
+      }
+      // Vor jeder Analyse: Modell bei Bedarf laden, ausser bei wenig Arbeitsspeicher
+      async function ensureAIReady() {
+        if (aiMode() !== "auto" || nerPipeline || aiLoading) return;
+        if (Date.now() - aiFailedAt < 60000) return;
+        if (await checkMemoryHint()) return;
+        await loadAIModel();
+      }
+      function scheduleAIIdleUnload() {
+        clearTimeout(aiIdleTimer);
+        if (!nerPipeline) return;
+        aiIdleTimer = setTimeout(function () {
+          if (!anonBusy && !aiLoading && nerPipeline) unloadAIModel(true);
+        }, AI_IDLE_MS);
+      }
       function aiSetState(state) {
         const ids = { def: "aiStatusDefault", loading: "aiStatusLoading", ready: "aiStatusReady", error: "aiStatusError" };
         for (const k in ids) document.getElementById(ids[k]).style.display = k === state ? "block" : "none";
         const badgeEl = document.getElementById("aiStatusBadge");
         const look = {
-          def: ["Nicht geladen", "#f0f2f5", "#4a5568"],
+          def: [aiMode() === "off" ? "Aus" : "Bereit", "#f0f2f5", "#4a5568"],
           loading: ["Lädt...", "#fffbeb", "#92400e"],
           ready: ["Aktiv (NER-Modell)", "#ecfdf5", "#059669"],
           error: ["Fallback (Wortlisten)", "#fffbeb", "#92400e"],
@@ -3854,25 +4109,97 @@
           aiCache = { key: null, spans: [] };
           aiSetState("ready");
           toast("KI-Modell geladen — bereit", "s");
-          localStorage.setItem("aiModelLoaded", "true");
         } catch (err) {
           console.error("NER-Modell konnte nicht geladen werden:", err);
           nerPipeline = null;
           localAIMode = true;
+          aiFailedAt = Date.now();
+          lastAIError = await diagnoseAIError(err);
+          document.getElementById("aiErrorReason").textContent = lastAIError.reason;
           aiSetState("error");
+          toast("KI-Erkennung konnte nicht starten. Grund steht im KI-Panel; es gilt die Standard-Erkennung.", "e");
         } finally {
           aiLoading = false;
         }
       }
 
+      // ---- Fehlerdiagnose: der Nutzer sieht, WARUM das Modell nicht startet (die Konsole ist in der App nicht zugaenglich)
+      let lastAIError = null;
+      let aiFailedAt = 0;
+      function fmtMB(n) {
+        return (n / 1048576).toFixed(1).replace(".", ",") + " MB";
+      }
+      async function diagnoseAIError(err) {
+        const msg = String((err && err.message) || err || "");
+        let assets = null;
+        try {
+          if (window.parent !== window && window.parent.electronAPI && window.parent.electronAPI.checkAssets)
+            assets = await window.parent.electronAPI.checkAssets(false);
+        } catch (e) {}
+        let code = "UNKNOWN";
+        if (assets && assets.manifest && !assets.ok) code = "ASSETS";
+        else if (/protobuf|failed to load model|invalid (?:onnx )?model|corrupt|unexpected end|session\. ERROR_CODE/i.test(msg)) code = "MODEL_CORRUPT";
+        else if (/not found locally|could not locate file|unable to get model file|\b404\b/i.test(msg)) code = "MODEL_FILE";
+        else if (/out of memory|could not allocate|allocation failed|RangeError|Aborted\(\)/i.test(msg)) code = "MEMORY";
+        else if (/failed to fetch|networkerror|load failed|ERR_[A-Z_]+/i.test(msg)) code = "NETWORK";
+        else if (/webassembly|compileerror|linkerror|wasm|SharedArrayBuffer|worker/i.test(msg)) code = "WASM";
+        const bad = assets
+          ? assets.missing.map((p) => p.split("/").pop() + " fehlt").concat(assets.wrongSize.map((w) => w.path.split("/").pop() + ": " + fmtMB(w.actual) + " statt " + fmtMB(w.expected)))
+          : [];
+        const reinstall = "Bitte PrivacyShield neu installieren. Häufige Ursache: Ein Virenschutz hat die große Modelldatei (135 MB) blockiert oder in Quarantäne verschoben.";
+        const texts = {
+          ASSETS: "Dateien der Installation fehlen oder sind unvollständig (" + bad.slice(0, 3).join("; ") + "). " + reinstall,
+          MODEL_FILE: "Die Modelldatei wurde nicht gefunden. " + reinstall,
+          MODEL_CORRUPT: "Die Modelldatei ist beschädigt oder unvollständig. " + reinstall,
+          MEMORY: "Es ist nicht genug freier Arbeitsspeicher für das KI-Modell frei (ca. 0,7 GB nötig). Bitte andere Programme schließen und erneut versuchen.",
+          NETWORK: "Die Modelldateien konnten nicht geladen werden (Netzwerk). Bitte die Verbindung prüfen; in Firmennetzwerken wird huggingface.co oft blockiert.",
+          WASM: "Die Laufzeitumgebung der KI (WebAssembly) konnte nicht starten. Bitte das Programm neu starten; hilft das nicht, „Details kopieren“ und weitergeben.",
+          UNKNOWN: "Unbekannter Fehler. Bitte „Details kopieren“ und weitergeben.",
+        };
+        return { code: code, message: msg.slice(0, 600), assets: assets, reason: texts[code] + " [" + code + "]", time: new Date().toISOString() };
+      }
+      // Fuer die Shell ("Diagnose kopieren"): let-Variablen sind von aussen nicht lesbar, Funktionen schon.
+      function aiDiagnosticState() {
+        return { model: nerPipeline ? nerPipeline.info : null, error: lastAIError };
+      }
+      function aiErrorDetailsText() {
+        const e = lastAIError || { code: "-", message: "kein Fehler gemerkt" };
+        const a = e.assets;
+        return [
+          "PrivacyShield KI-Fehler",
+          "Code: " + e.code,
+          "Meldung: " + e.message,
+          "Zeitpunkt: " + (e.time || "-"),
+          "Cross-Origin-Isolation: " + window.crossOriginIsolated,
+          "Kerne: " + navigator.hardwareConcurrency + ", Speicher laut Browser: " + (navigator.deviceMemory || "?") + " GB",
+          "Installationsprüfung: " + (a ? (a.manifest ? (a.ok ? "alle Dateien vorhanden" : "fehlt: " + a.missing.join(", ") + " | falsche Größe: " + a.wrongSize.map((w) => w.path + " " + w.actual + "/" + w.expected).join(", ")) : "kein Manifest") : "nicht verfügbar"),
+          "Installationsordner: " + (a && a.appRoot ? a.appRoot : "-"),
+          "Browser: " + navigator.userAgent,
+        ].join("\n");
+      }
+      async function copyAIErrorDetails() {
+        const text = aiErrorDetailsText();
+        try {
+          if (window.parent !== window && window.parent.electronAPI && window.parent.electronAPI.copyText) await window.parent.electronAPI.copyText(text);
+          else await navigator.clipboard.writeText(text);
+          toast("Details kopiert", "s");
+        } catch (e) {
+          toast("Kopieren nicht möglich", "e");
+        }
+      }
+      async function retryAIModel() {
+        aiFailedAt = 0;
+        await loadAIModel();
+      }
+
       // Gibt den Arbeitsspeicher des Modells frei (ca. 0,5 GB) und kehrt zur Wortlisten-Erkennung zurueck.
-      function unloadAIModel() {
+      function unloadAIModel(silent) {
+        clearTimeout(aiIdleTimer);
         if (nerPipeline && nerPipeline.worker) nerPipeline.worker.terminate();
         nerPipeline = null;
         aiCache = { key: null, spans: [] };
-        localStorage.setItem("aiModelLoaded", "false");
         aiSetState("def");
-        toast("KI-Modell entladen — Speicher freigegeben", "s");
+        if (!silent) toast("KI-Modell entladen — Speicher freigegeben", "s");
       }
 
       // Arbeitsspeicher des Rechners in GB (Desktop-App: exakt, sonst Naeherung des Browsers) oder null.
@@ -3982,6 +4309,12 @@
         IBAN: 1,
         BIC: 1,
         IP: 1,
+        KARTE: 1,
+        KFZ: 2,
+        SENSIBEL: 2,
+        GERAET: 1,
+        KONTO: 1,
+        STANDORT: 2,
         TEL: 2,
         BETRAG: 2,
         DATUM: 2,
@@ -3994,8 +4327,8 @@
         NAME: 5,
         ORT: 5,
       };
-      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip"]);
-      const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med"]);
+      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip", "card", "vehicle", "device", "account", "geo", "intlid"]);
+      const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med", "sensitive"]);
       function isWhitelisted(v) {
         return whitelist.some(function (w) {
           return w && v.toLowerCase().includes(w.toLowerCase());
@@ -4005,6 +4338,73 @@
         /^(GmbH(?:\s*&\s*Co\.?\s*KG)?|AG|KGaA|KG|OHG|GbR|UG|e\.V\.|eG|SE|Ltd\.?|Inc\.?|Corp\.?|Stiftung|BIC|IBAN|SWIFT|BLZ|HRB|HRA|WKN|ISIN|PZN|ICD)$/;
       const ORG_LEAD =
         /^(?:(?:Vorstand|Geschäftsführer(?:in)?|Prokurist(?:in)?|Direktor(?:in)?|Inhaber(?:in)?|Gesellschafter(?:in)?|Mitarbeiter(?:in)?|Mandant(?:in)?|Aufsichtsrat|Beirat|Anteilseigner)\s+|(?:der|die|das|des|dem|den|bei|von|im|in|an|am|für|durch|mit|als|und|oder|einer?|eines|ist|sind|war|waren|bleibt|wird)\s+)+/;
+      function isValidCard(raw) {
+        const d = raw.replace(/\D/g, "");
+        if (d.length < 13 || d.length > 19 || !/^[2-6]/.test(d)) return false;
+        let sum = 0;
+        for (let i = 0; i < d.length; i++) {
+          let n = Number(d[d.length - 1 - i]);
+          if (i % 2 === 1) {
+            n *= 2;
+            if (n > 9) n -= 9;
+          }
+          sum += n;
+        }
+        return sum % 10 === 0;
+      }
+      // Wertpruefung fuer harte Treffer. Muss schon beim Sammeln laufen: ein unplausibler Treffer
+      // (z. B. PLZ 05331 als Telefonnummer) wuerde sonst die spaetere Adress-Erkennung verdraengen.
+      function luhnOk(d) {
+        let sum = 0;
+        for (let i = 0; i < d.length; i++) {
+          let n = Number(d[d.length - 1 - i]);
+          if (i % 2 === 1) {
+            n *= 2;
+            if (n > 9) n -= 9;
+          }
+          sum += n;
+        }
+        return sum % 10 === 0;
+      }
+      function validIntlId(val) {
+        const v = val.replace(/[ .\-]/g, "").toUpperCase();
+        if (/^\d{8}[A-Z]$/.test(v) || /^[XYZ]\d{7}[A-Z]$/.test(v)) {
+          // spanische DNI/NIE: Kontrollbuchstabe = Rest der Zahl durch 23
+          const num = Number((v[0] === "X" ? "0" : v[0] === "Y" ? "1" : v[0] === "Z" ? "2" : v[0]) + v.slice(1, 8));
+          return "TRWAGMYFPDXBNJZSQVHLCKE"[num % 23] === v[8];
+        }
+        if (/^\d{11}$/.test(v)) {
+          // polnische PESEL: Pruefsumme
+          const w = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+          const sum = w.reduce((a, x, i) => a + x * Number(v[i]), 0);
+          return (10 - (sum % 10)) % 10 === Number(v[10]);
+        }
+        return true;
+      }
+      // Liefert den (ggf. gekuerzten) Wert oder null, wenn der Treffer unplausibel ist.
+      function hardValue(pfx, val, id) {
+        if (id === "device" && /^\d{2}[ \-]?\d{6}[ \-]?\d{6}[ \-]?\d$/.test(val)) return luhnOk(val.replace(/\D/g, "")) ? val : null;
+        if (id === "intlid" && !validIntlId(val)) return null;
+        if (pfx === "KARTE") return isValidCard(val) ? val : null;
+        if (pfx === "TEL") return /^[A-Za-zäöüß ,\-]+$/.test(val) || val.replace(/\D/g, "").length >= 7 ? val : null;
+        if (pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val)) {
+          const exp = IBAN_LEN[val.slice(0, 2).toUpperCase()];
+          if (exp) {
+            // Treffer, der ueber die IBAN hinausreicht (angrenzende Ziffern oder Woerter), auf die Landeslaenge kuerzen
+            let n = 0;
+            for (let i = 0; i < val.length; i++) {
+              if (/[A-Za-z0-9]/.test(val[i])) n++;
+              if (n === exp) {
+                val = val.slice(0, i + 1);
+                break;
+              }
+            }
+          }
+          // OCR-Verwechslung "O" statt "0" in der Kontonummer tolerieren (nur fuer die Pruefung)
+          return isValidIBANFormat(val.slice(0, 4) + val.slice(4).replace(/O/g, "0")) ? val : null;
+        }
+        return val;
+      }
       function isValidBIC(code) {
         return /^[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/.test(code);
       }
@@ -4030,12 +4430,36 @@
         SK: 24,
         HU: 28,
         LI: 21,
+        GR: 27,
+        HR: 21,
+        SI: 19,
+        RO: 24,
+        BG: 22,
+        EE: 20,
+        LV: 21,
+        LT: 20,
+        MT: 31,
+        CY: 28,
+        IS: 26,
+        TR: 26,
       };
+      function ibanMod97(c) {
+        let rem = 0;
+        const s = c.slice(4) + c.slice(0, 4);
+        for (const ch of s) {
+          const v = /\d/.test(ch) ? ch : String(ch.charCodeAt(0) - 55);
+          for (const d of v) rem = (rem * 10 + Number(d)) % 97;
+        }
+        return rem === 1;
+      }
+      // Bekanntes Land: Laenge muss stimmen (Tippfehler in der Pruefziffer bleiben maskiert).
+      // Unbekanntes Land: Laenge 15-34 und gueltige Pruefsumme (mod 97), sonst zu viele Zufallstreffer.
       function isValidIBANFormat(raw) {
         const c = raw.replace(/\s+/g, "").toUpperCase();
         if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(c)) return false;
         const exp = IBAN_LEN[c.slice(0, 2)];
-        return !exp || c.length === exp;
+        if (exp) return c.length === exp;
+        return c.length >= 15 && c.length <= 34 && ibanMod97(c);
       }
       function isHeadingSpan(text, start, end) {
         const ls = text.lastIndexOf("\n", start - 1) + 1;
@@ -4045,10 +4469,18 @@
         const val = text.slice(start, end).trim();
         const numbered = line.match(/^(?:[IVXLC]+|\d+(?:\.\d+)*)[\.\)]\s+(.*)$/);
         if (numbered && numbered[1].trim() === val) return true;
-        if (line === val && /[A-ZÄÖÜ]/.test(line) && line === line.toUpperCase() && !/\d{5}/.test(line)) return true;
+        if (line === val && /[A-ZÄÖÜ]/.test(line) && line === line.toUpperCase() && !/\d{5}/.test(line))
+          return !isCapsPersonName(val);
         return false;
       }
+      let lastP1 = { text: null, sig: null, res: null };
       function computePass1(text) {
+        const sig = ENTS.map((e) => (e.on ? 1 : 0)).join("") + "|" + cvars.map((c) => c.n + "\u0001" + c.p).join("\u0002");
+        if (!(lastP1.text === text && lastP1.sig === sig)) lastP1 = { text: text, sig: sig, res: computePass1Uncached(text) };
+        // Kopie liefern: postProcessSpans veraendert die Treffer (start/end), das darf spaetere Aufrufe nicht beeinflussen.
+        return { p1: lastP1.res.p1.map((x) => Object.assign({}, x)), maskedText: lastP1.res.maskedText };
+      }
+      function computePass1Uncached(text) {
         const pass1 = [];
         for (const cv of cvars) {
           let rx;
@@ -4086,8 +4518,10 @@
                   break;
                 }
               const raw = gval !== null ? gval : m[0];
-              const val = raw.trim();
+              let val = raw.trim();
               if (!val || val.length < 2) continue;
+              val = hardValue(e.pfx, val, e.id);
+              if (!val) continue;
               const off = (gval !== null ? m[0].indexOf(raw) : 0) + (raw.length - raw.replace(/^\s+/, "").length);
               pass1.push({
                 start: m.index + off,
@@ -4153,10 +4587,17 @@
             let le = text.indexOf("\n", s.end);
             if (le === -1) le = text.length;
             const headLine = text.slice(ls, le).trim();
-            if (/[A-ZÄÖÜ]/.test(headLine) && headLine === headLine.toUpperCase() && !/\d{5}/.test(headLine)) continue;
+            if (
+              /[A-ZÄÖÜ]/.test(headLine) &&
+              headLine === headLine.toUpperCase() &&
+              !/\d{5}/.test(headLine) &&
+              !isCapsPersonName(vt)
+            )
+              continue;
             if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(vt)) continue;
             if (s.pfx === "ORG" && /^(?:AG|GmbH|KG|OHG|GbR|UG|SE|eG|Ltd\.?|Inc\.?|Corp\.?)[ \t]/.test(vt)) continue;
             if (SW.has(vt) || SW.has(vt.replace(/[^A-Za-züäöÄÖÜß]/g, ""))) continue;
+            if (s.pfx === "NAME" && vt.split(/\s+/).every((w) => SW.has(w))) continue;
             pass2.push({
               start: s.start,
               end: s.end,
@@ -4222,19 +4663,23 @@
         working.sort(function (a, b) {
           return (a.prio || 5) - (b.prio || 5) || b.end - b.start - (a.end - a.start) || a.start - b.start;
         });
+        // Akzeptierte Treffer sind ueberlappungsfrei und nach Start sortiert: es genuegt, die Nachbarn zu pruefen.
         const accepted = [];
         for (const s of working) {
-          let ok = true;
-          for (const a of accepted)
-            if (s.start < a.end && a.start < s.end) {
-              ok = false;
-              break;
-            }
-          if (ok) accepted.push(s);
+          let lo = 0,
+            hi = accepted.length;
+          while (lo < hi) {
+            const mid = (lo + hi) >> 1;
+            if (accepted[mid].start < s.start) lo = mid + 1;
+            else hi = mid;
+          }
+          const prev = accepted[lo - 1],
+            next = accepted[lo];
+          if (prev && prev.end > s.start) continue;
+          if (next && next.start < s.end) continue;
+          accepted.splice(lo, 0, s);
         }
-        return accepted.sort(function (a, b) {
-          return a.start - b.start;
-        });
+        return accepted;
       }
       function postProcessSpans(text, cands) {
         const ADDR_LEAD = /^(?:Sitz|Anschrift|Adresse|Geschäftssitz|Wohnsitz|Lieferadresse|Rechnungsadresse)[ \t]+/;
@@ -4248,17 +4693,34 @@
           if (s.pfx !== "NAME") continue;
           let m2;
           while (
-            (m2 = text.slice(s.start, s.end).match(/^([A-ZÜÄÖ][A-Za-züäöß\-]*)[ \t]+/)) &&
+            (m2 = text.slice(s.start, s.end).match(/^([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][A-Za-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]*)[ \t]+/)) &&
             (SW.has(m2[1]) || SW.has(m2[1].replace(/[^A-Za-züäöÄÖÜß]/g, "")))
           ) {
             s.start += m2[0].length;
           }
           while (
-            (m2 = text.slice(s.end).match(/^[ \t]+([A-ZÜÄÖ][a-züäöß]{2,}(?:-[A-ZÜÄÖ][a-züäöß]+)?)(?![\wäöüß])/)) &&
+            (m2 = text.slice(s.end).match(/^[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)(?![\wäöüß])/)) &&
             !SW.has(m2[1])
           ) {
             s.end += m2[0].length;
           }
+        }
+        for (const s of cands) {
+          if (s.pfx !== "NAME") continue;
+          let mp;
+          while (
+            (mp = text.slice(s.end).match(/^[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/)) &&
+            !SW.has(mp[1])
+          )
+            s.end += mp[0].length;
+          const ml = text.slice(Math.max(0, s.start - 60), s.start).match(/([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+$/);
+          if (ml && !SW.has(ml[1])) s.start -= ml[0].length;
+        }
+        for (const s of cands) {
+          if (s.pfx !== "NAME") continue;
+          let mh;
+          while ((mh = text.slice(s.end).match(/^-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}/))) s.end += mh[0].length;
+          while ((mh = text.slice(Math.max(0, s.start - 40), s.start).match(/[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}-$/))) s.start -= mh[0].length;
         }
         const valid = cands.filter(function (s) {
           const val = text.slice(s.start, s.end);
@@ -4269,6 +4731,7 @@
             if (s.end < text.length && /[\wäöüÄÖÜß]/.test(text[s.end])) return false;
             if (s.start > 0 && /[\wäöüÄÖÜß]/.test(text[s.start - 1])) return false;
           }
+          if (s.pfx === "KARTE" && !isValidCard(val)) return false;
           if (s.pfx === "BIC") {
             if (!isValidBIC(val)) return false;
             if (!/\d/.test(val) && !/XXX$/.test(val)) {
@@ -4278,7 +4741,7 @@
               if (!/BIC|SWIFT|IBAN|Bank|BLZ|Konto/i.test(text.slice(ls, s.start) + text.slice(s.end, le))) return false;
             }
           }
-          if (s.pfx === "IBAN" && /^[A-Z]{2}\d{2}/.test(val) && !isValidIBANFormat(val)) return false;
+          if (s.pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val) && !isValidIBANFormat(val)) return false;
           if (s.pfx === "NAME" && !okName(val)) return false;
           if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(val)) return false;
           if (s.pfx === "ORT" && SW.has(val)) return false;
@@ -4331,10 +4794,18 @@
           await anonCore();
         } finally {
           anonBusy = false;
+          scheduleAIIdleUnload();
           if (btn) btn.disabled = false;
           const pe = document.getElementById("aiRunProgress");
           if (pe) pe.textContent = "";
         }
+      }
+      // Gleich lange Normalisierung fuer die Erkennung (Positionen bleiben gueltig): geschuetzte/schmale Leerzeichen
+      // und Vollbreiten-Ziffern/-Buchstaben werden zu gewoehnlichen Zeichen. Ausgegeben wird weiterhin der Originaltext.
+      function normalizeForDetection(t) {
+        return t
+          .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, " ")
+          .replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
       }
       async function anonCore() {
         const input = document.getElementById("IT").value;
@@ -4345,17 +4816,24 @@
         store = {};
         cnt = {};
         try {
-          if (nerPipeline && aiCache.key !== input) {
+          await ensureAIReady();
+          const det = normalizeForDetection(input);
+          if (nerPipeline && aiCache.key !== det) {
             toast("KI-Analyse läuft...", "s");
-            await ensureAISpans(input);
+            await ensureAISpans(det);
           }
-          const spans = collectEntities(input);
-          let txt = input;
+          const spans = collectEntities(det);
+          spans.forEach((sp) => (sp.val = input.slice(sp.start, sp.end)));
+          // Token in unveraenderter Reihenfolge (von hinten) vergeben, Text aber in einem Durchgang zusammensetzen.
+          const parts = [];
+          let tail = input.length;
           for (let i = spans.length - 1; i >= 0; i--) {
             const s = spans[i];
-            const token = tok(s.val, s.pfx, s.col, s.meth);
-            txt = txt.slice(0, s.start) + token + txt.slice(s.end);
+            parts.push(input.slice(s.end, tail), tok(s.val, s.pfx, s.col, s.meth));
+            tail = s.start;
           }
+          parts.push(input.slice(0, tail));
+          const txt = parts.reverse().join("");
           document.getElementById("AT").value = txt;
           renderMap();
           setStep(2);
@@ -4371,10 +4849,23 @@
         cnt[pfx] = (cnt[pfx] || 0) + 1;
         return String(cnt[pfx]);
       }
+      // Rueckwaerts-Index Wert -> erstes Token. Wird neu aufgebaut, sobald `store` ein neues Objekt ist (Zuruecksetzen).
+      let storeIdx = new Map(),
+        storeIdxFor = null;
+      function storeIndex() {
+        if (storeIdxFor !== store) {
+          storeIdx = new Map();
+          for (const [t, d] of Object.entries(store)) if (!storeIdx.has(d.v)) storeIdx.set(d.v, t);
+          storeIdxFor = store;
+        }
+        return storeIdx;
+      }
       function tok(val, pfx, col, meth) {
         const cleanVal = val.replace(/\{\{[^}]*\}\}/g, "").trim();
         if (!cleanVal || cleanVal.length < 2) return val;
-        for (const [t, d] of Object.entries(store)) if (d.v === cleanVal) return t;
+        const idx = storeIndex();
+        const known = idx.get(cleanVal);
+        if (known !== undefined) return known;
         const suffix = smartSuffix(cleanVal, pfx);
         let base = "{{" + pfx + "_" + suffix + "}}";
         if (store[base] && store[base].v !== cleanVal) {
@@ -4382,6 +4873,7 @@
           base = "{{" + pfx + "_" + suffix + "_" + cnt[pfx] + "}}";
         }
         store[base] = { v: cleanVal, t: pfx, c: col, m: meth };
+        if (!idx.has(cleanVal)) idx.set(cleanVal, base);
         return base;
       }
       function deanon() {
@@ -4394,8 +4886,10 @@
           toast("Kein Mapping vorhanden", "e");
           return;
         }
-        let r = ai;
-        for (const [t, d] of Object.entries(store)) r = r.split(t).join(d.v);
+        const tokens = Object.keys(store).sort((a, b) => b.length - a.length);
+        const r = tokens.length
+          ? ai.replace(new RegExp(tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g"), (m) => store[m].v)
+          : ai;
         document.getElementById("RT").value = r;
         setStep(4);
         toast("Originaldaten erfolgreich eingesetzt", "s");
@@ -4924,6 +5418,7 @@
                 };
                 const col = colorMap[typStr] || "#8b5cf6";
                 store[token] = { v: origVal, t: typStr || "IMPORT", c: col, m: methStr };
+                if (!storeIndex().has(origVal)) storeIndex().set(origVal, token);
                 imported++;
               }
             }

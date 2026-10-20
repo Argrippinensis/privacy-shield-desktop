@@ -9,3 +9,4 @@ release/
 # Gebuendelte Bibliotheken und Modell (scripts/fetch-vendor.mjs)
 app/vendor/
 app/models/
+app/vendor-manifest.json

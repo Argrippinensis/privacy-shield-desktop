@@ -1,6 +1,6 @@
 {
   "name": "privacy-shield-desktop",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "PrivacyShield Desktop — Dokumente anonymisieren, 100% offline",
   "main": "main.js",
   "scripts": {
@@ -19,7 +19,10 @@
     "prebuild:mac": "node scripts/fetch-vendor.mjs",
     "prebuild:linux": "node scripts/fetch-vendor.mjs",
     "prebuild:all": "node scripts/fetch-vendor.mjs",
-    "prerelease": "node scripts/fetch-vendor.mjs"
+    "prerelease": "node scripts/fetch-vendor.mjs",
+    "golden:update": "node tests/golden/update.mjs",
+    "eval": "node tests/eval/run-eval.mjs",
+    "eval:baseline": "node tests/eval/run-eval.mjs --baseline"
   },
   "build": {
     "appId": "eu.arcangeli.privacyshield",
@@ -33,7 +36,7 @@
         "nsis"
       ],
       "icon": "assets/icon.png",
-      "artifactName": "PrivacyShield-Setup-${version}.${ext}"
+      "artifactName": "PrivacyShield-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -43,11 +46,19 @@
     },
     "mac": {
       "target": [
-        "zip"
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
       "icon": "assets/icon.png",
-      "artifactName": "PrivacyShield-${version}.${ext}",
-      "identity": null
+      "artifactName": "PrivacyShield-mac-${arch}.${ext}",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     },
     "linux": {
       "target": [
@@ -55,7 +66,7 @@
         "deb"
       ],
       "icon": "assets/icon.png",
-      "artifactName": "PrivacyShield-${version}.${ext}"
+      "artifactName": "PrivacyShield.${ext}"
     },
     "publish": {
       "provider": "github",
@@ -97,5 +108,6 @@
   "author": {
     "name": "Alexander Arcangeli",
     "email": "alexander.arcangeli@yahoo.de"
-  }
+  },
+  "signedMac": false
 }
