@@ -3,7 +3,7 @@
 Format: ein Abschnitt je Version, Überschrift `## [x.y.z] - JJJJ-MM-TT`. Der Release-Workflow übernimmt den Abschnitt
 der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.Y.Z").
 
-## [1.8.0] - noch nicht veröffentlicht
+## [1.8.0] - 2026-10-20
 
 ### Erkennung
 - Neue Kategorien: Kreditkartennummern (mit Prüfziffer), Kfz-Kennzeichen und Fahrgestellnummern, IPv6, Weblinks.
