@@ -4203,7 +4203,14 @@
           return !isCapsPersonName(val);
         return false;
       }
+      let lastP1 = { text: null, sig: null, res: null };
       function computePass1(text) {
+        const sig = ENTS.map((e) => (e.on ? 1 : 0)).join("") + "|" + cvars.map((c) => c.n + "\u0001" + c.p).join("\u0002");
+        if (!(lastP1.text === text && lastP1.sig === sig)) lastP1 = { text: text, sig: sig, res: computePass1Uncached(text) };
+        // Kopie liefern: postProcessSpans veraendert die Treffer (start/end), das darf spaetere Aufrufe nicht beeinflussen.
+        return { p1: lastP1.res.p1.map((x) => Object.assign({}, x)), maskedText: lastP1.res.maskedText };
+      }
+      function computePass1Uncached(text) {
         const pass1 = [];
         for (const cv of cvars) {
           let rx;
@@ -4385,19 +4392,23 @@
         working.sort(function (a, b) {
           return (a.prio || 5) - (b.prio || 5) || b.end - b.start - (a.end - a.start) || a.start - b.start;
         });
+        // Akzeptierte Treffer sind ueberlappungsfrei und nach Start sortiert: es genuegt, die Nachbarn zu pruefen.
         const accepted = [];
         for (const s of working) {
-          let ok = true;
-          for (const a of accepted)
-            if (s.start < a.end && a.start < s.end) {
-              ok = false;
-              break;
-            }
-          if (ok) accepted.push(s);
+          let lo = 0,
+            hi = accepted.length;
+          while (lo < hi) {
+            const mid = (lo + hi) >> 1;
+            if (accepted[mid].start < s.start) lo = mid + 1;
+            else hi = mid;
+          }
+          const prev = accepted[lo - 1],
+            next = accepted[lo];
+          if (prev && prev.end > s.start) continue;
+          if (next && next.start < s.end) continue;
+          accepted.splice(lo, 0, s);
         }
-        return accepted.sort(function (a, b) {
-          return a.start - b.start;
-        });
+        return accepted;
       }
       function postProcessSpans(text, cands) {
         const ADDR_LEAD = /^(?:Sitz|Anschrift|Adresse|Geschäftssitz|Wohnsitz|Lieferadresse|Rechnungsadresse)[ \t]+/;
@@ -4533,12 +4544,16 @@
             await ensureAISpans(input);
           }
           const spans = collectEntities(input);
-          let txt = input;
+          // Token in unveraenderter Reihenfolge (von hinten) vergeben, Text aber in einem Durchgang zusammensetzen.
+          const parts = [];
+          let tail = input.length;
           for (let i = spans.length - 1; i >= 0; i--) {
             const s = spans[i];
-            const token = tok(s.val, s.pfx, s.col, s.meth);
-            txt = txt.slice(0, s.start) + token + txt.slice(s.end);
+            parts.push(input.slice(s.end, tail), tok(s.val, s.pfx, s.col, s.meth));
+            tail = s.start;
           }
+          parts.push(input.slice(0, tail));
+          const txt = parts.reverse().join("");
           document.getElementById("AT").value = txt;
           renderMap();
           setStep(2);
@@ -4554,10 +4569,23 @@
         cnt[pfx] = (cnt[pfx] || 0) + 1;
         return String(cnt[pfx]);
       }
+      // Rueckwaerts-Index Wert -> erstes Token. Wird neu aufgebaut, sobald `store` ein neues Objekt ist (Zuruecksetzen).
+      let storeIdx = new Map(),
+        storeIdxFor = null;
+      function storeIndex() {
+        if (storeIdxFor !== store) {
+          storeIdx = new Map();
+          for (const [t, d] of Object.entries(store)) if (!storeIdx.has(d.v)) storeIdx.set(d.v, t);
+          storeIdxFor = store;
+        }
+        return storeIdx;
+      }
       function tok(val, pfx, col, meth) {
         const cleanVal = val.replace(/\{\{[^}]*\}\}/g, "").trim();
         if (!cleanVal || cleanVal.length < 2) return val;
-        for (const [t, d] of Object.entries(store)) if (d.v === cleanVal) return t;
+        const idx = storeIndex();
+        const known = idx.get(cleanVal);
+        if (known !== undefined) return known;
         const suffix = smartSuffix(cleanVal, pfx);
         let base = "{{" + pfx + "_" + suffix + "}}";
         if (store[base] && store[base].v !== cleanVal) {
@@ -4565,6 +4593,7 @@
           base = "{{" + pfx + "_" + suffix + "_" + cnt[pfx] + "}}";
         }
         store[base] = { v: cleanVal, t: pfx, c: col, m: meth };
+        if (!idx.has(cleanVal)) idx.set(cleanVal, base);
         return base;
       }
       function deanon() {
@@ -4577,8 +4606,10 @@
           toast("Kein Mapping vorhanden", "e");
           return;
         }
-        let r = ai;
-        for (const [t, d] of Object.entries(store)) r = r.split(t).join(d.v);
+        const tokens = Object.keys(store).sort((a, b) => b.length - a.length);
+        const r = tokens.length
+          ? ai.replace(new RegExp(tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g"), (m) => store[m].v)
+          : ai;
         document.getElementById("RT").value = r;
         setStep(4);
         toast("Originaldaten erfolgreich eingesetzt", "s");
@@ -5107,6 +5138,7 @@
                 };
                 const col = colorMap[typStr] || "#8b5cf6";
                 store[token] = { v: origVal, t: typStr || "IMPORT", c: col, m: methStr };
+                if (!storeIndex().has(origVal)) storeIndex().set(origVal, token);
                 imported++;
               }
             }
