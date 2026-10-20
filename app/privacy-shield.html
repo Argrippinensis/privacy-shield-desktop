@@ -2005,10 +2005,20 @@
           on: true,
           pfx: "IBAN",
           rx: [
-            /\b([A-Z]{2}\d{2}[ \t]{0,3}\d{4}[ \t]{0,3}\d{4}[ \t]{0,3}\d{4}[ \t]{0,3}\d{4}[ \t]{0,3}\d{0,4})\b/g,
+            /\b([A-Za-z]{2}\d{2}[ \t]{1,3}[A-Za-z0-9]{4}(?![A-Za-z0-9])(?:[ \t]{1,3}(?=[A-Za-z0-9]{0,3}\d)[A-Za-z0-9]{4}(?![A-Za-z0-9])){1,6}(?:[ \t]{1,3}\d{1,4}(?![A-Za-z0-9]))?)/g,
+            /\b([A-Za-z]{2}\d{2}[A-Za-z0-9]{11,30})\b/g,
             /(Konto(?:nummer|nr\.?)?[\s:]+[\d\s]{6,18}\d)/gi,
             /((?:BLZ|Bankleitzahl)[\s:]+\d{8})/gi,
           ],
+        },
+        {
+          id: "card",
+          lbl: "Kreditkartennummern",
+          desc: "Visa, Mastercard, Amex u. a. (Prüfziffer wird geprüft)",
+          col: "#059669",
+          on: true,
+          pfx: "KARTE",
+          rx: [/\b((?:\d{4}[ \-]){3}\d{1,7}|\d{4}[ \-]\d{6}[ \-]\d{5}|\d{13,19})\b/g],
         },
         {
           id: "bic",
@@ -2030,9 +2040,9 @@
           on: true,
           pfx: "TEL",
           rx: [
-            /((?:Tel\.?(?:efon)?|Fon|Fax|Mobil(?:e|funk)?|Handy|Rufnummer)[\s:\.]*(?:\+|00)?\d[\d\s\-\(\)\/\.]{6,24})/gi,
-            /(\+49[\s\-\.]?(?:\(0\))?[\s\-\.]?\d{2,5}[\s\-\.]?\d{3,10}(?:[\s\-\.]\d{1,5})?)/g,
-            /\b(0\d{2,4}[\s\/\-\.]?\d{3,6}(?:[\s\/\-\.]\d{1,6})?(?:[\s\/\-\.]\d{1,4})?)\b/g,
+            /((?:Tel(?:efon)?\.?(?:[ \-]?(?:Nr|Nummer)\.?)?|Fon|Fax|Mobil(?:e|funk)?|Handy|Rufnummer|Durchwahl|Zentrale)[\s:\.]*(?:\+|00)?\d[\d\s\-\(\)\/\.]{6,24})/gi,
+            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\d{1,5}(?:[ \t\-\.\/]?\d{2,8}){1,3})(?!\d)/g,
+            /(?<![\d\/\-\.])(\(?0[1-9]\d{1,4}\)?[ \t\/\-\.]?\d{2,10}(?:[ \t\-\.]\d{1,6}){0,3})(?!\d)/g,
           ],
         },
         {
@@ -2058,6 +2068,8 @@
             /((?:geb(?:oren)?\.?|Geburtsdatum|geboren am|geb\. am)[\s:]*\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{2,4})/gi,
             /\b(\d{1,2}\.\d{1,2}\.(?:19|20)\d{2})\b/g,
             /\b(\d{4}-\d{2}-\d{2})\b/g,
+            /\b(\d{1,2}\/\d{1,2}\/(?:19|20)\d{2})\b/g,
+            /\b(\d{1,2}\.?[ \t]+(?:Januar|Februar|März|Maerz|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|Jan\.|Feb\.|Mär\.|Apr\.|Jun\.|Jul\.|Aug\.|Sept?\.|Okt\.|Nov\.|Dez\.|January|February|March|May|June|July|October|December)[ \t]+(?:19|20)\d{2})\b/g,
           ],
         },
         {
@@ -2068,13 +2080,13 @@
           on: true,
           pfx: "KENNNR",
           rx: [
-            /((?:Steuer(?:nummer|nr\.?|ID)|StNr\.?|St\.-?Nr\.?)[\s:]*[\d\s\/\-]{8,18})/gi,
+            /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)[ \t:]*[\d \t\/\-]{8,18})/gi,
             /((?:USt\.?-?Id(?:Nr\.?)?|Umsatzsteuer-?ID|VAT)[\s:]*[A-Z]{0,2}\d{7,12})/gi,
             /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?)[\s:]*[A-Z0-9]{6,14})/gi,
             /(HR[AB]\s*(?:Nr\.?\s*)?\d{3,8})/g,
             /((?:Aktenzeichen|Az\.?)[\s:]+(?:\d{1,4}\s+[A-Z]{1,5}\s+)?[\w\/\.\-]{2,30})/g,
             /\b(\d{1,3}\s+[A-Z]{1,5}\s+\d{3,6}\/\d{2,4})\b/g,
-            /(Sozialversicherungs(?:nummer|nr\.?)?[\s:]*\d{2}[\s\-]?\d{6}[\s\-]?[A-Z]\s*\d{3})/gi,
+            /((?:Sozialversicherungs(?:nummer|nr\.?)?|SV-?(?:Nr|Nummer)\.?|Rentenversicherungs(?:nummer|nr\.?)|RVNR|SVNR)[ \t:]*\d{2}[ \t\-]?\d{6}[ \t\-]?[A-Z][ \t]?\d{3})/gi,
             /((?:ISIN|WKN)[\s:]+[A-Z0-9]{6,12})/gi,
             /(Steuerberater(?:-?Nr\.?|nummer)[\s:]*[\d\/\-]{5,15})/gi,
             /(PZN[ \t:]*\d{7,8})/gi,
@@ -2092,7 +2104,7 @@
           on: true,
           pfx: "ORG",
           rx: [
-            /\b([A-ZÜÄÖ][A-Za-züäöÄÖÜß&\.\-]{1,30}(?:[ \t]+[A-Za-züäöÄÖÜß&\.\-]{1,30}){0,4}[ \t]+(?:GmbH(?:[ \t]*&[ \t]*Co\.?[ \t]*KG)?|AG|KGaA|KG|OHG|GbR|UG(?:[ \t]*\(haftungsbeschränkt\))?|e\.V\.|eG|SE|Stiftung|Ltd\.?|Inc\.?|Corp\.?|PartG|PartGmbB|Partnerschaft))\b/g,
+            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖ][A-Za-züäöÄÖÜß&\.\-]{1,30}(?:[ \t]+[A-Za-züäöÄÖÜß&\.\-]{1,30}){0,4}[ \t]+(?:GmbH(?:[ \t]*&[ \t]*Co\.?[ \t]*KG)?|AG|KGaA|KG|OHG|GbR|UG(?:[ \t]*\(haftungsbeschränkt\))?|e\.V\.|eG|SE|Stiftung|Ltd\.?|Inc\.?|Corp\.?|PartG|PartGmbB|Partnerschaft))\b/g,
             /((?:Kanzlei|Rechtsanwaltskanzlei|Steuerberatung|Wirtschaftsprüfung|Notariat|Notarkanzlei|Praxis|Arztpraxis)[ \t]+[A-ZÜÄÖ][A-Za-züäöß &\.\-]{2,50})/g,
             /((?:Amtsgericht|Landgericht|Oberlandesgericht|Bundesgerichtshof|Verwaltungsgericht|Finanzgericht|Sozialgericht|Arbeitsgericht)[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,35})/g,
             /((?:Finanzamt|Bundesministerium|Bundesamt|Landesamt|Stadtverwaltung)[ \t]+(?:der|des|für|von)?[ \t]*[A-ZÜÄÖ][A-Za-züäöß \-]{2,40})/g,
@@ -2107,10 +2119,24 @@
           on: true,
           pfx: "ADRESSE",
           rx: [
-            /([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*\d{5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
-            /([A-ZÜÄÖ][a-züäöß \-]+(?:straße|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
+            /([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*(?:[A-Z]{1,2}-)?\d{4,5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
+            /([A-ZÜÄÖ][a-züäöß \-]+(?:stra(?:ß|ss)e|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
             /(\b\d{5}[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,28})\b/g,
             /(\b[A-Z]{1,2}-\d{4}[ \t]+[A-ZÜÄÖ][a-züäöß\-]{2,25})\b/g,
+          ],
+        },
+        {
+          id: "vehicle",
+          lbl: "Kfz-Kennzeichen & Fahrgestellnummern",
+          desc: "Amtliche Kennzeichen, FIN/VIN",
+          col: "#64748b",
+          on: true,
+          pfx: "KFZ",
+          rx: [
+            /(?<=(?:Kennzeichen|Kfz-Kennzeichen|Fahrzeug|Pkw|PKW|Lkw|LKW)[ \t:]*)([A-ZÄÖÜ]{1,3}[ \t\-]{1,2}[A-Z]{1,2}[ \t\-]?\d{1,4}[EH]?)\b/g,
+            /\b((?!DIN|ISO|ENV|SAE|TÜV|ICD|ITU|RFC|BGB|SGB|StGB|ZPO|HGB|AEO|EN)[A-ZÄÖÜ]{1,3}-[A-Z]{1,2}[ \t]?\d{1,4}[EH]?)\b/g,
+            /(?<=(?:Fahrgestellnummer|FIN|VIN)[ \t:\.]*)([A-HJ-NPR-Z0-9]{17})\b/g,
+            /\b([A-HJ-NPR-Z][A-HJ-NPR-Z0-9]{10}\d{6})\b/g,
           ],
         },
         {
@@ -2121,15 +2147,18 @@
           on: true,
           pfx: "NAME",
           rx: [
-            /(?:Herr|Frau|Hr\.|Fr\.)[ \t]+((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Phys|Math|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|M\.A\.|BSc|B\.Sc\.|BA|B\.A\.|PhD|MD|RA|RAin|StB|WP|Notar(?:in)?)\.?[ \t]+)*[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*){0,3})/g,
-            /((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Math|Phys|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|PhD|MD)\.?[ \t]+){1,3}[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*){0,2})/g,
-            /\b([A-ZÜÄÖ][a-züäöß\-]{2,}[ \t]+[A-Z]\.[ \t]+[A-ZÜÄÖ][a-züäöß\-]{2,})\b/g,
-            /\b([A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?[ \t]+[A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?)\b/g,
-            /(?:(?:von|bei|durch|für|an|mit|als|gezeichnet|unterzeichnet|unterschrieben|verantwortlich|zuständig|bearbeitet|gesendet|erstellt|geprüft|genehmigt|kontaktiere(?:n|n Sie)?)\s+)([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2})/g,
-            /(?:(?:Mit freundlichen Grüßen|Mit freundlichem Gruß|Hochachtungsvoll|Viele Grüße|Liebe Grüße|Beste Grüße|Herzliche Grüße|Freundliche Grüße|Mit besten Grüßen|MfG|LG|VG|Best regards|Sincerely|Yours sincerely)\s*\n*\s*)([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2})/g,
-            /(?:Sehr geehrte(?:r)?\s+(?:Herr|Frau|Hr\.|Fr\.)\s+(?:(?:Dr|Prof|Ing|Mag)\.?\s+)*([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+(?:[A-ZÜÄÖ][a-züäöß]{2,})){0,2}))/g,
-            /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2}))/g,
-            /\b([A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?[ \t]+[A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?[ \t]+[A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?)\b/g,
+            /(?:Herr|Frau|Hr\.|Fr\.)[ \t]+((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Phys|Math|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|M\.A\.|BSc|B\.Sc\.|BA|B\.A\.|PhD|MD|RA|RAin|StB|WP|Notar(?:in)?)\.?[ \t]+)*(?:(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,3})/g,
+            /((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Math|Phys|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|PhD|MD)\.?[ \t]+){1,3}[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:[ \t]+[A-Z]\.)?(?:(?:[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?)?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,2})/g,
+            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}[ \t]+[A-Z]\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})(?![A-Za-z0-9_À-ɏ])/g,
+            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
+            /(?:(?:von|bei|durch|für|an|mit|als|gezeichnet|unterzeichnet|unterschrieben|verantwortlich|zuständig|bearbeitet|gesendet|erstellt|geprüft|genehmigt|kontaktiere(?:n|n Sie)?)\s+)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})/g,
+            /(?:(?:Mit freundlichen Grüßen|Mit freundlichem Gruß|Hochachtungsvoll|Viele Grüße|Liebe Grüße|Beste Grüße|Herzliche Grüße|Freundliche Grüße|Mit besten Grüßen|MfG|LG|VG|Best regards|Sincerely|Yours sincerely)\s*\n*\s*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})/g,
+            /(?:Sehr geehrte(?:r)?\s+(?:Herr|Frau|Hr\.|Fr\.)\s+(?:(?:Dr|Prof|Ing|Mag)\.?\s+)*([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+(?:[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})){0,2}))/g,
+            /(?<=[^\n\s][ \t])((?:[A-HJ-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
+            /(?:^|\n)[ \t]*((?:[J-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
+            /(?<![A-Za-z0-9_À-ɏ])([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?[ \t]+[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
+            /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2}))/g,
+            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
           ],
         },
         {
@@ -2155,12 +2184,17 @@
         },
         {
           id: "ip",
-          lbl: "IP-Adressen & URLs",
-          desc: "IPv4, Domains, Weblinks",
+          lbl: "IP-Adressen & Weblinks",
+          desc: "IPv4, IPv6, Weblinks mit Pfad oder Parametern",
           col: "#6366f1",
           on: false,
           pfx: "IP",
-          rx: [/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b/g, /(https?:\/\/[^\s<>"{}|\\^`\[\]\)\(,;]{4,})/g],
+          rx: [
+            /(?<![\d.])(?<!(?:Version|Ver\.|Build|Release|Rev\.?|v|V)[ \t]*)((?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?!\d|\.\d)/g,
+            /(?<![\w:])((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:(?:[0-9a-fA-F]{1,4})?|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})(?![\w:])/g,
+            /(https?:\/\/[^\s<>"{}|\\^`\[\]\)\(,;]{4,}[^\s<>"{}|\\^`\[\]\)\(,;.:!?])/g,
+            /(?<![\w@.\/-])(www\.[a-z0-9\-]+(?:\.[a-z0-9\-]+)+(?:\/[^\s<>"{}|\\^`\[\]\)\(,;]*[^\s<>"{}|\\^`\[\]\)\(,;.:!?])?)/gi,
+          ],
         },
         {
           id: "med",
@@ -2172,11 +2206,17 @@
           rx: [
             /((?:Diagnose|Befund|ICD-1[01]|Erkrankung|Symptom|Medikation|Therapie)[\s:][^\n]{5,80})/gi,
             /\b([A-Z]\d{2}(?:\.\d{1,2})?)\b/g,
-            /((?:Patient(?:in)?|Pat\.?)[\s:]+[A-ZÜÄÖ][a-züäöß]+(?:\s+[A-ZÜÄÖ][a-züäöß]+)?)/gi,
+            /((?:Patient(?:in)?|Pat\.?)[ \t:]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]+){0,3})/g,
           ],
         },
       ];
       const SW = new Set([
+        "Deutschland",
+        "Deutschlands",
+        "Österreich",
+        "Schweiz",
+        "Europa",
+        "Zentrale",
         "Die",
         "Der",
         "Das",
@@ -3056,11 +3096,23 @@
         "Kreiskrankenhaus",
         "Rehabilitationszentrum",
       ]);
+      // GROSSGESCHRIEBENE Personennamen ("HANS MEIER"): nur wenn Vor- oder Nachname in den Wortlisten steht,
+      // damit Ueberschriften ("KAUFVERTRAG ZWISCHEN") nicht als Name gelten.
+      function isCapsPersonName(val) {
+        const words = val.trim().split(/[ \t]+/);
+        if (words.length < 2 || words.length > 3) return false;
+        if (!words.every((w) => /^[A-ZÄÖÜ][A-ZÄÖÜ\-]+$/.test(w))) return false;
+        const tc = (w) => w.charAt(0) + w.slice(1).toLowerCase();
+        return LOCAL_NAMES.has(tc(words[0])) || words.some((w) => w.split("-").some((p) => LOCAL_SURNAMES.has(tc(p))));
+      }
       function okName(s) {
+        const tt = s.trim();
+        if (tt === tt.toUpperCase() && /[A-ZÄÖÜ]{2}/.test(tt)) return isCapsPersonName(tt);
         return s
           .trim()
           .split(/\s+/)
           .every((p, i) => {
+            if (/^[A-ZÄÖÜ]\.$/.test(p)) return true; // Initiale
             const c = p.replace(/[^A-Za-züäöüÄÖÜß]/g, "");
             if (c.length < 2 || /^\d+$/.test(c)) return false;
             if (i === 0 && (SW.has(p) || SW.has(c))) return false;
@@ -3073,8 +3125,8 @@
           lbl: "Standard",
           badge: "Empfohlen",
           desc: "Für die meisten Anwendungsfälle. Erkennt persönliche Daten, Kontaktdaten, Finanzdaten und Identifikationsnummern.",
-          ents: ["email", "iban", "bic", "phone", "money", "date", "taxid", "addr", "org", "name"],
-          tags: ["Namen", "Adressen", "IBAN", "BIC", "Telefon", "E-Mail", "Daten", "Steuer-IDs", "Beträge"],
+          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "org", "name", "ip"],
+          tags: ["Namen", "Adressen", "IBAN", "Karten", "BIC", "Telefon", "E-Mail", "Daten", "Steuer-IDs", "Beträge", "Kfz", "IP/Links"],
           note: "",
         },
         {
@@ -3082,7 +3134,7 @@
           lbl: "Finanzen & Recht",
           badge: "",
           desc: "Für Anwaltskanzleien, Steuerberatung und Banken. Wie Standard — zusätzlich mit Aktenzeichen, Handelsregisternummern und Sozialversicherungsnummern.",
-          ents: ["email", "iban", "bic", "phone", "money", "date", "taxid", "addr", "org", "name"],
+          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "org", "name", "ip"],
           tags: ["+ Aktenzeichen", "+ HR-Nummern", "+ SV-Nummern", "Alle Standardfelder"],
           note: "Gleiche Kategorien wie Standard, jedoch mit erweiterten Mustern für rechtliche und steuerliche Dokumente.",
         },
@@ -3091,7 +3143,7 @@
           lbl: "Medizin & Pflege",
           badge: "",
           desc: "Für Kliniken, Praxen und Pflegedienste. Enthält zusätzlich ICD-Codes, Diagnosen und Patientendaten. Finanzdaten (IBAN, Beträge) werden nicht erkannt.",
-          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "paragraf"],
+          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "paragraf", "ip"],
           tags: ["+ ICD-Codes", "+ Diagnosen", "+ Patientendaten", "Ohne IBAN & Beträge"],
           note: "",
         },
@@ -3699,7 +3751,7 @@
       function detectLocalEntities(text) {
         var results = [];
         var seen = new Set();
-        var nameRx = /\b([A-ZÄÖÜ][a-zäöüß]+(?:[\- \t][A-ZÄÖÜ][a-zäöüß]+)?)\b/g;
+        var nameRx = /\b([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[\- \t][A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)\b/g;
         var match;
         while ((match = nameRx.exec(text)) !== null) {
           var name = match[0].trim();
@@ -4021,6 +4073,8 @@
         IBAN: 1,
         BIC: 1,
         IP: 1,
+        KARTE: 1,
+        KFZ: 2,
         TEL: 2,
         BETRAG: 2,
         DATUM: 2,
@@ -4033,7 +4087,7 @@
         NAME: 5,
         ORT: 5,
       };
-      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip"]);
+      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip", "card", "vehicle"]);
       const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med"]);
       function isWhitelisted(v) {
         return whitelist.some(function (w) {
@@ -4044,6 +4098,43 @@
         /^(GmbH(?:\s*&\s*Co\.?\s*KG)?|AG|KGaA|KG|OHG|GbR|UG|e\.V\.|eG|SE|Ltd\.?|Inc\.?|Corp\.?|Stiftung|BIC|IBAN|SWIFT|BLZ|HRB|HRA|WKN|ISIN|PZN|ICD)$/;
       const ORG_LEAD =
         /^(?:(?:Vorstand|Geschäftsführer(?:in)?|Prokurist(?:in)?|Direktor(?:in)?|Inhaber(?:in)?|Gesellschafter(?:in)?|Mitarbeiter(?:in)?|Mandant(?:in)?|Aufsichtsrat|Beirat|Anteilseigner)\s+|(?:der|die|das|des|dem|den|bei|von|im|in|an|am|für|durch|mit|als|und|oder|einer?|eines|ist|sind|war|waren|bleibt|wird)\s+)+/;
+      function isValidCard(raw) {
+        const d = raw.replace(/\D/g, "");
+        if (d.length < 13 || d.length > 19 || !/^[2-6]/.test(d)) return false;
+        let sum = 0;
+        for (let i = 0; i < d.length; i++) {
+          let n = Number(d[d.length - 1 - i]);
+          if (i % 2 === 1) {
+            n *= 2;
+            if (n > 9) n -= 9;
+          }
+          sum += n;
+        }
+        return sum % 10 === 0;
+      }
+      // Wertpruefung fuer harte Treffer. Muss schon beim Sammeln laufen: ein unplausibler Treffer
+      // (z. B. PLZ 05331 als Telefonnummer) wuerde sonst die spaetere Adress-Erkennung verdraengen.
+      // Liefert den (ggf. gekuerzten) Wert oder null, wenn der Treffer unplausibel ist.
+      function hardValue(pfx, val) {
+        if (pfx === "KARTE") return isValidCard(val) ? val : null;
+        if (pfx === "TEL") return val.replace(/\D/g, "").length >= 7 ? val : null;
+        if (pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val)) {
+          const exp = IBAN_LEN[val.slice(0, 2).toUpperCase()];
+          if (exp) {
+            // Treffer, der ueber die IBAN hinausreicht (angrenzende Ziffern oder Woerter), auf die Landeslaenge kuerzen
+            let n = 0;
+            for (let i = 0; i < val.length; i++) {
+              if (/[A-Za-z0-9]/.test(val[i])) n++;
+              if (n === exp) {
+                val = val.slice(0, i + 1);
+                break;
+              }
+            }
+          }
+          return isValidIBANFormat(val) ? val : null;
+        }
+        return val;
+      }
       function isValidBIC(code) {
         return /^[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/.test(code);
       }
@@ -4069,12 +4160,36 @@
         SK: 24,
         HU: 28,
         LI: 21,
+        GR: 27,
+        HR: 21,
+        SI: 19,
+        RO: 24,
+        BG: 22,
+        EE: 20,
+        LV: 21,
+        LT: 20,
+        MT: 31,
+        CY: 28,
+        IS: 26,
+        TR: 26,
       };
+      function ibanMod97(c) {
+        let rem = 0;
+        const s = c.slice(4) + c.slice(0, 4);
+        for (const ch of s) {
+          const v = /\d/.test(ch) ? ch : String(ch.charCodeAt(0) - 55);
+          for (const d of v) rem = (rem * 10 + Number(d)) % 97;
+        }
+        return rem === 1;
+      }
+      // Bekanntes Land: Laenge muss stimmen (Tippfehler in der Pruefziffer bleiben maskiert).
+      // Unbekanntes Land: Laenge 15-34 und gueltige Pruefsumme (mod 97), sonst zu viele Zufallstreffer.
       function isValidIBANFormat(raw) {
         const c = raw.replace(/\s+/g, "").toUpperCase();
         if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(c)) return false;
         const exp = IBAN_LEN[c.slice(0, 2)];
-        return !exp || c.length === exp;
+        if (exp) return c.length === exp;
+        return c.length >= 15 && c.length <= 34 && ibanMod97(c);
       }
       function isHeadingSpan(text, start, end) {
         const ls = text.lastIndexOf("\n", start - 1) + 1;
@@ -4084,7 +4199,8 @@
         const val = text.slice(start, end).trim();
         const numbered = line.match(/^(?:[IVXLC]+|\d+(?:\.\d+)*)[\.\)]\s+(.*)$/);
         if (numbered && numbered[1].trim() === val) return true;
-        if (line === val && /[A-ZÄÖÜ]/.test(line) && line === line.toUpperCase() && !/\d{5}/.test(line)) return true;
+        if (line === val && /[A-ZÄÖÜ]/.test(line) && line === line.toUpperCase() && !/\d{5}/.test(line))
+          return !isCapsPersonName(val);
         return false;
       }
       function computePass1(text) {
@@ -4125,8 +4241,10 @@
                   break;
                 }
               const raw = gval !== null ? gval : m[0];
-              const val = raw.trim();
+              let val = raw.trim();
               if (!val || val.length < 2) continue;
+              val = hardValue(e.pfx, val);
+              if (!val) continue;
               const off = (gval !== null ? m[0].indexOf(raw) : 0) + (raw.length - raw.replace(/^\s+/, "").length);
               pass1.push({
                 start: m.index + off,
@@ -4192,7 +4310,13 @@
             let le = text.indexOf("\n", s.end);
             if (le === -1) le = text.length;
             const headLine = text.slice(ls, le).trim();
-            if (/[A-ZÄÖÜ]/.test(headLine) && headLine === headLine.toUpperCase() && !/\d{5}/.test(headLine)) continue;
+            if (
+              /[A-ZÄÖÜ]/.test(headLine) &&
+              headLine === headLine.toUpperCase() &&
+              !/\d{5}/.test(headLine) &&
+              !isCapsPersonName(vt)
+            )
+              continue;
             if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(vt)) continue;
             if (s.pfx === "ORG" && /^(?:AG|GmbH|KG|OHG|GbR|UG|SE|eG|Ltd\.?|Inc\.?|Corp\.?)[ \t]/.test(vt)) continue;
             if (SW.has(vt) || SW.has(vt.replace(/[^A-Za-züäöÄÖÜß]/g, ""))) continue;
@@ -4287,17 +4411,34 @@
           if (s.pfx !== "NAME") continue;
           let m2;
           while (
-            (m2 = text.slice(s.start, s.end).match(/^([A-ZÜÄÖ][A-Za-züäöß\-]*)[ \t]+/)) &&
+            (m2 = text.slice(s.start, s.end).match(/^([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][A-Za-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]*)[ \t]+/)) &&
             (SW.has(m2[1]) || SW.has(m2[1].replace(/[^A-Za-züäöÄÖÜß]/g, "")))
           ) {
             s.start += m2[0].length;
           }
           while (
-            (m2 = text.slice(s.end).match(/^[ \t]+([A-ZÜÄÖ][a-züäöß]{2,}(?:-[A-ZÜÄÖ][a-züäöß]+)?)(?![\wäöüß])/)) &&
+            (m2 = text.slice(s.end).match(/^[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)(?![\wäöüß])/)) &&
             !SW.has(m2[1])
           ) {
             s.end += m2[0].length;
           }
+        }
+        for (const s of cands) {
+          if (s.pfx !== "NAME") continue;
+          let mp;
+          while (
+            (mp = text.slice(s.end).match(/^[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/)) &&
+            !SW.has(mp[1])
+          )
+            s.end += mp[0].length;
+          const ml = text.slice(Math.max(0, s.start - 60), s.start).match(/([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+$/);
+          if (ml && !SW.has(ml[1])) s.start -= ml[0].length;
+        }
+        for (const s of cands) {
+          if (s.pfx !== "NAME") continue;
+          let mh;
+          while ((mh = text.slice(s.end).match(/^-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}/))) s.end += mh[0].length;
+          while ((mh = text.slice(Math.max(0, s.start - 40), s.start).match(/[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}-$/))) s.start -= mh[0].length;
         }
         const valid = cands.filter(function (s) {
           const val = text.slice(s.start, s.end);
@@ -4308,6 +4449,7 @@
             if (s.end < text.length && /[\wäöüÄÖÜß]/.test(text[s.end])) return false;
             if (s.start > 0 && /[\wäöüÄÖÜß]/.test(text[s.start - 1])) return false;
           }
+          if (s.pfx === "KARTE" && !isValidCard(val)) return false;
           if (s.pfx === "BIC") {
             if (!isValidBIC(val)) return false;
             if (!/\d/.test(val) && !/XXX$/.test(val)) {
@@ -4317,7 +4459,7 @@
               if (!/BIC|SWIFT|IBAN|Bank|BLZ|Konto/i.test(text.slice(ls, s.start) + text.slice(s.end, le))) return false;
             }
           }
-          if (s.pfx === "IBAN" && /^[A-Z]{2}\d{2}/.test(val) && !isValidIBANFormat(val)) return false;
+          if (s.pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val) && !isValidIBANFormat(val)) return false;
           if (s.pfx === "NAME" && !okName(val)) return false;
           if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(val)) return false;
           if (s.pfx === "ORT" && SW.has(val)) return false;
