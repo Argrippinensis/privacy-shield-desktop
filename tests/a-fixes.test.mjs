@@ -1,7 +1,7 @@
 // Paket A: Update-Dialog bei Offline, Navigation nach aussen, Skriptfehler.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { launchApp, toolFrame } from './helpers.mjs';
+import { launchApp, toolFrame, MAC } from './helpers.mjs';
 
 test('Start ohne Skriptfehler (Shell und Tool)', async () => {
   const a = await launchApp();
@@ -36,7 +36,7 @@ test('Links zu arcangeli.eu oeffnen extern und lassen das Tool intakt', async ()
   } finally { await a.close(); }
 });
 
-test('Offline: ein vom Nutzer gestarteter Update-Download meldet den Fehler weiterhin', async () => {
+test('Offline: ein vom Nutzer gestarteter Update-Download meldet den Fehler weiterhin', { skip: MAC && 'macOS: manueller Update-Weg (unsigniert)' }, async () => {
   // APPIMAGE gesetzt = automatischer Modus (sonst oeffnet "Aktualisieren" nur die Download-Seite)
   const a = await launchApp({ offline: true, env: { PS_FORCE_DEV_UPDATE: '1', APPIMAGE: '/tmp/ps-fake.AppImage' } });
   try {

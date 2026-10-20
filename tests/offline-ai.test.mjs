@@ -46,7 +46,8 @@ test('Cross-Origin-Isolation aktiv, KI nutzt mehrere Rechenthreads', async () =>
     const m = await loadModel(f);
     assert.equal(m.info.isolated, true);
     const cores = await f.evaluate(() => navigator.hardwareConcurrency);
-    if (cores >= 3) assert.ok(m.info.threads >= 2, 'nur ' + m.info.threads + ' Thread(s) bei ' + cores + ' Kernen');
+    // Faustregel der App: halbe Kernzahl (Runner mit 3 Kernen ergibt 1 Thread)
+    if (cores >= 4) assert.ok(m.info.threads >= 2, 'nur ' + m.info.threads + ' Thread(s) bei ' + cores + ' Kernen');
   } finally { await a.close(); }
 });
 
