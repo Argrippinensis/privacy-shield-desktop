@@ -36,7 +36,7 @@
         "nsis"
       ],
       "icon": "assets/icon.png",
-      "artifactName": "PrivacyShield-Setup-${version}.${ext}"
+      "artifactName": "PrivacyShield-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -46,11 +46,19 @@
     },
     "mac": {
       "target": [
-        "zip"
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
       "icon": "assets/icon.png",
-      "artifactName": "PrivacyShield-${version}.${ext}",
-      "identity": null
+      "artifactName": "PrivacyShield-mac-${arch}.${ext}",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     },
     "linux": {
       "target": [
@@ -58,7 +66,7 @@
         "deb"
       ],
       "icon": "assets/icon.png",
-      "artifactName": "PrivacyShield-${version}.${ext}"
+      "artifactName": "PrivacyShield.${ext}"
     },
     "publish": {
       "provider": "github",
@@ -100,5 +108,6 @@
   "author": {
     "name": "Alexander Arcangeli",
     "email": "alexander.arcangeli@yahoo.de"
-  }
+  },
+  "signedMac": false
 }

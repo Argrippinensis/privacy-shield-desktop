@@ -1,0 +1,54 @@
+name: CI
+
+# Prueft jeden Pull Request und jeden Push auf main: Tests mit der echten Electron-App (ohne Internet).
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/cache@v6
+        with:
+          path: |
+            app/vendor
+            app/models
+          key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
+      - run: npm ci
+      - run: npm run fetch-vendor
+      # Erkennungsqualitaet ist plattformunabhaengig und dauert lange: nur unter Linux messen
+      - name: Tests (Linux, mit Erkennungsqualitaet)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm test
+      - name: Tests (Windows)
+        if: runner.os == 'Windows'
+        env:
+          PS_SKIP_EVAL: '1'
+        run: npm test
+      - name: Ergebnisse der Erkennungsmessung sichern
+        if: always() && runner.os == 'Linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: eval-result
+          path: tests/eval/out/
+          if-no-files-found: ignore
