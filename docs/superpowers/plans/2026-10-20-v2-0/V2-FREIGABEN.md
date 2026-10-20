@@ -4,7 +4,7 @@ Gilt nur, was der Nutzer **im Chat schriftlich** erteilt hat (Wortlaut und Datum
 
 ## Stand
 
-Version 1.8.0 wurde vom Nutzer ausdruecklich zur Veroeffentlichung freigegeben (Chat, 2026-10-20: "Das mit der Version 1.8.0, die soll komplett online gestellt werden") und liegt ausserhalb dieses Plans. Fuer 2.0 gilt: **keine Betas und keine Pre-releases**, **kein automatischer Ausloeser** (Cron); der Nutzer startet jede Sitzung von Hand.
+Version 1.8.0 wurde vom Nutzer ausdruecklich zur Veroeffentlichung freigegeben (Chat, 2026-10-20: "Das mit der Version 1.8.0, die soll komplett online gestellt werden") und liegt ausserhalb dieses Plans. Fuer 2.0 gilt: **keine Betas und keine Pre-releases**, ein **Cron-Ausloeser** (alle 2 h) setzt die Arbeit nach Limit oder Abbruch fort (vom Nutzer am 2026-10-20 ausdruecklich gewuenscht, Trigger `trig_01BFtBbS69N7ymWDXat91cb4`); er darf nur Pakete bearbeiten, nichts veroeffentlichen.
 
 ## Dauerfreigabe V2-1 (Vorschlag, noch nicht erteilt; Nutzer bestaetigt im Chat)
 

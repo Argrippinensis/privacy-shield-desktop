@@ -43,7 +43,7 @@ Fragen werden **gebündelt und knapp** gestellt: eine Zeile Frage, Empfehlung, S
 
 **Auslösen:**
 1. **Von Hand** (Nutzer fügt den Prompt ein, oder `/loop` ohne Intervall).
-2. *(Entscheidung des Nutzers: kein automatischer Auslöser.)* Ein Cron-Auslöser wäre möglich, ist aber nicht eingerichtet; der Nutzer startet jede Sitzung von Hand (Weiter-Prompt in `V2-START.md`).
+2. **Automatisch (eingerichtet am 2026-10-20, Wunsch des Nutzers):** geplanter Auslöser `trig_01BFtBbS69N7ymWDXat91cb4` (alle 2 Stunden, Minute 27) startet eine frische Sitzung mit dem Weiter-Prompt. Hält eine Sitzung die Sperre (Herzschlag alle Schleifendurchläufe, Ablauf 30 min), beendet sich der neue Lauf sofort. Abschalten: `update_trigger enabled=false` oder Not-Aus `touch ~/.ps-STOP`.
 
 **Einführung in Stufen (Pflicht, damit nichts Ungeprüftes unbeaufsichtigt läuft):**
 1. *Probelauf von Hand:* Der Orchestrator führt Vorabprüfung, die Planhärtung P0 und das Paket F2 (Unit-Läufer, Electron 44) mit der ganzen Pipeline durch; der Nutzer liest den Bericht.
