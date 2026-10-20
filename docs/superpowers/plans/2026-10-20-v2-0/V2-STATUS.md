@@ -1,4 +1,6 @@
-# V2-STATUS: Fortschritt (vom Orchestrator gepflegt)
+# V2-STATUS: Fortschritt (Übersicht; Quelle der Wahrheit ist `loop/V2-QUEUE.json`, Anzeige: `node loop/queue.mjs status`)
+
+> Die Tabelle unten ist die **ursprüngliche Planübersicht**. Den aktuellen Stand führt die Arbeitsliste (`loop/V2-QUEUE.json`, Pakete mit Teilung `.m` Modul / `.w` Oberfläche). Hier nur das Sitzungsprotokoll fortschreiben.
 
 Status: `offen`, `bereit`, `laeuft`, `fertig`, `blockiert`, `verschoben` (mit Grund). Reihenfolge = Abarbeitung (Abhängigkeiten beachtet).
 Der Orchestrator ändert nur diese Datei und den Branch `v2/main`; jede Statusänderung ist ein eigener kleiner Commit `docs: Status <Paket> <Status>`.

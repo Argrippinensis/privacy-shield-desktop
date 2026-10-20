@@ -2,7 +2,7 @@
 
 > **Für Ausführende:** Lies zuerst diese Datei, danach nur das Arbeitspaket (V2-xx), das dir zugewiesen ist. Der Plan baut auf
 > `../2026-10-20-naechste-schritte/` auf (dort: `00-INDEX.md`, Regeln, Stopp-Regeln, Gates, Belege, Patch-Serie 1.8.0). Diese Regeln gelten unverändert.
-> Den Ablauf steuert der Orchestrator mit [`V2-EXEC-PROMPT.md`](V2-EXEC-PROMPT.md); den Fortschritt hält [`V2-STATUS.md`](V2-STATUS.md).
+> Den Ablauf steuert der Orchestrator mit [`V2-EXEC-PROMPT.md`](V2-EXEC-PROMPT.md) im Dauerbetrieb ([`V2-LOOP.md`](V2-LOOP.md): Fragenliste, Dauerfreigaben, automatischer Neustart); den Fortschritt hält die Arbeitsliste `loop/V2-QUEUE.json` (Übersicht: [`V2-STATUS.md`](V2-STATUS.md)).
 
 ## 1. Leitidee
 
