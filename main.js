@@ -107,10 +107,14 @@ function sendToWindow(channel, ...args) {
 
 // Externe Links (Website, Impressum, Datenschutz) gehoeren in den System-Browser.
 // Ohne diese Regel ersetzt ein Klick den Tool-Frame durch eine leere Seite.
+// PS_BLOCK_EXTERNAL=1 (Tests): nichts oeffnen, nur in globalThis.__psExternal vermerken.
+globalThis.__psExternal = [];
 function openExternalSafe(url) {
   try {
     const u = new URL(url);
-    if (u.protocol === 'https:' || u.protocol === 'mailto:') shell.openExternal(u.toString());
+    if (u.protocol !== 'https:' && u.protocol !== 'mailto:') return;
+    if (process.env.PS_BLOCK_EXTERNAL === '1') globalThis.__psExternal.push(u.toString());
+    else shell.openExternal(u.toString());
   } catch { /* ungueltige URL ignorieren */ }
 }
 
