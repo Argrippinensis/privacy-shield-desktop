@@ -373,10 +373,15 @@
     document.getElementById('version-label').textContent = 'v?.?.?';
   }
 
+function fmtMem(mb) { return mb >= 1024 ? (mb / 1024).toFixed(1).replace('.', ',') + " GB" : mb + " MB"; }
 setInterval(async () => {
   try {
     const s = await window.electronAPI.getSystemStats();
-    document.getElementById("sysstats").innerHTML = "RAM " + s.ram.used + "/" + s.ram.total + " GB (" + s.ram.percent + "%) | CPU " + s.cpu.cores + "× " + s.cpu.model.substring(0,10) + " | App " + s.app.memory + " MB";
+    const el = document.getElementById("sysstats");
+    el.textContent = "RAM " + s.ram.used + "/" + s.ram.total + " GB (" + s.ram.percent + "%) | CPU " + s.cpu.cores + "× " + s.cpu.model.substring(0,10) + " | App " + fmtMem(s.app.memory);
+    // Arbeitsspeicher des Rechners fast voll: Hinweis, dass ein Entladen des KI-Modells hilft
+    el.style.background = s.ram.percent >= 90 ? "rgba(180,40,40,0.85)" : "";
+    el.title = s.ram.percent >= 90 ? "Arbeitsspeicher knapp: In der KI-Erkennung kann das Modell entladen werden." : "";
   } catch(e) {}
 }, 2000);
 </script>

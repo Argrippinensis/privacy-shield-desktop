@@ -1,20 +1,30 @@
 {
   "name": "privacy-shield-desktop",
-  "version": "1.6.2",
-  "description": "PrivacyShield Desktop \u2014 Dokumente anonymisieren, 100% offline",
+  "version": "1.7.0",
+  "description": "PrivacyShield Desktop — Dokumente anonymisieren, 100% offline",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "prestart": "node scripts/fetch-vendor.mjs",
+    "build:css": "tailwindcss -c tailwind.config.js -i scripts/tailwind-input.css -o app/css/tailwind.css --minify",
+    "fetch-vendor": "node scripts/fetch-vendor.mjs",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "pretest": "node scripts/fetch-vendor.mjs",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
     "build:all": "electron-builder --win --mac --linux",
-    "release": "electron-builder --win --mac --linux --publish always"
+    "release": "electron-builder --win --mac --linux --publish always",
+    "prebuild:win": "node scripts/fetch-vendor.mjs",
+    "prebuild:mac": "node scripts/fetch-vendor.mjs",
+    "prebuild:linux": "node scripts/fetch-vendor.mjs",
+    "prebuild:all": "node scripts/fetch-vendor.mjs",
+    "prerelease": "node scripts/fetch-vendor.mjs"
   },
   "build": {
     "appId": "eu.arcangeli.privacyshield",
     "productName": "PrivacyShield",
-    "copyright": "Copyright \u00a9 2026 Alexander Arcangeli",
+    "copyright": "Copyright © 2026 Alexander Arcangeli",
     "directories": {
       "output": "dist"
     },
@@ -55,11 +65,31 @@
       "releaseType": "release"
     },
     "afterSign": null,
-    "forceCodeSigning": false
+    "forceCodeSigning": false,
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "assets/icon.png",
+      "app/**/*",
+      "!**/*.map"
+    ],
+    "asarUnpack": [
+      "app/vendor/**/*",
+      "app/models/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "THIRD_PARTY_NOTICES.md",
+        "to": "THIRD_PARTY_NOTICES.md"
+      }
+    ]
   },
   "devDependencies": {
     "electron": "^35.0.0",
-    "electron-builder": "^26.0.0"
+    "electron-builder": "^26.0.0",
+    "playwright-core": "^1.59.1",
+    "tailwindcss": "^3.4.17"
   },
   "dependencies": {
     "electron-updater": "^6.0.0"

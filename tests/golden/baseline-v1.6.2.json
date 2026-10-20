@@ -1,0 +1,205 @@
+{
+ "aiActive": true,
+ "wordlist": {
+  "out": "Kaufvertrag\n\nzwischen {{NAME_3}}, wohnhaft {{ADRESSE_2}} (nachfolgend \"Verkaeufer\")\nund der {{ORG_1}}, vertreten durch Frau {{NAME_2}}, {{ADRESSE_1}} (nachfolgend \"Kaeufer\").\n\n1. Der Kaufpreis betraegt {{BETRAG_1}} und ist bis zum {{DATUM_3}} auf das Konto IBAN {{IBAN_1}} (BIC {{BIC_1}}) zu ueberweisen.\n2. Rueckfragen richten Sie bitte an {{EMAIL_1}} oder telefonisch unter {{TEL_1}}.\n3. Der Vertrag wurde am {{DATUM_2}} in Berlin von {{NAME_1}} unterzeichnet.\n4. {{KENNNR_1}}, Kennzeichen M-AB 1234.\n\nOrt, Datum: Hamburg, den {{DATUM_1}}\n",
+  "store": {
+   "{{DATUM_1}}": {
+    "v": "20.03.2024",
+    "t": "DATUM",
+    "c": "#ec4899",
+    "m": "Regex (Pass 1)"
+   },
+   "{{KENNNR_1}}": {
+    "v": "Steuernummer 143/815/08156",
+    "t": "KENNNR",
+    "c": "#84cc16",
+    "m": "Regex (Pass 1)"
+   },
+   "{{NAME_1}}": {
+    "v": "Hans Fischer fuer die Mustermann GmbH",
+    "t": "NAME",
+    "c": "#f59e0b",
+    "m": "Regex (Pass 2)"
+   },
+   "{{DATUM_2}}": {
+    "v": "15.03.2024",
+    "t": "DATUM",
+    "c": "#ec4899",
+    "m": "Regex (Pass 1)"
+   },
+   "{{TEL_1}}": {
+    "v": "+49 89 1234567",
+    "t": "TEL",
+    "c": "#f97316",
+    "m": "Regex (Pass 1)"
+   },
+   "{{EMAIL_1}}": {
+    "v": "maria.schmidt@beispiel-gmbh.de",
+    "t": "EMAIL",
+    "c": "#06b6d4",
+    "m": "Regex (Pass 1)"
+   },
+   "{{BIC_1}}": {
+    "v": "COBADEFFXXX",
+    "t": "BIC",
+    "c": "#0ea5e9",
+    "m": "Regex (Pass 1)"
+   },
+   "{{IBAN_1}}": {
+    "v": "DE89 3704 0044 0532 0130 00",
+    "t": "IBAN",
+    "c": "#10b981",
+    "m": "Regex (Pass 1)"
+   },
+   "{{DATUM_3}}": {
+    "v": "12.03.2024",
+    "t": "DATUM",
+    "c": "#ec4899",
+    "m": "Regex (Pass 1)"
+   },
+   "{{BETRAG_1}}": {
+    "v": "1.234,56 EUR",
+    "t": "BETRAG",
+    "c": "#14b8a6",
+    "m": "Regex (Pass 1)"
+   },
+   "{{ADRESSE_1}}": {
+    "v": "Werner-von-Siemens-Strasse 1, 80333 Muenchen",
+    "t": "ADRESSE",
+    "c": "#3b82f6",
+    "m": "Regex (Pass 2)"
+   },
+   "{{NAME_2}}": {
+    "v": "Dr. Anna Weber",
+    "t": "NAME",
+    "c": "#f59e0b",
+    "m": "Regex (Pass 2)"
+   },
+   "{{ORG_1}}": {
+    "v": "Siemens AG",
+    "t": "ORG",
+    "c": "#8b5cf6",
+    "m": "Regex (Pass 2)"
+   },
+   "{{ADRESSE_2}}": {
+    "v": "Musterstrasse 12, 80331 Muenchen",
+    "t": "ADRESSE",
+    "c": "#3b82f6",
+    "m": "Regex (Pass 2)"
+   },
+   "{{NAME_3}}": {
+    "v": "Herrn Thomas Mueller",
+    "t": "NAME",
+    "c": "#f59e0b",
+    "m": "Regex (Pass 2)"
+   }
+  }
+ },
+ "model": {
+  "out": "Kaufvertrag\n\nzwischen {{NAME_2}}, wohnhaft {{ADRESSE_1}} (nachfolgend \"Verkaeufer\")\nund der {{ORG_3}}, vertreten durch Frau {{NAME_1}}, {{ORG_2}} (nachfolgend \"Kaeufer\").\n\n1. Der Kaufpreis betraegt {{BETRAG_1}} und ist bis zum {{DATUM_3}} auf das Konto IBAN {{IBAN_1}} (BIC {{BIC_1}}) zu ueberweisen.\n2. Rueckfragen richten Sie bitte an {{EMAIL_1}} oder telefonisch unter {{TEL_1}}.\n3. Der Vertrag wurde am {{DATUM_2}} in {{ORT_2}} von {{ORG_1}} unterzeichnet.\n4. {{KENNNR_1}}, Kennzeichen M-AB 1234.\n\nOrt, Datum: {{ORT_1}}, den {{DATUM_1}}\n",
+  "store": {
+   "{{DATUM_1}}": {
+    "v": "20.03.2024",
+    "t": "DATUM",
+    "c": "#ec4899",
+    "m": "Regex (Pass 1)"
+   },
+   "{{ORT_1}}": {
+    "v": "Hamburg",
+    "t": "ORT",
+    "c": "#3b82f6",
+    "m": "KI (NER-Modell)"
+   },
+   "{{KENNNR_1}}": {
+    "v": "Steuernummer 143/815/08156",
+    "t": "KENNNR",
+    "c": "#84cc16",
+    "m": "Regex (Pass 1)"
+   },
+   "{{ORG_1}}": {
+    "v": "Hans Fischer fuer die Mustermann GmbH",
+    "t": "ORG",
+    "c": "#8b5cf6",
+    "m": "KI (NER-Modell)"
+   },
+   "{{ORT_2}}": {
+    "v": "Berlin",
+    "t": "ORT",
+    "c": "#3b82f6",
+    "m": "KI (NER-Modell)"
+   },
+   "{{DATUM_2}}": {
+    "v": "15.03.2024",
+    "t": "DATUM",
+    "c": "#ec4899",
+    "m": "Regex (Pass 1)"
+   },
+   "{{TEL_1}}": {
+    "v": "+49 89 1234567",
+    "t": "TEL",
+    "c": "#f97316",
+    "m": "Regex (Pass 1)"
+   },
+   "{{EMAIL_1}}": {
+    "v": "maria.schmidt@beispiel-gmbh.de",
+    "t": "EMAIL",
+    "c": "#06b6d4",
+    "m": "Regex (Pass 1)"
+   },
+   "{{BIC_1}}": {
+    "v": "COBADEFFXXX",
+    "t": "BIC",
+    "c": "#0ea5e9",
+    "m": "Regex (Pass 1)"
+   },
+   "{{IBAN_1}}": {
+    "v": "DE89 3704 0044 0532 0130 00",
+    "t": "IBAN",
+    "c": "#10b981",
+    "m": "Regex (Pass 1)"
+   },
+   "{{DATUM_3}}": {
+    "v": "12.03.2024",
+    "t": "DATUM",
+    "c": "#ec4899",
+    "m": "Regex (Pass 1)"
+   },
+   "{{BETRAG_1}}": {
+    "v": "1.234,56 EUR",
+    "t": "BETRAG",
+    "c": "#14b8a6",
+    "m": "Regex (Pass 1)"
+   },
+   "{{ORG_2}}": {
+    "v": "Werner-von-Siemens-Strasse 1, 80333 Muenchen",
+    "t": "ORG",
+    "c": "#8b5cf6",
+    "m": "KI (NER-Modell)"
+   },
+   "{{NAME_1}}": {
+    "v": "Dr. Anna Weber",
+    "t": "NAME",
+    "c": "#f59e0b",
+    "m": "Regex (Pass 2)"
+   },
+   "{{ORG_3}}": {
+    "v": "Siemens AG",
+    "t": "ORG",
+    "c": "#8b5cf6",
+    "m": "KI (NER-Modell)"
+   },
+   "{{ADRESSE_1}}": {
+    "v": "Musterstrasse 12, 80331 Muenchen",
+    "t": "ADRESSE",
+    "c": "#3b82f6",
+    "m": "Regex (Pass 2)"
+   },
+   "{{NAME_2}}": {
+    "v": "Herrn Thomas Mueller",
+    "t": "NAME",
+    "c": "#f59e0b",
+    "m": "Regex (Pass 2)"
+   }
+  }
+ }
+}

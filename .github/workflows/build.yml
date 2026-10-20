@@ -34,6 +34,14 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      # Bibliotheken und KI-Modell (nicht im Git, 135 MB) bereitstellen; Pruefsummen siehe scripts/vendor.lock.json
+      - uses: actions/cache@v4
+        with:
+          path: |
+            app/vendor
+            app/models
+          key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
+      - run: npm run fetch-vendor
       - run: npx electron-builder ${{ matrix.build_flag }} --publish never
         continue-on-error: ${{ matrix.os == 'macos-14' || matrix.os == 'windows-2022' }}
       - uses: actions/upload-artifact@v4
@@ -54,6 +62,15 @@ jobs:
           pattern: builds-*
           merge-multiple: true
           path: dist
+      - name: Alle Installer vorhanden?
+        # Verhindert ein Release ohne Windows-Installer (der Download-Link auf der Website liefe sonst ins Leere).
+        run: |
+          for pattern in "PrivacyShield-Setup-*.exe" "PrivacyShield-*.zip" "PrivacyShield-*.AppImage" "PrivacyShield-*.deb"; do
+            if ! compgen -G "dist/$pattern" > /dev/null; then
+              echo "FEHLT: $pattern - Build-Job erneut ausfuehren, bevor das Release erstellt wird"
+              exit 1
+            fi
+          done
       - name: Create Release
         run: |
           set -e

@@ -1,0 +1,119 @@
+{
+  "_comment": "Alle zur Laufzeit benoetigten Bibliotheken und das KI-Modell, mit festen Versionen. 'node scripts/fetch-vendor.mjs' laedt fehlende Dateien und prueft SHA-256; '--update-lock' schreibt die Pruefsummen neu.",
+  "files": [
+    {
+      "dest": "vendor/pdfjs/pdf.min.js",
+      "url": "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js",
+      "sha256": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
+      "size": 320004
+    },
+    {
+      "dest": "vendor/pdfjs/pdf.worker.min.js",
+      "url": "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js",
+      "sha256": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b",
+      "size": 1087212
+    },
+    {
+      "dest": "vendor/mammoth/mammoth.browser.min.js",
+      "url": "https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js",
+      "sha256": "596ef52239e52d8ee3cee10b2ee4a72596abf900d0e4f468593f956e9f1809b0",
+      "size": 642759
+    },
+    {
+      "dest": "vendor/jszip/jszip.min.js",
+      "url": "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js",
+      "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e",
+      "size": 97630
+    },
+    {
+      "dest": "vendor/jspdf/jspdf.umd.min.js",
+      "url": "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
+      "sha256": "98ccf17aa10c20bb1301762618fcc9b6ab3a4e7f26b6071d64d0b41154df3875",
+      "size": 364463
+    },
+    {
+      "dest": "vendor/tesseract/tesseract.min.js",
+      "url": "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js",
+      "sha256": "a8e29918d098b2b06e1012bdaeffb4aec0445c5d5654709023e0bd1f442a80e8",
+      "size": 66695
+    },
+    {
+      "dest": "vendor/tesseract/worker.min.js",
+      "url": "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
+      "sha256": "aca1229639fc9907d86f96e825955a2b7c5716d17f3bc3acd71f9c7ab66181fc",
+      "size": 123724
+    },
+    {
+      "dest": "vendor/tesseract/tesseract-core-simd-lstm.wasm.js",
+      "url": "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-simd-lstm.wasm.js",
+      "sha256": "ce20eda9533cbed1e6c2b4276fbae1e0adc61b6754b5513084be601787b457cf",
+      "size": 3938657
+    },
+    {
+      "dest": "vendor/tesseract/tesseract-core-lstm.wasm.js",
+      "url": "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-lstm.wasm.js",
+      "sha256": "8f04aa0cc81e7bde33f80e92fa01a7a665f0b4884d098acf5de9c7104a11dfaa",
+      "size": 3938277
+    },
+    {
+      "dest": "vendor/tesseract/lang/deu.traineddata.gz",
+      "url": "https://cdn.jsdelivr.net/npm/@tesseract.js-data/deu/4.0.0_best_int/deu.traineddata.gz",
+      "sha256": "306c4280d0cbed46fbff727486bd43b92730181bae80f56941a091f363bdf28b",
+      "size": 1333102
+    },
+    {
+      "dest": "vendor/tesseract/lang/eng.traineddata.gz",
+      "url": "https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng/4.0.0_best_int/eng.traineddata.gz",
+      "sha256": "45b4cb346724ac1774f1c36f42f182b887bcdb28ebe63e6fff90ac41f3fcff91",
+      "size": 2952873
+    },
+    {
+      "dest": "vendor/transformers/transformers.min.js",
+      "url": "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2/dist/transformers.min.js",
+      "sha256": "8154eee40d77f246ccd5a49f06e8e6d707cc01f91b6c56e32c9290c418dc6d9a",
+      "size": 849533
+    },
+    {
+      "dest": "vendor/transformers/ort-wasm-simd-threaded.jsep.mjs",
+      "url": "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2/dist/ort-wasm-simd-threaded.jsep.mjs",
+      "sha256": "08fb86ec433c78bfb032c5d84a68b8e8e5a8d81268fa39e24314179a5767a5b9",
+      "size": 44484
+    },
+    {
+      "dest": "vendor/transformers/ort-wasm-simd-threaded.jsep.wasm",
+      "url": "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2/dist/ort-wasm-simd-threaded.jsep.wasm",
+      "sha256": "c46655e8a94afc45338d4cb2b840475f88e5012d524509916e505079c00bfa39",
+      "size": 21596019
+    },
+    {
+      "dest": "models/Xenova/distilbert-base-multilingual-cased-ner-hrl/config.json",
+      "url": "https://huggingface.co/Xenova/distilbert-base-multilingual-cased-ner-hrl/resolve/c2a4dbf593c57f47004c5bc2d3770d311aee9c43/config.json",
+      "sha256": "38847be4dc6699b1218a749ed69f888c2ccc7b4deba98e3c4a1cac8cb34d54c8",
+      "size": 927
+    },
+    {
+      "dest": "models/Xenova/distilbert-base-multilingual-cased-ner-hrl/tokenizer.json",
+      "url": "https://huggingface.co/Xenova/distilbert-base-multilingual-cased-ner-hrl/resolve/c2a4dbf593c57f47004c5bc2d3770d311aee9c43/tokenizer.json",
+      "sha256": "bf1b59b7b11c95f194f51708d918eea378e09d05f84c0e1656dc5180e8117088",
+      "size": 2919362
+    },
+    {
+      "dest": "models/Xenova/distilbert-base-multilingual-cased-ner-hrl/tokenizer_config.json",
+      "url": "https://huggingface.co/Xenova/distilbert-base-multilingual-cased-ner-hrl/resolve/c2a4dbf593c57f47004c5bc2d3770d311aee9c43/tokenizer_config.json",
+      "sha256": "2d61ce6c7646881e0e7ef08e3b5dd655a19553ab85c41b1a3c27090a63ff6f49",
+      "size": 373
+    },
+    {
+      "dest": "models/Xenova/distilbert-base-multilingual-cased-ner-hrl/special_tokens_map.json",
+      "url": "https://huggingface.co/Xenova/distilbert-base-multilingual-cased-ner-hrl/resolve/c2a4dbf593c57f47004c5bc2d3770d311aee9c43/special_tokens_map.json",
+      "sha256": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3",
+      "size": 125
+    },
+    {
+      "dest": "models/Xenova/distilbert-base-multilingual-cased-ner-hrl/onnx/model_quantized.onnx",
+      "url": "https://huggingface.co/Xenova/distilbert-base-multilingual-cased-ner-hrl/resolve/c2a4dbf593c57f47004c5bc2d3770d311aee9c43/onnx/model_quantized.onnx",
+      "sha256": "24a0b98f4dd4cd92842f5a541272f86f760225a64a29928eddef14bdb2edb986",
+      "size": 135359829
+    }
+  ]
+}
