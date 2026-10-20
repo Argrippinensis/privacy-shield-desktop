@@ -94,6 +94,9 @@
     ".github/workflows/*.yml",
     "tests/helpers.mjs",
     "tests/unit/**",
+    "tests/eval/dump-reference.mjs",
+    "tests/eval/diff-reference.mjs",
+    "tests/golden/reference-v1.8.json",
     "tests/shell.test.mjs",
     "tests/hygiene.test.mjs",
     "main.js",
@@ -158,8 +161,6 @@
     "app/lib/detect.js",
     "app/privacy-shield.html",
     "tests/unit/detect*.test.mjs",
-    "tests/eval/dump-reference.mjs",
-    "tests/golden/reference-v1.8.json",
     "package.json"
    ],
    "tests": [
@@ -1235,9 +1236,9 @@
  ],
  "milestones": [
   {
-   "id": "beta1",
-   "version": "2.0.0-beta.1",
-   "kind": "prerelease",
+   "id": "phase-vertrauen",
+   "version": "",
+   "kind": "audit",
    "after": [
     "A1.w",
     "A2.w",
@@ -1247,29 +1248,29 @@
    ],
    "audit": true,
    "status": "offen",
-   "note": ""
+   "note": "Phasenpruefung Vertrauen (kein Release)"
   },
   {
-   "id": "beta2",
-   "version": "2.0.0-beta.2",
-   "kind": "prerelease",
+   "id": "phase-dokumente",
+   "version": "",
+   "kind": "audit",
    "after": [
     "B1.w",
     "B2.w",
     "C1.1",
-    "C3.w",
-    "D1.w",
-    "D3"
+    "C3.w"
    ],
-   "audit": false,
+   "audit": true,
    "status": "offen",
-   "note": ""
+   "note": "Phasenpruefung Dokumente und Erkennung (kein Release)"
   },
   {
-   "id": "rc1",
-   "version": "2.0.0-rc.1",
-   "kind": "prerelease",
+   "id": "phase-bedienung",
+   "version": "",
+   "kind": "audit",
    "after": [
+    "D1.w",
+    "D3",
     "C2",
     "D2",
     "E1",
@@ -1277,7 +1278,7 @@
    ],
    "audit": true,
    "status": "offen",
-   "note": ""
+   "note": "Phasenpruefung Bedienung und Betrieb (kein Release)"
   },
   {
    "id": "final",

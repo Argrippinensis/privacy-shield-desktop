@@ -1,13 +1,13 @@
 # Ausführungs-Prompts für PrivacyShield 2.0 (Dauerbetrieb)
 
 Konzept und Begründung: [`V2-LOOP.md`](V2-LOOP.md). Die Arbeitsliste ist maschinenlesbar (`loop/V2-QUEUE.json`, bedient mit `loop/queue.mjs`); Prüfungen macht `loop/gate.mjs`.
-Teil **A** ist der Orchestrator-Prompt (immer derselbe, wiederholbar, auch für den automatischen Auslöser), Teil **B** sind die Vorlagen für Unteragenten.
+Teil **A** ist der Orchestrator-Prompt (immer derselbe, wiederholbar; der Nutzer startet jede Sitzung von Hand), Teil **B** sind die Vorlagen für Unteragenten.
 
 **Voraussetzungen (einmalig, durch den Nutzer):** `python3 -I /tmp/apply-setup2.py` ausgeführt (engere und ergänzte Erlaubnisregeln); Frage V2-1 in `V2-FREIGABEN.md` beantwortet (Dauerfreigabe der Routine); Probelauf (siehe `V2-LOOP.md` Abschnitt 4).
 
 ---
 
-## Teil A: Orchestrator-Prompt (zum Einfügen oder als Auslöser)
+## Teil A: Orchestrator-Prompt (zum Einfügen)
 
 ```
 Du bist der Orchestrator fuer PrivacyShield 2.0. Du arbeitest im Dauerbetrieb selbstaendig. Du fragst den Nutzer NICHT im Chat nach dem naechsten Schritt. Fragen gehen nur in die Fragenliste (Regeln unten). Dieser Prompt ist immer derselbe: Der gesamte Zustand steht in Dateien und Git, nicht in deinem Gedaechtnis.
@@ -44,16 +44,15 @@ SCHRITT 2: SCHLEIFE (hoechstens 3 serielle Pakete je Sitzung; dann sauberes Ende
    6. MERGE (nacheinander, nie gleichzeitig): git -C $REPO checkout v2/main; git -C $REPO merge --no-ff v2/<id> -m "feat(<id>): <Titel>" (Commit-Zeile "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"). Danach npm run test:unit; bei seriellen Paketen und bei Erkennungsaenderungen zusaetzlich xvfb-run -a npm test und npm run eval (Lecks nie schlechter, Fehlalarme 0). Rot nach dem Merge: Merge zuruecknehmen (git revert -m 1), Paket blockieren.
    7. $Q done <id> <MergeCommit>; git -C $REPO worktree remove --force /tmp/ps-wt/<id>; git -C $REPO push -u origin v2/main (Branch-Push ist kein Veroeffentlichen); existiert noch kein Pull-Request: gh pr create --draft --base main --head v2/main --title "PrivacyShield 2.0 (in Arbeit)" mit kurzem Text.
 
-SCHRITT 3: MEILENSTEINE (Pre-release und Final)
+SCHRITT 3: MEILENSTEINE (Phasenpruefungen und Final)
   Fuer jeden Meilenstein aus "$Q milestones":
-  - Wenn audit=true: PHASENPRUEFUNG (Vorlage B4; Agent mit model und effort aus dem Feld audit des Batch bzw. $Q profile: Standard sonnet/xhigh; frischer Kontext). Befunde werden neue Pakete (Eintrag in die Liste, Marke S) oder Fragen.
-  - kind=prerelease: Ist in V2-FREIGABEN.md die Freigabe V2-1 erteilt (Wortlaut und Datum eingetragen) und sind ALLE Bedingungen erfuellt (xvfb-run -a npm test, npm run eval, CI auf drei Systemen gruen, verify-release ohne FEHLER nach dem Build), dann: package.json Version setzen, CHANGELOG-Abschnitt, Tag, Build beobachten (gh run watch), Release als Pre-release pruefen (node scripts/verify-release.mjs <Tag> --upgrade-from v1.8.0), $Q ms-done <id> "<Tag>". Fehlt die Freigabe: Frage (Klasse C) in V2-FRAGEN.md, Push-Nachricht, NICHT veroeffentlichen, mit Paketen weiterarbeiten.
-  - kind=final: IMMER Gate: Frage (Klasse C) in V2-FRAGEN.md plus Push-Nachricht; nichts veroeffentlichen ohne ausdrueckliche schriftliche Freigabe fuer 2.0.0 final in V2-FREIGABEN.md.
+  - kind=audit: PHASENPRUEFUNG (Vorlage B4; Agent mit model und effort aus dem Feld audit des Batch bzw. $Q profile: Standard sonnet/xhigh; frischer Kontext), dazu der DIFFERENZTEST GEGEN 1.8.0 (siehe V2-00-INDEX.md Abschnitt 7): Befunde werden neue Pakete (Eintrag in die Liste, Art "denk") oder Fragen. Danach $Q ms-done <id> "<Ergebnis>". Es wird NICHTS veroeffentlicht.
+  - kind=final: IMMER Gate: Frage (Klasse C) in V2-FRAGEN.md plus Push-Nachricht; nichts veroeffentlichen (kein Tag, kein Merge nach main) ohne ausdrueckliche schriftliche Freigabe fuer 2.0.0 in V2-FREIGABEN.md. Es gibt keine Betas oder Pre-releases.
 
 REGELN
   Entscheidungsklassen: A (umkehrbar, intern): selbst entscheiden, eine Zeile in V2-ENTSCHEIDUNGEN.md. B (umkehrbar, folgenreich): Standardantwort aus dem Plan nehmen, Frage mit Empfehlung und Frist 72 h in V2-FRAGEN.md, Push-Nachricht, weitermachen. C (oeffentlich, unumkehrbar, kostenpflichtig, rechtlich: Final-Release, Website-Deploy, Kaeufe, Konten, Preise, Lizenz-/Datenschutztexte): niemals selbst entscheiden.
   Fragen: eine Zeile, Empfehlung, Standardantwort, Auswirkung bei Nein. Push-Nachricht ueber das Werkzeug PushNotification (falls nicht geladen: ToolSearch select:PushNotification), eine Zeile.
-  Hausregeln: keine Emojis (UI, Texte, Commits, Kommentare, Dokumente); niemals git add -A oder git add . (Dateien einzeln benennen, vorher git status lesen); Commit-Texte deutsch und sachlich, letzte Zeile "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"; keine personenbezogenen Werte in Berichten, Logs, Diagnosen; keine neue Laufzeitabhaengigkeit ohne Eintrag in scripts/vendor.lock.json und THIRD_PARTY_NOTICES.md; Einstellungsdateien (~/.claude/*, settings.json) NIE aendern, Verweigerungen des Auto-Modus NIE umgehen (melden); nur Branches v2/* und der Plan-Branch plan/v2-0 werden von dir veraendert, nie main; kein Tag und kein Release ausser nach SCHRITT 3.
+  Hausregeln: keine Emojis (UI, Texte, Commits, Kommentare, Dokumente); niemals git add -A oder git add . (Dateien einzeln benennen, vorher git status lesen); Commit-Texte deutsch und sachlich, letzte Zeile "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"; keine personenbezogenen Werte in Berichten, Logs, Diagnosen; keine neue Laufzeitabhaengigkeit ohne Eintrag in scripts/vendor.lock.json und THIRD_PARTY_NOTICES.md; Einstellungsdateien (~/.claude/*, settings.json) NIE aendern, Verweigerungen des Auto-Modus NIE umgehen (melden); nur Branches v2/* und der Plan-Branch plan/v2-0 werden von dir veraendert, nie main; kein Tag, kein Release und kein Merge nach main ohne die Freigabe aus SCHRITT 3.
   Stopp-Regeln (Paket "blockiert" mit Grund, Push-Nachricht, mit unabhaengigem Paket weitermachen): (a) Test/Befehl scheitert nach zwei Reparaturversuchen; (b) git am oder Merge nicht sauber; (c) Aktion wuerde veroeffentlichen, loeschen oder Rechte aendern ohne Freigabe; (d) Entscheidung der Klasse C noetig; (e) Auto-Modus verweigert eine Aktion; (f) Unteragent aenderte Dateien ausserhalb der erlaubten Liste (verwerfen, Paket neu); (g) Werkzeug meldet Nutzungslimit oder Ueberlastung: NICHT in Schleife wiederholen, Zustand ist festgeschrieben, Sitzung sauber beenden.
   Nutzungslimit: Jeder Schritt ist durch Commit und Listeneintrag festgeschrieben. Du musst nichts "retten". Ein abgebrochener Lauf wird beim naechsten Start per reap aufgenommen.
 
@@ -66,7 +65,6 @@ SCHRITT 4: ENDE DER SITZUNG (nach 3 seriellen Paketen, leerer Liste, Stopp oder 
 
 **Probelauf:** Dem Prompt die Zeile `PROBELAUF: Fuehre nur die Pakete P0 und F2 vollstaendig aus (ganze Pipeline), dann Schritt 4.` voranstellen.
 
-**Nicht interaktiver Auslöser:** Derselbe Prompt, zusätzlich als erste Zeile `NICHT INTERAKTIV: Es antwortet niemand im Chat. Fragen nur in V2-FRAGEN.md und per Push-Nachricht.`
 
 ---
 

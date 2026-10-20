@@ -17,12 +17,12 @@ HTML = 'app/privacy-shield.html'
 add('P0', 'Planhaertung: Spezifikationen gegen den echten Code pruefen und nachbessern', 'V2-LOOP.md#planhaertung', 'S', [],
     ['docs/superpowers/plans/2026-10-20-v2-0/**'], [], [], serial=True)
 add('F2', 'Unit-Laeufer, Electron 44, Haertung', 'V2-F-fundament.md#f2', 'S', ['P0'],
-    ['package.json', 'package-lock.json', '.github/workflows/*.yml', 'tests/helpers.mjs', 'tests/unit/**', 'tests/shell.test.mjs', 'tests/hygiene.test.mjs', 'main.js', 'preload.js', 'app/index.html', 'THIRD_PARTY_NOTICES.md'],
+    ['package.json', 'package-lock.json', '.github/workflows/*.yml', 'tests/helpers.mjs', 'tests/unit/**', 'tests/eval/dump-reference.mjs', 'tests/eval/diff-reference.mjs', 'tests/golden/reference-v1.8.json', 'tests/shell.test.mjs', 'tests/hygiene.test.mjs', 'main.js', 'preload.js', 'app/index.html', 'THIRD_PARTY_NOTICES.md'],
     ['tests/unit/**', 'tests/shell.test.mjs'], [U, 'xvfb-run -a npm test'], serial=True)
 add('F1.spike', 'Machbarkeitspruefung Kernauslagerung (Go/Nein)', 'V2-F-fundament.md#f1', 'S', ['F2'],
     ['docs/superpowers/plans/2026-10-20-v2-0/artifacts/f1-abhaengigkeiten.md'], [], [], serial=True, effort='medium')
 add('F1', 'Erkennungskern auslagern', 'V2-F-fundament.md#f1', 'S', ['F1.spike'],
-    ['app/lib/detect.js', HTML, 'tests/unit/detect*.test.mjs', 'tests/eval/dump-reference.mjs', 'tests/golden/reference-v1.8.json', 'package.json'],
+    ['app/lib/detect.js', HTML, 'tests/unit/detect*.test.mjs', 'package.json'],
     ['tests/unit/detect*.test.mjs'], [U, 'xvfb-run -a npm test', 'xvfb-run -a npm run eval'], serial=True, effort='medium')
 add('A1.m', 'Gegenpruefung: Modul', 'V2-A-vertrauen.md#a1', 'H', ['F2'], ['app/lib/leakcheck.js', 'tests/unit/leakcheck.test.mjs'], ['tests/unit/leakcheck.test.mjs'], [unit('leakcheck.test.mjs')])
 add('A1.w', 'Gegenpruefung: Oberflaeche', 'V2-A-vertrauen.md#a1', 'S', ['A1.m'], [HTML, 'tests/leakcheck.test.mjs'], ['tests/leakcheck.test.mjs'], [U, e2e('leakcheck.test.mjs')], serial=True)
@@ -54,9 +54,9 @@ add('G1', 'Abnahme, Dokumentation, Veroeffentlichung', 'V2-G-abschluss.md', 'S',
 for k in ['B3', 'C4', 'D4', 'D5', 'E3', 'E4', 'E5']:
     add(k, f'Kann-Paket {k}', 'V2-00-INDEX.md', 'S', ['G1'], [], [], [], serial=True, kann=True)
 M = [
-  dict(id='beta1', version='2.0.0-beta.1', kind='prerelease', after=['A1.w', 'A2.w', 'A3.w', 'A4', 'F1.spike'], audit=True, status='offen', note=''),
-  dict(id='beta2', version='2.0.0-beta.2', kind='prerelease', after=['B1.w', 'B2.w', 'C1.1', 'C3.w', 'D1.w', 'D3'], audit=False, status='offen', note=''),
-  dict(id='rc1', version='2.0.0-rc.1', kind='prerelease', after=['C2', 'D2', 'E1', 'E2'], audit=True, status='offen', note=''),
+  dict(id='phase-vertrauen', version='', kind='audit', after=['A1.w', 'A2.w', 'A3.w', 'A4', 'F1.spike'], audit=True, status='offen', note='Phasenpruefung Vertrauen (kein Release)'),
+  dict(id='phase-dokumente', version='', kind='audit', after=['B1.w', 'B2.w', 'C1.1', 'C3.w'], audit=True, status='offen', note='Phasenpruefung Dokumente und Erkennung (kein Release)'),
+  dict(id='phase-bedienung', version='', kind='audit', after=['D1.w', 'D3', 'C2', 'D2', 'E1', 'E2'], audit=True, status='offen', note='Phasenpruefung Bedienung und Betrieb (kein Release)'),
   dict(id='final', version='2.0.0', kind='final', after=['G1'], audit=True, status='offen', note='Gate: nur mit schriftlicher Freigabe des Nutzers'),
 ]
 PROFILES = {

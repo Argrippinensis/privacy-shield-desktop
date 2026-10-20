@@ -41,14 +41,13 @@ Fragen werden **gebündelt und knapp** gestellt: eine Zeile Frage, Empfehlung, S
 
 **Der Wiedereinstieg ist immer derselbe Prompt** (`V2-EXEC-PROMPT.md`, Teil A): Er liest nur die Arbeitsliste und macht dort weiter. Es gibt keine "Sitzungsgeschichte", auf die es ankommt.
 
-**Zwei Wege, ihn auszulösen:**
+**Auslösen:**
 1. **Von Hand** (Nutzer fügt den Prompt ein, oder `/loop` ohne Intervall).
-2. **Automatisch:** ein geplanter Auslöser (Cron, z. B. alle 2 Stunden) startet bei jedem Lauf eine **frische Sitzung** mit dem Prompt. Läuft noch eine Sitzung (Sperre frisch), beendet sich der neue Lauf sofort ("noop", wenige Tausend Token). Ist das Limit erschöpft, schlägt der Start fehl, ohne etwas zu verbrauchen; nach dem Zurücksetzen arbeitet der nächste Lauf weiter. Das ersetzt "der Nutzer triggert wieder".
+2. *(Entscheidung des Nutzers: kein automatischer Auslöser.)* Ein Cron-Auslöser wäre möglich, ist aber nicht eingerichtet; der Nutzer startet jede Sitzung von Hand (Weiter-Prompt in `V2-START.md`).
 
 **Einführung in Stufen (Pflicht, damit nichts Ungeprüftes unbeaufsichtigt läuft):**
 1. *Probelauf von Hand:* Der Orchestrator führt Vorabprüfung, die Planhärtung P0 und das Paket F2 (Unit-Läufer, Electron 44) mit der ganzen Pipeline durch; der Nutzer liest den Bericht.
-2. *Probelauf mit Auslöser, Tagesbetrieb:* Auslöser an, aber nur Pakete der Phase 1 und 2 (Vertrauen).
-3. *Volle Freigabe* des Dauerbetriebs bis zur Phase Abschluss (ohne Release 2.0.0).
+2. *Arbeitsbetrieb:* danach Sitzung für Sitzung bis zur Abnahme (ohne Release 2.0.0; das bleibt ein eigenes Gate).
 
 ## 5. Zeitliche Optimierung (ehrlich)
 
@@ -72,7 +71,7 @@ Fragen werden **gebündelt und knapp** gestellt: eine Zeile Frage, Empfehlung, S
 | sofort alles anhalten | Terminal: `touch ~/.ps-STOP` (aufheben: `rm ~/.ps-STOP`) |
 | sehen, wo wir stehen | `node <PLAN>/docs/superpowers/plans/2026-10-20-v2-0/loop/queue.mjs status` oder `V2-STATUS.md` |
 | eine Frage beantworten | im Chat: `F3: ja` (oder `nein, weil ...`) |
-| einen Release freigeben | im Chat ausdrücklich, z. B. "Ja, 2.0.0-beta.1 veröffentlichen" (oder Dauerfreigabe, siehe `V2-FREIGABEN.md`) |
+| einen Release freigeben | im Chat ausdrücklich, z. B. "Ja, 2.0.0 veröffentlichen" |
 | ein Paket neu starten | `queue.mjs reopen <id>` |
 
 ## 8. Modelle und Denkaufwand: kein Umschalten durch den Nutzer

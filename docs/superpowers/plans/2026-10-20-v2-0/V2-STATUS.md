@@ -14,7 +14,6 @@ Der Orchestrator ändert nur diese Datei und den Branch `v2/main`; jede Statusä
 | 4 | A2 Bericht | Muss | H | 3 | offen | | |
 | 5 | A3 Verschlüsselte Zuordnung | Muss | H | 1 | offen | | Prüfung Sonnet mittel Pflicht |
 | 6 | A4 Hygiene | Soll | H | 1 | offen | | |
-| - | **Beta 1** (`2.0.0-beta.1`) | Gate G1 | | 2-6 | offen | | Nutzer fragen |
 | 7 | B1 Mehrfachauswahl, Projekt, ZIP | Muss | S | 4, 5, 6 | offen | | Sofortfix zuerst |
 | 8 | B2 Weitere Formate | Soll | H | 1 | offen | | |
 | 9 | C1 Korpusschleife, Durchlauf 1 | Muss | S | 1 | offen | | |
@@ -23,7 +22,6 @@ Der Orchestrator ändert nur diese Datei und den Branch `v2/main`; jede Statusä
 | 12 | D1 Prüfansicht, Rückgängig | Muss | S | 3 | offen | | Skill frontend-design |
 | 13 | D3 Info-Dialog | Muss | H | 1 | offen | | |
 | 14 | D2 Barrierefreiheit | Soll | S | 12, 13 | offen | | axe-core nur Tests |
-| - | **Beta 2 / RC 1** | Gate G1 | | 7-14 | offen | | Nutzer fragen |
 | 15 | E1 Kommandozeile | Soll | S | 4, 5, 7 | offen | | |
 | 16 | E2 Öffnen mit, Einzelinstanz | Soll | H | 7 | offen | | |
 | 17 | F3 Bibliotheken | Soll | S | 2 | offen | | Vorgängerplan WP 08 |

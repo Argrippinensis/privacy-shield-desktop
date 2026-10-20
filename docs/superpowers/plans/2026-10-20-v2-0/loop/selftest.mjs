@@ -47,8 +47,8 @@ t('Meilenstein erscheint erst, wenn alle Voraussetzungen fertig sind', () => {
   assert.deepEqual(JSON.parse(q('milestones').out).map((m) => m.id), []);
   for (const i of ['A1.w', 'A2.w', 'A3.w', 'A4', 'F1.spike']) { q('reopen', i); }
   const a2 = JSON.parse(fs.readFileSync(env.PS_QUEUE, 'utf8')); a2.packages.forEach((p) => { if (['A1.w', 'A2.w', 'A3.w', 'A4', 'F1.spike'].includes(p.id)) p.status = 'fertig'; }); fs.writeFileSync(env.PS_QUEUE, JSON.stringify(a2));
-  assert.deepEqual(JSON.parse(q('milestones').out).map((m) => m.id), ['beta1']);
-  q('ms-done', 'beta1', 'ok'); assert.deepEqual(JSON.parse(q('milestones').out).map((m) => m.id), []);
+  assert.deepEqual(JSON.parse(q('milestones').out).map((m) => m.id), ['phase-vertrauen']);
+  q('ms-done', 'phase-vertrauen', 'ok'); assert.deepEqual(JSON.parse(q('milestones').out).map((m) => m.id), []);
 });
 t('Kann-Pakete nie ohne Flag', () => { const whole = JSON.parse(fs.readFileSync(env.PS_QUEUE, 'utf8')); for (const p of whole.packages) if (p.status === 'offen' && !p.kann) p.status = 'fertig'; fs.writeFileSync(env.PS_QUEUE, JSON.stringify(whole)); assert.deepEqual(ids(q('next', '--max', '9')), []); assert.ok(ids(q('next', '--max', '9', '--include-kann')).length > 0); });
 

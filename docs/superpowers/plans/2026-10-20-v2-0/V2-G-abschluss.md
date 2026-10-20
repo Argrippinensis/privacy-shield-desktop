@@ -1,13 +1,10 @@
 # V2-G: Abnahme, Dokumentation, Veröffentlichung
 
-**Marke:** S. **Aufwand:** 4 h plus Wartezeiten. **Gate:** G1 (Pre-release und Release). Voraussetzung: alle **Muss**- und **Soll**-Pakete laut `V2-STATUS.md` erledigt oder begründet verschoben.
+**Marke:** S. **Aufwand:** 4 h plus Wartezeiten. **Gate:** G1 (Release 2.0.0). Voraussetzung: alle **Muss**- und **Soll**-Pakete laut `V2-STATUS.md` erledigt oder begründet verschoben.
 
-## 1. Pre-releases (Beta-Verteilung)
+## 1. Keine Pre-releases
 
-- [ ] Nach P2 (Vertrauen): `package.json` Version `2.0.0-beta.1`, `CHANGELOG.md` Abschnitt `## [2.0.0-beta.1] - Datum`, Tag `v2.0.0-beta.1`. **Gate G1** (Frage mit Empfehlung). Release mit `--prerelease` (Workflow: Tags mit Bindestrich als Pre-release markieren; Schritt in `build.yml` ergänzen: `gh release create ... $( [[ "$TAG" == *-* ]] && echo --prerelease )`). Der Link `releases/latest` zeigt weiter auf die stabile Version.
-- [ ] Prüfung der Betas wie `02-release-1.8.0.md` Schritt 7 (`verify-release.mjs`), **ohne** feste Links zu prüfen, die nur für das stabile Release gelten.
-- [ ] Rückmeldung einholen (Nutzer plus 2 bis 3 Testpersonen): Installation, Mehrfachverarbeitung, Passwortdialog, Prüfansicht; Fehler als Fälle in die Tests.
-- [ ] `2.0.0-beta.2` nach P3, `2.0.0-rc.1` nach P5, jeweils gleiches Verfahren.
+Es gibt keine Betas und keine Release Candidates (Entscheidung des Nutzers). Zwischenstände werden **nur intern** durch Phasenprüfungen (Meilensteine in der Arbeitsliste) und den Differenztest abgesichert; der Nutzer kann jederzeit einen Entwicklungsstand selbst bauen und ausprobieren (`npm run build:linux` bzw. Artefakte des Pull-Request-Laufs).
 
 ## 2. Abnahmelauf (vor `2.0.0`)
 
@@ -15,6 +12,7 @@
 npm ci && npm run fetch-vendor
 xvfb-run -a npm test                       # alle Suiten inkl. Unit, a11y, cli, project, realdocs
 npm run eval                               # Ratsche, beide Modi; Tabelle in den PR-Text
+node tests/eval/diff-reference.mjs        # Differenztest gegen die Referenz von 1.8.0 (aus F1): jede Abweichung erklaeren
 npm run build:linux && PS_PACKAGED_BIN=dist/linux-unpacked/privacy-shield-desktop xvfb-run -a npm test
 git log --oneline v1.8.0..HEAD | wc -l     # Umfang notieren
 ```

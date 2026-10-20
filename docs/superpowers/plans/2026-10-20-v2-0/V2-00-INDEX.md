@@ -35,17 +35,15 @@ Fahrplan (jeder Schritt ist ein Pull Request, jedes Ziel mit Tests grün):
 ```
 R0  1.8.0                       Serie aus dem Vorgängerplan (WP 02, Gate G1)
 P1  Fundament                   F1 Kern auslagern (nach Machbarkeitsprüfung), F2 Testläufer + Electron 44
-P2  Vertrauen                   A1 Gegenprüfung, A2 Bericht, A3 verschlüsseltes Mapping, A4 Export-Hygiene     -> 2.0.0-beta.1
-P3  Dokumente                   B1 Mehrfachauswahl und Projekt, B2 weitere Formate                            -> 2.0.0-beta.2
+P2  Vertrauen                   A1 Gegenprüfung, A2 Bericht, A3 verschlüsseltes Mapping, A4 Export-Hygiene     -> Phasenpruefung
+P3  Dokumente                   B1 Mehrfachauswahl und Projekt, B2 weitere Formate                            -> Phasenpruefung
 P4  Erkennung                   C1 Korpusschleife (mehrfach), C2 Verknüpfung, C3 eigene Regeln
-P5  Bedienung                   D1 Prüfansicht und Rückgängig, D2 Barrierefreiheit, D3 Info/Lizenzen/Diagnose  -> 2.0.0-rc.1
+P5  Bedienung                   D1 Prüfansicht und Rückgängig, D2 Barrierefreiheit, D3 Info/Lizenzen/Diagnose  -> Phasenprüfung
 P6  Betrieb                     E1 Kommandozeile, E2 Dateizuordnung und Einzelinstanz, F3 Bibliotheken, F4 Stabilität
-P7  Abschluss                   G1 Abnahme, Dokumentation, Website, Veröffentlichung                          -> 2.0.0 (Gate G1)
+P7  Abschluss                   G1 Abnahme, Dokumentation, Differenztest, Veröffentlichung (Gate)             -> 2.0.0
 ```
 
-**Beta-Verteilung:** Vorabversionen werden als GitHub-**Pre-release** veröffentlicht (`gh release create --prerelease`). `electron-updater` bietet Vorabversionen
-nur an, wenn `allowPrerelease` gesetzt ist; normale Nutzer bekommen sie nicht. Tester installieren manuell. Die Website verlinkt weiter auf `releases/latest`
-(ein Pre-release ist nie "latest").
+**Keine Betas, keine Pre-releases (Entscheidung des Nutzers).** Qualität wird durch Tiefe der Tests, Phasenprüfungen und den Differenztest gegen 1.8.0 gesichert, nicht durch Vorabversionen. 2.0.0 erscheint erst, wenn alles gründlich geprüft ist. Jede Sitzung wird vom Nutzer von Hand gestartet.
 
 ## 3. Architekturregeln für 2.0 (damit auch schwächere Modelle sicher arbeiten können)
 
@@ -114,7 +112,17 @@ Haiku ist optional (Profil `gemischt`: Bau-Implementierer mit Haiku, spart Verbr
 | D17 | Versionsnummer 2.0.0 trotz kompatibler Dateien | ja: neues Zuordnungsformat, Kommandozeile, Bericht sind sichtbare Neuerungen; Hauptversion signalisiert "neues Niveau", Updates von 1.x laufen automatisch |
 | D18 | Web-Tool (arcangeli.eu) erhält den Kern aus F1 | nach 2.0, mit Gate G3 (Regel "arcangeli.eu inhaltlich unberührt") |
 
-## 7. Definition von "fertig" für 2.0.0
+## 7. Qualitätsprinzip und Definition von "fertig" für 2.0.0
+
+**Prinzip: mehr können, aber nie fehleranfälliger als 1.8.0.** Jede neue Funktion muss das Bestehende nachweislich unberührt lassen:
+* **Differenztest gegen 1.8.0:** Für alle Korpusdokumente (Harness, synthetisch, Realdokumente, Golden, Stress) ist die Ausgabe von 2.0 mit der von 1.8.0 verglichen (Text und Zuordnung, Hash je Fall). Jede Abweichung ist erklärt (gewollte Verbesserung mit Eintrag in `V2-ENTSCHEIDUNGEN.md`) oder ein Fehler. Werkzeug: `tests/eval/dump-reference.mjs` aus F1, Referenz `tests/golden/reference-v1.8.json`.
+* **Tests nur hinzufügen:** Kein bestehender Test wird gelockert oder entfernt; Ratschen (Lecks, Fehlalarme, Leistung) werden nie gelockert (Prüfskript `gate.mjs`).
+* **Neue Funktionen ausschaltbar oder ohne Wirkung, wenn nicht benutzt:** Wer nur ein Dokument anonymisiert wie bisher, bekommt dasselbe Ergebnis und dieselbe Bedienung (Test: Ein-Dokument-Ablauf von 1.8.0 läuft unverändert).
+* **Dauer- und Wiederholungstests:** Rundlauf über das ganze Korpus, 200 Wiederholungen großer Dokumente ohne Speicherzuwachs (nach Entladen unter 1 GB), Fuzz (F4).
+* **Echte Systeme:** CI auf Windows, macOS, Linux (gebautes Programm) bei jedem Pull-Request; Windows-Checkliste durch den Nutzer vor der Veröffentlichung.
+* **Im Zweifel nicht einbauen:** Ein Paket, das die Prinzipien nicht erfüllt, wird verschoben (nicht "durchgewunken"); der Plan lässt das ausdrücklich zu.
+
+**Fertig, wenn:**
 
 * Alle **Muss**- und **Soll**-Pakete erledigt oder mit Begründung ausdrücklich verschoben (Eintrag in `V2-STATUS.md`).
 * `xvfb-run -a npm test` und Unit-Tests grün auf Ubuntu und Windows; Paket-Tests auf allen drei Systemen in der CI grün.
