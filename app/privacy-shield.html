@@ -1349,21 +1349,25 @@
                 >
               </div>
               <div class="tool-panel-body">
+                <label class="text-xs" style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; cursor: pointer; line-height: 1.5">
+                  <input type="checkbox" id="aiAutoToggle" checked onchange="setAIMode(this.checked ? 'auto' : 'off')" style="margin-top: 2px" />
+                  <span>
+                    KI-Erkennung verwenden
+                    <span style="color: #999; display: block">Erkennt Personen, Organisationen und Orte. 100% lokal, funktioniert ohne Internet.</span>
+                  </span>
+                </label>
                 <div id="aiStatusDefault">
-                  <p class="text-xs" style="color: #666; margin-bottom: 10px; line-height: 1.5">
-                    Erkennt Personen, Organisationen und Orte automatisch. 100% lokal — kein Serverkontakt.
+                  <p id="aiDefaultText" class="text-xs" style="color: #666; margin-bottom: 10px; line-height: 1.5">
+                    Bereit. Das Modell startet bei der ersten Analyse (ca. 2 Sekunden) und gibt den Speicher nach 5 Minuten ohne Nutzung wieder frei.
                   </p>
                   <button
                     id="aiLoadBtn"
-                    class="btn-accent"
-                    style="font-size: 11px; padding: 8px 16px; gap: 6px"
+                    class="btn btn-ghost"
+                    style="font-size: 11px; padding: 6px 12px"
                     onclick="loadAIModel()"
                   >
-                    KI-Erkennung aktivieren
+                    Jetzt laden
                   </button>
-                  <p class="text-xs" style="color: #999; margin-top: 6px">
-                    Modell ist Teil der Installation · funktioniert ohne Internet
-                  </p>
                   <p id="aiMemHint" class="text-xs" style="color: #b45309; margin-top: 6px; line-height: 1.5; display: none"></p>
                 </div>
                 <div id="aiStatusLoading" style="display: none">
@@ -3209,9 +3213,8 @@
         document.getElementById("OB").style.display = "none";
         document.getElementById("WS").style.display = "block";
         initEL();
-        checkMemoryHint().then(function (lowRam) {
-          if (!lowRam && localStorage.getItem("aiModelLoaded") === "true") loadAIModel();
-        });
+        aiRefreshUI();
+        checkMemoryHint();
       }
       function showOB() {
         document.getElementById("WS").style.display = "none";
@@ -3815,12 +3818,49 @@
         });
       }
 
+      // KI-Modus: "auto" (Standard) laedt das Modell bei der ersten Analyse und entlaedt es nach Leerlauf, "off" nutzt nur Regeln + Wortlisten.
+      const AI_MODE_KEY = "ps_ai_mode";
+      let AI_IDLE_MS = 5 * 60 * 1000;
+      let aiIdleTimer = null;
+      function aiMode() {
+        const v = localStorage.getItem(AI_MODE_KEY);
+        if (v === "auto" || v === "off") return v;
+        return localStorage.getItem("aiModelLoaded") === "false" ? "off" : "auto"; // Übernahme der Einstellung aus v1.7
+      }
+      function setAIMode(mode) {
+        localStorage.setItem(AI_MODE_KEY, mode);
+        if (mode === "off") unloadAIModel(true);
+        aiRefreshUI();
+      }
+      function aiRefreshUI() {
+        const on = aiMode() === "auto";
+        const tg = document.getElementById("aiAutoToggle");
+        if (tg) tg.checked = on;
+        document.getElementById("aiDefaultText").textContent = on
+          ? "Bereit. Das Modell startet bei der ersten Analyse (ca. 2 Sekunden) und gibt den Speicher nach 5 Minuten ohne Nutzung wieder frei."
+          : "KI-Erkennung ist ausgeschaltet. Es gilt die Standard-Erkennung (Regeln und Wortlisten).";
+        document.getElementById("aiLoadBtn").style.display = on ? "inline-flex" : "none";
+        if (!nerPipeline && !aiLoading) aiSetState("def");
+      }
+      // Vor jeder Analyse: Modell bei Bedarf laden, ausser bei wenig Arbeitsspeicher
+      async function ensureAIReady() {
+        if (aiMode() !== "auto" || nerPipeline || aiLoading) return;
+        if (await checkMemoryHint()) return;
+        await loadAIModel();
+      }
+      function scheduleAIIdleUnload() {
+        clearTimeout(aiIdleTimer);
+        if (!nerPipeline) return;
+        aiIdleTimer = setTimeout(function () {
+          if (!anonBusy && !aiLoading && nerPipeline) unloadAIModel(true);
+        }, AI_IDLE_MS);
+      }
       function aiSetState(state) {
         const ids = { def: "aiStatusDefault", loading: "aiStatusLoading", ready: "aiStatusReady", error: "aiStatusError" };
         for (const k in ids) document.getElementById(ids[k]).style.display = k === state ? "block" : "none";
         const badgeEl = document.getElementById("aiStatusBadge");
         const look = {
-          def: ["Nicht geladen", "#f0f2f5", "#4a5568"],
+          def: [aiMode() === "off" ? "Aus" : "Bereit", "#f0f2f5", "#4a5568"],
           loading: ["Lädt...", "#fffbeb", "#92400e"],
           ready: ["Aktiv (NER-Modell)", "#ecfdf5", "#059669"],
           error: ["Fallback (Wortlisten)", "#fffbeb", "#92400e"],
@@ -3854,7 +3894,6 @@
           aiCache = { key: null, spans: [] };
           aiSetState("ready");
           toast("KI-Modell geladen — bereit", "s");
-          localStorage.setItem("aiModelLoaded", "true");
         } catch (err) {
           console.error("NER-Modell konnte nicht geladen werden:", err);
           nerPipeline = null;
@@ -3866,13 +3905,13 @@
       }
 
       // Gibt den Arbeitsspeicher des Modells frei (ca. 0,5 GB) und kehrt zur Wortlisten-Erkennung zurueck.
-      function unloadAIModel() {
+      function unloadAIModel(silent) {
+        clearTimeout(aiIdleTimer);
         if (nerPipeline && nerPipeline.worker) nerPipeline.worker.terminate();
         nerPipeline = null;
         aiCache = { key: null, spans: [] };
-        localStorage.setItem("aiModelLoaded", "false");
         aiSetState("def");
-        toast("KI-Modell entladen — Speicher freigegeben", "s");
+        if (!silent) toast("KI-Modell entladen — Speicher freigegeben", "s");
       }
 
       // Arbeitsspeicher des Rechners in GB (Desktop-App: exakt, sonst Naeherung des Browsers) oder null.
@@ -4331,6 +4370,7 @@
           await anonCore();
         } finally {
           anonBusy = false;
+          scheduleAIIdleUnload();
           if (btn) btn.disabled = false;
           const pe = document.getElementById("aiRunProgress");
           if (pe) pe.textContent = "";
@@ -4345,6 +4385,7 @@
         store = {};
         cnt = {};
         try {
+          await ensureAIReady();
           if (nerPipeline && aiCache.key !== input) {
             toast("KI-Analyse läuft...", "s");
             await ensureAISpans(input);

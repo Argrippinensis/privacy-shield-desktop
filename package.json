@@ -19,7 +19,8 @@
     "prebuild:mac": "node scripts/fetch-vendor.mjs",
     "prebuild:linux": "node scripts/fetch-vendor.mjs",
     "prebuild:all": "node scripts/fetch-vendor.mjs",
-    "prerelease": "node scripts/fetch-vendor.mjs"
+    "prerelease": "node scripts/fetch-vendor.mjs",
+    "golden:update": "node tests/golden/update.mjs"
   },
   "build": {
     "appId": "eu.arcangeli.privacyshield",
