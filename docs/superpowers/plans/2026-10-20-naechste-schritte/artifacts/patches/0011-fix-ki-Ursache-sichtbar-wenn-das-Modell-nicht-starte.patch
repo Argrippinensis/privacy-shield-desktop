@@ -1,0 +1,467 @@
+From 692117e3ef15f04a6b382cfee6ac6ed2fe02608d Mon Sep 17 00:00:00 2001
+From: Alexander Arcangeli <alexander@arcangeli.eu>
+Date: Tue, 20 Oct 2026 16:34:48 +0200
+Subject: [PATCH 11/11] fix(ki): Ursache sichtbar, wenn das Modell nicht
+ startet; Installationspruefung; leere Dateien
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Auslöser: Ein Nutzer sah "Modell konnte nicht geladen werden" ohne jeden Grund. Reproduziert: Bei fehlender oder
+abgeschnittener Modelldatei zeigte die App exakt diesen Text; die echte Ursache ("file was not found locally",
+"protobuf parsing failed") stand nur in der Konsole, die in der Desktop-App nicht zugaenglich ist. Zusaetzlich
+behauptete der Text, die Standard-Erkennung funktioniere "ohne Einschraenkung".
+
+- Fehlerdiagnose im KI-Panel: Code (ASSETS, MODEL_FILE, MODEL_CORRUPT, MEMORY, NETWORK, WASM, UNKNOWN), Klartext mit
+  Loesungshinweis, "Erneut versuchen", "Details kopieren". Kein automatischer Neuversuch bei jeder Analyse (60 s Pause).
+- scripts/fetch-vendor.mjs schreibt app/vendor-manifest.json (Pfad, Groesse, SHA-256); main.js prueft damit die
+  Installation (check-assets). Fehlende oder unvollstaendige Dateien werden mit Dateiname und Groesse genannt.
+- ner-worker.js: bei Thread-/Speicherfehlern einmal mit einem Thread wiederholen.
+- "Diagnose kopieren" enthaelt den KI-Fehler. Behoben: Der Modellstatus wurde bisher immer als "nicht geladen" gemeldet,
+  weil let-Variablen von aussen nicht lesbar sind.
+- Leere Dateien (0 Bytes, z. B. nur online in OneDrive) werden erklaert statt stumm als geladen angezeigt.
+- Tests mit absichtlich beschaedigter Installation (tests/ai-fehler.test.mjs, makeAppVariant).
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ .gitignore               |  1 +
+ CHANGELOG.md             |  8 ++++
+ app/index.html           |  4 +-
+ app/ner-worker.js        | 28 +++++++++----
+ app/privacy-shield.html  | 90 ++++++++++++++++++++++++++++++++++++++--
+ main.js                  | 21 ++++++++++
+ preload.js               |  1 +
+ scripts/fetch-vendor.mjs |  5 +++
+ tests/ai-fehler.test.mjs | 88 +++++++++++++++++++++++++++++++++++++++
+ tests/helpers.mjs        | 25 +++++++++++
+ tests/shell.test.mjs     | 13 ++++++
+ 11 files changed, 271 insertions(+), 13 deletions(-)
+ create mode 100644 tests/ai-fehler.test.mjs
+
+diff --git a/.gitignore b/.gitignore
+index d7c120b..b7acd4e 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -9,3 +9,4 @@ release/
+ # Gebuendelte Bibliotheken und Modell (scripts/fetch-vendor.mjs)
+ app/vendor/
+ app/models/
++app/vendor-manifest.json
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 0ca1649..abc4931 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -14,6 +14,14 @@ der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.
+ - Adressen: Schweizer und österreichische Schreibweise, vierstellige Postleitzahlen.
+ - Weniger Fehlalarme (Länder, "Zentrale", Rechnungsnummern mit führenden Nullen).
+ 
++### Fehlerdiagnose
++- Startet die KI-Erkennung nicht, nennt die App jetzt den Grund (fehlende oder unvollständige Modelldatei, zu wenig Arbeitsspeicher,
++  Laufzeitfehler) samt Lösungshinweis statt nur "Modell konnte nicht geladen werden". Knöpfe "Erneut versuchen" und "Details kopieren".
++- Die Installation wird beim Fehler gegen ein Manifest geprüft (Dateien und Größen); "Diagnose kopieren" enthält den KI-Fehler.
++- Bei Thread- oder Speicherproblemen wird einmal automatisch mit einem Rechenthread wiederholt.
++- Leere Dateien (0 Bytes, z. B. nur online in OneDrive vorhanden) werden erklärt statt stumm angezeigt.
++- Der Hinweis zur Standard-Erkennung sagt ehrlich, dass sie weniger erkennt (bisher: "ohne Einschränkung").
++
+ ### Bedienung und Leistung
+ - KI-Erkennung ist standardmäßig aktiv: Das Modell startet bei der ersten Analyse und gibt nach 5 Minuten Leerlauf den Speicher frei.
+ - Große Dokumente werden bis zu 8-mal schneller anonymisiert.
+diff --git a/app/index.html b/app/index.html
+index df66a27..1ce099f 100644
+--- a/app/index.html
++++ b/app/index.html
+@@ -347,12 +347,14 @@
+         const s = await api.getSystemStats();
+         const v = await api.getAppVersion();
+         const w = document.getElementById('tool-frame').contentWindow;
+-        const model = w.nerPipeline ? 'aktiv (' + w.nerPipeline.info.threads + ' Thread(s))' : 'nicht geladen';
++        const st = w.aiDiagnosticState();
++        const model = st.model ? 'aktiv (' + st.model.threads + ' Thread(s))' : 'nicht geladen';
+         lines.push('PrivacyShield ' + v, 'Plattform: ' + api.platform,
+           'Arbeitsspeicher: ' + s.ram.total + ' GB gesamt, ' + s.ram.percent + '% belegt, App ' + s.app.memory + ' MB',
+           'Prozessor: ' + s.cpu.cores + 'x ' + s.cpu.model,
+           'KI-Modus: ' + w.aiMode() + ', Modell: ' + model,
+           'Cross-Origin-Isolation: ' + w.crossOriginIsolated,
++          'KI-Fehler: ' + (st.error ? st.error.code + ' - ' + st.error.message.slice(0, 160) : 'keiner'),
+           'Zeitpunkt: ' + new Date().toISOString());
+       } catch (e) { lines.push('Fehler beim Sammeln der Angaben: ' + e.message); }
+       await window.electronAPI.copyText(lines.join('\n'));
+diff --git a/app/ner-worker.js b/app/ner-worker.js
+index 3d17b73..7a83367 100644
+--- a/app/ner-worker.js
++++ b/app/ner-worker.js
+@@ -21,15 +21,25 @@ self.onmessage = async ({ data }) => {
+   try {
+     if (data.type === 'load') {
+       if (data.threads) env.backends.onnx.wasm.numThreads = data.threads; // nur fuer Messungen/Tests
+-      ner = await pipeline('token-classification', data.modelId, {
+-        dtype: 'q8',
+-        device: 'wasm',
+-        progress_callback: (p) => {
+-          if (p.status === 'progress' && p.file) {
+-            self.postMessage({ type: 'progress', file: p.file, loaded: p.loaded || 0, total: p.total || 0 });
+-          }
+-        },
+-      });
++      const create = () =>
++        pipeline('token-classification', data.modelId, {
++          dtype: 'q8',
++          device: 'wasm',
++          progress_callback: (p) => {
++            if (p.status === 'progress' && p.file) {
++              self.postMessage({ type: 'progress', file: p.file, loaded: p.loaded || 0, total: p.total || 0 });
++            }
++          },
++        });
++      try {
++        ner = await create();
++      } catch (err) {
++        // Mehrere Rechenthreads brauchen SharedArrayBuffer und mehr Speicher: bei solchen Fehlern einmal mit einem Thread versuchen.
++        const threaded = env.backends.onnx.wasm.numThreads > 1;
++        if (!threaded || !/thread|SharedArrayBuffer|Atomics|shared|memory|alloc|WebAssembly/i.test(String((err && err.message) || err))) throw err;
++        env.backends.onnx.wasm.numThreads = 1;
++        ner = await create();
++      }
+       self.postMessage({ type: 'ready', threads: env.backends.onnx.wasm.numThreads, isolated: !!self.crossOriginIsolated });
+     } else if (data.type === 'run') {
+       const out = await ner(data.text);
+diff --git a/app/privacy-shield.html b/app/privacy-shield.html
+index 26761ba..1109f3c 100644
+--- a/app/privacy-shield.html
++++ b/app/privacy-shield.html
+@@ -1393,10 +1393,16 @@
+                   </button>
+                 </div>
+                 <div id="aiStatusError" style="display: none">
+-                  <p class="text-xs" style="color: #dc2626">Modell konnte nicht geladen werden.</p>
+-                  <p class="text-xs" style="color: #666; margin-top: 6px">
+-                    Die Standard-Erkennung (Regex + Klicken) funktioniert ohne Einschränkung.
++                  <p class="text-xs" style="color: #dc2626; font-weight: 600">KI-Erkennung konnte nicht starten.</p>
++                  <p id="aiErrorReason" class="text-xs" style="color: #444; margin-top: 6px; line-height: 1.5"></p>
++                  <p class="text-xs" style="color: #666; margin-top: 6px; line-height: 1.5">
++                    Die Standard-Erkennung (Regeln und Wortlisten) läuft weiter, erkennt aber weniger, vor allem Namen,
++                    Firmen und Orte. Bitte das Ergebnis dann besonders sorgfältig prüfen.
+                   </p>
++                  <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap">
++                    <button class="btn btn-ghost" style="font-size: 11px; padding: 4px 10px" onclick="retryAIModel()">Erneut versuchen</button>
++                    <button class="btn btn-ghost" style="font-size: 11px; padding: 4px 10px" onclick="copyAIErrorDetails()">Details kopieren</button>
++                  </div>
+                 </div>
+               </div>
+             </div>
+@@ -3522,6 +3528,10 @@
+       }
+       async function loadF(file) {
+         const ext = file.name.split(".").pop().toLowerCase();
++        if (file.size === 0) {
++          toast("Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.", "e");
++          return;
++        }
+         if (file.size > 30 * 1024 * 1024) {
+           toast("Datei zu groß (max 30 MB)", "e");
+           return;
+@@ -4049,6 +4059,7 @@
+       // Vor jeder Analyse: Modell bei Bedarf laden, ausser bei wenig Arbeitsspeicher
+       async function ensureAIReady() {
+         if (aiMode() !== "auto" || nerPipeline || aiLoading) return;
++        if (Date.now() - aiFailedAt < 60000) return;
+         if (await checkMemoryHint()) return;
+         await loadAIModel();
+       }
+@@ -4102,12 +4113,85 @@
+           console.error("NER-Modell konnte nicht geladen werden:", err);
+           nerPipeline = null;
+           localAIMode = true;
++          aiFailedAt = Date.now();
++          lastAIError = await diagnoseAIError(err);
++          document.getElementById("aiErrorReason").textContent = lastAIError.reason;
+           aiSetState("error");
++          toast("KI-Erkennung konnte nicht starten. Grund steht im KI-Panel; es gilt die Standard-Erkennung.", "e");
+         } finally {
+           aiLoading = false;
+         }
+       }
+ 
++      // ---- Fehlerdiagnose: der Nutzer sieht, WARUM das Modell nicht startet (die Konsole ist in der App nicht zugaenglich)
++      let lastAIError = null;
++      let aiFailedAt = 0;
++      function fmtMB(n) {
++        return (n / 1048576).toFixed(1).replace(".", ",") + " MB";
++      }
++      async function diagnoseAIError(err) {
++        const msg = String((err && err.message) || err || "");
++        let assets = null;
++        try {
++          if (window.parent !== window && window.parent.electronAPI && window.parent.electronAPI.checkAssets)
++            assets = await window.parent.electronAPI.checkAssets(false);
++        } catch (e) {}
++        let code = "UNKNOWN";
++        if (assets && assets.manifest && !assets.ok) code = "ASSETS";
++        else if (/protobuf|failed to load model|invalid (?:onnx )?model|corrupt|unexpected end|session\. ERROR_CODE/i.test(msg)) code = "MODEL_CORRUPT";
++        else if (/not found locally|could not locate file|unable to get model file|\b404\b/i.test(msg)) code = "MODEL_FILE";
++        else if (/out of memory|could not allocate|allocation failed|RangeError|Aborted\(\)/i.test(msg)) code = "MEMORY";
++        else if (/failed to fetch|networkerror|load failed|ERR_[A-Z_]+/i.test(msg)) code = "NETWORK";
++        else if (/webassembly|compileerror|linkerror|wasm|SharedArrayBuffer|worker/i.test(msg)) code = "WASM";
++        const bad = assets
++          ? assets.missing.map((p) => p.split("/").pop() + " fehlt").concat(assets.wrongSize.map((w) => w.path.split("/").pop() + ": " + fmtMB(w.actual) + " statt " + fmtMB(w.expected)))
++          : [];
++        const reinstall = "Bitte PrivacyShield neu installieren. Häufige Ursache: Ein Virenschutz hat die große Modelldatei (135 MB) blockiert oder in Quarantäne verschoben.";
++        const texts = {
++          ASSETS: "Dateien der Installation fehlen oder sind unvollständig (" + bad.slice(0, 3).join("; ") + "). " + reinstall,
++          MODEL_FILE: "Die Modelldatei wurde nicht gefunden. " + reinstall,
++          MODEL_CORRUPT: "Die Modelldatei ist beschädigt oder unvollständig. " + reinstall,
++          MEMORY: "Es ist nicht genug freier Arbeitsspeicher für das KI-Modell frei (ca. 0,7 GB nötig). Bitte andere Programme schließen und erneut versuchen.",
++          NETWORK: "Die Modelldateien konnten nicht geladen werden (Netzwerk). Bitte die Verbindung prüfen; in Firmennetzwerken wird huggingface.co oft blockiert.",
++          WASM: "Die Laufzeitumgebung der KI (WebAssembly) konnte nicht starten. Bitte das Programm neu starten; hilft das nicht, „Details kopieren“ und weitergeben.",
++          UNKNOWN: "Unbekannter Fehler. Bitte „Details kopieren“ und weitergeben.",
++        };
++        return { code: code, message: msg.slice(0, 600), assets: assets, reason: texts[code] + " [" + code + "]", time: new Date().toISOString() };
++      }
++      // Fuer die Shell ("Diagnose kopieren"): let-Variablen sind von aussen nicht lesbar, Funktionen schon.
++      function aiDiagnosticState() {
++        return { model: nerPipeline ? nerPipeline.info : null, error: lastAIError };
++      }
++      function aiErrorDetailsText() {
++        const e = lastAIError || { code: "-", message: "kein Fehler gemerkt" };
++        const a = e.assets;
++        return [
++          "PrivacyShield KI-Fehler",
++          "Code: " + e.code,
++          "Meldung: " + e.message,
++          "Zeitpunkt: " + (e.time || "-"),
++          "Cross-Origin-Isolation: " + window.crossOriginIsolated,
++          "Kerne: " + navigator.hardwareConcurrency + ", Speicher laut Browser: " + (navigator.deviceMemory || "?") + " GB",
++          "Installationsprüfung: " + (a ? (a.manifest ? (a.ok ? "alle Dateien vorhanden" : "fehlt: " + a.missing.join(", ") + " | falsche Größe: " + a.wrongSize.map((w) => w.path + " " + w.actual + "/" + w.expected).join(", ")) : "kein Manifest") : "nicht verfügbar"),
++          "Installationsordner: " + (a && a.appRoot ? a.appRoot : "-"),
++          "Browser: " + navigator.userAgent,
++        ].join("\n");
++      }
++      async function copyAIErrorDetails() {
++        const text = aiErrorDetailsText();
++        try {
++          if (window.parent !== window && window.parent.electronAPI && window.parent.electronAPI.copyText) await window.parent.electronAPI.copyText(text);
++          else await navigator.clipboard.writeText(text);
++          toast("Details kopiert", "s");
++        } catch (e) {
++          toast("Kopieren nicht möglich", "e");
++        }
++      }
++      async function retryAIModel() {
++        aiFailedAt = 0;
++        await loadAIModel();
++      }
++
+       // Gibt den Arbeitsspeicher des Modells frei (ca. 0,5 GB) und kehrt zur Wortlisten-Erkennung zurueck.
+       function unloadAIModel(silent) {
+         clearTimeout(aiIdleTimer);
+diff --git a/main.js b/main.js
+index 084d513..7607f7a 100644
+--- a/main.js
++++ b/main.js
+@@ -275,6 +275,27 @@ ipcMain.handle('copy-text', (event, text) => {
+   if (typeof text === 'string' && text.length <= 5000) clipboard.writeText(text);
+ });
+ 
++// Prueft die mitgelieferten Dateien (Modell, Bibliotheken) gegen app/vendor-manifest.json.
++// deep=true berechnet zusaetzlich die SHA-256 der Modelldateien (ca. 1 s fuer 135 MB).
++async function checkAssets(deep) {
++  let manifest;
++  try { manifest = JSON.parse(fs.readFileSync(path.join(APP_ROOT, 'vendor-manifest.json'), 'utf8')); }
++  catch { return { manifest: false, ok: true, missing: [], wrongSize: [], corrupt: [], appRoot: APP_ROOT }; }
++  const missing = [], wrongSize = [], corrupt = [];
++  for (const f of manifest.files) {
++    let st;
++    try { st = fs.statSync(path.join(APP_ROOT, f.path)); } catch { missing.push(f.path); continue; }
++    if (st.size !== f.size) { wrongSize.push({ path: f.path, expected: f.size, actual: st.size }); continue; }
++    if (deep && f.path.startsWith('models/') && f.sha256) {
++      const h = require('crypto').createHash('sha256');
++      await require('stream/promises').pipeline(fs.createReadStream(path.join(APP_ROOT, f.path)), h);
++      if (h.digest('hex') !== f.sha256) corrupt.push(f.path);
++    }
++  }
++  return { manifest: true, ok: !missing.length && !wrongSize.length && !corrupt.length, missing, wrongSize, corrupt, appRoot: APP_ROOT };
++}
++ipcMain.handle('check-assets', (event, deep) => checkAssets(!!deep));
++
+ ipcMain.handle('get-update-mode', () => ({ manual: MANUAL_UPDATE }));
+ 
+ ipcMain.handle('open-download-page', () => {
+diff --git a/preload.js b/preload.js
+index 47e6fd8..c2965b6 100644
+--- a/preload.js
++++ b/preload.js
+@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
+   dismissUpdate: (version) => ipcRenderer.invoke('dismiss-update', version),
+   startDownload: () => ipcRenderer.invoke('start-download'),
+   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
++  checkAssets: (deep) => ipcRenderer.invoke('check-assets', !!deep),
+   copyText: (text) => ipcRenderer.invoke('copy-text', text),
+   getUpdateMode: () => ipcRenderer.invoke('get-update-mode'),
+   openDownloadPage: () => ipcRenderer.invoke('open-download-page'),
+diff --git a/scripts/fetch-vendor.mjs b/scripts/fetch-vendor.mjs
+index 9af0d78..5276bdb 100644
+--- a/scripts/fetch-vendor.mjs
++++ b/scripts/fetch-vendor.mjs
+@@ -70,6 +70,11 @@ async function worker() {
+ }
+ await Promise.all(Array.from({ length: 4 }, worker));
+ 
++// Manifest fuer die Programmpruefung zur Laufzeit (main.js: check-assets): Pfad, Groesse, SHA-256 je mitgelieferter Datei.
++// Erkennt, ob Modell oder Bibliotheken nach der Installation fehlen oder beschaedigt sind (z. B. durch einen Virenschutz).
++if (!problems) {
++  fs.writeFileSync(path.join(APP, 'vendor-manifest.json'), JSON.stringify({ files: lock.files.map((f) => ({ path: f.dest, size: f.size, sha256: f.sha256 })) }) + '\n');
++}
+ if (args.has('--update-lock') && !problems) {
+   fs.writeFileSync(LOCK, JSON.stringify(lock, null, 2) + '\n');
+   console.log('vendor.lock.json aktualisiert');
+diff --git a/tests/ai-fehler.test.mjs b/tests/ai-fehler.test.mjs
+new file mode 100644
+index 0000000..5774385
+--- /dev/null
++++ b/tests/ai-fehler.test.mjs
+@@ -0,0 +1,88 @@
++// KI-Start schlaegt fehl: Der Nutzer muss die Ursache sehen, die Standard-Erkennung laeuft weiter, "Erneut versuchen" geht.
++// Hintergrund: Ein Nutzer sah nur "Modell konnte nicht geladen werden" ohne Grund (Modelldatei fehlte oder war blockiert).
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { launchApp, toolFrame, runAnon, makeAppVariant } from './helpers.mjs';
++
++const panel = (f) => f.evaluate(() => ({ visible: getComputedStyle(document.getElementById('aiStatusError')).display !== 'none', reason: document.getElementById('aiErrorReason').textContent, code: lastAIError && lastAIError.code }));
++
++for (const [name, opts, code, texts] of [
++  ['Modelldatei fehlt', { dropModel: true }, 'ASSETS', [/Modelldatei|model_quantized/i, /fehlt/, /neu installieren/, /Virenschutz/]],
++  ['Modelldatei unvollstaendig (abgeschnitten)', { truncateModelTo: 10_485_760 }, 'ASSETS', [/10,0 MB statt 129,1 MB/, /neu installieren/]],
++  ['Modelldatei fehlt und kein Manifest (nur Fehlermeldung des Laders)', { dropModel: true, dropManifest: true }, 'MODEL_FILE', [/nicht gefunden/, /neu installieren/]],
++]) {
++  test(`KI-Start schlaegt fehl: ${name} -> Ursache sichtbar, Standard-Erkennung laeuft`, async () => {
++    const v = makeAppVariant(opts);
++    const a = await launchApp({ offline: true, appDir: v.dir });
++    try {
++      const f = await toolFrame(a.win);
++      await f.evaluate(async () => { await loadAIModel(); });
++      const p = await panel(f);
++      assert.ok(p.visible, 'Fehlerbereich nicht sichtbar');
++      assert.equal(p.code, code);
++      for (const t of texts) assert.match(p.reason, t);
++      assert.doesNotMatch(await f.evaluate(() => document.getElementById('aiStatusError').innerText), /ohne Einschränkung/, 'Text darf keine falsche Zusicherung machen');
++      // Standard-Erkennung funktioniert weiterhin
++      const r = await runAnon(f, 'IBAN DE89 3704 0044 0532 0130 00, E-Mail max@firma.de');
++      assert.match(r.out, /\{\{IBAN_1\}\}/);
++      // Diagnose in der Shell enthaelt den Fehler, ohne Dokumentinhalt
++      await a.win.click('#btn-diag'); await a.win.waitForTimeout(600);
++      const diag = await a.app.evaluate(({ clipboard }) => clipboard.readText());
++      assert.match(diag, new RegExp('KI-Fehler: ' + code));
++      assert.doesNotMatch(diag, /max@firma/);
++    } finally { await a.close(); v.cleanup(); }
++  });
++}
++
++test('Fehlerklassen: Speicher, Netzwerk, Laufzeit werden erkannt; Details enthalten Code und Meldung', async () => {
++  const a = await launchApp({ offline: true });
++  try {
++    const f = await toolFrame(a.win);
++    const res = await f.evaluate(async () => {
++      const out = {};
++      for (const [k, m] of Object.entries({ MEMORY: 'RangeError: WebAssembly.Memory(): could not allocate memory', NETWORK: 'TypeError: Failed to fetch', WASM: 'CompileError: WebAssembly.instantiate(): invalid', MODEL_CORRUPT: "Can't create a session. ERROR_CODE: 7, Failed to load model because protobuf parsing failed.", UNKNOWN: 'irgendwas' })) out[k] = (await diagnoseAIError(new Error(m))).code;
++      lastAIError = await diagnoseAIError(new Error('RangeError: could not allocate memory'));
++      return { out, details: aiErrorDetailsText() };
++    });
++    for (const [k, v] of Object.entries(res.out)) assert.equal(v, k);
++    assert.match(res.details, /Code: MEMORY/);
++    assert.match(res.details, /could not allocate memory/);
++  } finally { await a.close(); }
++});
++
++test('"Erneut versuchen" startet das Modell nach einem Fehlschlag; kein Dauer-Neuversuch bei jeder Analyse', async () => {
++  const a = await launchApp({ offline: true });
++  try {
++    const f = await toolFrame(a.win);
++    const r = await f.evaluate(async () => {
++      const orig = window.createNerPipeline; let calls = 0;
++      window.createNerPipeline = () => { calls++; return Promise.reject(new Error('RangeError: could not allocate memory')); };
++      await loadAIModel();
++      const failed = !nerPipeline && lastAIError && lastAIError.code === 'MEMORY';
++      // automatisches Laden pausiert nach dem Fehlschlag (60 s): weitere Analysen warten nicht jedes Mal erneut
++      document.getElementById('IT').value = 'Herr Thomas Müller'; await anon(); await anon();
++      const callsAfterAnalyses = calls;
++      window.createNerPipeline = orig;
++      await retryAIModel();
++      return { failed, callsAfterAnalyses, loadedAfterRetry: !!nerPipeline };
++    });
++    assert.ok(r.failed);
++    assert.equal(r.callsAfterAnalyses, 1, 'Analysen haben das Laden erneut versucht');
++    assert.ok(r.loadedAfterRetry, 'Erneut versuchen hat das Modell nicht gestartet');
++  } finally { await a.close(); }
++});
++
++test('Leere Datei (0 Bytes, z. B. nur online in OneDrive) wird erklaert statt stumm angezeigt', async () => {
++  const a = await launchApp({ offline: true });
++  try {
++    const f = await toolFrame(a.win);
++    const r = await f.evaluate(async () => {
++      const calls = []; const orig = window.toast; window.toast = (m, t) => calls.push([m, t]);
++      await loadF(new File([], 'leer.pdf', { type: 'application/pdf' }));
++      window.toast = orig;
++      return { calls, listed: getComputedStyle(document.getElementById('FT')).display !== 'none' && document.getElementById('FT').classList.contains('on') };
++    });
++    assert.ok(r.calls.some(([m, t]) => t === 'e' && /leer/.test(m) && /OneDrive/.test(m)), JSON.stringify(r.calls));
++    assert.equal(r.listed, false, 'leere Datei darf nicht als geladen angezeigt werden');
++  } finally { await a.close(); }
++});
+diff --git a/tests/helpers.mjs b/tests/helpers.mjs
+index 8e66c87..d14544d 100644
+--- a/tests/helpers.mjs
++++ b/tests/helpers.mjs
+@@ -107,3 +107,28 @@ export function startUpdateServer({ version = '99.0.0', notes = '' } = {}) {
+   });
+   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ url: `http://127.0.0.1:${server.address().port}`, hits, close: () => new Promise((r) => server.close(r)) })));
+ }
++
++// Kopie des Programms mit absichtlich beschaedigter Installation (fuer Fehlerdiagnose-Tests).
++// dropModel: Modelldatei fehlt; truncateModelTo: Modelldatei auf n Bytes gekuerzt; dropManifest: vendor-manifest.json fehlt.
++// Alles andere wird verknuepft (Verzeichnisse als "junction": unter Windows ohne Administratorrechte moeglich).
++export function makeAppVariant({ dropModel = false, truncateModelTo = null, dropManifest = false } = {}) {
++  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-variant-'));
++  for (const f of ['main.js', 'preload.js', 'package.json']) fs.copyFileSync(path.join(ROOT, f), path.join(dir, f));
++  for (const d of ['node_modules', 'assets']) fs.symlinkSync(path.join(ROOT, d), path.join(dir, d), 'junction');
++  fs.mkdirSync(path.join(dir, 'app'));
++  for (const e of fs.readdirSync(path.join(ROOT, 'app'))) {
++    if (e === 'models' || (e === 'vendor-manifest.json' && dropManifest)) continue;
++    const src = path.join(ROOT, 'app', e);
++    if (fs.statSync(src).isDirectory()) fs.symlinkSync(src, path.join(dir, 'app', e), 'junction');
++    else fs.copyFileSync(src, path.join(dir, 'app', e));
++  }
++  const rel = path.join('models', 'Xenova', 'distilbert-base-multilingual-cased-ner-hrl');
++  fs.mkdirSync(path.join(dir, 'app', rel, 'onnx'), { recursive: true });
++  for (const f of fs.readdirSync(path.join(ROOT, 'app', rel))) if (f !== 'onnx') fs.copyFileSync(path.join(ROOT, 'app', rel, f), path.join(dir, 'app', rel, f));
++  if (!dropModel) {
++    const src = path.join(ROOT, 'app', rel, 'onnx', 'model_quantized.onnx'), dst = path.join(dir, 'app', rel, 'onnx', 'model_quantized.onnx');
++    if (truncateModelTo) { const b = Buffer.alloc(truncateModelTo); const fd = fs.openSync(src, 'r'); fs.readSync(fd, b, 0, b.length, 0); fs.closeSync(fd); fs.writeFileSync(dst, b); }
++    else fs.copyFileSync(src, dst);
++  }
++  return { dir, cleanup: () => fs.rmSync(dir, { recursive: true, force: true }) };
++}
+diff --git a/tests/shell.test.mjs b/tests/shell.test.mjs
+index 08ebb3e..23ffdbf 100644
+--- a/tests/shell.test.mjs
++++ b/tests/shell.test.mjs
+@@ -26,3 +26,16 @@ test('Versions- und Update-Leiste liegt unten und verdeckt die Navigation des To
+     assert.ok(box.top > box.height / 2, 'Leiste muss in der unteren Haelfte liegen');
+   } finally { await a.close(); }
+ });
++
++test('Diagnose meldet ein aktives Modell mit Thread-Zahl', async () => {
++  const a = await launchApp({ offline: true });
++  try {
++    const f = await toolFrame(a.win);
++    await f.evaluate(async () => { document.getElementById('IT').value = 'Herr Thomas Müller'; await anon(); }); // KI startet bei Bedarf
++    await a.win.click('#btn-diag');
++    await a.win.waitForTimeout(600);
++    const text = await a.app.evaluate(({ clipboard }) => clipboard.readText());
++    assert.match(text, /Modell: aktiv \(\d+ Thread/);
++    assert.match(text, /KI-Fehler: keiner/);
++  } finally { await a.close(); }
++});
+-- 
+2.43.0
+

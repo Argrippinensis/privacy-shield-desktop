@@ -1,0 +1,517 @@
+From 95acaed5a5cd2b4785b4e0bf213a5c2d2e89a50e Mon Sep 17 00:00:00 2001
+From: Alexander Arcangeli <alexander@arcangeli.eu>
+Date: Tue, 20 Oct 2026 16:05:38 +0200
+Subject: [PATCH 09/11] build: feste Dateinamen, macOS fuer beide
+ Architekturen, Pruefsummen, CI mit Tests auf allen Plattformen
+
+- Installer heissen ohne Versionsnummer (PrivacyShield-Setup.exe, PrivacyShield-mac-arm64.zip, -mac-x64.zip,
+  PrivacyShield.AppImage, PrivacyShield.deb): releases/latest/download/<Name> zeigt immer auf die neueste Version.
+  Hinweis: Beim Wechsel von 1.7.0 faellt das differenzielle Update unter Windows einmalig auf einen vollstaendigen
+  Download zurueck (die alte Blockmap hat einen anderen Namen).
+- macOS: Intel und Apple Silicon, Ad-hoc-Signatur (identity "-"); vorher nur arm64 und ohne jede Signatur.
+- ci.yml: Tests bei jedem Pull Request und Push auf main (Linux mit Erkennungsmessung, Windows).
+- build.yml: jedes gebaute Programm wird vor dem Release getestet (Linux, Windows, macOS); Release nur, wenn alles
+  gruen ist; Release-Text aus CHANGELOG.md, SHA256SUMS.txt, Pruefung der festen Links nach dem Veroeffentlichen;
+  Aktionen auf aktuelle Versionen (Node 24), unnoetige Upload-Verzeichnisse entfernt.
+- scripts/verify-release.mjs: prueft ein Release unabhaengig vom Build (Assets, Update-Dateien, feste Links,
+  optional echter Upgrade-Test einer alten AppImage-Installation).
+- CHANGELOG.md.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ .github/workflows/build.yml |  87 ++++++++++++++++++++---------
+ .github/workflows/ci.yml    |  54 ++++++++++++++++++
+ CHANGELOG.md                |  32 +++++++++++
+ README.md                   |  42 +++++++++-----
+ package.json                |  21 +++++--
+ scripts/verify-release.mjs  | 107 ++++++++++++++++++++++++++++++++++++
+ 6 files changed, 295 insertions(+), 48 deletions(-)
+ create mode 100644 .github/workflows/ci.yml
+ create mode 100644 CHANGELOG.md
+ create mode 100644 scripts/verify-release.mjs
+
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+index b46904b..60b060d 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -1,5 +1,6 @@
+ name: Build & Release
+ 
++# Ein Tag vX.Y.Z baut alle Plattformen, testet jedes gebaute Programm und erstellt erst dann das Release.
+ on:
+   push:
+     tags:
+@@ -9,8 +10,9 @@ on:
+ permissions:
+   contents: write
+ 
+-env:
+-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
++concurrency:
++  group: release-${{ github.ref }}
++  cancel-in-progress: false
+ 
+ jobs:
+   build:
+@@ -28,14 +30,15 @@ jobs:
+             build_flag: --mac
+             artifact_name: macos
+     runs-on: ${{ matrix.os }}
++    timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-node@v4
++      - uses: actions/checkout@v7
++      - uses: actions/setup-node@v7
+         with:
+           node-version: 22
+       - run: npm ci
+       # Bibliotheken und KI-Modell (nicht im Git, 135 MB) bereitstellen; Pruefsummen siehe scripts/vendor.lock.json
+-      - uses: actions/cache@v4
++      - uses: actions/cache@v6
+         with:
+           path: |
+             app/vendor
+@@ -43,49 +46,79 @@ jobs:
+           key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
+       - run: npm run fetch-vendor
+       - run: npx electron-builder ${{ matrix.build_flag }} --publish never
+-        continue-on-error: ${{ matrix.os == 'macos-14' || matrix.os == 'windows-2022' }}
+-      - uses: actions/upload-artifact@v4
++      # Das gebaute (entpackte) Programm testen, bevor es in ein Release geht
++      - name: Tests gegen das gebaute Programm
++        shell: bash
++        env:
++          PS_SKIP_EVAL: '1'
++        run: |
++          case "$RUNNER_OS" in
++            Linux)   BIN="$PWD/dist/linux-unpacked/privacy-shield-desktop"; PREFIX="xvfb-run -a" ;;
++            Windows) BIN="$(cygpath -w "$PWD/dist/win-unpacked/PrivacyShield.exe")"; PREFIX="" ;;
++            macOS)   BIN="$PWD/dist/mac-arm64/PrivacyShield.app/Contents/MacOS/PrivacyShield"; PREFIX="" ;;
++          esac
++          echo "Programm: $BIN"
++          PS_PACKAGED_BIN="$BIN" $PREFIX npm test
++      - uses: actions/upload-artifact@v7
+         if: always()
+         with:
+           name: builds-${{ matrix.artifact_name }}
+-          path: dist/*
++          path: |
++            dist/*.exe
++            dist/*.exe.blockmap
++            dist/*.zip
++            dist/*.zip.blockmap
++            dist/*.AppImage
++            dist/*.deb
++            dist/latest*.yml
+           if-no-files-found: warn
+ 
+   release:
+     needs: [build]
+-    if: ${{ !cancelled() }}
+     runs-on: ubuntu-24.04
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/download-artifact@v4
++      - uses: actions/checkout@v7
++      - uses: actions/download-artifact@v8
+         with:
+           pattern: builds-*
+           merge-multiple: true
+           path: dist
+       - name: Alle Installer vorhanden?
+-        # Verhindert ein Release ohne Windows-Installer (der Download-Link auf der Website liefe sonst ins Leere).
++        # Verhindert ein Release ohne Installer einer Plattform (Download-Links der Website liefen sonst ins Leere).
+         run: |
+-          for pattern in "PrivacyShield-Setup-*.exe" "PrivacyShield-*.zip" "PrivacyShield-*.AppImage" "PrivacyShield-*.deb"; do
++          for pattern in "PrivacyShield-Setup*.exe" "PrivacyShield*mac*.zip" "PrivacyShield*.AppImage" "PrivacyShield*.deb"; do
+             if ! compgen -G "dist/$pattern" > /dev/null; then
+               echo "FEHLT: $pattern - Build-Job erneut ausfuehren, bevor das Release erstellt wird"
+               exit 1
+             fi
+           done
++      - name: Release-Text aus CHANGELOG.md
++        run: |
++          VERSION="${GITHUB_REF_NAME#v}"
++          awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > notes.md || true
++          if [ ! -s notes.md ]; then echo "PrivacyShield ${GITHUB_REF_NAME}" > notes.md; fi
++          cat notes.md
++      - name: Pruefsummen erstellen
++        run: |
++          cd dist
++          sha256sum PrivacyShield* > SHA256SUMS.txt
++          cat SHA256SUMS.txt
+       - name: Create Release
++        env:
++          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         run: |
+           set -e
+-          TAG="${{ github.ref_name }}"
+-          FILES=$(find dist -maxdepth 1 -type f | tr '\n' ' ' | xargs)
+-          if [ -z "$FILES" ]; then
+-            echo "Keine Dateien in dist/ — erstelle Release ohne Assets"
+-            gh release create "$TAG" \
+-              --title "$TAG" \
+-              --notes "PrivacyShield $TAG"
+-          else
+-            echo "Dateien gefunden: $FILES"
+-            gh release create "$TAG" $FILES \
+-              --title "$TAG" \
+-              --notes "PrivacyShield $TAG"
+-          fi
++          FILES=$(find dist -maxdepth 1 -type f \( -name 'PrivacyShield*' -o -name 'latest*.yml' -o -name 'SHA256SUMS.txt' \) | tr '\n' ' ')
++          echo "Dateien: $FILES"
++          # shellcheck disable=SC2086
++          gh release create "$GITHUB_REF_NAME" $FILES --title "PrivacyShield $GITHUB_REF_NAME" --notes-file notes.md
++      - name: Download-Links pruefen
++        # Die Website verlinkt auf releases/latest/download/<fester Dateiname>; hier sicherstellen, dass sie funktionieren.
+         env:
+-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
++          REPO: ${{ github.repository }}
++        run: |
++          for f in PrivacyShield-Setup.exe PrivacyShield-mac-arm64.zip PrivacyShield-mac-x64.zip PrivacyShield.AppImage PrivacyShield.deb SHA256SUMS.txt; do
++            code=$(curl -sIL -o /dev/null -w "%{http_code}" "https://github.com/${REPO}/releases/latest/download/$f")
++            echo "$f -> HTTP $code"
++            [ "$code" = "200" ] || exit 1
++          done
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+new file mode 100644
+index 0000000..ddd5282
+--- /dev/null
++++ b/.github/workflows/ci.yml
+@@ -0,0 +1,54 @@
++name: CI
++
++# Prueft jeden Pull Request und jeden Push auf main: Tests mit der echten Electron-App (ohne Internet).
++on:
++  pull_request:
++  push:
++    branches: [main]
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++concurrency:
++  group: ci-${{ github.ref }}
++  cancel-in-progress: true
++
++jobs:
++  test:
++    name: Tests (${{ matrix.os }})
++    strategy:
++      fail-fast: false
++      matrix:
++        os: [ubuntu-24.04, windows-2022]
++    runs-on: ${{ matrix.os }}
++    timeout-minutes: 30
++    steps:
++      - uses: actions/checkout@v7
++      - uses: actions/setup-node@v7
++        with:
++          node-version: 22
++      - uses: actions/cache@v6
++        with:
++          path: |
++            app/vendor
++            app/models
++          key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
++      - run: npm ci
++      - run: npm run fetch-vendor
++      # Erkennungsqualitaet ist plattformunabhaengig und dauert lange: nur unter Linux messen
++      - name: Tests (Linux, mit Erkennungsqualitaet)
++        if: runner.os == 'Linux'
++        run: xvfb-run -a npm test
++      - name: Tests (Windows)
++        if: runner.os == 'Windows'
++        env:
++          PS_SKIP_EVAL: '1'
++        run: npm test
++      - name: Ergebnisse der Erkennungsmessung sichern
++        if: always() && runner.os == 'Linux'
++        uses: actions/upload-artifact@v7
++        with:
++          name: eval-result
++          path: tests/eval/out/
++          if-no-files-found: ignore
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+new file mode 100644
+index 0000000..0ca1649
+--- /dev/null
++++ b/CHANGELOG.md
+@@ -0,0 +1,32 @@
++# Änderungsprotokoll
++
++Format: ein Abschnitt je Version, Überschrift `## [x.y.z] - JJJJ-MM-TT`. Der Release-Workflow übernimmt den Abschnitt
++der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.Y.Z").
++
++## [1.8.0] - noch nicht veröffentlicht
++
++### Erkennung
++- Neue Kategorien: Kreditkartennummern (mit Prüfziffer), Kfz-Kennzeichen und Fahrgestellnummern, IPv6, Weblinks.
++- IBAN: alphanumerische Kontonummern (NL, GB, FR, IT, ES ...), Kleinschreibung und Schreibweise ohne Leerzeichen.
++- Telefonnummern: internationale Formate, Vorwahl mit Schrägstrich, Klammern.
++- Datumsangaben mit Monatsnamen und Schrägstrich, Steuer-ID in allen gängigen Schreibweisen.
++- Namen: Initialen, GROSSGESCHRIEBENE Namen, Namenszusätze (von, van, de), Bindestrich-Namen, Sonderzeichen (Ö, Ü, Ç, ë ...).
++- Adressen: Schweizer und österreichische Schreibweise, vierstellige Postleitzahlen.
++- Weniger Fehlalarme (Länder, "Zentrale", Rechnungsnummern mit führenden Nullen).
++
++### Bedienung und Leistung
++- KI-Erkennung ist standardmäßig aktiv: Das Modell startet bei der ersten Analyse und gibt nach 5 Minuten Leerlauf den Speicher frei.
++- Große Dokumente werden bis zu 8-mal schneller anonymisiert.
++- Update-Hinweise sperren die App nie mehr; wo automatisches Installieren nicht möglich ist, führt ein Link zur Download-Seite.
++
++### Verteilung
++- Feste Dateinamen der Installer (immer die neueste Version unter `releases/latest/download/`).
++- macOS: Intel- und Apple-Silicon-Version, Ad-hoc-Signatur.
++- Prüfsummen (`SHA256SUMS.txt`) im Release.
++
++## [1.7.0] - 2026-10-20
++
++- KI-Erkennung läuft im Hintergrund, die Oberfläche bleibt bedienbar.
++- Bibliotheken, OCR-Daten und KI-Modell sind Teil der Installation; kein Download beim ersten Start, vollständig offline.
++- Echte Arbeitsspeicher-Anzeige, KI-Modell entladbar.
++- Update-Dialog sperrt die App offline nicht mehr, externe Links öffnen im Browser.
+diff --git a/README.md b/README.md
+index 9e9605f..6cdb9d7 100644
+--- a/README.md
++++ b/README.md
+@@ -1,32 +1,44 @@
+ # PrivacyShield Desktop
+ 
+-Desktop-App fuer das PrivacyShield-Tool. Alles laeuft lokal: Bibliotheken, OCR und das KI-Modell
++Desktop-App für das PrivacyShield-Tool. Alles läuft lokal: Bibliotheken, OCR und das KI-Modell
+ (Namen, Organisationen, Orte) sind Teil der Installation. Die Seiten selbst haben keinen Netzzugriff
+-(Content-Security-Policy plus Sperre im Hauptprozess); nur die Update-Pruefung des Programms nutzt das Internet.
++(Content-Security-Policy plus Sperre im Hauptprozess); nur die Update-Prüfung des Programms nutzt das Internet.
+ 
+ ## Entwicklung
+ 
+     npm install
+-    npm start          # laedt beim ersten Mal Bibliotheken und Modell (ca. 170 MB), danach nur Pruefsummen-Check
++    npm start          # lädt beim ersten Mal Bibliotheken und Modell (ca. 170 MB), danach nur Prüfsummen-Check
+ 
+-## Gebuendelte Komponenten (`app/vendor`, `app/models`)
++## Gebündelte Komponenten (`app/vendor`, `app/models`)
+ 
+ Nicht im Git (das Modell ist 135 MB, GitHub erlaubt 100 MB pro Datei). `scripts/vendor.lock.json` legt exakte
+-Versionen und SHA-256-Pruefsummen fest; `npm run fetch-vendor` stellt sie bereit und prueft sie. Start, Tests und
++Versionen und SHA-256-Prüfsummen fest; `npm run fetch-vendor` stellt sie bereit und prüft sie. Start, Tests und
+ Builds rufen das automatisch auf. Versionswechsel bewusst mit `node scripts/fetch-vendor.mjs --update-lock`.
+ Lizenzen: `THIRD_PARTY_NOTICES.md` (wird mit der Installation ausgeliefert).
+ 
+-Das Tailwind-CSS ist vorkompiliert (`app/css/tailwind.css`). Nach Aenderungen an Klassen in `app/*.html`:
++Das Tailwind-CSS ist vorkompiliert (`app/css/tailwind.css`). Nach Änderungen an Klassen in `app/*.html`:
+ `npm run build:css`.
+ 
+ ## Tests
+ 
+-    npm test                       # Linux ohne Display: xvfb-run -a npm test
++    npm test                           # Linux ohne Display: xvfb-run -a npm test
+     PS_PACKAGED_BIN=<Pfad> npm test    # gegen eine gepackte Anwendung (z. B. dist/linux-unpacked/privacy-shield-desktop)
++    PS_SKIP_EVAL=1 / PS_SKIP_PERF=1    # Erkennungsmessung bzw. Zeitprüfung überspringen (langsame Rechner)
+ 
+-Die Tests starten die echte App mit totem Proxy (kein Internet) und pruefen unter anderem: kein Netzzugriff der Seiten,
+-KI-Modell und OCR offline, Oberflaeche bleibt waehrend der Analyse bedienbar, Erkennung identisch zu v1.6.2
+-(`tests/golden`), Update-Dialog, externe Links, RAM-Anzeige.
++Die Tests starten die echte App mit totem Proxy (kein Internet). Sie prüfen unter anderem: kein Netzzugriff der
++Seiten, KI-Modell und OCR offline, Oberfläche bleibt bedienbar, Update-Dialoge (mit lokalem Mock-Update-Server),
++externe Links, Speicheranzeige, große Dokumente, Hausregeln (keine Emojis, Umlaute).
++
++### Erkennungsqualität
++
++    npm run eval            # Messung mit Tabelle (Lecks und Falsch-Maskierungen je Kategorie, mit und ohne KI)
++    npm run eval:baseline   # Baseline nach bewusster Verbesserung festschreiben
++    npm run golden:update   # Golden-Stand (Beispieltext) nach bewusster Änderung neu erzeugen
++
++`tests/eval/cases.mjs` und `tests/eval/cases-gdpr.mjs` sind die Testsätze, `tests/eval/generate.mjs` erzeugt
++synthetische Dokumente mit bekannter Wahrheit. Ein Leck ist ein personenbezogener Wert, der nach dem Anonymisieren noch im
++Text steht. `tests/eval.test.mjs` verhindert, dass Lecks gegenüber `tests/eval/baseline.json` zunehmen.
++**Neuer Fehler im Betrieb: zuerst als Fall in einen Testsatz (rot), dann beheben (grün).**
+ 
+ ## Build
+ 
+@@ -34,9 +46,9 @@ KI-Modell und OCR offline, Oberflaeche bleibt waehrend der Analyse bedienbar, Er
+ 
+ ## Release
+ 
+-    # Version in package.json erhoehen, dann:
+-    git tag vX.Y.Z
+-    git push --tags
++1. Abschnitt in `CHANGELOG.md` ergänzen, Version in `package.json` erhöhen, per Pull Request nach `main`.
++2. `git tag vX.Y.Z && git push --tags`
+ 
+-GitHub Actions baut alle Plattformen und erstellt ein Release. Das Release wird nur angelegt, wenn alle vier
+-Installer (exe, zip, AppImage, deb) vorhanden sind. Die Website verlinkt auf diese Dateien.
++GitHub Actions baut alle Plattformen, testet jedes gebaute Programm und erstellt das Release nur, wenn alles grün ist
++(Release-Text aus `CHANGELOG.md`, `SHA256SUMS.txt`). Danach: `node scripts/verify-release.mjs vX.Y.Z [--upgrade-from vA.B.C]`.
++Die Website verlinkt auf `releases/latest/download/<fester Dateiname>` und muss bei neuen Versionen nicht angepasst werden.
+diff --git a/package.json b/package.json
+index 787d2bd..71ed6a8 100644
+--- a/package.json
++++ b/package.json
+@@ -36,7 +36,7 @@
+         "nsis"
+       ],
+       "icon": "assets/icon.png",
+-      "artifactName": "PrivacyShield-Setup-${version}.${ext}"
++      "artifactName": "PrivacyShield-Setup.${ext}"
+     },
+     "nsis": {
+       "oneClick": false,
+@@ -46,11 +46,19 @@
+     },
+     "mac": {
+       "target": [
+-        "zip"
++        {
++          "target": "zip",
++          "arch": [
++            "x64",
++            "arm64"
++          ]
++        }
+       ],
+       "icon": "assets/icon.png",
+-      "artifactName": "PrivacyShield-${version}.${ext}",
+-      "identity": null
++      "artifactName": "PrivacyShield-mac-${arch}.${ext}",
++      "identity": "-",
++      "hardenedRuntime": false,
++      "gatekeeperAssess": false
+     },
+     "linux": {
+       "target": [
+@@ -58,7 +66,7 @@
+         "deb"
+       ],
+       "icon": "assets/icon.png",
+-      "artifactName": "PrivacyShield-${version}.${ext}"
++      "artifactName": "PrivacyShield.${ext}"
+     },
+     "publish": {
+       "provider": "github",
+@@ -100,5 +108,6 @@
+   "author": {
+     "name": "Alexander Arcangeli",
+     "email": "alexander.arcangeli@yahoo.de"
+-  }
++  },
++  "signedMac": false
+ }
+diff --git a/scripts/verify-release.mjs b/scripts/verify-release.mjs
+new file mode 100644
+index 0000000..b1671f8
+--- /dev/null
++++ b/scripts/verify-release.mjs
+@@ -0,0 +1,107 @@
++// Prueft ein veroeffentlichtes Release unabhaengig vom Build (Assets, Groessen, Update-Dateien, feste Links, Upgrade-Pfad).
++//
++//   node scripts/verify-release.mjs v1.8.0                         feste Dateinamen (ab v1.8.0)
++//   node scripts/verify-release.mjs v1.7.0 --names versioned       Dateinamen mit Versionsnummer (bis v1.7.0)
++//   node scripts/verify-release.mjs v1.8.0 --upgrade-from v1.7.0   zusaetzlich: echtes Update einer alten AppImage-Installation
++//                                                                  (nur Linux; benoetigt xvfb-run: xvfb-run -a node scripts/verify-release.mjs ...)
++//   --deep                                                         zusaetzlich SHA-512 aller Installer herunterladen und pruefen
++import fs from 'fs';
++import os from 'os';
++import path from 'path';
++import crypto from 'crypto';
++import { createRequire } from 'module';
++import { fileURLToPath } from 'url';
++import { pipeline } from 'stream/promises';
++import { Readable } from 'stream';
++
++const require = createRequire(import.meta.url);
++const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
++const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
++const REPO = `${pkg.build.publish.owner}/${pkg.build.publish.repo}`;
++
++const args = process.argv.slice(2);
++const tag = args.find((a) => /^v\d/.test(a));
++const opt = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : null; };
++const names = opt('--names') || 'stable';
++const upgradeFrom = opt('--upgrade-from');
++const deep = args.includes('--deep');
++if (!tag) { console.error('Aufruf: node scripts/verify-release.mjs vX.Y.Z [--names stable|versioned] [--upgrade-from vA.B.C] [--deep]'); process.exit(2); }
++const version = tag.slice(1);
++
++let failures = 0;
++const ok = (m) => console.log('  ok   ' + m);
++const fail = (m) => { failures++; console.log('  FEHLER ' + m); };
++const check = (cond, good, bad) => (cond ? ok(good) : fail(bad));
++
++const api = async (p) => { const r = await fetch(`https://api.github.com/repos/${REPO}/${p}`, { headers: { 'User-Agent': 'verify-release' } }); if (!r.ok) throw new Error(`${p}: HTTP ${r.status}`); return r.json(); };
++const sha = async (file, algo = 'sha512', enc = 'base64') => { const h = crypto.createHash(algo); await pipeline(fs.createReadStream(file), h); return h.digest(enc); };
++async function download(url, file) { const r = await fetch(url, { redirect: 'follow' }); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); await pipeline(Readable.fromWeb(r.body), fs.createWriteStream(file)); }
++
++const expected = names === 'stable'
++  ? ['PrivacyShield-Setup.exe', 'PrivacyShield-Setup.exe.blockmap', 'PrivacyShield-mac-arm64.zip', 'PrivacyShield-mac-x64.zip', 'PrivacyShield.AppImage', 'PrivacyShield.deb', 'latest.yml', 'latest-mac.yml', 'latest-linux.yml', 'SHA256SUMS.txt']
++  : [`PrivacyShield-Setup-${version}.exe`, `PrivacyShield-${version}.zip`, `PrivacyShield-${version}.AppImage`, `PrivacyShield-${version}.deb`, 'latest.yml', 'latest-mac.yml', 'latest-linux.yml'];
++
++console.log(`Release ${tag} (${REPO}), Namensschema: ${names}`);
++const rel = await api(`releases/tags/${tag}`);
++check(!rel.draft && !rel.prerelease, 'veroeffentlicht (kein Entwurf, keine Vorabversion)', 'Release ist Entwurf oder Vorabversion');
++const latest = await api('releases/latest');
++check(latest.tag_name === tag, `ist "latest"`, `"latest" ist ${latest.tag_name}, nicht ${tag}`);
++check((rel.body || '').trim().length > 0, 'hat Release-Text', 'Release-Text ist leer');
++const assets = Object.fromEntries(rel.assets.map((a) => [a.name, a]));
++for (const n of expected) check(assets[n] && assets[n].size > 0, `${n} (${assets[n] ? (assets[n].size / 1e6).toFixed(1) + ' MB' : ''})`, `${n} fehlt`);
++const small = Object.values(assets).filter((a) => /\.(exe|zip|AppImage|deb)$/.test(a.name) && a.size < 50e6);
++check(small.length === 0, 'alle Installer sind plausibel gross (>= 50 MB)', 'verdaechtig kleine Installer: ' + small.map((a) => a.name).join(', '));
++
++const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-verify-'));
++try {
++  // Update-Dateien: Versionsnummer, Verweis auf vorhandene Datei, Groesse stimmt
++  for (const y of ['latest.yml', 'latest-mac.yml', 'latest-linux.yml']) {
++    if (!assets[y]) continue;
++    const text = await (await fetch(assets[y].browser_download_url)).text();
++    const v = (text.match(/^version:\s*(\S+)/m) || [])[1];
++    check(v === version, `${y}: Version ${v}`, `${y}: Version ${v} statt ${version}`);
++    for (const m of text.matchAll(/- url:\s*(\S+)\n\s+sha512:\s*(\S+)\n\s+size:\s*(\d+)/g)) {
++      const [, url, , size] = m;
++      check(assets[url] && assets[url].size === Number(size), `${y}: ${url} vorhanden, Groesse stimmt`, `${y}: ${url} fehlt oder Groesse weicht ab`);
++      if (deep && assets[url]) { const f = path.join(tmp, url); await download(assets[url].browser_download_url, f); check((await sha(f)) === m[2], `${url}: SHA-512 stimmt`, `${url}: SHA-512 weicht von ${y} ab`); fs.rmSync(f); }
++    }
++  }
++  // Feste Links (releases/latest/download/<Name>) muessen ohne Umwege funktionieren
++  if (names === 'stable') {
++    for (const n of expected) {
++      const r = await fetch(`https://github.com/${REPO}/releases/latest/download/${n}`, { method: 'HEAD', redirect: 'follow' });
++      check(r.status === 200, `Link latest/download/${n} -> 200`, `Link latest/download/${n} -> HTTP ${r.status}`);
++    }
++  }
++  // Echter Upgrade-Pfad (Linux/AppImage): alte Version starten, Update ueber die Oberflaeche ausloesen, neue Version muss laufen
++  if (upgradeFrom) {
++    console.log(`Upgrade-Test ${upgradeFrom} -> ${tag} (AppImage)`);
++    const { _electron } = require('playwright-core');
++    const old = await api(`releases/tags/${upgradeFrom}`);
++    const oldAsset = old.assets.find((a) => a.name.endsWith('.AppImage'));
++    const app = path.join(tmp, 'PrivacyShield.AppImage');
++    await download(oldAsset.browser_download_url, app);
++    fs.chmodSync(app, 0o755);
++    const ud = path.join(tmp, 'userdata');
++    let electron = await _electron.launch({ executablePath: app, args: ['--no-sandbox', `--user-data-dir=${ud}`], timeout: 60000 });
++    let win = await electron.firstWindow();
++    await win.waitForTimeout(3000);
++    check((await win.evaluate(() => document.getElementById('version-label').textContent)) === 'v' + upgradeFrom.slice(1), `alte Version ${upgradeFrom} startet`, 'alte Version meldet falsche Versionsnummer');
++    let banner = null;
++    for (let i = 0; i < 60 && !banner; i++) { await win.waitForTimeout(1000); banner = await win.evaluate(() => (getComputedStyle(document.getElementById('update-banner')).display === 'flex' ? document.getElementById('banner-title').textContent : null)).catch(() => null); }
++    check(!!banner && banner.includes(version), `Update-Hinweis erscheint: "${banner}"`, 'kein Update-Hinweis fuer ' + version);
++    let closed = false; electron.on('close', () => { closed = true; });
++    await win.evaluate(() => window.electronAPI.startDownload()).catch(() => {});
++    for (let i = 0; i < 300 && !closed; i++) await new Promise((r) => setTimeout(r, 2000));
++    await new Promise((r) => setTimeout(r, 15000)); // Updater ersetzt die Datei und startet neu
++    const want = assets['latest-linux.yml'] ? (await (await fetch(assets['latest-linux.yml'].browser_download_url)).text()).match(/^sha512:\s*(\S+)/m)[1] : null;
++    check(want && (await sha(app)) === want, 'AppImage wurde durch die neue Version ersetzt (SHA-512 stimmt)', 'AppImage entspricht nicht der neuen Version');
++    // neue Version starten und Versionsnummer lesen
++    electron = await _electron.launch({ executablePath: app, args: ['--no-sandbox', `--user-data-dir=${path.join(tmp, 'userdata2')}`], timeout: 60000 });
++    win = await electron.firstWindow(); await win.waitForTimeout(3000);
++    check((await win.evaluate(() => document.getElementById('version-label').textContent)) === 'v' + version, `neue Version ${version} startet`, 'neue Version meldet falsche Versionsnummer');
++    await electron.close();
++  }
++} finally { fs.rmSync(tmp, { recursive: true, force: true }); }
++console.log(failures ? `\n${failures} Problem(e)` : '\nAlles in Ordnung');
++process.exit(failures ? 1 : 0);
+-- 
+2.43.0
+

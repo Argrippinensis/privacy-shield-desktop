@@ -1,0 +1,344 @@
+From 4089f23de3baa4f8a758abd3b8532116b0a5377b Mon Sep 17 00:00:00 2001
+From: Alexander Arcangeli <alexander@arcangeli.eu>
+Date: Tue, 20 Oct 2026 11:09:27 +0200
+Subject: [PATCH 02/11] feat: KI-Erkennung standardmaessig an, Start bei
+ Bedarf, Entladen im Leerlauf
+
+- Modus "auto" (Standard) oder "aus", Schalter im KI-Panel. Einstellung aus v1.7 (aiModelLoaded=false) wird uebernommen.
+- Das Modell startet bei der ersten Analyse (ca. 2 Sekunden, aus der Installation) und gibt nach 5 Minuten
+  Leerlauf den Speicher (ca. 0,6 GB) wieder frei. Bei weniger als 6 GB RAM kein automatisches Laden.
+- Messung (v1.7.0-Stand): Mit KI bleiben 27 statt 37 von 91 Handfaellen undicht; das Modell war bisher nur nach
+  einem Klick aktiv, wodurch viele Nutzer ohne KI-Erkennung arbeiteten.
+- tests/golden/update.mjs erzeugt den Golden-Stand bewusst neu (npm run golden:update).
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ app/privacy-shield.html   | 73 ++++++++++++++++++++++++++++++---------
+ package.json              |  3 +-
+ tests/ai-mode.test.mjs    | 62 +++++++++++++++++++++++++++++++++
+ tests/golden/update.mjs   | 18 ++++++++++
+ tests/offline-ai.test.mjs | 24 ++++++-------
+ 5 files changed, 149 insertions(+), 31 deletions(-)
+ create mode 100644 tests/ai-mode.test.mjs
+ create mode 100644 tests/golden/update.mjs
+
+diff --git a/app/privacy-shield.html b/app/privacy-shield.html
+index 98ea5a8..c140cf6 100644
+--- a/app/privacy-shield.html
++++ b/app/privacy-shield.html
+@@ -1349,21 +1349,25 @@
+                 >
+               </div>
+               <div class="tool-panel-body">
++                <label class="text-xs" style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; cursor: pointer; line-height: 1.5">
++                  <input type="checkbox" id="aiAutoToggle" checked onchange="setAIMode(this.checked ? 'auto' : 'off')" style="margin-top: 2px" />
++                  <span>
++                    KI-Erkennung verwenden
++                    <span style="color: #999; display: block">Erkennt Personen, Organisationen und Orte. 100% lokal, funktioniert ohne Internet.</span>
++                  </span>
++                </label>
+                 <div id="aiStatusDefault">
+-                  <p class="text-xs" style="color: #666; margin-bottom: 10px; line-height: 1.5">
+-                    Erkennt Personen, Organisationen und Orte automatisch. 100% lokal — kein Serverkontakt.
++                  <p id="aiDefaultText" class="text-xs" style="color: #666; margin-bottom: 10px; line-height: 1.5">
++                    Bereit. Das Modell startet bei der ersten Analyse (ca. 2 Sekunden) und gibt den Speicher nach 5 Minuten ohne Nutzung wieder frei.
+                   </p>
+                   <button
+                     id="aiLoadBtn"
+-                    class="btn-accent"
+-                    style="font-size: 11px; padding: 8px 16px; gap: 6px"
++                    class="btn btn-ghost"
++                    style="font-size: 11px; padding: 6px 12px"
+                     onclick="loadAIModel()"
+                   >
+-                    KI-Erkennung aktivieren
++                    Jetzt laden
+                   </button>
+-                  <p class="text-xs" style="color: #999; margin-top: 6px">
+-                    Modell ist Teil der Installation · funktioniert ohne Internet
+-                  </p>
+                   <p id="aiMemHint" class="text-xs" style="color: #b45309; margin-top: 6px; line-height: 1.5; display: none"></p>
+                 </div>
+                 <div id="aiStatusLoading" style="display: none">
+@@ -3209,9 +3213,8 @@
+         document.getElementById("OB").style.display = "none";
+         document.getElementById("WS").style.display = "block";
+         initEL();
+-        checkMemoryHint().then(function (lowRam) {
+-          if (!lowRam && localStorage.getItem("aiModelLoaded") === "true") loadAIModel();
+-        });
++        aiRefreshUI();
++        checkMemoryHint();
+       }
+       function showOB() {
+         document.getElementById("WS").style.display = "none";
+@@ -3815,12 +3818,49 @@
+         });
+       }
+ 
++      // KI-Modus: "auto" (Standard) laedt das Modell bei der ersten Analyse und entlaedt es nach Leerlauf, "off" nutzt nur Regeln + Wortlisten.
++      const AI_MODE_KEY = "ps_ai_mode";
++      let AI_IDLE_MS = 5 * 60 * 1000;
++      let aiIdleTimer = null;
++      function aiMode() {
++        const v = localStorage.getItem(AI_MODE_KEY);
++        if (v === "auto" || v === "off") return v;
++        return localStorage.getItem("aiModelLoaded") === "false" ? "off" : "auto"; // Übernahme der Einstellung aus v1.7
++      }
++      function setAIMode(mode) {
++        localStorage.setItem(AI_MODE_KEY, mode);
++        if (mode === "off") unloadAIModel(true);
++        aiRefreshUI();
++      }
++      function aiRefreshUI() {
++        const on = aiMode() === "auto";
++        const tg = document.getElementById("aiAutoToggle");
++        if (tg) tg.checked = on;
++        document.getElementById("aiDefaultText").textContent = on
++          ? "Bereit. Das Modell startet bei der ersten Analyse (ca. 2 Sekunden) und gibt den Speicher nach 5 Minuten ohne Nutzung wieder frei."
++          : "KI-Erkennung ist ausgeschaltet. Es gilt die Standard-Erkennung (Regeln und Wortlisten).";
++        document.getElementById("aiLoadBtn").style.display = on ? "inline-flex" : "none";
++        if (!nerPipeline && !aiLoading) aiSetState("def");
++      }
++      // Vor jeder Analyse: Modell bei Bedarf laden, ausser bei wenig Arbeitsspeicher
++      async function ensureAIReady() {
++        if (aiMode() !== "auto" || nerPipeline || aiLoading) return;
++        if (await checkMemoryHint()) return;
++        await loadAIModel();
++      }
++      function scheduleAIIdleUnload() {
++        clearTimeout(aiIdleTimer);
++        if (!nerPipeline) return;
++        aiIdleTimer = setTimeout(function () {
++          if (!anonBusy && !aiLoading && nerPipeline) unloadAIModel(true);
++        }, AI_IDLE_MS);
++      }
+       function aiSetState(state) {
+         const ids = { def: "aiStatusDefault", loading: "aiStatusLoading", ready: "aiStatusReady", error: "aiStatusError" };
+         for (const k in ids) document.getElementById(ids[k]).style.display = k === state ? "block" : "none";
+         const badgeEl = document.getElementById("aiStatusBadge");
+         const look = {
+-          def: ["Nicht geladen", "#f0f2f5", "#4a5568"],
++          def: [aiMode() === "off" ? "Aus" : "Bereit", "#f0f2f5", "#4a5568"],
+           loading: ["Lädt...", "#fffbeb", "#92400e"],
+           ready: ["Aktiv (NER-Modell)", "#ecfdf5", "#059669"],
+           error: ["Fallback (Wortlisten)", "#fffbeb", "#92400e"],
+@@ -3854,7 +3894,6 @@
+           aiCache = { key: null, spans: [] };
+           aiSetState("ready");
+           toast("KI-Modell geladen — bereit", "s");
+-          localStorage.setItem("aiModelLoaded", "true");
+         } catch (err) {
+           console.error("NER-Modell konnte nicht geladen werden:", err);
+           nerPipeline = null;
+@@ -3866,13 +3905,13 @@
+       }
+ 
+       // Gibt den Arbeitsspeicher des Modells frei (ca. 0,5 GB) und kehrt zur Wortlisten-Erkennung zurueck.
+-      function unloadAIModel() {
++      function unloadAIModel(silent) {
++        clearTimeout(aiIdleTimer);
+         if (nerPipeline && nerPipeline.worker) nerPipeline.worker.terminate();
+         nerPipeline = null;
+         aiCache = { key: null, spans: [] };
+-        localStorage.setItem("aiModelLoaded", "false");
+         aiSetState("def");
+-        toast("KI-Modell entladen — Speicher freigegeben", "s");
++        if (!silent) toast("KI-Modell entladen — Speicher freigegeben", "s");
+       }
+ 
+       // Arbeitsspeicher des Rechners in GB (Desktop-App: exakt, sonst Naeherung des Browsers) oder null.
+@@ -4331,6 +4370,7 @@
+           await anonCore();
+         } finally {
+           anonBusy = false;
++          scheduleAIIdleUnload();
+           if (btn) btn.disabled = false;
+           const pe = document.getElementById("aiRunProgress");
+           if (pe) pe.textContent = "";
+@@ -4345,6 +4385,7 @@
+         store = {};
+         cnt = {};
+         try {
++          await ensureAIReady();
+           if (nerPipeline && aiCache.key !== input) {
+             toast("KI-Analyse läuft...", "s");
+             await ensureAISpans(input);
+diff --git a/package.json b/package.json
+index b905931..4590a50 100644
+--- a/package.json
++++ b/package.json
+@@ -19,7 +19,8 @@
+     "prebuild:mac": "node scripts/fetch-vendor.mjs",
+     "prebuild:linux": "node scripts/fetch-vendor.mjs",
+     "prebuild:all": "node scripts/fetch-vendor.mjs",
+-    "prerelease": "node scripts/fetch-vendor.mjs"
++    "prerelease": "node scripts/fetch-vendor.mjs",
++    "golden:update": "node tests/golden/update.mjs"
+   },
+   "build": {
+     "appId": "eu.arcangeli.privacyshield",
+diff --git a/tests/ai-mode.test.mjs b/tests/ai-mode.test.mjs
+new file mode 100644
+index 0000000..b36028a
+--- /dev/null
++++ b/tests/ai-mode.test.mjs
+@@ -0,0 +1,62 @@
++// KI-Modus: Standard "auto" = bei der ersten Analyse laden, nach Leerlauf entladen; "off" = nur Regeln und Wortlisten.
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { launchApp, toolFrame, runAnon, waitFor, GOLDEN, SAMPLE } from './helpers.mjs';
++
++const loaded = (f) => f.evaluate(() => !!nerPipeline);
++
++test('Standard: Modell startet erst bei der ersten Analyse und liefert das KI-Ergebnis', async () => {
++  const a = await launchApp({ offline: true });
++  try {
++    const f = await toolFrame(a.win);
++    assert.equal(await f.evaluate(() => aiMode()), 'auto');
++    assert.equal(await loaded(f), false, 'Modell darf vor der ersten Analyse nicht im Speicher sein');
++    const r = await runAnon(f, SAMPLE);
++    assert.equal(await loaded(f), true, 'Modell wurde nicht automatisch geladen');
++    assert.equal(r.out, GOLDEN.model.out);
++  } finally { await a.close(); }
++});
++
++test('Ausgeschaltet: kein Modell, Ergebnis der Standard-Erkennung', async () => {
++  const a = await launchApp({ offline: true });
++  try {
++    const f = await toolFrame(a.win);
++    await f.evaluate(() => setAIMode('off'));
++    const r = await runAnon(f, SAMPLE);
++    assert.equal(await loaded(f), false);
++    assert.equal(r.out, GOLDEN.wordlist.out);
++    assert.equal(await f.evaluate(() => document.getElementById('aiAutoToggle').checked), false);
++    // und wieder einschalten
++    await f.evaluate(() => setAIMode('auto'));
++    await runAnon(f, SAMPLE);
++    assert.equal(await loaded(f), true);
++  } finally { await a.close(); }
++});
++
++test('Leerlauf: Modell wird entladen (Speicher sinkt) und bei Bedarf identisch neu geladen', async () => {
++  const a = await launchApp({ offline: true });
++  try {
++    const f = await toolFrame(a.win);
++    await f.evaluate(() => { AI_IDLE_MS = 1500; });
++    const mem = () => a.win.evaluate(() => window.electronAPI.getSystemStats()).then((s) => s.app.memory);
++    const first = await runAnon(f, SAMPLE);
++    const withModel = await mem();
++    await waitFor(() => loaded(f), (v) => v === false, { timeout: 10000 });
++    assert.equal(await loaded(f), false, 'Modell wurde im Leerlauf nicht entladen');
++    const after = await waitFor(mem, (m) => withModel - m > 200);
++    console.log('  App-Speicher MB: mit Modell', withModel, '| nach Leerlauf-Entladen', after);
++    assert.ok(withModel - after > 200, 'Speicher nicht freigegeben: ' + withModel + ' -> ' + after);
++    const second = await runAnon(f, SAMPLE);
++    assert.equal(await loaded(f), true);
++    assert.equal(second.out, first.out, 'Ergebnis nach Neuladen weicht ab');
++  } finally { await a.close(); }
++});
++
++test('Einstellung aus v1.7 wird uebernommen: "aiModelLoaded=false" bedeutet aus', async () => {
++  const a = await launchApp({ offline: true });
++  try {
++    const f = await toolFrame(a.win);
++    await f.evaluate(() => { localStorage.removeItem('ps_ai_mode'); localStorage.setItem('aiModelLoaded', 'false'); });
++    assert.equal(await f.evaluate(() => aiMode()), 'off');
++  } finally { await a.close(); }
++});
+diff --git a/tests/golden/update.mjs b/tests/golden/update.mjs
+new file mode 100644
+index 0000000..f4cff1e
+--- /dev/null
++++ b/tests/golden/update.mjs
+@@ -0,0 +1,18 @@
++// Erzeugt tests/golden/baseline.json neu (Wortlisten- und KI-Ausgabe fuer tests/golden/sample.txt).
++// Nur nach bewusster Aenderung der Erkennung ausfuehren und den Diff (git diff tests/golden) pruefen.
++import fs from 'fs';
++import path from 'path';
++import { fileURLToPath } from 'url';
++import { launchApp, toolFrame, runAnon, SAMPLE } from '../helpers.mjs';
++
++const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), 'baseline.json');
++const a = await launchApp({ offline: true });
++try {
++  const f = await toolFrame(a.win);
++  await f.evaluate(() => setAIMode('off'));
++  const wordlist = await runAnon(f, SAMPLE);
++  await f.evaluate(async () => { setAIMode('auto'); await loadAIModel(); });
++  const model = await runAnon(f, SAMPLE);
++  fs.writeFileSync(OUT, JSON.stringify({ wordlist, model }, null, 1) + '\n');
++  console.log('baseline.json geschrieben:', Object.keys(wordlist.store).length, 'Eintraege (Wortlisten),', Object.keys(model.store).length, '(KI)');
++} finally { await a.close(); }
+diff --git a/tests/offline-ai.test.mjs b/tests/offline-ai.test.mjs
+index 959fc57..36f6ed7 100644
+--- a/tests/offline-ai.test.mjs
++++ b/tests/offline-ai.test.mjs
+@@ -2,7 +2,7 @@
+ // Die App laeuft hier mit totem Proxy: jeder Netzzugriff wuerde sofort auffallen.
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+-import { launchApp, toolFrame, runAnon, makePdf, GOLDEN, SAMPLE } from './helpers.mjs';
++import { launchApp, toolFrame, runAnon, makePdf, waitFor, GOLDEN, SAMPLE } from './helpers.mjs';
+ 
+ async function loadModel(frame) {
+   const r = await frame.evaluate(async () => { await loadAIModel(); return { active: !!nerPipeline, info: nerPipeline && nerPipeline.info }; });
+@@ -10,18 +10,19 @@ async function loadModel(frame) {
+   return r;
+ }
+ 
+-test('Wortlisten-Erkennung unveraendert zu v1.6.2 (Golden)', async () => {
++test('Wortlisten-Erkennung entspricht dem Golden-Stand', async () => {
+   const a = await launchApp({ offline: true });
+   try {
+     const f = await toolFrame(a.win);
+     await a.win.waitForTimeout(1500);
++    await f.evaluate(() => setAIMode('off'));
+     const r = await runAnon(f, SAMPLE);
+     assert.equal(r.out, GOLDEN.wordlist.out);
+     assert.deepEqual(r.store, GOLDEN.wordlist.store);
+   } finally { await a.close(); }
+ });
+ 
+-test('KI-Modell laedt offline aus der Installation, Ergebnis wie v1.6.2 (Golden)', async () => {
++test('KI-Modell laedt offline aus der Installation, Ergebnis entspricht dem Golden-Stand', async () => {
+   const a = await launchApp({ offline: true });
+   try {
+     const f = await toolFrame(a.win);
+@@ -126,8 +127,7 @@ test('RAM-Anzeige zeigt den echten Verbrauch aller Prozesse und sinkt nach dem E
+     const loaded = (await stats()).app.memory;
+     assert.ok(loaded - before > 300, 'Modell muss sich im Speicher zeigen: ' + before + ' -> ' + loaded + ' MB');
+     await f.evaluate(() => unloadAIModel());
+-    await a.win.waitForTimeout(2500);
+-    const after = (await stats()).app.memory;
++    const after = await waitFor(async () => (await stats()).app.memory, (m) => loaded - m > 200);
+     console.log('  App-Speicher MB: Start', before, '| mit Modell', loaded, '| nach Entladen', after);
+     assert.ok(loaded - after > 200, 'Entladen muss Speicher freigeben: ' + loaded + ' -> ' + after + ' MB');
+     const shown = await a.win.evaluate(() => document.getElementById('sysstats').textContent);
+@@ -136,18 +136,14 @@ test('RAM-Anzeige zeigt den echten Verbrauch aller Prozesse und sinkt nach dem E
+   } finally { await a.close(); }
+ });
+ 
+-test('Hinweis bei wenig Arbeitsspeicher, kein Autostart des Modells', async () => {
++test('Hinweis bei wenig Arbeitsspeicher, kein automatisches Laden des Modells', async () => {
+   const a = await launchApp({ offline: true });
+   try {
+     const f = await toolFrame(a.win);
+     await f.evaluate(() => { window.getTotalRamGB = async () => 4; });
+-    const low = await f.evaluate(() => checkMemoryHint());
+-    assert.equal(low, true);
+-    const txt = await f.evaluate(() => document.getElementById('aiMemHint').textContent);
+-    assert.match(txt, /4 GB/);
+-    // Autostart: Flag gesetzt, aber wenig RAM -> Modell bleibt aus
+-    await f.evaluate(() => { localStorage.setItem('aiModelLoaded', 'true'); startApp(); });
+-    await a.win.waitForTimeout(2500);
+-    assert.equal(await f.evaluate(() => !!nerPipeline), false);
++    assert.equal(await f.evaluate(() => checkMemoryHint()), true);
++    assert.match(await f.evaluate(() => document.getElementById('aiMemHint').textContent), /4 GB/);
++    await runAnon(f, 'Herr Thomas Müller wohnt in München.');
++    assert.equal(await f.evaluate(() => !!nerPipeline), false, 'Modell darf bei wenig RAM nicht automatisch starten');
+   } finally { await a.close(); }
+ });
+-- 
+2.43.0
+

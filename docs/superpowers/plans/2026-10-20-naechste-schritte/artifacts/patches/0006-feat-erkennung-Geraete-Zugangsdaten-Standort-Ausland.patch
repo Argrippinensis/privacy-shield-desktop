@@ -1,0 +1,1512 @@
+From 5d3d2951ca5cc68a4b032e629a3d7bad4dba6b50 Mon Sep 17 00:00:00 2001
+From: Alexander Arcangeli <alexander@arcangeli.eu>
+Date: Tue, 20 Oct 2026 11:13:02 +0200
+Subject: [PATCH 06/11] feat(erkennung): Geraete, Zugangsdaten, Standort,
+ Auslandskennungen, Art. 9/10 DSGVO (Welle 2)
+
+Neue Kategorien: Geraete-Kennungen (MAC, IMEI mit Luhn, UUID, Seriennummern), Konten und Zugangsdaten (@-Handles,
+Social-Media-Links, Benutzername, Passwort, API-Schluessel, JWT, Hash/Token), Standortdaten (GPS dezimal und
+Grad/Minuten/Sekunden), auslaendische Kennungen (Codice fiscale, PESEL und DNI/NIE mit Pruefsumme, UK National
+Insurance, AHV, UK/PL-Postleitzahlen), Kundennummer, Vertragsnummer, Matrikelnummer u. a. mit Bezeichnung,
+Fuehrerschein, beschriftete Namensfelder (Vorname:, Geburtsname:), Geburtsort, auslaendische Adressformen,
+verschleierte E-Mail ("name (at) firma (dot) de"), ausgeschriebene Ziffernfolgen, OCR-Verwechslung O/0 in IBAN.
+Unicode: geschuetzte und schmale Leerzeichen sowie Vollbreiten-Ziffern werden gleich lang normalisiert.
+Besondere Kategorien (Art. 9/10): Begriffslisten fuer Gesundheit, Medikamente, Religion, Gewerkschaft/Partei,
+Herkunft, Sexualleben, Strafdaten, Biometrie sowie Aktenzeichen der Strafgerichte; nur im Profil "Medizin" und im neuen
+Profil "Maximal" aktiv, weil Wortlisten sonst zu viel maskieren.
+Fehlalarme: Mengenangaben ("3,2 Millionen Euro") sind keine Namen.
+
+Messung (breiter DSGVO-Satz, 59 Faelle mit Wert): mit KI 4 statt 35 undicht (Rest: GROSSGESCHRIEBENER Name mit
+Komma, Rufname in Anfuehrungszeichen, Aufenthaltstitel-Nummer, ungueltige Dummy-NI), 0 Falsch-Maskierungen;
+kuratiert und synthetisch ohne Regression.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ app/privacy-shield.html    | 230 +++++++++++++++--
+ tests/eval/baseline.json   |  50 ++--
+ tests/eval/out/result.json | 507 ++++++++++++++++---------------------
+ 3 files changed, 452 insertions(+), 335 deletions(-)
+
+diff --git a/app/privacy-shield.html b/app/privacy-shield.html
+index 55c7aed..db5e374 100644
+--- a/app/privacy-shield.html
++++ b/app/privacy-shield.html
+@@ -1987,6 +1987,62 @@
+     <script src="vendor/jspdf/jspdf.umd.min.js"></script>
+     <script src="vendor/jszip/jszip.min.js"></script>
+     <script>
++      // Begriffslisten fuer besondere Kategorien (Art. 9 und 10 DSGVO). Ein Begriff verraet die Eigenschaft einer Person
++      // (Krankheit, Religion, Gewerkschaft, Strafdaten ...). Wortlisten koennen auch in unverfaenglichen Texten treffen;
++      // deshalb nur in den Profilen "Medizin" und "Maximal" aktiv. Wortanfang muss stimmen, Endungen sind erlaubt.
++      const SENSITIVE_WORDS = [
++        // Gesundheit: Krankheiten und Zustaende
++        "Diabetes", "Krebs", "Karzinom", "Tumor", "Leukämie", "Lymphom", "Melanom", "Metastase", "Multiple Sklerose", "Parkinson",
++        "Alzheimer", "Demenz", "Epilepsie", "Depression", "Burnout", "Angststörung", "Panikattacke", "Schizophreni", "Psychose",
++        "Posttraumatische", "Autismus", "Hepatitis", "Tuberkulose", "Herzinfarkt", "Schlaganfall", "Herzinsuffizienz", "Bluthochdruck",
++        "Asthma", "Rheuma", "Arthrose", "Bandscheibenvorfall", "Osteoporose", "Migräne", "Chemotherapie", "Strahlentherapie",
++        "Dialyse", "Fehlgeburt", "Abtreibung", "Schwangerschaftsabbruch", "Unfruchtbarkeit", "Alkoholismus", "Alkoholabhängigkeit",
++        "Drogenabhängigkeit", "Suchterkrankung", "Suizid", "Selbstmord", "Essstörung", "Anorexie", "Bulimie", "Schwerbehinderung",
++        "Pflegegrad", "Arbeitsunfähigkeit", "arbeitsunfähig", "Krankschreibung", "Neurodermitis", "Endometriose", "Mukoviszidose",
++        "Hämophilie", "Morbus", "schwanger", "Schwangerschaft",
++        // Gesundheit: Wirkstoffe und Praeparate (Auswahl)
++        "Metformin", "Insulin", "Ramipril", "Sertralin", "Citalopram", "Escitalopram", "Fluoxetin", "Venlafaxin", "Duloxetin",
++        "Amitriptylin", "Mirtazapin", "Quetiapin", "Olanzapin", "Risperidon", "Aripiprazol", "Clozapin", "Haloperidol", "Lithium",
++        "Methylphenidat", "Ritalin", "Lorazepam", "Diazepam", "Tavor", "Valium", "Zolpidem", "Oxycodon", "Morphin", "Fentanyl",
++        "Methadon", "Tramadol", "Levothyroxin", "Bisoprolol", "Metoprolol", "Amlodipin", "Simvastatin", "Atorvastatin", "Pantoprazol",
++        "Omeprazol", "Marcumar", "Phenprocoumon", "Xarelto", "Rivaroxaban", "Eliquis", "Apixaban", "Prednisolon", "Cortison",
++        "Humira", "Adalimumab", "Ocrelizumab", "Interferon", "Truvada", "Biktarvy", "Tamoxifen", "Letrozol", "Cisplatin",
++        "Methotrexat", "Gabapentin", "Pregabalin", "Levodopa", "Donepezil", "Lamotrigin", "Valproat", "Carbamazepin",
++        "Levetiracetam", "Naltrexon", "Buprenorphin",
++        // Religion und Weltanschauung
++        "katholisch", "evangelisch", "evangelisch-lutherisch", "ev.-luth.", "muslimisch", "Muslim", "islamisch", "jüdisch",
++        "Judentum", "buddhistisch", "hinduistisch", "Zeugen Jehovas", "Mormonen", "Freikirche", "Konfession", "Kirchenaustritt",
++        "Kirchenmitglied", "Atheist", "konfessionslos",
++        // Politik und Gewerkschaft
++        "Die Linke", "Die Grünen", "Bündnis 90", "Freie Wähler", "Piratenpartei", "Parteimitglied", "Parteieintritt", "ver.di",
++        "IG Metall", "IG BCE", "IG BAU", "Gewerkschaftsmitglied", "Gewerkschaftszugehörigkeit",
++        // Herkunft
++        "kurdisch", "türkischstämmig", "Migrationshintergrund", "Hautfarbe", "Asylbewerber", "Spätaussiedler", "Sinti",
++        // Sexualleben
++        "homosexuell", "schwul", "lesbisch", "bisexuell", "transgender", "transsexuell", "gleichgeschlechtlich", "Sexualleben",
++        "sexuelle Orientierung", "intersexuell",
++        // Strafdaten
++        "verurteilt", "Verurteilung", "vorbestraft", "Vorstrafe", "Straftat", "Ermittlungsverfahren", "Strafverfahren",
++        "Strafbefehl", "Haftstrafe", "Freiheitsstrafe", "Bewährung", "Untersuchungshaft", "Inhaftierung", "Strafanzeige",
++        "Betrug", "Diebstahl", "Körperverletzung", "Unterschlagung", "Steuerhinterziehung", "Bußgeldbescheid", "Führungszeugnis",
++        "Strafregister",
++        // Biometrie und Genetik
++        "Fingerabdruck", "Gentest", "genetisch", "Iris-Scan", "Gesichtserkennung", "Stimmprofil", "biometrisch",
++      ];
++      // Kurzformen: nur exakt (Grossschreibung), ohne Endungen
++      const SENSITIVE_EXACT = ["HIV", "AIDS", "ADHS", "PTBS", "COPD", "DNA", "CDU", "CSU", "SPD", "FDP", "AfD", "BSW", "GEW", "EVG", "NGG", "DGB", "GdP"];
++      const SENSITIVE_RX = [
++        new RegExp(
++          "(?<![A-Za-z0-9_\\u00C0-\\u024F])(?:" +
++            SENSITIVE_WORDS.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "[ \\t]+")).join("|") +
++            ")[A-Za-zäöüß]*",
++          "gi",
++        ),
++        new RegExp("(?<![A-Za-z0-9_\\u00C0-\\u024F])(?:" + SENSITIVE_EXACT.join("|") + ")(?![A-Za-z0-9_\\u00C0-\\u024F])", "g"),
++        /\bGdB[ \t]?\d{2,3}\b/g,
++        /\b\d{1,2}\.[ \t]?SSW\b/g,
++        /\b\d{1,2}[ \t]+Punkte?[ \t]+in[ \t]+Flensburg\b/gi,
++      ];
+       const ENTS = [
+         {
+           id: "email",
+@@ -1995,7 +2051,10 @@
+           col: "#06b6d4",
+           on: true,
+           pfx: "EMAIL",
+-          rx: [/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g],
++          rx: [
++            /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g,
++            /([a-zA-Z0-9._%+\-]+[ \t]*(?:\(at\)|\[at\]|\{at\}|\(ät\)|\[ät\])[ \t]*[a-zA-Z0-9\-]+(?:[ \t]*(?:\(dot\)|\[dot\]|\(punkt\)|\.)[ \t]*[a-zA-Z0-9\-]+)*[ \t]*(?:\(dot\)|\[dot\]|\(punkt\)|\.)[ \t]*[a-zA-Z]{2,})/g,
++          ],
+         },
+         {
+           id: "iban",
+@@ -2005,7 +2064,7 @@
+           on: true,
+           pfx: "IBAN",
+           rx: [
+-            /\b([A-Za-z]{2}\d{2}[ \t]{1,3}[A-Za-z0-9]{4}(?![A-Za-z0-9])(?:[ \t]{1,3}(?=[A-Za-z0-9]{0,3}\d)[A-Za-z0-9]{4}(?![A-Za-z0-9])){1,6}(?:[ \t]{1,3}\d{1,4}(?![A-Za-z0-9]))?)/g,
++            /\b([A-Za-z]{2}\d{2}[ \t]{1,3}[A-Za-z0-9]{4}(?![A-Za-z0-9])(?:[ \t]{1,3}(?=[A-Za-z0-9]{0,3}\d)[A-Za-z0-9]{4}(?![A-Za-z0-9])){1,6}(?:[ \t]{1,3}[\dO]{1,4}(?![A-Za-z0-9]))?)/g,
+             /\b([A-Za-z]{2}\d{2}[A-Za-z0-9]{11,30})\b/g,
+             /(Konto(?:nummer|nr\.?)?[\s:]+[\d\s]{6,18}\d)/gi,
+             /((?:BLZ|Bankleitzahl)[\s:]+\d{8})/gi,
+@@ -2020,6 +2079,66 @@
+           pfx: "KARTE",
+           rx: [/\b((?:\d{4}[ \-]){3}\d{1,7}|\d{4}[ \-]\d{6}[ \-]\d{5}|\d{13,19})\b/g],
+         },
++        {
++          id: "device",
++          lbl: "Geräte-Kennungen",
++          desc: "MAC-Adresse, IMEI, UUID, Seriennummern",
++          col: "#475569",
++          on: true,
++          pfx: "GERAET",
++          rx: [
++            /(?<![0-9A-Fa-f:\-])((?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2})(?![0-9A-Fa-f:\-])/g,
++            /(?<![\d\-])(\d{2}[ \-]?\d{6}[ \-]?\d{6}[ \-]?\d)(?![\d\-])/g,
++            /\b([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\b/g,
++            /(?<=(?:Seriennummer|Serien-?Nr\.?|Gerät(?:e)?-?ID|Device-?ID|Geräte-?Nr\.?|IMEI|Chassis-?Nr\.?)[ \t:#]*)([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/g,
++          ],
++        },
++        {
++          id: "account",
++          lbl: "Benutzerkonten & Zugangsdaten",
++          desc: "Benutzernamen, @-Handles, Passwörter, API-Schlüssel, Token",
++          col: "#dc2626",
++          on: true,
++          pfx: "KONTO",
++          rx: [
++            /(?<![\w@.\/])(@[A-Za-z0-9_]{3,30})(?![\w@])/g,
++            /(?<![\w@.\/-])((?:t\.me|wa\.me|linkedin\.com\/in|instagram\.com|facebook\.com|x\.com|twitter\.com|xing\.com\/profile|tiktok\.com\/@)\/[A-Za-z0-9_.\-\/]{2,60})/gi,
++            /(?<=(?:Benutzer(?:name)?|User(?:name)?|Login|Nutzername|Account|Kennung)[ \t]*[:=][ \t]*)([A-Za-z0-9._\-@]{3,40})/g,
++            /(?<=(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer)[ \t]*[:=]?[ \t]*)(\S{4,64})/gi,
++            /\b((?:sk|pk|rk|api|key|tok|secret|ghp|gho|xox[abp])[-_][A-Za-z0-9_\-]{12,64})\b/g,
++            /\b(eyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,})\b/g,
++            /\b([0-9a-fA-F]{32}|[0-9a-fA-F]{40}|[0-9a-fA-F]{64})\b/g,
++          ],
++        },
++        {
++          id: "geo",
++          lbl: "Standortdaten",
++          desc: "GPS-Koordinaten (Dezimalgrad, Grad/Minuten/Sekunden)",
++          col: "#0d9488",
++          on: true,
++          pfx: "STANDORT",
++          rx: [
++            /(?<![\d.])(-?\d{1,2}\.\d{4,8}[ \t]*[,;][ \t]*-?\d{1,3}\.\d{4,8})(?![\d.])/g,
++            /(\d{1,3}°[ \t]?\d{1,2}['′][ \t]?\d{1,2}(?:[.,]\d+)?["″]?[ \t]?[NSOEW][ \t,;]*\d{1,3}°[ \t]?\d{1,2}['′][ \t]?\d{1,2}(?:[.,]\d+)?["″]?[ \t]?[NSOEW])/g,
++          ],
++        },
++        {
++          id: "intlid",
++          lbl: "Ausländische Kennungen",
++          desc: "Codice fiscale, PESEL, DNI/NIE, UK National Insurance, AHV, Postleitzahlen (UK, PL, NL)",
++          col: "#7c3aed",
++          on: true,
++          pfx: "KENNNR",
++          rx: [
++            /\b([A-Z]{6}\d{2}[A-EHLMPR-T]\d{2}[A-Z]\d{3}[A-Z])\b/g,
++            /(?<=PESEL[ \t:]*)(\d{11})\b/gi,
++            /\b(\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-HJ-NP-TV-Z])\b/g,
++            /\b([A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z][ ]?\d{2}[ ]?\d{2}[ ]?\d{2}[ ]?[A-D])\b/g,
++            /\b(756\.\d{4}\.\d{4}\.\d{2})\b/g,
++            /\b([A-Z]{1,2}\d[A-Z\d]?[ ]?\d[A-Z]{2})\b/g,
++            /(?<=(?:NIE|DNI|NIF|BSN|Burgerservicenummer|AHV-?Nr\.?|Sozialversicherungsnummer)[ \t:]*)([A-Z0-9][A-Z0-9.\- ]{6,16})/g,
++          ],
++        },
+         {
+           id: "bic",
+           lbl: "BIC / SWIFT-Codes",
+@@ -2041,8 +2160,9 @@
+           pfx: "TEL",
+           rx: [
+             /((?:Tel(?:efon)?\.?(?:[ \-]?(?:Nr|Nummer)\.?)?|Fon|Fax|Mobil(?:e|funk)?|Handy|Rufnummer|Durchwahl|Zentrale)[\s:\.]*(?:\+|00)?\d[\d\s\-\(\)\/\.]{6,24})/gi,
+-            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\d{1,5}(?:[ \t\-\.\/]?\d{2,8}){1,3})(?!\d)/g,
++            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\(?\d{1,5}\)?(?:[ \t\-\.\/]?\d{2,8}){1,3})(?!\d)/g,
+             /(?<![\d\/\-\.])(\(?0[1-9]\d{1,4}\)?[ \t\/\-\.]?\d{2,10}(?:[ \t\-\.]\d{1,6}){0,3})(?!\d)/g,
++            /\b((?:(?:null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun)[ ,\-]+){6,}(?:null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun))\b/gi,
+           ],
+         },
+         {
+@@ -2082,10 +2202,13 @@
+           rx: [
+             /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)[ \t:]*[\d \t\/\-]{8,18})/gi,
+             /((?:USt\.?-?Id(?:Nr\.?)?|Umsatzsteuer-?ID|VAT)[\s:]*[A-Z]{0,2}\d{7,12})/gi,
+-            /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?)[\s:]*[A-Z0-9]{6,14})/gi,
++            /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?|Führerschein(?:nummer)?|FS-?Nr\.?|Aufenthaltstitel(?:-?Nr\.?)?)[ \t:]*[A-Z0-9]{6,14})/gi,
++            /(?<=(?:Kunden|Vertrags|Mitarbeiter|Personal|Matrikel|Versicherungs|Policen|Mandanten|Patienten|Fall|Antrags|Referenz|Bestell|Konto|Teilnehmer|Mitglieds|Lizenz|Buchungs|Sendungs|Ticket)-?(?:nummer|nr\.?|no\.?|id)[ \t:#]*)([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/gi,
+             /(HR[AB]\s*(?:Nr\.?\s*)?\d{3,8})/g,
+             /((?:Aktenzeichen|Az\.?)[\s:]+(?:\d{1,4}\s+[A-Z]{1,5}\s+)?[\w\/\.\-]{2,30})/g,
+             /\b(\d{1,3}\s+[A-Z]{1,5}\s+\d{3,6}\/\d{2,4})\b/g,
++            /\b(\d{1,3}[ \t]?(?:Js|Ds|Cs|Gs|Ls|Ns|OWi|StVK|KLs|VRs)[ \t]?\d{1,6}\/\d{2})\b/g,
++            /\b((?:Js|Ds)[ \t]?\d{1,6}\/\d{2})\b/g,
+             /((?:Sozialversicherungs(?:nummer|nr\.?)?|SV-?(?:Nr|Nummer)\.?|Rentenversicherungs(?:nummer|nr\.?)|RVNR|SVNR)[ \t:]*\d{2}[ \t\-]?\d{6}[ \t\-]?[A-Z][ \t]?\d{3})/gi,
+             /((?:ISIN|WKN)[\s:]+[A-Z0-9]{6,12})/gi,
+             /(Steuerberater(?:-?Nr\.?|nummer)[\s:]*[\d\/\-]{5,15})/gi,
+@@ -2119,6 +2242,13 @@
+           on: true,
+           pfx: "ADRESSE",
+           rx: [
++            /(?<=(?:Geburtsort|Wohnort|Standort|Einsatzort|Tatort)[ \t]*[:=][ \t]*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ.\- ]{2,40}?)(?=[,;\n]|$)/g,
++            /(\b\d{1,4}[a-z]?,?[ \t]+(?:rue|avenue|boulevard|av\.|bd|impasse|chemin)[ \t]+(?:de[ \t]+(?:la[ \t]+)?|du[ \t]+|des[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30})/g,
++            /(\b(?:via|viale|piazza|corso|vicolo)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
++            /(\b(?:calle|avenida|paseo|plaza|c\/)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4})/g,
++            /(\bul\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
++            /(\b\d{1,4}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?[ \t]+(?:Street|Road|Lane|Avenue|Drive|Way|Close|Square|Gardens)\b)/g,
++            /(\b\d{2}-\d{3}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}|(?<=,[ \t]*)\d{5}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?=[ \t]*(?:\.|$)))/g,
+             /([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*(?:[A-Z]{1,2}-)?\d{4,5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
+             /([A-ZÜÄÖ][a-züäöß \-]+(?:stra(?:ß|ss)e|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
+             /(\b\d{5}[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,28})\b/g,
+@@ -2157,6 +2287,8 @@
+             /(?<=[^\n\s][ \t])((?:[A-HJ-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
+             /(?:^|\n)[ \t]*((?:[J-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
+             /(?<![A-Za-z0-9_À-ɏ])([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?[ \t]+[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
++            /(?<=\b(?:Vorname|Nachname|Familienname|Geburtsname|Mädchenname|Rufname|Künstlername|Name|Namen|Unterzeichner|Antragsteller(?:in)?|Patient(?:in)?|Versicherte[rn]?)[ \t]*[:=][ \t]*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})?)/g,
++            /(?<=\b(?:geboren|geb\.)[ \t]+)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![\w.])/g,
+             /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2}))/g,
+             /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
+           ],
+@@ -2196,6 +2328,15 @@
+             /(?<![\w@.\/-])(www\.[a-z0-9\-]+(?:\.[a-z0-9\-]+)+(?:\/[^\s<>"{}|\\^`\[\]\)\(,;]*[^\s<>"{}|\\^`\[\]\)\(,;.:!?])?)/gi,
+           ],
+         },
++        {
++          id: "sensitive",
++          lbl: "Besondere Kategorien (Art. 9/10 DSGVO)",
++          desc: "Gesundheit, Medikamente, Religion, Gewerkschaft, Partei, Herkunft, Sexualleben, Strafdaten (Begriffslisten)",
++          col: "#be123c",
++          on: false,
++          pfx: "SENSIBEL",
++          rx: SENSITIVE_RX,
++        },
+         {
+           id: "med",
+           lbl: "Medizinische Daten",
+@@ -2211,6 +2352,10 @@
+         },
+       ];
+       const SW = new Set([
++        "Millionen",
++        "Milliarden",
++        "Euro",
++        "Prozent",
+         "Deutschland",
+         "Deutschlands",
+         "Österreich",
+@@ -3125,7 +3270,7 @@
+           lbl: "Standard",
+           badge: "Empfohlen",
+           desc: "Für die meisten Anwendungsfälle. Erkennt persönliche Daten, Kontaktdaten, Finanzdaten und Identifikationsnummern.",
+-          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "org", "name", "ip"],
++          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "device", "account", "geo", "intlid", "org", "name", "ip"],
+           tags: ["Namen", "Adressen", "IBAN", "Karten", "BIC", "Telefon", "E-Mail", "Daten", "Steuer-IDs", "Beträge", "Kfz", "IP/Links"],
+           note: "",
+         },
+@@ -3134,7 +3279,7 @@
+           lbl: "Finanzen & Recht",
+           badge: "",
+           desc: "Für Anwaltskanzleien, Steuerberatung und Banken. Wie Standard — zusätzlich mit Aktenzeichen, Handelsregisternummern und Sozialversicherungsnummern.",
+-          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "org", "name", "ip"],
++          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "device", "account", "geo", "intlid", "org", "name", "ip"],
+           tags: ["+ Aktenzeichen", "+ HR-Nummern", "+ SV-Nummern", "Alle Standardfelder"],
+           note: "Gleiche Kategorien wie Standard, jedoch mit erweiterten Mustern für rechtliche und steuerliche Dokumente.",
+         },
+@@ -3143,10 +3288,19 @@
+           lbl: "Medizin & Pflege",
+           badge: "",
+           desc: "Für Kliniken, Praxen und Pflegedienste. Enthält zusätzlich ICD-Codes, Diagnosen und Patientendaten. Finanzdaten (IBAN, Beträge) werden nicht erkannt.",
+-          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "paragraf", "ip"],
++          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "sensitive", "paragraf", "ip", "device", "account", "geo", "intlid"],
+           tags: ["+ ICD-Codes", "+ Diagnosen", "+ Patientendaten", "Ohne IBAN & Beträge"],
+           note: "",
+         },
++        {
++          id: "strict",
++          lbl: "Maximal",
++          badge: "",
++          desc: "Alle Kategorien aktiv, auch besondere Kategorien (Art. 9/10 DSGVO), Funktionen und Paragraphen. Kann mehr maskieren als nötig; das Ergebnis bitte prüfen.",
++          ents: ENTS.map((e) => e.id),
++          tags: ["Alle Kategorien", "Art. 9/10 DSGVO", "Maximaler Schutz"],
++          note: "",
++        },
+         {
+           id: "custom",
+           lbl: "Eigene Auswahl",
+@@ -4075,6 +4229,10 @@
+         IP: 1,
+         KARTE: 1,
+         KFZ: 2,
++        SENSIBEL: 2,
++        GERAET: 1,
++        KONTO: 1,
++        STANDORT: 2,
+         TEL: 2,
+         BETRAG: 2,
+         DATUM: 2,
+@@ -4087,8 +4245,8 @@
+         NAME: 5,
+         ORT: 5,
+       };
+-      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip", "card", "vehicle"]);
+-      const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med"]);
++      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip", "card", "vehicle", "device", "account", "geo", "intlid"]);
++      const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med", "sensitive"]);
+       function isWhitelisted(v) {
+         return whitelist.some(function (w) {
+           return w && v.toLowerCase().includes(w.toLowerCase());
+@@ -4114,10 +4272,39 @@
+       }
+       // Wertpruefung fuer harte Treffer. Muss schon beim Sammeln laufen: ein unplausibler Treffer
+       // (z. B. PLZ 05331 als Telefonnummer) wuerde sonst die spaetere Adress-Erkennung verdraengen.
++      function luhnOk(d) {
++        let sum = 0;
++        for (let i = 0; i < d.length; i++) {
++          let n = Number(d[d.length - 1 - i]);
++          if (i % 2 === 1) {
++            n *= 2;
++            if (n > 9) n -= 9;
++          }
++          sum += n;
++        }
++        return sum % 10 === 0;
++      }
++      function validIntlId(val) {
++        const v = val.replace(/[ .\-]/g, "").toUpperCase();
++        if (/^\d{8}[A-Z]$/.test(v) || /^[XYZ]\d{7}[A-Z]$/.test(v)) {
++          // spanische DNI/NIE: Kontrollbuchstabe = Rest der Zahl durch 23
++          const num = Number((v[0] === "X" ? "0" : v[0] === "Y" ? "1" : v[0] === "Z" ? "2" : v[0]) + v.slice(1, 8));
++          return "TRWAGMYFPDXBNJZSQVHLCKE"[num % 23] === v[8];
++        }
++        if (/^\d{11}$/.test(v)) {
++          // polnische PESEL: Pruefsumme
++          const w = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
++          const sum = w.reduce((a, x, i) => a + x * Number(v[i]), 0);
++          return (10 - (sum % 10)) % 10 === Number(v[10]);
++        }
++        return true;
++      }
+       // Liefert den (ggf. gekuerzten) Wert oder null, wenn der Treffer unplausibel ist.
+-      function hardValue(pfx, val) {
++      function hardValue(pfx, val, id) {
++        if (id === "device" && /^\d{2}[ \-]?\d{6}[ \-]?\d{6}[ \-]?\d$/.test(val)) return luhnOk(val.replace(/\D/g, "")) ? val : null;
++        if (id === "intlid" && !validIntlId(val)) return null;
+         if (pfx === "KARTE") return isValidCard(val) ? val : null;
+-        if (pfx === "TEL") return val.replace(/\D/g, "").length >= 7 ? val : null;
++        if (pfx === "TEL") return /^[A-Za-zäöüß ,\-]+$/.test(val) || val.replace(/\D/g, "").length >= 7 ? val : null;
+         if (pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val)) {
+           const exp = IBAN_LEN[val.slice(0, 2).toUpperCase()];
+           if (exp) {
+@@ -4131,7 +4318,8 @@
+               }
+             }
+           }
+-          return isValidIBANFormat(val) ? val : null;
++          // OCR-Verwechslung "O" statt "0" in der Kontonummer tolerieren (nur fuer die Pruefung)
++          return isValidIBANFormat(val.slice(0, 4) + val.slice(4).replace(/O/g, "0")) ? val : null;
+         }
+         return val;
+       }
+@@ -4250,7 +4438,7 @@
+               const raw = gval !== null ? gval : m[0];
+               let val = raw.trim();
+               if (!val || val.length < 2) continue;
+-              val = hardValue(e.pfx, val);
++              val = hardValue(e.pfx, val, e.id);
+               if (!val) continue;
+               const off = (gval !== null ? m[0].indexOf(raw) : 0) + (raw.length - raw.replace(/^\s+/, "").length);
+               pass1.push({
+@@ -4327,6 +4515,7 @@
+             if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(vt)) continue;
+             if (s.pfx === "ORG" && /^(?:AG|GmbH|KG|OHG|GbR|UG|SE|eG|Ltd\.?|Inc\.?|Corp\.?)[ \t]/.test(vt)) continue;
+             if (SW.has(vt) || SW.has(vt.replace(/[^A-Za-züäöÄÖÜß]/g, ""))) continue;
++            if (s.pfx === "NAME" && vt.split(/\s+/).every((w) => SW.has(w))) continue;
+             pass2.push({
+               start: s.start,
+               end: s.end,
+@@ -4529,6 +4718,13 @@
+           if (pe) pe.textContent = "";
+         }
+       }
++      // Gleich lange Normalisierung fuer die Erkennung (Positionen bleiben gueltig): geschuetzte/schmale Leerzeichen
++      // und Vollbreiten-Ziffern/-Buchstaben werden zu gewoehnlichen Zeichen. Ausgegeben wird weiterhin der Originaltext.
++      function normalizeForDetection(t) {
++        return t
++          .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, " ")
++          .replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
++      }
+       async function anonCore() {
+         const input = document.getElementById("IT").value;
+         if (!input.trim()) {
+@@ -4539,11 +4735,13 @@
+         cnt = {};
+         try {
+           await ensureAIReady();
+-          if (nerPipeline && aiCache.key !== input) {
++          const det = normalizeForDetection(input);
++          if (nerPipeline && aiCache.key !== det) {
+             toast("KI-Analyse läuft...", "s");
+-            await ensureAISpans(input);
++            await ensureAISpans(det);
+           }
+-          const spans = collectEntities(input);
++          const spans = collectEntities(det);
++          spans.forEach((sp) => (sp.val = input.slice(sp.start, sp.end)));
+           // Token in unveraenderter Reihenfolge (von hinten) vergeben, Text aber in einem Durchgang zusammensetzen.
+           const parts = [];
+           let tail = input.length;
+diff --git a/tests/eval/baseline.json b/tests/eval/baseline.json
+index ee34406..f12ae1f 100644
+--- a/tests/eval/baseline.json
++++ b/tests/eval/baseline.json
+@@ -10,23 +10,23 @@
+       "DATUM": 0,
+       "KFZ": 0,
+       "MED": 0,
+-      "NEG": 1,
+-      "G-NAME": 8,
+-      "G-KONTAKT": 4,
+-      "G-GERAET": 2,
+-      "G-STANDORT": 2,
+-      "G-NUMMER": 3,
++      "NEG": 0,
++      "G-NAME": 7,
++      "G-KONTAKT": 0,
++      "G-GERAET": 0,
++      "G-STANDORT": 0,
++      "G-NUMMER": 0,
+       "G-GEBURT": 2,
+       "G-GEHALT": 0,
+       "G-FAMILIE": 1,
+       "G-NATION": 1,
+-      "G-ART9": 9,
+-      "G-ART10": 3,
+-      "G-FORM": 2,
+-      "G-AUSLAND": 5,
+-      "G-SECRET": 1
++      "G-ART9": 1,
++      "G-ART10": 0,
++      "G-FORM": 0,
++      "G-AUSLAND": 1,
++      "G-SECRET": 0
+     },
+-    "synthLeaked": 21,
++    "synthLeaked": 18,
+     "synthTotal": 276
+   },
+   "ki": {
+@@ -40,23 +40,23 @@
+       "DATUM": 0,
+       "KFZ": 0,
+       "MED": 0,
+-      "NEG": 1,
+-      "G-NAME": 3,
+-      "G-KONTAKT": 4,
+-      "G-GERAET": 2,
+-      "G-STANDORT": 2,
+-      "G-NUMMER": 3,
+-      "G-GEBURT": 1,
++      "NEG": 0,
++      "G-NAME": 2,
++      "G-KONTAKT": 0,
++      "G-GERAET": 0,
++      "G-STANDORT": 0,
++      "G-NUMMER": 0,
++      "G-GEBURT": 0,
+       "G-GEHALT": 0,
+       "G-FAMILIE": 0,
+       "G-NATION": 1,
+-      "G-ART9": 9,
+-      "G-ART10": 3,
+-      "G-FORM": 2,
+-      "G-AUSLAND": 4,
+-      "G-SECRET": 1
++      "G-ART9": 0,
++      "G-ART10": 0,
++      "G-FORM": 0,
++      "G-AUSLAND": 1,
++      "G-SECRET": 0
+     },
+-    "synthLeaked": 2,
++    "synthLeaked": 1,
+     "synthTotal": 276
+   }
+ }
+diff --git a/tests/eval/out/result.json b/tests/eval/out/result.json
+index 09c9d85..5ccd09a 100644
+--- a/tests/eval/out/result.json
++++ b/tests/eval/out/result.json
+@@ -60,14 +60,12 @@
+    },
+    "NEG": {
+     "total": 20,
+-    "leaked": 1,
+-    "ids": [
+-     "gn04"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-NAME": {
+     "total": 9,
+-    "leaked": 8,
++    "leaked": 7,
+     "ids": [
+      "ga01",
+      "ga02",
+@@ -75,44 +73,28 @@
+      "ga04",
+      "ga05",
+      "ga06",
+-     "ga07",
+-     "ga09"
++     "ga07"
+     ]
+    },
+    "G-KONTAKT": {
+     "total": 5,
+-    "leaked": 4,
+-    "ids": [
+-     "ga10",
+-     "ga11",
+-     "ga12",
+-     "ga13"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-GERAET": {
+     "total": 2,
+-    "leaked": 2,
+-    "ids": [
+-     "ga15",
+-     "ga16"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-STANDORT": {
+     "total": 2,
+-    "leaked": 2,
+-    "ids": [
+-     "ga17",
+-     "ga18"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-NUMMER": {
+     "total": 5,
+-    "leaked": 3,
+-    "ids": [
+-     "ga19",
+-     "ga20",
+-     "ga21"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-GEBURT": {
+     "total": 2,
+@@ -143,53 +125,32 @@
+    },
+    "G-ART9": {
+     "total": 11,
+-    "leaked": 9,
++    "leaked": 1,
+     "ids": [
+-     "gb01",
+-     "gb02",
+-     "gb03",
+-     "gb04",
+-     "gb05",
+-     "gb06",
+-     "gb08",
+-     "gb09",
+-     "gb11"
++     "gb09"
+     ]
+    },
+    "G-ART10": {
+     "total": 3,
+-    "leaked": 3,
+-    "ids": [
+-     "gc01",
+-     "gc02",
+-     "gc03"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-FORM": {
+     "total": 10,
+-    "leaked": 2,
+-    "ids": [
+-     "gd01",
+-     "gd07"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-AUSLAND": {
+     "total": 5,
+-    "leaked": 5,
++    "leaked": 1,
+     "ids": [
+-     "ge01",
+-     "ge02",
+-     "ge03",
+-     "ge04",
+-     "ge05"
++     "ge01"
+     ]
+    },
+    "G-SECRET": {
+     "total": 2,
+-    "leaked": 1,
+-    "ids": [
+-     "gf01"
+-    ]
++    "leaked": 0,
++    "ids": []
+    }
+   },
+   "synth": {
+@@ -199,7 +160,7 @@
+    },
+    "NAME": {
+     "total": 66,
+-    "leaked": 21
++    "leaked": 18
+    },
+    "ADR": {
+     "total": 30,
+@@ -251,7 +212,7 @@
+    }
+   },
+   "synthTotal": 276,
+-  "synthLeaked": 21,
++  "synthLeaked": 18,
+   "raw": {
+    "cases": [
+     {
+@@ -331,8 +292,8 @@
+     },
+     {
+      "key": "n16",
+-     "out": "Betreff: Kündigung durch {{NAME_1}}, Kundennummer 4711",
+-     "tokens": 1
++     "out": "Betreff: Kündigung durch {{NAME_1}}, Kundennummer {{KENNNR_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "n17",
+@@ -706,8 +667,8 @@
+     },
+     {
+      "key": "m02",
+-     "out": "Patient leidet an einer Depression ({{MEDIZIN_1}}).",
+-     "tokens": 1
++     "out": "Patient leidet an einer {{SENSIBEL_1}} ({{MEDIZIN_1}}).",
++     "tokens": 2
+     },
+     {
+      "key": "x01",
+@@ -786,8 +747,8 @@
+     },
+     {
+      "key": "ga01",
+-     "out": "Müller, Hans (geb. Schmidt) wurde am Montag befragt.",
+-     "tokens": 0
++     "out": "Müller, Hans (geb. {{NAME_1}}) wurde am Montag befragt.",
++     "tokens": 1
+     },
+     {
+      "key": "ga02",
+@@ -826,28 +787,28 @@
+     },
+     {
+      "key": "ga09",
+-     "out": "Antragsteller: Maximilian\n{{NAME_1}}",
++     "out": "Antragsteller: {{NAME_1}}",
+      "tokens": 1
+     },
+     {
+      "key": "ga10",
+-     "out": "Instagram: @max_mustermann, X: @mmustermann85, Telegram t.me/maxmuster",
+-     "tokens": 0
++     "out": "Instagram: {{KONTO_3}}, X: {{KONTO_2}}, Telegram {{KONTO_1}}",
++     "tokens": 3
+     },
+     {
+      "key": "ga11",
+-     "out": "Mail an max (at) firma (dot) de oder max[at]firma.de bitte.",
+-     "tokens": 0
++     "out": "Mail an {{EMAIL_2}} oder {{EMAIL_1}} bitte.",
++     "tokens": 2
+     },
+     {
+      "key": "ga12",
+-     "out": "Rufen Sie an: null eins sieben eins, eins zwei drei vier fünf sechs sieben.",
+-     "tokens": 0
++     "out": "Rufen Sie an: {{TEL_1}}.",
++     "tokens": 1
+     },
+     {
+      "key": "ga13",
+-     "out": "Handy privat: {{TEL_1}} (nur WhatsApp), dienstl. +49 (89) 99 88 77-0",
+-     "tokens": 1
++     "out": "Handy privat: {{TEL_2}} (nur WhatsApp), dienstl. {{TEL_1}}-0",
++     "tokens": 2
+     },
+     {
+      "key": "ga14",
+@@ -856,38 +817,38 @@
+     },
+     {
+      "key": "ga15",
+-     "out": "MAC 00:1A:2B:3C:4D:5E, IMEI 35-209900-176148-1, UUID 123e4567-e89b-12d3-a456-426614174000",
+-     "tokens": 0
++     "out": "MAC {{GERAET_3}}, IMEI {{GERAET_2}}, UUID {{GERAET_1}}",
++     "tokens": 3
+     },
+     {
+      "key": "ga16",
+-     "out": "Seriennummer {{KENNNR_1}}, Gerät-ID: AB12CD34EF56",
+-     "tokens": 1
++     "out": "Seriennummer {{GERAET_2}}, Gerät-ID: {{GERAET_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "ga17",
+-     "out": "Standort laut GPS: 48.137154, 11.576124 (Marienplatz).",
+-     "tokens": 0
++     "out": "Stan{{KONTO_1}} laut GPS: {{STANDORT_1}} (Marienplatz).",
++     "tokens": 2
+     },
+     {
+      "key": "ga18",
+-     "out": "Koordinaten 48°08'13.7\"N 11°34'34.0\"E wurden gespeichert.",
+-     "tokens": 0
++     "out": "Koordinaten {{STANDORT_1}} wurden gespeichert.",
++     "tokens": 1
+     },
+     {
+      "key": "ga19",
+-     "out": "Kundennummer: 4711-0815, Vertragsnummer VN-2024/009981, Mitarbeiter-Nr. 100245",
+-     "tokens": 0
++     "out": "Kundennummer: {{KENNNR_3}}, Vertragsnummer {{KENNNR_2}}, Mitarbeiter-Nr. {{KENNNR_1}}",
++     "tokens": 3
+     },
+     {
+      "key": "ga20",
+-     "out": "Matrikelnummer 2019-345678, Versicherungsnummer 12-3456789-A-001",
+-     "tokens": 0
++     "out": "Matrikelnummer {{KENNNR_2}}, Versicherungsnummer {{KENNNR_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "ga21",
+-     "out": "{{KENNNR_2}}, Führerschein B072RRE2I55, {{KENNNR_1}}",
+-     "tokens": 2
++     "out": "{{KENNNR_3}}, {{KENNNR_2}}, {{KENNNR_1}}",
++     "tokens": 3
+     },
+     {
+      "key": "ga22",
+@@ -906,8 +867,8 @@
+     },
+     {
+      "key": "ga25",
+-     "out": "Geburtsort: Bad Homburg v. d. Höhe, Geburtsname: Fröhlich",
+-     "tokens": 0
++     "out": "Geburtsort: Bad Homburg v. d. Höhe, Geburtsname: {{NAME_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "ga26",
+@@ -926,33 +887,33 @@
+     },
+     {
+      "key": "gb01",
+-     "out": "Diagnose: {{NAME_2}} (G35), seit 2019 in Behandlung mit {{NAME_1}}.",
+-     "tokens": 2
++     "out": "{{NAME_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "gb02",
+-     "out": "Herr {{NAME_1}} ist vom 12.03. bis {{DATUM_1}} arbeitsunfähig (AU) wegen Bandscheibenvorfall.",
+-     "tokens": 2
++     "out": "Herr {{NAME_1}} ist vom 12.03. bis {{DATUM_1}} {{SENSIBEL_2}} (AU) wegen {{SENSIBEL_1}}.",
++     "tokens": 4
+     },
+     {
+      "key": "gb03",
+-     "out": "Schwerbehinderung GdB 60, Merkzeichen G, HIV-positiv seit 2015.",
+-     "tokens": 0
++     "out": "{{SENSIBEL_3}} {{SENSIBEL_2}}, Merkzeichen G, {{SENSIBEL_1}}-positiv seit 2015.",
++     "tokens": 3
+     },
+     {
+      "key": "gb04",
+-     "out": "Medikation: Metformin 1000 mg 1-0-1, Ramipril 5 mg, Sertralin 50 mg.",
+-     "tokens": 0
++     "out": "{{MEDIZIN_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "gb05",
+-     "out": "Die Patientin ist schwanger (12. SSW), Rhesusfaktor negativ.",
+-     "tokens": 0
++     "out": "Die Patientin ist {{SENSIBEL_2}} ({{SENSIBEL_1}}), Rhesusfaktor negativ.",
++     "tokens": 2
+     },
+     {
+      "key": "gb06",
+-     "out": "Konfession: römisch-katholisch, Kirchenaustritt am {{DATUM_1}}.",
+-     "tokens": 1
++     "out": "{{SENSIBEL_3}}: römisch-{{SENSIBEL_2}}, {{SENSIBEL_1}} am {{DATUM_1}}.",
++     "tokens": 4
+     },
+     {
+      "key": "gb07",
+@@ -961,43 +922,43 @@
+     },
+     {
+      "key": "gb08",
+-     "out": "Mitglied der Partei Die Linke seit 2012, Gewerkschaft ver.di {{KENNNR_1}}.",
+-     "tokens": 1
++     "out": "Mitglied der Partei {{SENSIBEL_2}} seit 2012, Gewerkschaft {{SENSIBEL_1}} {{KENNNR_1}}.",
++     "tokens": 3
+     },
+     {
+      "key": "gb09",
+-     "out": "Herkunft: Roma aus Rumänien; ethnische Zugehörigkeit: kurdisch.",
+-     "tokens": 0
++     "out": "Herkunft: Roma aus Rumänien; ethnische Zugehörigkeit: {{SENSIBEL_1}}.",
++     "tokens": 1
+     },
+     {
+      "key": "gb10",
+-     "out": "{{ORG_1}} mit {{NAME_1}}.",
++     "out": "Er lebt in einer {{SENSIBEL_1}} Partnerschaft mit {{NAME_1}}.",
+      "tokens": 2
+     },
+     {
+      "key": "gb11",
+-     "out": "Fingerabdruck-Hash 9f86d081884c7d659a2feaa0c55ad015 und DNA-Profil D3S1358.",
+-     "tokens": 0
++     "out": "{{SENSIBEL_2}}-Hash {{KONTO_1}} und {{SENSIBEL_1}}-Profil D3S1358.",
++     "tokens": 3
+     },
+     {
+      "key": "gc01",
+-     "out": "Verurteilt wegen Betrugs ({{KENNNR_1}} Ds 345/23), Bewährung bis 2026.",
+-     "tokens": 1
++     "out": "{{SENSIBEL_3}} wegen {{SENSIBEL_2}} (Az. {{KENNNR_1}}), {{SENSIBEL_1}} bis 2026.",
++     "tokens": 4
+     },
+     {
+      "key": "gc02",
+-     "out": "Ermittlungsverfahren der {{NAME_2}} I, Js 12345/24, gegen {{NAME_1}}.",
+-     "tokens": 2
++     "out": "{{SENSIBEL_1}} der {{NAME_2}} I, {{KENNNR_1}}, gegen {{NAME_1}}.",
++     "tokens": 4
+     },
+     {
+      "key": "gc03",
+-     "out": "Bußgeldbescheid: {{BETRAG_1}} und 2 Punkte in Flensburg, Tatzeit {{DATUM_1}} um 08:12 Uhr.",
+-     "tokens": 2
++     "out": "{{SENSIBEL_2}}: {{BETRAG_1}} und {{SENSIBEL_1}}, Tatzeit {{DATUM_1}} um 08:12 Uhr.",
++     "tokens": 4
+     },
+     {
+      "key": "gd01",
+-     "out": "IBAN DE89 3704 0044 0532 0130 00 bitte nutzen.",
+-     "tokens": 0
++     "out": "IBAN {{IBAN_1}} bitte nutzen.",
++     "tokens": 1
+     },
+     {
+      "key": "gd02",
+@@ -1026,8 +987,8 @@
+     },
+     {
+      "key": "gd07",
+-     "out": "IBAN DE89 37O4 OO44 O532 O13O OO und Tel. O17I 234567O",
+-     "tokens": 0
++     "out": "IBAN {{IBAN_1}} und Tel. O17I 234567O",
++     "tokens": 1
+     },
+     {
+      "key": "gd08",
+@@ -1046,33 +1007,33 @@
+     },
+     {
+      "key": "ge01",
+-     "out": "Mr. {{NAME_2}}, 12 {{NAME_1}}, London SW1A 1AA, {{TEL_1}}, NI number QQ 12 34 56 C.",
+-     "tokens": 3
++     "out": "Mr. {{NAME_2}}, {{NAME_1}}, London {{KENNNR_1}}, {{TEL_1}}, NI number QQ 12 34 56 C.",
++     "tokens": 4
+     },
+     {
+      "key": "ge02",
+-     "out": "{{NAME_1}}, 15 rue de la Paix, {{ADRESSE_1}}, tél. {{TEL_1}} 00.",
++     "out": "{{NAME_1}}, {{ADRESSE_1}}, tél. {{TEL_1}} 00.",
+      "tokens": 3
+     },
+     {
+      "key": "ge03",
+-     "out": "Sig. {{NAME_1}}, codice fiscale RSSMRC85T10A562S, via {{ADRESSE_1}}.",
+-     "tokens": 2
++     "out": "Sig. {{NAME_1}}, codice fiscale {{KENNNR_1}}, via {{ADRESSE_1}}.",
++     "tokens": 3
+     },
+     {
+      "key": "ge04",
+-     "out": "Jan {{NAME_1}}, PESEL 44051401359, ul. Marszałkowska 12, 00-001 Warszawa.",
+-     "tokens": 1
++     "out": "Jan {{NAME_1}}, PESEL {{KENNNR_1}}, {{ADRESSE_1}}.",
++     "tokens": 3
+     },
+     {
+      "key": "ge05",
+-     "out": "{{NAME_1}}, DNI 12345678Z, calle {{ADRESSE_1}}.",
+-     "tokens": 2
++     "out": "{{NAME_1}}, DNI {{KENNNR_1}}, calle {{ADRESSE_1}}.",
++     "tokens": 3
+     },
+     {
+      "key": "gf01",
+-     "out": "Zugangsdaten: Benutzer: mmustermann, Passwort: Hund#2024!x, API-Key sk-live-4f8a9c2b1d7e",
+-     "tokens": 0
++     "out": "Zugangsdaten: Benutzer: {{KONTO_3}}, Passwort: {{KONTO_2}} API-Key {{KONTO_1}}",
++     "tokens": 3
+     },
+     {
+      "key": "gf02",
+@@ -1096,8 +1057,8 @@
+     },
+     {
+      "key": "gn04",
+-     "out": "Der Umsatz stieg um 12,5 Prozent auf 3,2 {{NAME_1}}.",
+-     "tokens": 1
++     "out": "Der Umsatz stieg um 12,5 Prozent auf 3,2 Millionen Euro.",
++     "tokens": 0
+     },
+     {
+      "key": "gn05",
+@@ -1168,8 +1129,8 @@
+     },
+     {
+      "key": "syn12",
+-     "out": "{{NAME_2}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{NAME_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
+-     "tokens": 6
++     "out": "Schadensmeldung an Tan{{KONTO_1}} {{ORG_1}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{NAME_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 7
+     },
+     {
+      "key": "syn13",
+@@ -1188,8 +1149,8 @@
+     },
+     {
+      "key": "syn16",
+-     "out": "{{NAME_4}} (haftungsbeschränkt)\n\nPatient: Sabine von der Dvořák, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_5}} (haftungsbeschränkt)\n\nPatient: {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn17",
+@@ -1223,8 +1184,8 @@
+     },
+     {
+      "key": "syn23",
+-     "out": "{{NAME_4}} e.V.\n\nPatient: Jürgen de Schäfer, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_5}} e.V.\n\nPatient: {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn24",
+@@ -1258,8 +1219,8 @@
+     },
+     {
+      "key": "syn30",
+-     "out": "{{NAME_4}} e.V.\n\nPatient: Dieter von der Al-Farsi, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_5}} e.V.\n\nPatient: {{NAME_4}} von der Al-Farsi, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn31",
+@@ -1288,13 +1249,13 @@
+     },
+     {
+      "key": "syn36",
+-     "out": "{{NAME_1}}\n{{ADRESSE_2}} Breisgau\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_1}}\n{{ADRESSE_2}} Breisgau\n\nTan{{KONTO_1}} {{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn37",
+-     "out": "{{NAME_4}}\n\nPatient: Zoë de Schäfer, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn38",
+@@ -1369,61 +1330,41 @@
+    },
+    "NEG": {
+     "total": 20,
+-    "leaked": 1,
+-    "ids": [
+-     "gn04"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-NAME": {
+     "total": 9,
+-    "leaked": 3,
++    "leaked": 2,
+     "ids": [
+      "ga03",
+-     "ga05",
+-     "ga09"
++     "ga05"
+     ]
+    },
+    "G-KONTAKT": {
+     "total": 5,
+-    "leaked": 4,
+-    "ids": [
+-     "ga10",
+-     "ga11",
+-     "ga12",
+-     "ga13"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-GERAET": {
+     "total": 2,
+-    "leaked": 2,
+-    "ids": [
+-     "ga15",
+-     "ga16"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-STANDORT": {
+     "total": 2,
+-    "leaked": 2,
+-    "ids": [
+-     "ga17",
+-     "ga18"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-NUMMER": {
+     "total": 5,
+-    "leaked": 3,
+-    "ids": [
+-     "ga19",
+-     "ga20",
+-     "ga21"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-GEBURT": {
+     "total": 2,
+-    "leaked": 1,
+-    "ids": [
+-     "ga25"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-GEHALT": {
+     "total": 1,
+@@ -1444,52 +1385,30 @@
+    },
+    "G-ART9": {
+     "total": 11,
+-    "leaked": 9,
+-    "ids": [
+-     "gb01",
+-     "gb02",
+-     "gb03",
+-     "gb04",
+-     "gb05",
+-     "gb06",
+-     "gb08",
+-     "gb09",
+-     "gb11"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-ART10": {
+     "total": 3,
+-    "leaked": 3,
+-    "ids": [
+-     "gc01",
+-     "gc02",
+-     "gc03"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-FORM": {
+     "total": 10,
+-    "leaked": 2,
+-    "ids": [
+-     "gd01",
+-     "gd07"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "G-AUSLAND": {
+     "total": 5,
+-    "leaked": 4,
++    "leaked": 1,
+     "ids": [
+-     "ge01",
+-     "ge03",
+-     "ge04",
+-     "ge05"
++     "ge01"
+     ]
+    },
+    "G-SECRET": {
+     "total": 2,
+-    "leaked": 1,
+-    "ids": [
+-     "gf01"
+-    ]
++    "leaked": 0,
++    "ids": []
+    }
+   },
+   "synth": {
+@@ -1499,7 +1418,7 @@
+    },
+    "NAME": {
+     "total": 66,
+-    "leaked": 2
++    "leaked": 1
+    },
+    "ADR": {
+     "total": 30,
+@@ -1551,7 +1470,7 @@
+    }
+   },
+   "synthTotal": 276,
+-  "synthLeaked": 2,
++  "synthLeaked": 1,
+   "raw": {
+    "cases": [
+     {
+@@ -1631,8 +1550,8 @@
+     },
+     {
+      "key": "n16",
+-     "out": "Betreff: Kündigung durch {{NAME_1}}, Kundennummer 4711",
+-     "tokens": 1
++     "out": "Betreff: Kündigung durch {{NAME_1}}, Kundennummer {{KENNNR_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "n17",
+@@ -2006,8 +1925,8 @@
+     },
+     {
+      "key": "m02",
+-     "out": "Patient leidet an einer Depression ({{MEDIZIN_1}}).",
+-     "tokens": 1
++     "out": "Patient leidet an einer {{SENSIBEL_1}} ({{MEDIZIN_1}}).",
++     "tokens": 2
+     },
+     {
+      "key": "x01",
+@@ -2126,28 +2045,28 @@
+     },
+     {
+      "key": "ga09",
+-     "out": "Antragsteller: Maximilian\n{{NAME_1}}",
++     "out": "Antragsteller: {{NAME_1}}",
+      "tokens": 1
+     },
+     {
+      "key": "ga10",
+-     "out": "Instagram: @max_mustermann, X: @mmustermann85, Telegram t.me/maxmuster",
+-     "tokens": 0
++     "out": "Instagram: {{KONTO_3}}, X: {{KONTO_2}}, {{ORG_1}} {{KONTO_1}}",
++     "tokens": 4
+     },
+     {
+      "key": "ga11",
+-     "out": "Mail an max (at) firma (dot) de oder max[at]firma.de bitte.",
+-     "tokens": 0
++     "out": "Mail an {{EMAIL_2}} oder {{EMAIL_1}} bitte.",
++     "tokens": 2
+     },
+     {
+      "key": "ga12",
+-     "out": "Rufen Sie an: null eins sieben eins, eins zwei drei vier fünf sechs sieben.",
+-     "tokens": 0
++     "out": "Rufen Sie an: {{TEL_1}}.",
++     "tokens": 1
+     },
+     {
+      "key": "ga13",
+-     "out": "Handy privat: {{TEL_1}} (nur WhatsApp), dienstl. +49 (89) 99 88 77-0",
+-     "tokens": 1
++     "out": "Handy privat: {{TEL_2}} (nur {{ORG_1}}), dienstl. {{TEL_1}}-0",
++     "tokens": 3
+     },
+     {
+      "key": "ga14",
+@@ -2156,38 +2075,38 @@
+     },
+     {
+      "key": "ga15",
+-     "out": "{{ORG_1}} 00:1A:2B:3C:4D:5E, IMEI 35-209900-176148-1, UUID 123e4567-e89b-12d3-a456-426614174000",
+-     "tokens": 1
++     "out": "{{ORG_1}} {{GERAET_3}}, IMEI {{GERAET_2}}, UUID {{GERAET_1}}",
++     "tokens": 4
+     },
+     {
+      "key": "ga16",
+-     "out": "Seriennummer {{KENNNR_1}}, Gerät-ID: AB12CD34EF56",
+-     "tokens": 1
++     "out": "Seriennummer {{GERAET_2}}, Gerät-ID: {{GERAET_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "ga17",
+-     "out": "Standort laut GPS: 48.137154, 11.576124 ({{ORT_1}}).",
+-     "tokens": 1
++     "out": "Stan{{KONTO_1}} laut GPS: {{STANDORT_1}} ({{ORT_1}}).",
++     "tokens": 3
+     },
+     {
+      "key": "ga18",
+-     "out": "Koordinaten 48°08'13.7\"N 11°34'34.0\"E wurden gespeichert.",
+-     "tokens": 0
++     "out": "Koordinaten {{STANDORT_1}} wurden gespeichert.",
++     "tokens": 1
+     },
+     {
+      "key": "ga19",
+-     "out": "Kundennummer: 4711-0815, Vertragsnummer VN-2024/009981, Mitarbeiter-Nr. 100245",
+-     "tokens": 0
++     "out": "Kundennummer: {{KENNNR_3}}, Vertragsnummer {{KENNNR_2}}, Mitarbeiter-Nr. {{KENNNR_1}}",
++     "tokens": 3
+     },
+     {
+      "key": "ga20",
+-     "out": "Matrikelnummer 2019-345678, Versicherungsnummer 12-3456789-A-001",
+-     "tokens": 0
++     "out": "Matrikelnummer {{KENNNR_2}}, Versicherungsnummer {{KENNNR_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "ga21",
+-     "out": "{{KENNNR_2}}, Führerschein B072RRE2I55, {{KENNNR_1}}",
+-     "tokens": 2
++     "out": "{{KENNNR_3}}, {{KENNNR_2}}, {{KENNNR_1}}",
++     "tokens": 3
+     },
+     {
+      "key": "ga22",
+@@ -2206,8 +2125,8 @@
+     },
+     {
+      "key": "ga25",
+-     "out": "Geburtsort: {{ORT_1}} Höhe, Geburtsname: Fröhlich",
+-     "tokens": 1
++     "out": "Geburtsort: {{ORT_1}} Höhe, Geburtsname: {{NAME_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "ga26",
+@@ -2226,78 +2145,78 @@
+     },
+     {
+      "key": "gb01",
+-     "out": "Diagnose: {{NAME_2}} (G35), seit 2019 in Behandlung mit {{NAME_1}}.",
+-     "tokens": 2
++     "out": "{{NAME_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "gb02",
+-     "out": "Herr {{NAME_1}} ist vom 12.03. bis {{DATUM_1}} arbeitsunfähig (AU) wegen Bandscheibenvorfall.",
+-     "tokens": 2
++     "out": "Herr {{NAME_1}} ist vom 12.03. bis {{DATUM_1}} {{SENSIBEL_2}} (AU) wegen {{SENSIBEL_1}}.",
++     "tokens": 4
+     },
+     {
+      "key": "gb03",
+-     "out": "Schwerbehinderung GdB 60, Merkzeichen G, HIV-positiv seit 2015.",
+-     "tokens": 0
++     "out": "{{SENSIBEL_3}} {{SENSIBEL_2}}, Merkzeichen G, {{SENSIBEL_1}}-positiv seit 2015.",
++     "tokens": 3
+     },
+     {
+      "key": "gb04",
+-     "out": "Medikation: Metformin 1000 mg 1-0-1, Ramipril 5 mg, Sertralin 50 mg.",
+-     "tokens": 0
++     "out": "{{MEDIZIN_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "gb05",
+-     "out": "Die Patientin ist schwanger (12. SSW), Rhesusfaktor negativ.",
+-     "tokens": 0
++     "out": "Die Patientin ist {{SENSIBEL_2}} ({{SENSIBEL_1}}), Rhesusfaktor negativ.",
++     "tokens": 2
+     },
+     {
+      "key": "gb06",
+-     "out": "Konfession: römisch-katholisch, Kirchenaustritt am {{DATUM_1}}.",
+-     "tokens": 1
++     "out": "{{SENSIBEL_3}}: römisch-{{SENSIBEL_2}}, {{SENSIBEL_1}} am {{DATUM_1}}.",
++     "tokens": 4
+     },
+     {
+      "key": "gb07",
+-     "out": "Er ist Mitglied der {{NAME_1}} und lehnt Bluttransfusionen ab.",
++     "out": "Er ist Mitglied der {{ORG_1}} und lehnt Bluttransfusionen ab.",
+      "tokens": 1
+     },
+     {
+      "key": "gb08",
+-     "out": "Mitglied der Partei {{ORG_1}} seit 2012, Gewerkschaft ver.di {{KENNNR_1}}.",
+-     "tokens": 2
++     "out": "Mitglied der Partei {{ORG_1}} seit 2012, Gewerkschaft {{SENSIBEL_1}} {{KENNNR_1}}.",
++     "tokens": 3
+     },
+     {
+      "key": "gb09",
+-     "out": "Herkunft: {{ORT_2}} aus {{ORT_1}}; ethnische Zugehörigkeit: kurdisch.",
+-     "tokens": 2
++     "out": "Herkunft: {{ORT_2}} aus {{ORT_1}}; ethnische Zugehörigkeit: {{SENSIBEL_1}}.",
++     "tokens": 3
+     },
+     {
+      "key": "gb10",
+-     "out": "{{ORG_1}} mit {{NAME_1}}.",
++     "out": "Er lebt in einer {{SENSIBEL_1}} Partnerschaft mit {{NAME_1}}.",
+      "tokens": 2
+     },
+     {
+      "key": "gb11",
+-     "out": "Fingerabdruck-Hash 9f86d081884c7d659a2feaa0c55ad015 und DNA-Profil D3S1358.",
+-     "tokens": 0
++     "out": "{{SENSIBEL_2}}-Hash {{KONTO_1}} und {{SENSIBEL_1}}-Profil D3S1358.",
++     "tokens": 3
+     },
+     {
+      "key": "gc01",
+-     "out": "Verurteilt wegen Betrugs ({{KENNNR_1}} Ds 345/23), Bewährung bis 2026.",
+-     "tokens": 1
++     "out": "{{SENSIBEL_3}} wegen {{SENSIBEL_2}} (Az. {{KENNNR_1}}), {{SENSIBEL_1}} bis 2026.",
++     "tokens": 4
+     },
+     {
+      "key": "gc02",
+-     "out": "Ermittlungsverfahren der {{NAME_2}} I, Js 12345/24, gegen {{NAME_1}}.",
+-     "tokens": 2
++     "out": "{{SENSIBEL_1}} der {{NAME_2}} I, {{KENNNR_1}}, gegen {{NAME_1}}.",
++     "tokens": 4
+     },
+     {
+      "key": "gc03",
+-     "out": "Bußgeldbescheid: {{BETRAG_1}} und 2 Punkte in {{ORT_1}}, Tatzeit {{DATUM_1}} um 08:12 Uhr.",
+-     "tokens": 3
++     "out": "{{SENSIBEL_1}}: {{BETRAG_1}} und {{ORT_1}}, Tatzeit {{DATUM_1}} um 08:12 Uhr.",
++     "tokens": 4
+     },
+     {
+      "key": "gd01",
+-     "out": "IBAN DE89 3704 0044 0532 0130 00 bitte nutzen.",
+-     "tokens": 0
++     "out": "IBAN {{IBAN_1}} bitte nutzen.",
++     "tokens": 1
+     },
+     {
+      "key": "gd02",
+@@ -2326,8 +2245,8 @@
+     },
+     {
+      "key": "gd07",
+-     "out": "IBAN DE89 37O4 OO44 O532 O13O OO und Tel. O17I 234567O",
+-     "tokens": 0
++     "out": "IBAN {{IBAN_1}} und Tel. O17I 234567O",
++     "tokens": 1
+     },
+     {
+      "key": "gd08",
+@@ -2346,33 +2265,33 @@
+     },
+     {
+      "key": "ge01",
+-     "out": "Mr. {{NAME_2}}, 12 {{NAME_1}}, {{ORT_1}} SW1A 1AA, {{TEL_1}}, NI number QQ 12 34 56 C.",
+-     "tokens": 4
++     "out": "Mr. {{NAME_1}}, {{ORT_2}}, {{ORT_1}} {{KENNNR_1}}, {{TEL_1}}, NI number QQ 12 34 56 C.",
++     "tokens": 5
+     },
+     {
+      "key": "ge02",
+-     "out": "{{NAME_1}}, 15 {{ORT_2}}, {{ORT_1}}, tél. {{TEL_1}} 00.",
++     "out": "{{NAME_1}}, {{ORT_2}}, {{ORT_1}}, tél. {{TEL_1}} 00.",
+      "tokens": 4
+     },
+     {
+      "key": "ge03",
+-     "out": "Sig. {{NAME_1}}, codice fiscale RSSMRC85T10A562S, via {{ORT_1}}.",
+-     "tokens": 2
++     "out": "Sig. {{NAME_1}}, codice fiscale {{KENNNR_1}}, via {{ORT_1}}.",
++     "tokens": 3
+     },
+     {
+      "key": "ge04",
+-     "out": "{{NAME_1}}, PESEL 44051401359, {{ORT_2}} 12, 00-001 {{ORT_1}}.",
+-     "tokens": 3
++     "out": "{{NAME_1}}, PESEL {{KENNNR_1}}, {{ORT_2}}, {{ORT_1}}.",
++     "tokens": 4
+     },
+     {
+      "key": "ge05",
+-     "out": "{{NAME_1}}, DNI 12345678Z, calle {{ORT_1}}.",
+-     "tokens": 2
++     "out": "{{NAME_1}}, DNI {{KENNNR_1}}, calle {{ORT_1}}.",
++     "tokens": 3
+     },
+     {
+      "key": "gf01",
+-     "out": "Zugangsdaten: Benutzer: mmustermann, Passwort: Hund#2024!x, API-Key sk-live-4f8a9c2b1d7e",
+-     "tokens": 0
++     "out": "Zugangsdaten: Benutzer: {{KONTO_3}}, Passwort: {{KONTO_2}} API-Key {{KONTO_1}}",
++     "tokens": 3
+     },
+     {
+      "key": "gf02",
+@@ -2396,8 +2315,8 @@
+     },
+     {
+      "key": "gn04",
+-     "out": "Der Umsatz stieg um 12,5 Prozent auf 3,2 {{NAME_1}}.",
+-     "tokens": 1
++     "out": "Der Umsatz stieg um 12,5 Prozent auf 3,2 Millionen Euro.",
++     "tokens": 0
+     },
+     {
+      "key": "gn05",
+@@ -2468,8 +2387,8 @@
+     },
+     {
+      "key": "syn12",
+-     "out": "{{NAME_1}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{ORT_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
+-     "tokens": 6
++     "out": "Schadensmeldung an Tan{{KONTO_1}} {{ORG_1}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{ORT_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 7
+     },
+     {
+      "key": "syn13",
+@@ -2588,13 +2507,13 @@
+     },
+     {
+      "key": "syn36",
+-     "out": "{{NAME_1}}\n{{ADRESSE_2}} Breisgau\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_1}}\n{{ADRESSE_2}} Breisgau\n\nTan{{KONTO_1}} {{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn37",
+-     "out": "{{NAME_4}}\n\nPatient: Zoë de Schäfer, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn38",
+-- 
+2.43.0
+

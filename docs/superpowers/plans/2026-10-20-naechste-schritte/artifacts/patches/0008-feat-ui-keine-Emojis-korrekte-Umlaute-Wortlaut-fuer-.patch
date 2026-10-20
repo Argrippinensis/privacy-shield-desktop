@@ -1,0 +1,387 @@
+From 6a0d710cc61a3ad3846b25167aeeed334ec247da Mon Sep 17 00:00:00 2001
+From: Alexander Arcangeli <alexander@arcangeli.eu>
+Date: Tue, 20 Oct 2026 16:05:37 +0200
+Subject: [PATCH 08/11] feat(ui): keine Emojis, korrekte Umlaute, Wortlaut fuer
+ das Desktop-Programm, Diagnose
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Statussymbole der Update-Dialoge als SVG statt Emojis; Knopf "Updates" ohne Symbol.
+- Umlaute und ß in den Texten der Shell korrigiert.
+- Update-Leiste unten links statt oben rechts (verdeckte "Alle Tools").
+- Tool-Texte sprechen vom Rechner und der App statt von Browser und Tab.
+- "Diagnose kopieren": Version, Plattform, Speicher, Prozessor, KI-Status in die Zwischenablage, ohne Dokumentinhalte,
+  fuer Support-Anfragen ohne Telemetrie.
+- Hygiene-Tests: keine Emojis, Umlaute, Wortlaut.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ app/index.html          | 67 +++++++++++++++++++++++++++++++----------
+ app/privacy-shield.html | 28 ++++++++---------
+ main.js                 |  7 ++++-
+ preload.js              |  1 +
+ tests/hygiene.test.mjs  | 27 +++++++++++++++++
+ tests/shell.test.mjs    | 28 +++++++++++++++++
+ 6 files changed, 126 insertions(+), 32 deletions(-)
+ create mode 100644 tests/hygiene.test.mjs
+ create mode 100644 tests/shell.test.mjs
+
+diff --git a/app/index.html b/app/index.html
+index a710128..df66a27 100644
+--- a/app/index.html
++++ b/app/index.html
+@@ -122,7 +122,7 @@
+       <div class="banner-hint" id="banner-notes"></div>
+     </div>
+     <div class="banner-actions">
+-      <button class="btn-later" id="btn-later" onclick="handleLater()">Spater</button>
++      <button class="btn-later" id="btn-later" onclick="handleLater()">Später</button>
+       <button class="btn-update" id="btn-update" onclick="handleUpdate()">Jetzt aktualisieren</button>
+     </div>
+   </div>
+@@ -135,36 +135,47 @@
+         <div id="progress-label">Download... 0%</div>
+         <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
+       </div>
+-      <div id="download-error-msg">Download fehlgeschlagen — bitte versuchen Sie es spater erneut.</div>
+-      <div id="install-msg">Installation lauft, App wird neu gestartet...</div>
++      <div id="download-error-msg">Download fehlgeschlagen — bitte versuchen Sie es später erneut.</div>
++      <div id="install-msg">Installation läuft, App wird neu gestartet...</div>
+       <div class="dialog-actions" id="dialog-actions">
+         <button class="btn-force-update" id="btn-force-update" onclick="handleForceUpdate()">Jetzt aktualisieren</button>
+         <button class="btn-quit" id="btn-manual" style="display:none" onclick="handleManualDownload()">Manuell herunterladen</button>
+         <button class="btn-quit" id="btn-continue" style="display:none" onclick="handleContinue()">Ohne Update fortfahren</button>
+-        <button class="btn-quit" id="btn-quit" onclick="handleQuit()">Programm schliessen</button>
++        <button class="btn-quit" id="btn-quit" onclick="handleQuit()">Programm schließen</button>
+       </div>
+     </div>
+   </div>
+ 
+   <div id="update-status-overlay">
+     <div class="dialog">
+-      <div class="status-icon" id="status-icon">⏳</div>
++      <div class="status-icon" id="status-icon"></div>
+       <h2 id="status-title">Suche nach Updates...</h2>
+       <p id="status-message">Bitte warten Sie einen Moment.</p>
+       <div id="status-progress-wrap">
+         <div id="status-progress-label">Download... 0%</div>
+         <div id="status-progress-bar-bg"><div id="status-progress-bar-fill"></div></div>
+       </div>
+-      <div id="status-error-msg" style="display:none;color:#dc2626;font-size:12px;margin-bottom:14px">Download fehlgeschlagen — bitte versuchen Sie es spater erneut.</div>
+-      <div id="status-install-msg" style="display:none;color:#16a34a;font-size:13px;margin-bottom:14px;font-weight:600">Installation lauft, App wird neu gestartet...</div>
++      <div id="status-error-msg" style="display:none;color:#dc2626;font-size:12px;margin-bottom:14px">Download fehlgeschlagen — bitte versuchen Sie es später erneut.</div>
++      <div id="status-install-msg" style="display:none;color:#16a34a;font-size:13px;margin-bottom:14px;font-weight:600">Installation läuft, App wird neu gestartet...</div>
+       <div id="status-actions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+         <button class="btn-force-update" id="btn-status-update" onclick="handleStatusUpdate()" style="display:none">Jetzt aktualisieren</button>
+-        <button class="btn-close" onclick="closeStatusDialog()">Schliessen</button>
++        <button class="btn-close" onclick="closeStatusDialog()">Schließen</button>
+       </div>
+     </div>
+   </div>
+ 
+   <script>
++    // Statussymbole als SVG (keine Emojis)
++    const SVG_OPEN = '<svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="#1a3a5c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
++    const ICONS = {
++      wait: SVG_OPEN + '<path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 2 4l3 2-3 2a5 5 0 0 0-2 4v4M17 2v4a5 5 0 0 1-2 4l-3 2 3 2a5 5 0 0 1 2 4v4"/></svg>',
++      warn: SVG_OPEN + '<path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18h.01"/></svg>',
++      info: SVG_OPEN + '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>',
++      clock: SVG_OPEN + '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
++      ok: SVG_OPEN + '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/></svg>'
++    };
++    function setStatusIcon(kind) { document.getElementById('status-icon').innerHTML = ICONS[kind]; }
++
+     let pendingVersion = null;
+     // manueller Weg: Installation nicht automatisch möglich (z. B. macOS ohne Signatur, .deb) -> nur Hinweis und Download-Seite
+     let updateManual = false;
+@@ -327,10 +338,33 @@
+       document.getElementById('update-status-overlay').style.display = 'none';
+     }
+ 
++
++    // Diagnose für Support-Anfragen: nur technische Angaben, keine Dokumentinhalte, nichts wird gesendet
++    async function copyDiagnostics() {
++      const lines = [];
++      try {
++        const api = window.electronAPI;
++        const s = await api.getSystemStats();
++        const v = await api.getAppVersion();
++        const w = document.getElementById('tool-frame').contentWindow;
++        const model = w.nerPipeline ? 'aktiv (' + w.nerPipeline.info.threads + ' Thread(s))' : 'nicht geladen';
++        lines.push('PrivacyShield ' + v, 'Plattform: ' + api.platform,
++          'Arbeitsspeicher: ' + s.ram.total + ' GB gesamt, ' + s.ram.percent + '% belegt, App ' + s.app.memory + ' MB',
++          'Prozessor: ' + s.cpu.cores + 'x ' + s.cpu.model,
++          'KI-Modus: ' + w.aiMode() + ', Modell: ' + model,
++          'Cross-Origin-Isolation: ' + w.crossOriginIsolated,
++          'Zeitpunkt: ' + new Date().toISOString());
++      } catch (e) { lines.push('Fehler beim Sammeln der Angaben: ' + e.message); }
++      await window.electronAPI.copyText(lines.join('\n'));
++      const b = document.getElementById('btn-diag');
++      b.textContent = 'Kopiert';
++      setTimeout(function () { b.textContent = 'Diagnose kopieren'; }, 2000);
++    }
++
+     async function checkForUpdatesManually() {
+       const overlay = document.getElementById('update-status-overlay');
+       overlay.style.display = 'flex';
+-      document.getElementById('status-icon').textContent = '⏳';
++      setStatusIcon('wait');
+       document.getElementById('status-title').textContent = 'Suche nach Updates...';
+       document.getElementById('status-message').textContent = 'Bitte warten Sie einen Moment.';
+       document.getElementById('btn-status-update').style.display = 'none';
+@@ -340,7 +374,7 @@
+       document.getElementById('status-actions').style.display = 'flex';
+ 
+       if (!window.electronAPI) {
+-        document.getElementById('status-icon').textContent = '⚠️';
++        setStatusIcon('warn');
+         document.getElementById('status-title').textContent = 'Nicht verfügbar';
+         document.getElementById('status-message').textContent = 'Die Update-Prüfung ist nur in der Desktop-App möglich. Besuchen Sie arcangeli.eu für die neueste Version.';
+         return;
+@@ -349,7 +383,7 @@
+       const result = await window.electronAPI.checkForUpdates();
+ 
+       if (result.updateAvailable) {
+-        document.getElementById('status-icon').textContent = '🆕';
++        setStatusIcon('info');
+         document.getElementById('status-title').textContent = 'Update verfügbar';
+         document.getElementById('status-message').textContent =
+           'Version ' + result.version + ' ist verfügbar. Sie verwenden Version ' + (result.currentVersion || '?') + '.';
+@@ -359,15 +393,15 @@
+         updateManual = !!result.manual;
+         pendingVersion = result.version;
+       } else if (result.error) {
+-        document.getElementById('status-icon').textContent = '⚠️';
++        setStatusIcon('warn');
+         document.getElementById('status-title').textContent = 'Fehler';
+         document.getElementById('status-message').textContent = 'Update-Prüfung fehlgeschlagen: ' + result.error + '. Bitte prüfen Sie Ihre Internetverbindung.';
+       } else if (result.timeout) {
+-        document.getElementById('status-icon').textContent = '⏰';
++        setStatusIcon('clock');
+         document.getElementById('status-title').textContent = 'Zeitüberschreitung';
+         document.getElementById('status-message').textContent = 'Die Update-Prüfung dauerte zu lange. Bitte prüfen Sie Ihre Internetverbindung.';
+       } else {
+-        document.getElementById('status-icon').textContent = '✅';
++        setStatusIcon('ok');
+         document.getElementById('status-title').textContent = 'Kein Update verfügbar';
+         document.getElementById('status-message').textContent =
+           'Sie verwenden die neueste Version (' + (result.currentVersion || '?') + ').';
+@@ -386,9 +420,10 @@
+     }
+   </script>
+ 
+-<div id="update-check-btn" style="position:fixed;top:8px;right:8px;z-index:9998;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);padding:6px 12px;border-radius:6px;display:flex;gap:8px;align-items:center">
++<div id="update-check-btn" style="position:fixed;bottom:8px;left:8px;z-index:9998;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);padding:6px 10px;border-radius:6px;display:flex;gap:8px;align-items:center">
+   <span style="color:rgba(255,255,255,0.7);font-size:11px;font-family:system-ui,sans-serif" id="version-label">Lade...</span>
+-  <button onclick="checkForUpdatesManually()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:system-ui,sans-serif">🔄 Updates</button>
++  <button onclick="checkForUpdatesManually()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:system-ui,sans-serif">Updates</button>
++  <button id="btn-diag" onclick="copyDiagnostics()" title="Systeminformationen für Support-Anfragen kopieren (enthält keine Dokumentinhalte)" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:system-ui,sans-serif">Diagnose kopieren</button>
+ </div>
+ 
+ <div id="sysstats">RAM — | CPU — | App — MB</div>
+diff --git a/app/privacy-shield.html b/app/privacy-shield.html
+index db5e374..26761ba 100644
+--- a/app/privacy-shield.html
++++ b/app/privacy-shield.html
+@@ -6,7 +6,7 @@
+     <title>PrivacyShield — Datenanonymisierung | arcangeli.eu</title>
+     <meta
+       name="description"
+-      content="Anonymisieren Sie sensible Daten vor der KI-Nutzung. 100% lokal im Browser. Erkennung von Namen, IBAN, Adressen & mehr."
++      content="Anonymisieren Sie sensible Daten vor der KI-Nutzung. 100% lokal auf Ihrem Rechner. Erkennung von Namen, IBAN, Adressen & mehr."
+     />
+     <style>
+       html {
+@@ -780,7 +780,6 @@
+       </div>
+     </nav>
+     <div style="padding-top: 56px">
+-      <p style="text-align: center; font-size: 9px; color: #bbb; margin: 4px 0 -10px 0">Empfohlen am PC/Laptop</p>
+       <div class="max-w-container mx-auto px-6 pt-6">
+         <div class="r" style="background: #fafafa; border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden">
+           <div style="padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap">
+@@ -807,8 +806,8 @@
+                 100% lokal &amp; datenschutzkonform
+               </div>
+               <div style="font-size: 12px; color: #666; line-height: 1.6">
+-                Alle Verarbeitung erfolgt ausschließlich im Arbeitsspeicher Ihres Browsers — kein Datenaustausch mit dem
+-                Internet, kein Tracking, keine Cloud. Beim Schließen des Tabs sind alle Daten sofort weg.
++                Alle Verarbeitung erfolgt ausschließlich im Arbeitsspeicher dieser App — kein Datenaustausch mit dem
++                Internet, kein Tracking, keine Cloud. Beim Schließen der App sind alle Daten sofort weg.
+               </div>
+               <button
+                 onclick="toggleInfoBlock()"
+@@ -842,7 +841,7 @@
+                 <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #666; line-height: 1.7">
+                   <li>Verarbeitung ausschließlich im Arbeitsspeicher (RAM)</li>
+                   <li>Kein Datenaustausch mit dem Internet — alles bleibt auf Ihrem Gerät</li>
+-                  <li>Beim Schließen des Tabs sind alle Daten sofort weg</li>
++                  <li>Beim Schließen der App sind alle Daten sofort weg</li>
+                   <li>Kein Tracking, keine Cloud, keine Server-Kontakte</li>
+                   <li>Flugmodus-Betrieb möglich</li>
+                 </ul>
+@@ -872,14 +871,13 @@
+             >
+               <strong style="color: #1a3a5c">Lokale Verarbeitung — was Sie wissen sollten</strong>
+               <p style="margin: 4px 0 0 0">
+-                PrivacyShield arbeitet komplett in Ihrem Browser. Ihre Dokumente verlassen Ihr Gerät nicht — daher kann
++                PrivacyShield arbeitet komplett auf Ihrem Rechner. Ihre Dokumente verlassen Ihr Gerät nicht — daher kann
+                 das Tool auch im Flugmodus oder ohne Internetverbindung genutzt werden. Die Verarbeitungsgeschwindigkeit
+-                hängt von Ihrem Gerät ab, da die KI direkt auf Ihrer Hardware läuft. Empfohlen werden 8+ GB RAM und ein
+-                aktueller Browser.
++                hängt von Ihrem Gerät ab, da die KI direkt auf Ihrer Hardware läuft. Empfohlen werden 8+ GB RAM.
+               </p>
+               <p style="margin: 4px 0 0 0">
+-                Probieren Sie einfach aus, was Ihr Gerät leistet. Sollte die Verarbeitung ins Stocken geraten oder der
+-                Browser nicht mehr reagieren, ist das ein Zeichen von Speicherüberlastung — keine Sorge: Ihre Dateien
++                Probieren Sie einfach aus, was Ihr Gerät leistet. Sollte die Verarbeitung ins Stocken geraten oder die
++                App nicht mehr reagieren, ist das ein Zeichen von Speicherüberlastung — keine Sorge: Ihre Dateien
+                 werden dadurch nicht verändert oder beschädigt. Sie können bis zum Limit gehen und werden nichts falsch
+                 machen. Liegt ein natives PDF vor, fällt die rechenintensive OCR weg und die Verarbeitung läuft deutlich
+                 schneller.
+@@ -943,7 +941,7 @@
+               "
+             >
+               PrivacyShield ersetzt sensible Daten durch Platzhalter — bevor der Text eine externe KI erreicht. Alles
+-              geschieht lokal im Browser. Kein Serverkontakt.
++              geschieht lokal auf Ihrem Rechner. Kein Serverkontakt.
+             </p>
+             <div
+               style="
+@@ -1166,7 +1164,7 @@
+         <span
+           class="category-label"
+           style="background: #ecfdf5; color: #059669; display: inline-flex; align-items: center; gap: 5px"
+-          >100% lokal im Browser</span
++          >100% lokal auf dem Rechner</span
+         >
+         <span
+           class="category-label"
+@@ -1667,7 +1665,7 @@
+                 <div class="tool-panel-body" style="padding: 12px">
+                   <p style="font-size: 12px; color: #666; margin-bottom: 10px; line-height: 1.5">
+                     Klicke auf eine Schaltfläche — der anonymisierte Text wird in die Zwischenablage kopiert und der
+-                    KI-Dienst öffnet sich im neuen Tab.
++                    KI-Dienst öffnet sich im Standard-Browser.
+                   </p>
+                   <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                     <button
+@@ -1856,11 +1854,11 @@
+       <footer class="py-12 border-t border-[#e5e5e5]" style="margin-top: 60px">
+         <div class="max-w-container mx-auto px-6 text-center">
+           <p class="text-sm font-medium text-ink mb-3">
+-            PrivacyShield — Deine Daten, dein Browser. Null Serverkontakt.
++            PrivacyShield — Deine Daten, dein Rechner. Null Serverkontakt.
+           </p>
+           <p class="text-xs text-muted mb-1">
+             Kein Daten-Leakage · Kein Tracking · Keine Datenspeicherung · Flugmodus-tauglich. Alle Verarbeitung erfolgt
+-            ausschließlich lokal im Browser — ohne eine einzige Serveranfrage.
++            ausschließlich lokal auf diesem Rechner — ohne eine einzige Serveranfrage.
+           </p>
+           <p class="text-xs text-muted">
+             Alexander Arcangeli · München ·
+diff --git a/main.js b/main.js
+index 3bf912e..084d513 100644
+--- a/main.js
++++ b/main.js
+@@ -1,4 +1,4 @@
+-const { app, BrowserWindow, ipcMain, dialog, Menu, shell, protocol, session } = require('electron');
++const { app, BrowserWindow, ipcMain, dialog, Menu, shell, protocol, session, clipboard } = require('electron');
+ const path = require("path")
+ const os = require("os");
+ const { autoUpdater } = require('electron-updater');
+@@ -270,6 +270,11 @@ ipcMain.handle('dismiss-update', (event, version) => {
+   return { dismissCount: state.dismissCount };
+ });
+ 
++// Kleine Textmengen in die Zwischenablage (Diagnose); Laenge begrenzt
++ipcMain.handle('copy-text', (event, text) => {
++  if (typeof text === 'string' && text.length <= 5000) clipboard.writeText(text);
++});
++
+ ipcMain.handle('get-update-mode', () => ({ manual: MANUAL_UPDATE }));
+ 
+ ipcMain.handle('open-download-page', () => {
+diff --git a/preload.js b/preload.js
+index 657fb9c..47e6fd8 100644
+--- a/preload.js
++++ b/preload.js
+@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
+   dismissUpdate: (version) => ipcRenderer.invoke('dismiss-update', version),
+   startDownload: () => ipcRenderer.invoke('start-download'),
+   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
++  copyText: (text) => ipcRenderer.invoke('copy-text', text),
+   getUpdateMode: () => ipcRenderer.invoke('get-update-mode'),
+   openDownloadPage: () => ipcRenderer.invoke('open-download-page'),
+   quitApp: () => ipcRenderer.invoke('quit-app'),
+diff --git a/tests/hygiene.test.mjs b/tests/hygiene.test.mjs
+new file mode 100644
+index 0000000..61c1afb
+--- /dev/null
++++ b/tests/hygiene.test.mjs
+@@ -0,0 +1,27 @@
++// Statische Pruefungen ohne App-Start: Hausregeln fuer Oberflaeche und Doku.
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'fs';
++import path from 'path';
++import { ROOT } from './helpers.mjs';
++
++const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
++
++test('Keine Emojis in Oberflaeche, Code und Dokumentation', () => {
++  const emoji = /[\p{Emoji_Presentation}️]/u;
++  for (const f of ['app/index.html', 'app/privacy-shield.html', 'main.js', 'preload.js', 'README.md', 'CHANGELOG.md', 'THIRD_PARTY_NOTICES.md']) {
++    if (!fs.existsSync(path.join(ROOT, f))) continue;
++    const m = read(f).match(emoji);
++    assert.equal(m, null, `${f} enthaelt ein Emoji (${m && m[0]}); stattdessen SVG oder Text verwenden`);
++  }
++});
++
++test('Texte der Shell haben korrekte Umlaute', () => {
++  const s = read('app/index.html');
++  for (const bad of ['Spater', 'verfugbar', 'durchgefuhrt', 'schliessen', 'Schliessen', ' lauft']) assert.ok(!s.includes(bad), `Shell enthaelt "${bad}"`);
++});
++
++test('Das Tool spricht in der Desktop-App nicht von Browser-Tab', () => {
++  const s = read('app/privacy-shield.html');
++  for (const bad of ['Schließen des Tabs', 'Ihres Browsers', 'dein Browser', 'lokal im Browser', 'Empfohlen am PC']) assert.ok(!s.includes(bad), `Tool enthaelt "${bad}"`);
++});
+diff --git a/tests/shell.test.mjs b/tests/shell.test.mjs
+new file mode 100644
+index 0000000..08ebb3e
+--- /dev/null
++++ b/tests/shell.test.mjs
+@@ -0,0 +1,28 @@
++// Shell der Desktop-App: Diagnose und Anordnung der Bedienelemente.
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { launchApp, toolFrame } from './helpers.mjs';
++
++test('Diagnose kopieren legt technische Angaben (ohne Dokumentinhalte) in die Zwischenablage', async () => {
++  const a = await launchApp({ offline: true });
++  try {
++    const f = await toolFrame(a.win);
++    await f.evaluate(() => { document.getElementById('IT').value = 'Vertraulicher Text von Thomas Müller'; });
++    await a.win.click('#btn-diag');
++    await a.win.waitForTimeout(800);
++    const text = await a.app.evaluate(({ clipboard }) => clipboard.readText());
++    assert.match(text, /^PrivacyShield \d+\.\d+\.\d+/);
++    assert.match(text, /KI-Modus: auto/);
++    assert.match(text, /Cross-Origin-Isolation: true/);
++    assert.doesNotMatch(text, /Müller|Vertraulich/);
++  } finally { await a.close(); }
++});
++
++test('Versions- und Update-Leiste liegt unten und verdeckt die Navigation des Tools nicht', async () => {
++  const a = await launchApp({ offline: true });
++  try {
++    await toolFrame(a.win);
++    const box = await a.win.evaluate(() => { const r = document.getElementById('update-check-btn').getBoundingClientRect(); return { top: r.top, height: innerHeight }; });
++    assert.ok(box.top > box.height / 2, 'Leiste muss in der unteren Haelfte liegen');
++  } finally { await a.close(); }
++});
+-- 
+2.43.0
+

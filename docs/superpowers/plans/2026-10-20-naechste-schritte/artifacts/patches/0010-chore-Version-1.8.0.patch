@@ -1,0 +1,25 @@
+From 5898b271ca80e851299187d2e0162b148b4c73af Mon Sep 17 00:00:00 2001
+From: Alexander Arcangeli <alexander@arcangeli.eu>
+Date: Tue, 20 Oct 2026 16:05:38 +0200
+Subject: [PATCH 10/11] chore: Version 1.8.0
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ package.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package.json b/package.json
+index 71ed6a8..c39f68c 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "privacy-shield-desktop",
+-  "version": "1.7.0",
++  "version": "1.8.0",
+   "description": "PrivacyShield Desktop — Dokumente anonymisieren, 100% offline",
+   "main": "main.js",
+   "scripts": {
+-- 
+2.43.0
+

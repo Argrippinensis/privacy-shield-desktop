@@ -1,0 +1,18 @@
+{
+  "name": "PrivacyShield",
+  "short_name": "PrivacyShield",
+  "description": "Dokumente lokal anonymisieren, bevor sie eine KI erreichen. Alle Daten bleiben auf Ihrem Gerät.",
+  "lang": "de",
+  "start_url": "/tools/privacyshield-redesigned.html?source=app",
+  "scope": "/tools/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#1a3a5c",
+  "categories": ["productivity", "utilities", "security"],
+  "icons": [
+    { "src": "/assets/privacyshield/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/privacyshield/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/privacyshield/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

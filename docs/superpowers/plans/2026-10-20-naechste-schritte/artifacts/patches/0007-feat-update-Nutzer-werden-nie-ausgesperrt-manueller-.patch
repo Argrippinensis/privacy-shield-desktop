@@ -1,0 +1,303 @@
+From 7999528d33414b2e0475120d41fba4702366cc16 Mon Sep 17 00:00:00 2001
+From: Alexander Arcangeli <alexander@arcangeli.eu>
+Date: Tue, 20 Oct 2026 11:14:04 +0200
+Subject: [PATCH 07/11] feat(update): Nutzer werden nie ausgesperrt, manueller
+ Weg ohne automatische Installation
+
+- Wo automatisches Installieren nicht moeglich ist (macOS ohne Signatur, .deb, Linux ohne AppImage), erscheint nur
+  ein Hinweis mit Link zur Download-Seite; der Pflicht-Dialog nach 3x "Spaeter" entfaellt dort.
+- Schlaegt ein Update-Download fehl, bietet der Dialog "Erneut versuchen", "Manuell herunterladen" und
+  "Ohne Update fortfahren". Vorher blieb nur "Programm schliessen".
+- Release-Notes der neuen Version werden im Hinweis angezeigt.
+- Tests mit lokalem Mock-Update-Server (PS_UPDATE_FEED), ohne GitHub und ohne Netz.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ app/index.html         | 58 ++++++++++++++++++++++++++++++++----------
+ main.js                | 40 +++++++++++++++++++++++++++--
+ preload.js             |  2 ++
+ tests/updater.test.mjs | 48 ++++++++++++++++++++++++++++++++++
+ 4 files changed, 133 insertions(+), 15 deletions(-)
+ create mode 100644 tests/updater.test.mjs
+
+diff --git a/app/index.html b/app/index.html
+index 04dfa42..a710128 100644
+--- a/app/index.html
++++ b/app/index.html
+@@ -118,11 +118,12 @@
+   <div id="update-banner">
+     <div class="banner-text">
+       <div class="banner-title" id="banner-title"></div>
+-      <div class="banner-hint">Diese Meldung ist nur 3x wegklickbar, danach wird das Update durchgefuhrt.</div>
++      <div class="banner-hint" id="banner-hint">Diese Meldung ist nur 3x wegklickbar, danach wird das Update durchgeführt.</div>
++      <div class="banner-hint" id="banner-notes"></div>
+     </div>
+     <div class="banner-actions">
+       <button class="btn-later" id="btn-later" onclick="handleLater()">Spater</button>
+-      <button class="btn-update" onclick="handleUpdate()">Jetzt aktualisieren</button>
++      <button class="btn-update" id="btn-update" onclick="handleUpdate()">Jetzt aktualisieren</button>
+     </div>
+   </div>
+ 
+@@ -138,6 +139,8 @@
+       <div id="install-msg">Installation lauft, App wird neu gestartet...</div>
+       <div class="dialog-actions" id="dialog-actions">
+         <button class="btn-force-update" id="btn-force-update" onclick="handleForceUpdate()">Jetzt aktualisieren</button>
++        <button class="btn-quit" id="btn-manual" style="display:none" onclick="handleManualDownload()">Manuell herunterladen</button>
++        <button class="btn-quit" id="btn-continue" style="display:none" onclick="handleContinue()">Ohne Update fortfahren</button>
+         <button class="btn-quit" id="btn-quit" onclick="handleQuit()">Programm schliessen</button>
+       </div>
+     </div>
+@@ -163,14 +166,26 @@
+ 
+   <script>
+     let pendingVersion = null;
++    // manueller Weg: Installation nicht automatisch möglich (z. B. macOS ohne Signatur, .deb) -> nur Hinweis und Download-Seite
++    let updateManual = false;
++    // Wer das Update nicht installieren kann, darf die App trotzdem benutzen (gilt bis zum nächsten Start)
++    let ignoreForced = false;
++    if (window.electronAPI) window.electronAPI.getUpdateMode().then(function (m) { updateManual = !!m.manual; }).catch(function () {});
++    function forcedAllowed() { return !updateManual && !ignoreForced; }
+ 
+-    function showBanner(version, dismissCount) {
++    function showBanner(version, dismissCount, notes) {
+       pendingVersion = version;
+       document.getElementById('banner-title').textContent =
+-        'Neue Version ' + version + ' verfugbar — jetzt aktualisieren';
++        'Neue Version ' + version + ' verfügbar' + (updateManual ? '' : ' — jetzt aktualisieren');
+       const btnLater = document.getElementById('btn-later');
+       const remaining = 3 - dismissCount;
+-      btnLater.textContent = 'Spater (' + remaining + 'x)';
++      btnLater.textContent = updateManual ? 'Später' : 'Später (' + Math.max(remaining, 0) + '×)';
++      document.getElementById('banner-hint').textContent = updateManual
++        ? 'Diese Version wird nicht automatisch installiert. Bitte laden Sie sie von der Download-Seite herunter.'
++        : (remaining > 0 ? 'Diese Meldung ist nur 3× wegklickbar, danach wird das Update durchgeführt.' : '');
++      document.getElementById('banner-notes').textContent = notes || '';
++      document.getElementById('banner-notes').style.display = notes ? 'block' : 'none';
++      document.getElementById('btn-update').textContent = updateManual ? 'Jetzt herunterladen' : 'Jetzt aktualisieren';
+       document.getElementById('update-banner').style.display = 'flex';
+     }
+ 
+@@ -190,16 +205,28 @@
+       if (!pendingVersion || !window.electronAPI) return;
+       const { dismissCount } = await window.electronAPI.dismissUpdate(pendingVersion);
+       hideBanner();
+-      if (dismissCount >= 3) {
++      if (dismissCount >= 3 && forcedAllowed()) {
+         showForcedDialog(pendingVersion);
+       }
+     }
+ 
+     async function handleUpdate() {
+       hideBanner();
+-      if (window.electronAPI) {
+-        await window.electronAPI.startDownload();
+-      }
++      if (!window.electronAPI) return;
++      if (updateManual) await window.electronAPI.openDownloadPage();
++      else await window.electronAPI.startDownload();
++    }
++
++    async function handleManualDownload() {
++      if (window.electronAPI) await window.electronAPI.openDownloadPage();
++    }
++
++    // Aus dem Fehlerzustand heraus ohne Update weiterarbeiten
++    function handleContinue() {
++      ignoreForced = true;
++      document.getElementById('forced-update-overlay').style.display = 'none';
++      document.getElementById('btn-manual').style.display = 'none';
++      document.getElementById('btn-continue').style.display = 'none';
+     }
+ 
+     async function handleForceUpdate() {
+@@ -218,11 +245,12 @@
+     }
+ 
+     if (window.electronAPI) {
+-      window.electronAPI.onUpdateAvailable(({ version, dismissCount }) => {
+-        if (dismissCount >= 3) {
++      window.electronAPI.onUpdateAvailable(({ version, dismissCount, manual, notes }) => {
++        updateManual = !!manual;
++        if (dismissCount >= 3 && forcedAllowed()) {
+           showForcedDialog(version);
+         } else {
+-          showBanner(version, dismissCount);
++          showBanner(version, dismissCount, notes);
+         }
+       });
+ 
+@@ -263,6 +291,8 @@
+         if (btnForce) { btnForce.disabled = false; btnForce.textContent = 'Erneut versuchen'; }
+         if (btnQuit) btnQuit.disabled = false;
+         document.getElementById('dialog-actions').style.display = 'flex';
++        document.getElementById('btn-manual').style.display = 'inline-block';
++        document.getElementById('btn-continue').style.display = 'inline-block';
+         document.getElementById('forced-update-overlay').style.display = 'flex';
+         // For status-dialog if open
+         const statusOverlay = document.getElementById('update-status-overlay');
+@@ -324,8 +354,9 @@
+         document.getElementById('status-message').textContent =
+           'Version ' + result.version + ' ist verfügbar. Sie verwenden Version ' + (result.currentVersion || '?') + '.';
+         document.getElementById('btn-status-update').style.display = 'inline-block';
+-        document.getElementById('btn-status-update').textContent = 'Jetzt aktualisieren';
++        document.getElementById('btn-status-update').textContent = result.manual ? 'Jetzt herunterladen' : 'Jetzt aktualisieren';
+         document.getElementById('btn-status-update').disabled = false;
++        updateManual = !!result.manual;
+         pendingVersion = result.version;
+       } else if (result.error) {
+         document.getElementById('status-icon').textContent = '⚠️';
+@@ -345,6 +376,7 @@
+ 
+     async function handleStatusUpdate() {
+       if (!window.electronAPI) return;
++      if (updateManual) { await window.electronAPI.openDownloadPage(); return; }
+       document.getElementById('btn-status-update').disabled = true;
+       document.getElementById('btn-status-update').textContent = 'Download läuft...';
+       document.getElementById('status-progress-wrap').style.display = 'block';
+diff --git a/main.js b/main.js
+index 5f34e5d..3bf912e 100644
+--- a/main.js
++++ b/main.js
+@@ -8,9 +8,33 @@ const { Readable } = require('stream');
+ // Nur fuer Tests: Updater auch ohne gepacktes Programm ausfuehren (liest dev-app-update.yml).
+ if (process.env.PS_FORCE_DEV_UPDATE === '1') autoUpdater.forceDevUpdateConfig = true;
+ 
++// Nur fuer Tests: Update-Quelle ist ein lokaler Mock-Server statt GitHub.
++if (process.env.PS_UPDATE_FEED) autoUpdater.setFeedURL({ provider: 'generic', url: process.env.PS_UPDATE_FEED });
++
+ autoUpdater.autoDownload = false;
+ autoUpdater.autoInstallOnAppQuit = false;
+ 
++// Seite mit allen Installern; dorthin fuehrt der manuelle Update-Weg.
++const DOWNLOAD_PAGE = 'https://arcangeli.eu/desktop/';
++
++// Automatisches Installieren gibt es nur, wo es technisch funktioniert: Windows (NSIS), Linux-AppImage und ein
++// signiertes macOS-Programm (package.json: "signedMac": true). Sonst wird nur auf die neue Version hingewiesen.
++function canInstallUpdates() {
++  if (process.env.PS_FORCE_MANUAL_UPDATE === '1') return false;
++  if (process.platform === 'win32') return true;
++  if (process.platform === 'linux') return !!process.env.APPIMAGE;
++  if (process.platform === 'darwin') return require('./package.json').signedMac === true;
++  return false;
++}
++const MANUAL_UPDATE = !canInstallUpdates();
++
++// Release-Notes (Text oder Liste von { note }) als kurzer Klartext
++function plainNotes(n) {
++  if (!n) return '';
++  const raw = Array.isArray(n) ? n.map((x) => (x && x.note) || '').join('\n') : String(n);
++  return raw.replace(/<[^>]*>/g, '').trim().slice(0, 400);
++}
++
+ let mainWindow;
+ // Nur ein vom Nutzer gestarteter Download darf den Fehler-Dialog ausloesen.
+ // Schlaegt die (automatische) Pruefung fehl, z. B. ohne Internet, laeuft die App ungestoert weiter.
+@@ -246,7 +270,17 @@ ipcMain.handle('dismiss-update', (event, version) => {
+   return { dismissCount: state.dismissCount };
+ });
+ 
++ipcMain.handle('get-update-mode', () => ({ manual: MANUAL_UPDATE }));
++
++ipcMain.handle('open-download-page', () => {
++  openExternalSafe(DOWNLOAD_PAGE);
++});
++
+ ipcMain.handle('start-download', async () => {
++  if (MANUAL_UPDATE) {
++    openExternalSafe(DOWNLOAD_PAGE);
++    return;
++  }
+   downloadActive = true;
+   try {
+     // Ohne vorherige erfolgreiche Pruefung (z. B. nach "Erneut versuchen") zuerst pruefen.
+@@ -274,7 +308,7 @@ ipcMain.handle('check-for-updates', () => {
+         settled = true;
+         clearTimeout(timeout);
+         cleanup();
+-        resolve({ updateAvailable: true, version: info.version, currentVersion: app.getVersion() });
++        resolve({ updateAvailable: true, version: info.version, currentVersion: app.getVersion(), manual: MANUAL_UPDATE });
+       }
+     };
+ 
+@@ -332,7 +366,9 @@ function setupAutoUpdater() {
+     if (mainWindow && !mainWindow.isDestroyed()) {
+       mainWindow.webContents.send('update-available', {
+         version: info.version,
+-        dismissCount: state.dismissCount
++        dismissCount: state.dismissCount,
++        manual: MANUAL_UPDATE,
++        notes: plainNotes(info.releaseNotes)
+       });
+     }
+   });
+diff --git a/preload.js b/preload.js
+index c991ad4..657fb9c 100644
+--- a/preload.js
++++ b/preload.js
+@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
+   dismissUpdate: (version) => ipcRenderer.invoke('dismiss-update', version),
+   startDownload: () => ipcRenderer.invoke('start-download'),
+   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
++  getUpdateMode: () => ipcRenderer.invoke('get-update-mode'),
++  openDownloadPage: () => ipcRenderer.invoke('open-download-page'),
+   quitApp: () => ipcRenderer.invoke('quit-app'),
+   getSystemStats: () => ipcRenderer.invoke("get-system-stats"),
+   onUpdateAvailable: (callback) => {
+diff --git a/tests/updater.test.mjs b/tests/updater.test.mjs
+new file mode 100644
+index 0000000..43d7d77
+--- /dev/null
++++ b/tests/updater.test.mjs
+@@ -0,0 +1,48 @@
++// Updater: Nutzer werden nie ausgesperrt; wo Installieren nicht geht, gibt es einen manuellen Weg.
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { launchApp, toolFrame, startUpdateServer } from './helpers.mjs';
++
++const FORCED_STATE = JSON.stringify({ version: '99.0.0', dismissCount: 3 });
++const css = (win, id) => win.evaluate((i) => getComputedStyle(document.getElementById(i)).display, id);
++
++test('Manueller Modus: Hinweis statt Zwangs-Dialog, Download-Seite oeffnet im Browser', async () => {
++  const srv = await startUpdateServer({ notes: 'Neu: Erkennung verbessert' });
++  const a = await launchApp({ env: { PS_FORCE_DEV_UPDATE: '1', PS_UPDATE_FEED: srv.url, PS_FORCE_MANUAL_UPDATE: '1' }, files: { 'update-state.json': FORCED_STATE } });
++  try {
++    await toolFrame(a.win);
++    await a.win.waitForFunction(() => getComputedStyle(document.getElementById('update-banner')).display === 'flex', null, { timeout: 20000 });
++    assert.equal(await css(a.win, 'forced-update-overlay'), 'none', 'Zwangs-Dialog darf im manuellen Modus nie erscheinen');
++    assert.match(await a.win.textContent('#banner-notes'), /Erkennung verbessert/);
++    assert.equal(await a.win.textContent('#btn-update'), 'Jetzt herunterladen');
++    await a.win.click('#btn-update');
++    await a.win.waitForTimeout(500);
++    assert.deepEqual(await a.app.evaluate(() => globalThis.__psExternal), ['https://arcangeli.eu/desktop/']);
++  } finally { await a.close(); await srv.close(); }
++});
++
++test('Automatischer Modus: nach 3x Spaeter kommt der Pflicht-Dialog, bei Fehlschlag gibt es einen Ausweg', async () => {
++  const srv = await startUpdateServer();
++  const a = await launchApp({ env: { PS_FORCE_DEV_UPDATE: '1', PS_UPDATE_FEED: srv.url, APPIMAGE: '/tmp/ps-fake.AppImage' }, files: { 'update-state.json': FORCED_STATE } });
++  try {
++    await toolFrame(a.win);
++    await a.win.waitForFunction(() => getComputedStyle(document.getElementById('forced-update-overlay')).display === 'flex', null, { timeout: 20000 });
++    await a.win.click('#btn-force-update'); // Installer existiert auf dem Mock-Server nicht -> Download scheitert
++    await a.win.waitForFunction(() => getComputedStyle(document.getElementById('download-error-msg')).display === 'block', null, { timeout: 20000 });
++    assert.notEqual(await css(a.win, 'btn-continue'), 'none', '"Ohne Update fortfahren" fehlt');
++    assert.notEqual(await css(a.win, 'btn-manual'), 'none', '"Manuell herunterladen" fehlt');
++    await a.win.click('#btn-continue');
++    assert.equal(await css(a.win, 'forced-update-overlay'), 'none', 'Nutzer bleibt ausgesperrt');
++  } finally { await a.close(); await srv.close(); }
++});
++
++test('Ohne gespeicherte Ablehnungen erscheint nur das Banner mit Zaehler', async () => {
++  const srv = await startUpdateServer();
++  const a = await launchApp({ env: { PS_FORCE_DEV_UPDATE: '1', PS_UPDATE_FEED: srv.url, APPIMAGE: '/tmp/ps-fake.AppImage' } });
++  try {
++    await toolFrame(a.win);
++    await a.win.waitForFunction(() => getComputedStyle(document.getElementById('update-banner')).display === 'flex', null, { timeout: 20000 });
++    assert.equal(await css(a.win, 'forced-update-overlay'), 'none');
++    assert.match(await a.win.textContent('#btn-later'), /Später \(3×\)/);
++  } finally { await a.close(); await srv.close(); }
++});
+-- 
+2.43.0
+

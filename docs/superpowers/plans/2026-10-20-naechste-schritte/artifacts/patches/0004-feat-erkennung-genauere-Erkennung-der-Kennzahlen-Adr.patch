@@ -1,0 +1,2526 @@
+From 7c555b94a6a4534b930a35819b2f31caef8a3cfc Mon Sep 17 00:00:00 2001
+From: Alexander Arcangeli <alexander@arcangeli.eu>
+Date: Tue, 20 Oct 2026 11:11:43 +0200
+Subject: [PATCH 04/11] feat(erkennung): genauere Erkennung der Kennzahlen,
+ Adressen und Namen (Welle 1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Kennzahlen: IBAN (alphanumerische BBAN, Kleinschreibung, ohne Leerzeichen, Laengenpruefung je Land, Kuerzen zu
+langer Treffer), Kreditkarten (Luhn), Telefon (international, Schraegstrich, Klammern, Mindestziffern gegen
+PLZ-Verwechslung), Datum (Monatsnamen, Schraegstrich), Steuer-ID (alle Schreibweisen), SV-Nummer, Kfz-Kennzeichen
+und Fahrgestellnummern, IPv4 (validiert, ohne Versionsnummern), IPv6, Weblinks.
+Adressen: Schweizer/oesterreichische Schreibweise, vierstellige PLZ.
+Namen: Initialen, GROSSGESCHRIEBENE Namen, Namenszusaetze (von, van, de), Bindestrich-Namen, Sonderzeichen
+(Oe, Ue, Ç, ë ...), Zeilenumbruch verschluckt kein Folgewort mehr.
+Fehler behoben:  erkennt Wortgrenzen nur bei ASCII-Buchstaben, Namen mit Ä/Ö/Ü/Ç am Anfang wurden von
+-verankerten Mustern nie getroffen. Harte Treffer werden jetzt vor der Ueberlappungsaufloesung geprueft
+(unplausibler Treffer verdraengte sonst die Adresse). Neue Profile-Eintraege: Karten, Kfz, IP/Links.
+
+Messung (Harness): mit KI 0 statt 27 von 91 Handfaellen undicht, synthetisch 2 statt 87 von 276 Werten;
+ohne KI 8 statt 37 bzw. 21 statt 109; keine Regression. Golden-Stand neu erzeugt (Kennzeichen wird maskiert).
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ app/privacy-shield.html    | 212 +++++++--
+ tests/eval/baseline.json   |  48 +--
+ tests/eval/out/result.json | 852 +++++++++++++++++--------------------
+ tests/golden/baseline.json |  31 +-
+ 4 files changed, 608 insertions(+), 535 deletions(-)
+
+diff --git a/app/privacy-shield.html b/app/privacy-shield.html
+index c140cf6..c0d6c57 100644
+--- a/app/privacy-shield.html
++++ b/app/privacy-shield.html
+@@ -2005,11 +2005,21 @@
+           on: true,
+           pfx: "IBAN",
+           rx: [
+-            /\b([A-Z]{2}\d{2}[ \t]{0,3}\d{4}[ \t]{0,3}\d{4}[ \t]{0,3}\d{4}[ \t]{0,3}\d{4}[ \t]{0,3}\d{0,4})\b/g,
++            /\b([A-Za-z]{2}\d{2}[ \t]{1,3}[A-Za-z0-9]{4}(?![A-Za-z0-9])(?:[ \t]{1,3}(?=[A-Za-z0-9]{0,3}\d)[A-Za-z0-9]{4}(?![A-Za-z0-9])){1,6}(?:[ \t]{1,3}\d{1,4}(?![A-Za-z0-9]))?)/g,
++            /\b([A-Za-z]{2}\d{2}[A-Za-z0-9]{11,30})\b/g,
+             /(Konto(?:nummer|nr\.?)?[\s:]+[\d\s]{6,18}\d)/gi,
+             /((?:BLZ|Bankleitzahl)[\s:]+\d{8})/gi,
+           ],
+         },
++        {
++          id: "card",
++          lbl: "Kreditkartennummern",
++          desc: "Visa, Mastercard, Amex u. a. (Prüfziffer wird geprüft)",
++          col: "#059669",
++          on: true,
++          pfx: "KARTE",
++          rx: [/\b((?:\d{4}[ \-]){3}\d{1,7}|\d{4}[ \-]\d{6}[ \-]\d{5}|\d{13,19})\b/g],
++        },
+         {
+           id: "bic",
+           lbl: "BIC / SWIFT-Codes",
+@@ -2030,9 +2040,9 @@
+           on: true,
+           pfx: "TEL",
+           rx: [
+-            /((?:Tel\.?(?:efon)?|Fon|Fax|Mobil(?:e|funk)?|Handy|Rufnummer)[\s:\.]*(?:\+|00)?\d[\d\s\-\(\)\/\.]{6,24})/gi,
+-            /(\+49[\s\-\.]?(?:\(0\))?[\s\-\.]?\d{2,5}[\s\-\.]?\d{3,10}(?:[\s\-\.]\d{1,5})?)/g,
+-            /\b(0\d{2,4}[\s\/\-\.]?\d{3,6}(?:[\s\/\-\.]\d{1,6})?(?:[\s\/\-\.]\d{1,4})?)\b/g,
++            /((?:Tel(?:efon)?\.?(?:[ \-]?(?:Nr|Nummer)\.?)?|Fon|Fax|Mobil(?:e|funk)?|Handy|Rufnummer|Durchwahl|Zentrale)[\s:\.]*(?:\+|00)?\d[\d\s\-\(\)\/\.]{6,24})/gi,
++            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\d{1,5}(?:[ \t\-\.\/]?\d{2,8}){1,3})(?!\d)/g,
++            /(?<![\d\/\-\.])(\(?0[1-9]\d{1,4}\)?[ \t\/\-\.]?\d{2,10}(?:[ \t\-\.]\d{1,6}){0,3})(?!\d)/g,
+           ],
+         },
+         {
+@@ -2058,6 +2068,8 @@
+             /((?:geb(?:oren)?\.?|Geburtsdatum|geboren am|geb\. am)[\s:]*\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{2,4})/gi,
+             /\b(\d{1,2}\.\d{1,2}\.(?:19|20)\d{2})\b/g,
+             /\b(\d{4}-\d{2}-\d{2})\b/g,
++            /\b(\d{1,2}\/\d{1,2}\/(?:19|20)\d{2})\b/g,
++            /\b(\d{1,2}\.?[ \t]+(?:Januar|Februar|März|Maerz|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|Jan\.|Feb\.|Mär\.|Apr\.|Jun\.|Jul\.|Aug\.|Sept?\.|Okt\.|Nov\.|Dez\.|January|February|March|May|June|July|October|December)[ \t]+(?:19|20)\d{2})\b/g,
+           ],
+         },
+         {
+@@ -2068,13 +2080,13 @@
+           on: true,
+           pfx: "KENNNR",
+           rx: [
+-            /((?:Steuer(?:nummer|nr\.?|ID)|StNr\.?|St\.-?Nr\.?)[\s:]*[\d\s\/\-]{8,18})/gi,
++            /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)[ \t:]*[\d \t\/\-]{8,18})/gi,
+             /((?:USt\.?-?Id(?:Nr\.?)?|Umsatzsteuer-?ID|VAT)[\s:]*[A-Z]{0,2}\d{7,12})/gi,
+             /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?)[\s:]*[A-Z0-9]{6,14})/gi,
+             /(HR[AB]\s*(?:Nr\.?\s*)?\d{3,8})/g,
+             /((?:Aktenzeichen|Az\.?)[\s:]+(?:\d{1,4}\s+[A-Z]{1,5}\s+)?[\w\/\.\-]{2,30})/g,
+             /\b(\d{1,3}\s+[A-Z]{1,5}\s+\d{3,6}\/\d{2,4})\b/g,
+-            /(Sozialversicherungs(?:nummer|nr\.?)?[\s:]*\d{2}[\s\-]?\d{6}[\s\-]?[A-Z]\s*\d{3})/gi,
++            /((?:Sozialversicherungs(?:nummer|nr\.?)?|SV-?(?:Nr|Nummer)\.?|Rentenversicherungs(?:nummer|nr\.?)|RVNR|SVNR)[ \t:]*\d{2}[ \t\-]?\d{6}[ \t\-]?[A-Z][ \t]?\d{3})/gi,
+             /((?:ISIN|WKN)[\s:]+[A-Z0-9]{6,12})/gi,
+             /(Steuerberater(?:-?Nr\.?|nummer)[\s:]*[\d\/\-]{5,15})/gi,
+             /(PZN[ \t:]*\d{7,8})/gi,
+@@ -2092,7 +2104,7 @@
+           on: true,
+           pfx: "ORG",
+           rx: [
+-            /\b([A-ZÜÄÖ][A-Za-züäöÄÖÜß&\.\-]{1,30}(?:[ \t]+[A-Za-züäöÄÖÜß&\.\-]{1,30}){0,4}[ \t]+(?:GmbH(?:[ \t]*&[ \t]*Co\.?[ \t]*KG)?|AG|KGaA|KG|OHG|GbR|UG(?:[ \t]*\(haftungsbeschränkt\))?|e\.V\.|eG|SE|Stiftung|Ltd\.?|Inc\.?|Corp\.?|PartG|PartGmbB|Partnerschaft))\b/g,
++            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖ][A-Za-züäöÄÖÜß&\.\-]{1,30}(?:[ \t]+[A-Za-züäöÄÖÜß&\.\-]{1,30}){0,4}[ \t]+(?:GmbH(?:[ \t]*&[ \t]*Co\.?[ \t]*KG)?|AG|KGaA|KG|OHG|GbR|UG(?:[ \t]*\(haftungsbeschränkt\))?|e\.V\.|eG|SE|Stiftung|Ltd\.?|Inc\.?|Corp\.?|PartG|PartGmbB|Partnerschaft))\b/g,
+             /((?:Kanzlei|Rechtsanwaltskanzlei|Steuerberatung|Wirtschaftsprüfung|Notariat|Notarkanzlei|Praxis|Arztpraxis)[ \t]+[A-ZÜÄÖ][A-Za-züäöß &\.\-]{2,50})/g,
+             /((?:Amtsgericht|Landgericht|Oberlandesgericht|Bundesgerichtshof|Verwaltungsgericht|Finanzgericht|Sozialgericht|Arbeitsgericht)[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,35})/g,
+             /((?:Finanzamt|Bundesministerium|Bundesamt|Landesamt|Stadtverwaltung)[ \t]+(?:der|des|für|von)?[ \t]*[A-ZÜÄÖ][A-Za-züäöß \-]{2,40})/g,
+@@ -2107,12 +2119,26 @@
+           on: true,
+           pfx: "ADRESSE",
+           rx: [
+-            /([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*\d{5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
+-            /([A-ZÜÄÖ][a-züäöß \-]+(?:straße|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
++            /([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*(?:[A-Z]{1,2}-)?\d{4,5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
++            /([A-ZÜÄÖ][a-züäöß \-]+(?:stra(?:ß|ss)e|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
+             /(\b\d{5}[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,28})\b/g,
+             /(\b[A-Z]{1,2}-\d{4}[ \t]+[A-ZÜÄÖ][a-züäöß\-]{2,25})\b/g,
+           ],
+         },
++        {
++          id: "vehicle",
++          lbl: "Kfz-Kennzeichen & Fahrgestellnummern",
++          desc: "Amtliche Kennzeichen, FIN/VIN",
++          col: "#64748b",
++          on: true,
++          pfx: "KFZ",
++          rx: [
++            /(?<=(?:Kennzeichen|Kfz-Kennzeichen|Fahrzeug|Pkw|PKW|Lkw|LKW)[ \t:]*)([A-ZÄÖÜ]{1,3}[ \t\-]{1,2}[A-Z]{1,2}[ \t\-]?\d{1,4}[EH]?)\b/g,
++            /\b((?!DIN|ISO|ENV|SAE|TÜV|ICD|ITU|RFC|BGB|SGB|StGB|ZPO|HGB|AEO|EN)[A-ZÄÖÜ]{1,3}-[A-Z]{1,2}[ \t]?\d{1,4}[EH]?)\b/g,
++            /(?<=(?:Fahrgestellnummer|FIN|VIN)[ \t:\.]*)([A-HJ-NPR-Z0-9]{17})\b/g,
++            /\b([A-HJ-NPR-Z][A-HJ-NPR-Z0-9]{10}\d{6})\b/g,
++          ],
++        },
+         {
+           id: "name",
+           lbl: "Personen-Namen",
+@@ -2121,15 +2147,18 @@
+           on: true,
+           pfx: "NAME",
+           rx: [
+-            /(?:Herr|Frau|Hr\.|Fr\.)[ \t]+((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Phys|Math|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|M\.A\.|BSc|B\.Sc\.|BA|B\.A\.|PhD|MD|RA|RAin|StB|WP|Notar(?:in)?)\.?[ \t]+)*[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*){0,3})/g,
+-            /((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Math|Phys|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|PhD|MD)\.?[ \t]+){1,3}[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ]?[a-züäöß]+)*){0,2})/g,
+-            /\b([A-ZÜÄÖ][a-züäöß\-]{2,}[ \t]+[A-Z]\.[ \t]+[A-ZÜÄÖ][a-züäöß\-]{2,})\b/g,
+-            /\b([A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?[ \t]+[A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?)\b/g,
+-            /(?:(?:von|bei|durch|für|an|mit|als|gezeichnet|unterzeichnet|unterschrieben|verantwortlich|zuständig|bearbeitet|gesendet|erstellt|geprüft|genehmigt|kontaktiere(?:n|n Sie)?)\s+)([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2})/g,
+-            /(?:(?:Mit freundlichen Grüßen|Mit freundlichem Gruß|Hochachtungsvoll|Viele Grüße|Liebe Grüße|Beste Grüße|Herzliche Grüße|Freundliche Grüße|Mit besten Grüßen|MfG|LG|VG|Best regards|Sincerely|Yours sincerely)\s*\n*\s*)([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2})/g,
+-            /(?:Sehr geehrte(?:r)?\s+(?:Herr|Frau|Hr\.|Fr\.)\s+(?:(?:Dr|Prof|Ing|Mag)\.?\s+)*([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+(?:[A-ZÜÄÖ][a-züäöß]{2,})){0,2}))/g,
+-            /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖ][a-züäöß]{2,}(?:\s+[A-ZÜÄÖ][a-züäöß]{2,}){0,2}))/g,
+-            /\b([A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?[ \t]+[A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?[ \t]+[A-ZÜÄÖ][a-züäöß]{3,}(?:-[A-ZÜÄÖ][a-züäöß]{2,})?)\b/g,
++            /(?:Herr|Frau|Hr\.|Fr\.)[ \t]+((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Phys|Math|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|M\.A\.|BSc|B\.Sc\.|BA|B\.A\.|PhD|MD|RA|RAin|StB|WP|Notar(?:in)?)\.?[ \t]+)*(?:(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,3})/g,
++            /((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Math|Phys|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|PhD|MD)\.?[ \t]+){1,3}[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:[ \t]+[A-Z]\.)?(?:(?:[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?)?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,2})/g,
++            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}[ \t]+[A-Z]\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})(?![A-Za-z0-9_À-ɏ])/g,
++            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
++            /(?:(?:von|bei|durch|für|an|mit|als|gezeichnet|unterzeichnet|unterschrieben|verantwortlich|zuständig|bearbeitet|gesendet|erstellt|geprüft|genehmigt|kontaktiere(?:n|n Sie)?)\s+)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})/g,
++            /(?:(?:Mit freundlichen Grüßen|Mit freundlichem Gruß|Hochachtungsvoll|Viele Grüße|Liebe Grüße|Beste Grüße|Herzliche Grüße|Freundliche Grüße|Mit besten Grüßen|MfG|LG|VG|Best regards|Sincerely|Yours sincerely)\s*\n*\s*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})/g,
++            /(?:Sehr geehrte(?:r)?\s+(?:Herr|Frau|Hr\.|Fr\.)\s+(?:(?:Dr|Prof|Ing|Mag)\.?\s+)*([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+(?:[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})){0,2}))/g,
++            /(?<=[^\n\s][ \t])((?:[A-HJ-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
++            /(?:^|\n)[ \t]*((?:[J-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
++            /(?<![A-Za-z0-9_À-ɏ])([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?[ \t]+[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
++            /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2}))/g,
++            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
+           ],
+         },
+         {
+@@ -2155,12 +2184,17 @@
+         },
+         {
+           id: "ip",
+-          lbl: "IP-Adressen & URLs",
+-          desc: "IPv4, Domains, Weblinks",
++          lbl: "IP-Adressen & Weblinks",
++          desc: "IPv4, IPv6, Weblinks mit Pfad oder Parametern",
+           col: "#6366f1",
+           on: false,
+           pfx: "IP",
+-          rx: [/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b/g, /(https?:\/\/[^\s<>"{}|\\^`\[\]\)\(,;]{4,})/g],
++          rx: [
++            /(?<![\d.])(?<!(?:Version|Ver\.|Build|Release|Rev\.?|v|V)[ \t]*)((?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?!\d|\.\d)/g,
++            /(?<![\w:])((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:(?:[0-9a-fA-F]{1,4})?|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})(?![\w:])/g,
++            /(https?:\/\/[^\s<>"{}|\\^`\[\]\)\(,;]{4,}[^\s<>"{}|\\^`\[\]\)\(,;.:!?])/g,
++            /(?<![\w@.\/-])(www\.[a-z0-9\-]+(?:\.[a-z0-9\-]+)+(?:\/[^\s<>"{}|\\^`\[\]\)\(,;]*[^\s<>"{}|\\^`\[\]\)\(,;.:!?])?)/gi,
++          ],
+         },
+         {
+           id: "med",
+@@ -2172,11 +2206,17 @@
+           rx: [
+             /((?:Diagnose|Befund|ICD-1[01]|Erkrankung|Symptom|Medikation|Therapie)[\s:][^\n]{5,80})/gi,
+             /\b([A-Z]\d{2}(?:\.\d{1,2})?)\b/g,
+-            /((?:Patient(?:in)?|Pat\.?)[\s:]+[A-ZÜÄÖ][a-züäöß]+(?:\s+[A-ZÜÄÖ][a-züäöß]+)?)/gi,
++            /((?:Patient(?:in)?|Pat\.?)[ \t:]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]+){0,3})/g,
+           ],
+         },
+       ];
+       const SW = new Set([
++        "Deutschland",
++        "Deutschlands",
++        "Österreich",
++        "Schweiz",
++        "Europa",
++        "Zentrale",
+         "Die",
+         "Der",
+         "Das",
+@@ -3056,11 +3096,23 @@
+         "Kreiskrankenhaus",
+         "Rehabilitationszentrum",
+       ]);
++      // GROSSGESCHRIEBENE Personennamen ("HANS MEIER"): nur wenn Vor- oder Nachname in den Wortlisten steht,
++      // damit Ueberschriften ("KAUFVERTRAG ZWISCHEN") nicht als Name gelten.
++      function isCapsPersonName(val) {
++        const words = val.trim().split(/[ \t]+/);
++        if (words.length < 2 || words.length > 3) return false;
++        if (!words.every((w) => /^[A-ZÄÖÜ][A-ZÄÖÜ\-]+$/.test(w))) return false;
++        const tc = (w) => w.charAt(0) + w.slice(1).toLowerCase();
++        return LOCAL_NAMES.has(tc(words[0])) || words.some((w) => w.split("-").some((p) => LOCAL_SURNAMES.has(tc(p))));
++      }
+       function okName(s) {
++        const tt = s.trim();
++        if (tt === tt.toUpperCase() && /[A-ZÄÖÜ]{2}/.test(tt)) return isCapsPersonName(tt);
+         return s
+           .trim()
+           .split(/\s+/)
+           .every((p, i) => {
++            if (/^[A-ZÄÖÜ]\.$/.test(p)) return true; // Initiale
+             const c = p.replace(/[^A-Za-züäöüÄÖÜß]/g, "");
+             if (c.length < 2 || /^\d+$/.test(c)) return false;
+             if (i === 0 && (SW.has(p) || SW.has(c))) return false;
+@@ -3073,8 +3125,8 @@
+           lbl: "Standard",
+           badge: "Empfohlen",
+           desc: "Für die meisten Anwendungsfälle. Erkennt persönliche Daten, Kontaktdaten, Finanzdaten und Identifikationsnummern.",
+-          ents: ["email", "iban", "bic", "phone", "money", "date", "taxid", "addr", "org", "name"],
+-          tags: ["Namen", "Adressen", "IBAN", "BIC", "Telefon", "E-Mail", "Daten", "Steuer-IDs", "Beträge"],
++          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "org", "name", "ip"],
++          tags: ["Namen", "Adressen", "IBAN", "Karten", "BIC", "Telefon", "E-Mail", "Daten", "Steuer-IDs", "Beträge", "Kfz", "IP/Links"],
+           note: "",
+         },
+         {
+@@ -3082,7 +3134,7 @@
+           lbl: "Finanzen & Recht",
+           badge: "",
+           desc: "Für Anwaltskanzleien, Steuerberatung und Banken. Wie Standard — zusätzlich mit Aktenzeichen, Handelsregisternummern und Sozialversicherungsnummern.",
+-          ents: ["email", "iban", "bic", "phone", "money", "date", "taxid", "addr", "org", "name"],
++          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "org", "name", "ip"],
+           tags: ["+ Aktenzeichen", "+ HR-Nummern", "+ SV-Nummern", "Alle Standardfelder"],
+           note: "Gleiche Kategorien wie Standard, jedoch mit erweiterten Mustern für rechtliche und steuerliche Dokumente.",
+         },
+@@ -3091,7 +3143,7 @@
+           lbl: "Medizin & Pflege",
+           badge: "",
+           desc: "Für Kliniken, Praxen und Pflegedienste. Enthält zusätzlich ICD-Codes, Diagnosen und Patientendaten. Finanzdaten (IBAN, Beträge) werden nicht erkannt.",
+-          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "paragraf"],
++          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "paragraf", "ip"],
+           tags: ["+ ICD-Codes", "+ Diagnosen", "+ Patientendaten", "Ohne IBAN & Beträge"],
+           note: "",
+         },
+@@ -3699,7 +3751,7 @@
+       function detectLocalEntities(text) {
+         var results = [];
+         var seen = new Set();
+-        var nameRx = /\b([A-ZÄÖÜ][a-zäöüß]+(?:[\- \t][A-ZÄÖÜ][a-zäöüß]+)?)\b/g;
++        var nameRx = /\b([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[\- \t][A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)\b/g;
+         var match;
+         while ((match = nameRx.exec(text)) !== null) {
+           var name = match[0].trim();
+@@ -4021,6 +4073,8 @@
+         IBAN: 1,
+         BIC: 1,
+         IP: 1,
++        KARTE: 1,
++        KFZ: 2,
+         TEL: 2,
+         BETRAG: 2,
+         DATUM: 2,
+@@ -4033,7 +4087,7 @@
+         NAME: 5,
+         ORT: 5,
+       };
+-      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip"]);
++      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip", "card", "vehicle"]);
+       const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med"]);
+       function isWhitelisted(v) {
+         return whitelist.some(function (w) {
+@@ -4044,6 +4098,43 @@
+         /^(GmbH(?:\s*&\s*Co\.?\s*KG)?|AG|KGaA|KG|OHG|GbR|UG|e\.V\.|eG|SE|Ltd\.?|Inc\.?|Corp\.?|Stiftung|BIC|IBAN|SWIFT|BLZ|HRB|HRA|WKN|ISIN|PZN|ICD)$/;
+       const ORG_LEAD =
+         /^(?:(?:Vorstand|Geschäftsführer(?:in)?|Prokurist(?:in)?|Direktor(?:in)?|Inhaber(?:in)?|Gesellschafter(?:in)?|Mitarbeiter(?:in)?|Mandant(?:in)?|Aufsichtsrat|Beirat|Anteilseigner)\s+|(?:der|die|das|des|dem|den|bei|von|im|in|an|am|für|durch|mit|als|und|oder|einer?|eines|ist|sind|war|waren|bleibt|wird)\s+)+/;
++      function isValidCard(raw) {
++        const d = raw.replace(/\D/g, "");
++        if (d.length < 13 || d.length > 19 || !/^[2-6]/.test(d)) return false;
++        let sum = 0;
++        for (let i = 0; i < d.length; i++) {
++          let n = Number(d[d.length - 1 - i]);
++          if (i % 2 === 1) {
++            n *= 2;
++            if (n > 9) n -= 9;
++          }
++          sum += n;
++        }
++        return sum % 10 === 0;
++      }
++      // Wertpruefung fuer harte Treffer. Muss schon beim Sammeln laufen: ein unplausibler Treffer
++      // (z. B. PLZ 05331 als Telefonnummer) wuerde sonst die spaetere Adress-Erkennung verdraengen.
++      // Liefert den (ggf. gekuerzten) Wert oder null, wenn der Treffer unplausibel ist.
++      function hardValue(pfx, val) {
++        if (pfx === "KARTE") return isValidCard(val) ? val : null;
++        if (pfx === "TEL") return val.replace(/\D/g, "").length >= 7 ? val : null;
++        if (pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val)) {
++          const exp = IBAN_LEN[val.slice(0, 2).toUpperCase()];
++          if (exp) {
++            // Treffer, der ueber die IBAN hinausreicht (angrenzende Ziffern oder Woerter), auf die Landeslaenge kuerzen
++            let n = 0;
++            for (let i = 0; i < val.length; i++) {
++              if (/[A-Za-z0-9]/.test(val[i])) n++;
++              if (n === exp) {
++                val = val.slice(0, i + 1);
++                break;
++              }
++            }
++          }
++          return isValidIBANFormat(val) ? val : null;
++        }
++        return val;
++      }
+       function isValidBIC(code) {
+         return /^[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/.test(code);
+       }
+@@ -4069,12 +4160,36 @@
+         SK: 24,
+         HU: 28,
+         LI: 21,
++        GR: 27,
++        HR: 21,
++        SI: 19,
++        RO: 24,
++        BG: 22,
++        EE: 20,
++        LV: 21,
++        LT: 20,
++        MT: 31,
++        CY: 28,
++        IS: 26,
++        TR: 26,
+       };
++      function ibanMod97(c) {
++        let rem = 0;
++        const s = c.slice(4) + c.slice(0, 4);
++        for (const ch of s) {
++          const v = /\d/.test(ch) ? ch : String(ch.charCodeAt(0) - 55);
++          for (const d of v) rem = (rem * 10 + Number(d)) % 97;
++        }
++        return rem === 1;
++      }
++      // Bekanntes Land: Laenge muss stimmen (Tippfehler in der Pruefziffer bleiben maskiert).
++      // Unbekanntes Land: Laenge 15-34 und gueltige Pruefsumme (mod 97), sonst zu viele Zufallstreffer.
+       function isValidIBANFormat(raw) {
+         const c = raw.replace(/\s+/g, "").toUpperCase();
+         if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(c)) return false;
+         const exp = IBAN_LEN[c.slice(0, 2)];
+-        return !exp || c.length === exp;
++        if (exp) return c.length === exp;
++        return c.length >= 15 && c.length <= 34 && ibanMod97(c);
+       }
+       function isHeadingSpan(text, start, end) {
+         const ls = text.lastIndexOf("\n", start - 1) + 1;
+@@ -4084,7 +4199,8 @@
+         const val = text.slice(start, end).trim();
+         const numbered = line.match(/^(?:[IVXLC]+|\d+(?:\.\d+)*)[\.\)]\s+(.*)$/);
+         if (numbered && numbered[1].trim() === val) return true;
+-        if (line === val && /[A-ZÄÖÜ]/.test(line) && line === line.toUpperCase() && !/\d{5}/.test(line)) return true;
++        if (line === val && /[A-ZÄÖÜ]/.test(line) && line === line.toUpperCase() && !/\d{5}/.test(line))
++          return !isCapsPersonName(val);
+         return false;
+       }
+       function computePass1(text) {
+@@ -4125,8 +4241,10 @@
+                   break;
+                 }
+               const raw = gval !== null ? gval : m[0];
+-              const val = raw.trim();
++              let val = raw.trim();
+               if (!val || val.length < 2) continue;
++              val = hardValue(e.pfx, val);
++              if (!val) continue;
+               const off = (gval !== null ? m[0].indexOf(raw) : 0) + (raw.length - raw.replace(/^\s+/, "").length);
+               pass1.push({
+                 start: m.index + off,
+@@ -4192,7 +4310,13 @@
+             let le = text.indexOf("\n", s.end);
+             if (le === -1) le = text.length;
+             const headLine = text.slice(ls, le).trim();
+-            if (/[A-ZÄÖÜ]/.test(headLine) && headLine === headLine.toUpperCase() && !/\d{5}/.test(headLine)) continue;
++            if (
++              /[A-ZÄÖÜ]/.test(headLine) &&
++              headLine === headLine.toUpperCase() &&
++              !/\d{5}/.test(headLine) &&
++              !isCapsPersonName(vt)
++            )
++              continue;
+             if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(vt)) continue;
+             if (s.pfx === "ORG" && /^(?:AG|GmbH|KG|OHG|GbR|UG|SE|eG|Ltd\.?|Inc\.?|Corp\.?)[ \t]/.test(vt)) continue;
+             if (SW.has(vt) || SW.has(vt.replace(/[^A-Za-züäöÄÖÜß]/g, ""))) continue;
+@@ -4287,18 +4411,35 @@
+           if (s.pfx !== "NAME") continue;
+           let m2;
+           while (
+-            (m2 = text.slice(s.start, s.end).match(/^([A-ZÜÄÖ][A-Za-züäöß\-]*)[ \t]+/)) &&
++            (m2 = text.slice(s.start, s.end).match(/^([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][A-Za-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]*)[ \t]+/)) &&
+             (SW.has(m2[1]) || SW.has(m2[1].replace(/[^A-Za-züäöÄÖÜß]/g, "")))
+           ) {
+             s.start += m2[0].length;
+           }
+           while (
+-            (m2 = text.slice(s.end).match(/^[ \t]+([A-ZÜÄÖ][a-züäöß]{2,}(?:-[A-ZÜÄÖ][a-züäöß]+)?)(?![\wäöüß])/)) &&
++            (m2 = text.slice(s.end).match(/^[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)(?![\wäöüß])/)) &&
+             !SW.has(m2[1])
+           ) {
+             s.end += m2[0].length;
+           }
+         }
++        for (const s of cands) {
++          if (s.pfx !== "NAME") continue;
++          let mp;
++          while (
++            (mp = text.slice(s.end).match(/^[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/)) &&
++            !SW.has(mp[1])
++          )
++            s.end += mp[0].length;
++          const ml = text.slice(Math.max(0, s.start - 60), s.start).match(/([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+$/);
++          if (ml && !SW.has(ml[1])) s.start -= ml[0].length;
++        }
++        for (const s of cands) {
++          if (s.pfx !== "NAME") continue;
++          let mh;
++          while ((mh = text.slice(s.end).match(/^-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}/))) s.end += mh[0].length;
++          while ((mh = text.slice(Math.max(0, s.start - 40), s.start).match(/[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}-$/))) s.start -= mh[0].length;
++        }
+         const valid = cands.filter(function (s) {
+           const val = text.slice(s.start, s.end);
+           if (!val || val.length < 2) return false;
+@@ -4308,6 +4449,7 @@
+             if (s.end < text.length && /[\wäöüÄÖÜß]/.test(text[s.end])) return false;
+             if (s.start > 0 && /[\wäöüÄÖÜß]/.test(text[s.start - 1])) return false;
+           }
++          if (s.pfx === "KARTE" && !isValidCard(val)) return false;
+           if (s.pfx === "BIC") {
+             if (!isValidBIC(val)) return false;
+             if (!/\d/.test(val) && !/XXX$/.test(val)) {
+@@ -4317,7 +4459,7 @@
+               if (!/BIC|SWIFT|IBAN|Bank|BLZ|Konto/i.test(text.slice(ls, s.start) + text.slice(s.end, le))) return false;
+             }
+           }
+-          if (s.pfx === "IBAN" && /^[A-Z]{2}\d{2}/.test(val) && !isValidIBANFormat(val)) return false;
++          if (s.pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val) && !isValidIBANFormat(val)) return false;
+           if (s.pfx === "NAME" && !okName(val)) return false;
+           if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(val)) return false;
+           if (s.pfx === "ORT" && SW.has(val)) return false;
+diff --git a/tests/eval/baseline.json b/tests/eval/baseline.json
+index eeb1f8d..ee34406 100644
+--- a/tests/eval/baseline.json
++++ b/tests/eval/baseline.json
+@@ -1,62 +1,62 @@
+ {
+   "wortlisten": {
+     "cases": {
+-      "NAME": 12,
++      "NAME": 5,
+       "ORG": 2,
+-      "ADR": 3,
++      "ADR": 0,
+       "ORT": 1,
+-      "KONTAKT": 8,
+-      "FINANZ": 7,
+-      "DATUM": 2,
+-      "KFZ": 2,
++      "KONTAKT": 0,
++      "FINANZ": 0,
++      "DATUM": 0,
++      "KFZ": 0,
+       "MED": 0,
+-      "NEG": 2,
++      "NEG": 1,
+       "G-NAME": 8,
+       "G-KONTAKT": 4,
+       "G-GERAET": 2,
+       "G-STANDORT": 2,
+-      "G-NUMMER": 4,
++      "G-NUMMER": 3,
+       "G-GEBURT": 2,
+       "G-GEHALT": 0,
+       "G-FAMILIE": 1,
+       "G-NATION": 1,
+       "G-ART9": 9,
+       "G-ART10": 3,
+-      "G-FORM": 4,
++      "G-FORM": 2,
+       "G-AUSLAND": 5,
+-      "G-SECRET": 2
++      "G-SECRET": 1
+     },
+-    "synthLeaked": 109,
++    "synthLeaked": 21,
+     "synthTotal": 276
+   },
+   "ki": {
+     "cases": {
+-      "NAME": 5,
++      "NAME": 0,
+       "ORG": 0,
+-      "ADR": 3,
++      "ADR": 0,
+       "ORT": 0,
+-      "KONTAKT": 8,
+-      "FINANZ": 7,
+-      "DATUM": 2,
+-      "KFZ": 2,
++      "KONTAKT": 0,
++      "FINANZ": 0,
++      "DATUM": 0,
++      "KFZ": 0,
+       "MED": 0,
+-      "NEG": 3,
++      "NEG": 1,
+       "G-NAME": 3,
+       "G-KONTAKT": 4,
+       "G-GERAET": 2,
+       "G-STANDORT": 2,
+-      "G-NUMMER": 4,
+-      "G-GEBURT": 2,
++      "G-NUMMER": 3,
++      "G-GEBURT": 1,
+       "G-GEHALT": 0,
+       "G-FAMILIE": 0,
+       "G-NATION": 1,
+       "G-ART9": 9,
+       "G-ART10": 3,
+-      "G-FORM": 4,
+-      "G-AUSLAND": 5,
+-      "G-SECRET": 2
++      "G-FORM": 2,
++      "G-AUSLAND": 4,
++      "G-SECRET": 1
+     },
+-    "synthLeaked": 87,
++    "synthLeaked": 2,
+     "synthTotal": 276
+   }
+ }
+diff --git a/tests/eval/out/result.json b/tests/eval/out/result.json
+index e65adcb..09c9d85 100644
+--- a/tests/eval/out/result.json
++++ b/tests/eval/out/result.json
+@@ -4,20 +4,13 @@
+   "cases": {
+    "NAME": {
+     "total": 24,
+-    "leaked": 12,
++    "leaked": 5,
+     "ids": [
+      "n03",
+-     "n04",
+-     "n08",
+      "n10",
+      "n12",
+      "n13",
+-     "n15",
+-     "n17",
+-     "n21",
+-     "n22",
+-     "n23",
+-     "n24"
++     "n17"
+     ]
+    },
+    "ORG": {
+@@ -30,12 +23,8 @@
+    },
+    "ADR": {
+     "total": 9,
+-    "leaked": 3,
+-    "ids": [
+-     "a09",
+-     "a10",
+-     "a11"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "ORT": {
+     "total": 2,
+@@ -46,46 +35,23 @@
+    },
+    "KONTAKT": {
+     "total": 16,
+-    "leaked": 8,
+-    "ids": [
+-     "t06",
+-     "t08",
+-     "t09",
+-     "t10",
+-     "u01",
+-     "u02",
+-     "i01",
+-     "i02"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "FINANZ": {
+     "total": 20,
+-    "leaked": 7,
+-    "ids": [
+-     "f02",
+-     "f07",
+-     "f09",
+-     "f17",
+-     "f18",
+-     "f19",
+-     "f20"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "DATUM": {
+     "total": 6,
+-    "leaked": 2,
+-    "ids": [
+-     "d02",
+-     "d05"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "KFZ": {
+     "total": 2,
+-    "leaked": 2,
+-    "ids": [
+-     "k01",
+-     "k02"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "MED": {
+     "total": 2,
+@@ -94,9 +60,8 @@
+    },
+    "NEG": {
+     "total": 20,
+-    "leaked": 2,
++    "leaked": 1,
+     "ids": [
+-     "x13",
+      "gn04"
+     ]
+    },
+@@ -142,12 +107,11 @@
+    },
+    "G-NUMMER": {
+     "total": 5,
+-    "leaked": 4,
++    "leaked": 3,
+     "ids": [
+      "ga19",
+      "ga20",
+-     "ga21",
+-     "ga23"
++     "ga21"
+     ]
+    },
+    "G-GEBURT": {
+@@ -203,12 +167,10 @@
+    },
+    "G-FORM": {
+     "total": 10,
+-    "leaked": 4,
++    "leaked": 2,
+     "ids": [
+      "gd01",
+-     "gd06",
+-     "gd07",
+-     "gd10"
++     "gd07"
+     ]
+    },
+    "G-AUSLAND": {
+@@ -224,10 +186,9 @@
+    },
+    "G-SECRET": {
+     "total": 2,
+-    "leaked": 2,
++    "leaked": 1,
+     "ids": [
+-     "gf01",
+-     "gf02"
++     "gf01"
+     ]
+    }
+   },
+@@ -238,19 +199,19 @@
+    },
+    "NAME": {
+     "total": 66,
+-    "leaked": 36
++    "leaked": 21
+    },
+    "ADR": {
+     "total": 30,
+-    "leaked": 5
++    "leaked": 0
+    },
+    "ORT": {
+     "total": 30,
+-    "leaked": 4
++    "leaked": 0
+    },
+    "TEL": {
+     "total": 18,
+-    "leaked": 11
++    "leaked": 0
+    },
+    "EMAIL": {
+     "total": 18,
+@@ -258,11 +219,11 @@
+    },
+    "IBAN": {
+     "total": 18,
+-    "leaked": 9
++    "leaked": 0
+    },
+    "DATUM": {
+     "total": 18,
+-    "leaked": 12
++    "leaked": 0
+    },
+    "BETRAG": {
+     "total": 12,
+@@ -270,27 +231,27 @@
+    },
+    "TAXID": {
+     "total": 6,
+-    "leaked": 5
++    "leaked": 0
+    },
+    "IP": {
+     "total": 6,
+-    "leaked": 6
++    "leaked": 0
+    },
+    "URL": {
+     "total": 6,
+-    "leaked": 5
++    "leaked": 0
+    },
+    "KFZ": {
+     "total": 12,
+-    "leaked": 12
++    "leaked": 0
+    },
+    "CARD": {
+     "total": 6,
+-    "leaked": 4
++    "leaked": 0
+    }
+   },
+   "synthTotal": 276,
+-  "synthLeaked": 109,
++  "synthLeaked": 21,
+   "raw": {
+    "cases": [
+     {
+@@ -310,7 +271,7 @@
+     },
+     {
+      "key": "n04",
+-     "out": "Unterzeichnet von {{NAME_1}} von der Heide am Montag.",
++     "out": "{{NAME_1}} am Montag.",
+      "tokens": 1
+     },
+     {
+@@ -330,8 +291,8 @@
+     },
+     {
+      "key": "n08",
+-     "out": "HANS MEIER\nGeschäftsführer",
+-     "tokens": 0
++     "out": "{{NAME_1}}\nGeschäftsführer",
++     "tokens": 1
+     },
+     {
+      "key": "n09",
+@@ -365,8 +326,8 @@
+     },
+     {
+      "key": "n15",
+-     "out": "J. Müller und M. Schmidt haben zugestimmt.",
+-     "tokens": 0
++     "out": "{{NAME_2}} und {{NAME_1}} haben zugestimmt.",
++     "tokens": 2
+     },
+     {
+      "key": "n16",
+@@ -395,23 +356,23 @@
+     },
+     {
+      "key": "n21",
+-     "out": "Kontakt: José García und Søren Kierkegaard.",
+-     "tokens": 0
++     "out": "Kontakt: {{NAME_2}} und {{NAME_1}}.",
++     "tokens": 2
+     },
+     {
+      "key": "n22",
+-     "out": "Die Anwältin Łucja Wiśniewska vertritt den Kläger.",
+-     "tokens": 0
++     "out": "Die {{NAME_1}} vertritt den Kläger.",
++     "tokens": 1
+     },
+     {
+      "key": "n23",
+-     "out": "Zeuge: Çağlar Yıldız, wohnhaft in Köln.",
+-     "tokens": 0
++     "out": "Zeuge: {{NAME_1}}, wohnhaft in Köln.",
++     "tokens": 1
+     },
+     {
+      "key": "n24",
+-     "out": "Von: J. R. Tolkien\nAn: M. Schmidt",
+-     "tokens": 0
++     "out": "Von: {{NAME_2}}\nAn: {{NAME_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "o01",
+@@ -490,8 +451,8 @@
+     },
+     {
+      "key": "a06",
+-     "out": "Anschrift: {{ADRESSE_2}}, D-{{ADRESSE_1}}",
+-     "tokens": 2
++     "out": "Anschrift: {{ADRESSE_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "a07",
+@@ -505,17 +466,17 @@
+     },
+     {
+      "key": "a09",
+-     "out": "{{ADRESSE_1}}, 4020 Linz, Österreich",
++     "out": "{{ADRESSE_1}}, Österreich",
+      "tokens": 1
+     },
+     {
+      "key": "a10",
+-     "out": "Kantonsstrasse 12, 8001 Zürich",
+-     "tokens": 0
++     "out": "{{ADRESSE_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "a11",
+-     "out": "Bahnhofstrasse 7, {{ADRESSE_1}}",
++     "out": "{{ADRESSE_1}}",
+      "tokens": 1
+     },
+     {
+@@ -545,8 +506,8 @@
+     },
+     {
+      "key": "t06",
+-     "out": "Zentrale 0049 89 123456",
+-     "tokens": 0
++     "out": "{{TEL_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "t07",
+@@ -555,18 +516,18 @@
+     },
+     {
+      "key": "t08",
+-     "out": "Rückruf unter 0151/23456789 erbeten.",
+-     "tokens": 0
++     "out": "Rückruf unter {{TEL_1}} erbeten.",
++     "tokens": 1
+     },
+     {
+      "key": "t09",
+-     "out": "Kontakt {{NAME_1}}: +43 1 5121234, Schweiz: +41 44 668 18 00",
+-     "tokens": 1
++     "out": "Kontakt Österreich: {{TEL_2}}, Schweiz: {{TEL_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "t10",
+-     "out": "Bitte unter (089) 12 34 56 78 zurückrufen.",
+-     "tokens": 0
++     "out": "Bitte unter {{TEL_1}} zurückrufen.",
++     "tokens": 1
+     },
+     {
+      "key": "e01",
+@@ -580,23 +541,23 @@
+     },
+     {
+      "key": "u01",
+-     "out": "Siehe https://www.beispiel.de/kunde/12345?token=abc",
+-     "tokens": 0
++     "out": "Siehe {{IP_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "u02",
+-     "out": "Profil: www.linkedin.com/in/max-mustermann",
+-     "tokens": 0
++     "out": "Profil: {{IP_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "i01",
+-     "out": "Zugriff von 192.168.178.20 um 10:15 Uhr",
+-     "tokens": 0
++     "out": "Zugriff von {{IP_1}} um 10:15 Uhr",
++     "tokens": 1
+     },
+     {
+      "key": "i02",
+-     "out": "Server 2001:0db8:85a3:0000:0000:8a2e:0370:7334 antwortet nicht.",
+-     "tokens": 0
++     "out": "Server {{IP_1}} antwortet nicht.",
++     "tokens": 1
+     },
+     {
+      "key": "f01",
+@@ -605,8 +566,8 @@
+     },
+     {
+      "key": "f02",
+-     "out": "iban: de89370400440532013000",
+-     "tokens": 0
++     "out": "iban: {{IBAN_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "f03",
+@@ -630,8 +591,8 @@
+     },
+     {
+      "key": "f07",
+-     "out": "Kreditkarte 4111 1111 1111 1111, gültig bis 12/26",
+-     "tokens": 0
++     "out": "Kreditkarte {{KARTE_1}}, gültig bis 12/26",
++     "tokens": 1
+     },
+     {
+      "key": "f08",
+@@ -640,8 +601,8 @@
+     },
+     {
+      "key": "f09",
+-     "out": "Steuer-ID: 12 345 678 901",
+-     "tokens": 0
++     "out": "{{KENNNR_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "f10",
+@@ -655,7 +616,7 @@
+     },
+     {
+      "key": "f12",
+-     "out": "SV-Nr. 12 {{TEL_1}} M 123",
++     "out": "{{KENNNR_1}}",
+      "tokens": 1
+     },
+     {
+@@ -680,22 +641,22 @@
+     },
+     {
+      "key": "f17",
+-     "out": "Zahlung an NL91 ABNA {{TEL_1}} und GB29 NWBK 6016 1331 9268 19.",
+-     "tokens": 1
++     "out": "Zahlung an {{IBAN_2}} und {{IBAN_1}}.",
++     "tokens": 2
+     },
+     {
+      "key": "f18",
+-     "out": "FR76 3000 6000 0112 3456 7890 189 sowie IT60 X054 2811 1010 {{TEL_1}}",
+-     "tokens": 1
++     "out": "{{IBAN_2}} sowie {{IBAN_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "f19",
+-     "out": "Karte: 5555 5555 5555 4444 und Amex 3782 822463 10005",
+-     "tokens": 0
++     "out": "Karte: {{KARTE_2}} und Amex {{KARTE_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "f20",
+-     "out": "Steuerliche {{NAME_1}} 65 929 970 489",
++     "out": "{{KENNNR_1}}",
+      "tokens": 1
+     },
+     {
+@@ -705,8 +666,8 @@
+     },
+     {
+      "key": "d02",
+-     "out": "Geburtsdatum: 12. März 1985",
+-     "tokens": 0
++     "out": "Geburtsdatum: {{DATUM_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "d03",
+@@ -720,8 +681,8 @@
+     },
+     {
+      "key": "d05",
+-     "out": "Born on 5 July 1990 in Wien.",
+-     "tokens": 0
++     "out": "Born on {{DATUM_1}} in Wien.",
++     "tokens": 1
+     },
+     {
+      "key": "d06",
+@@ -730,13 +691,13 @@
+     },
+     {
+      "key": "k01",
+-     "out": "Kennzeichen M-AB 1234",
+-     "tokens": 0
++     "out": "Kennzeichen {{KFZ_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "k02",
+-     "out": "Fahrzeug B-XY 99E, Fahrgestellnummer WVWZZZ1JZXW000001",
+-     "tokens": 0
++     "out": "Fahrzeug {{KFZ_2}}, Fahrgestellnummer {{KFZ_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "m01",
+@@ -745,8 +706,8 @@
+     },
+     {
+      "key": "m02",
+-     "out": "{{MEDIZIN_2}} einer Depression ({{MEDIZIN_1}}).",
+-     "tokens": 2
++     "out": "Patient leidet an einer Depression ({{MEDIZIN_1}}).",
++     "tokens": 1
+     },
+     {
+      "key": "x01",
+@@ -810,8 +771,8 @@
+     },
+     {
+      "key": "x13",
+-     "out": "Die Besprechung dauerte von 10:15:30 bis 11:45:10 Uhr, Rechnung Nr. {{TEL_1}}.",
+-     "tokens": 1
++     "out": "Die Besprechung dauerte von 10:15:30 bis 11:45:10 Uhr, Rechnung Nr. 0004711.",
++     "tokens": 0
+     },
+     {
+      "key": "x14",
+@@ -850,7 +811,7 @@
+     },
+     {
+      "key": "ga06",
+-     "out": "Die Tochter von {{NAME_1}}, Sophie, besucht die 3b der Grundschule Am Park.",
++     "out": "Die {{NAME_1}}, Sophie, besucht die 3b der Grundschule Am Park.",
+      "tokens": 1
+     },
+     {
+@@ -885,8 +846,8 @@
+     },
+     {
+      "key": "ga13",
+-     "out": "Handy privat: 0171-1234567 (nur WhatsApp), dienstl. +49 (89) 99 88 77-0",
+-     "tokens": 0
++     "out": "Handy privat: {{TEL_1}} (nur WhatsApp), dienstl. +49 (89) 99 88 77-0",
++     "tokens": 1
+     },
+     {
+      "key": "ga14",
+@@ -915,8 +876,8 @@
+     },
+     {
+      "key": "ga19",
+-     "out": "Kundennummer: 4711-0815, Vertragsnummer VN-2024/{{TEL_1}}, Mitarbeiter-Nr. 100245",
+-     "tokens": 1
++     "out": "Kundennummer: 4711-0815, Vertragsnummer VN-2024/009981, Mitarbeiter-Nr. 100245",
++     "tokens": 0
+     },
+     {
+      "key": "ga20",
+@@ -935,13 +896,13 @@
+     },
+     {
+      "key": "ga23",
+-     "out": "Steuer-IdNr. 86095742719 und SV-Nr. 65 170839 J 008",
+-     "tokens": 0
++     "out": "{{KENNNR_2}} und {{KENNNR_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "ga24",
+-     "out": "Max wurde am 3. Mai 1980 in Hannover geboren, 44 Jahre alt.",
+-     "tokens": 0
++     "out": "Max wurde am {{DATUM_1}} in Hannover geboren, 44 Jahre alt.",
++     "tokens": 1
+     },
+     {
+      "key": "ga25",
+@@ -1035,8 +996,8 @@
+     },
+     {
+      "key": "gd01",
+-     "out": "IBAN DE89 3704 {{TEL_1}} bitte nutzen.",
+-     "tokens": 1
++     "out": "IBAN DE89 3704 0044 0532 0130 00 bitte nutzen.",
++     "tokens": 0
+     },
+     {
+      "key": "gd02",
+@@ -1050,7 +1011,7 @@
+     },
+     {
+      "key": "gd04",
+-     "out": "IBAN: DE89 3704 {{TEL_1}}",
++     "out": "IBAN: DE89 3704 0044\n{{TEL_1}}",
+      "tokens": 1
+     },
+     {
+@@ -1060,8 +1021,8 @@
+     },
+     {
+      "key": "gd06",
+-     "out": "| Name | E-Mail | Telefon |\n| {{NAME_1}} | {{EMAIL_1}} | 0151 2345678 |",
+-     "tokens": 2
++     "out": "| Name | E-Mail | Telefon |\n| {{NAME_1}} | {{EMAIL_1}} | {{TEL_1}} |",
++     "tokens": 3
+     },
+     {
+      "key": "gd07",
+@@ -1080,18 +1041,18 @@
+     },
+     {
+      "key": "gd10",
+-     "out": "Er sagte: \"Rufen Sie Frau {{NAME_1}} unter 030 5551234 an.\"",
+-     "tokens": 1
++     "out": "Er sagte: \"Rufen Sie Frau {{NAME_1}} unter {{TEL_1}} an.\"",
++     "tokens": 2
+     },
+     {
+      "key": "ge01",
+-     "out": "Mr. {{NAME_2}}, 12 {{NAME_1}}, London SW1A 1AA, +44 20 7946 0958, NI number QQ 12 34 56 C.",
+-     "tokens": 2
++     "out": "Mr. {{NAME_2}}, 12 {{NAME_1}}, London SW1A 1AA, {{TEL_1}}, NI number QQ 12 34 56 C.",
++     "tokens": 3
+     },
+     {
+      "key": "ge02",
+-     "out": "{{NAME_1}}, 15 rue de la Paix, {{ADRESSE_1}}, tél. +33 1 42 68 53 00.",
+-     "tokens": 2
++     "out": "{{NAME_1}}, 15 rue de la Paix, {{ADRESSE_1}}, tél. {{TEL_1}} 00.",
++     "tokens": 3
+     },
+     {
+      "key": "ge03",
+@@ -1105,7 +1066,7 @@
+     },
+     {
+      "key": "ge05",
+-     "out": "{{NAME_1}}ía, DNI 12345678Z, calle {{ADRESSE_1}}.",
++     "out": "{{NAME_1}}, DNI 12345678Z, calle {{ADRESSE_1}}.",
+      "tokens": 2
+     },
+     {
+@@ -1115,8 +1076,8 @@
+     },
+     {
+      "key": "gf02",
+-     "out": "Link zum Zurücksetzen: https://portal.firma.de/reset?token=a8f5f167f44f4964e6c998dee827110c",
+-     "tokens": 0
++     "out": "Link zum Zurücksetzen: {{IP_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "gn01",
+@@ -1147,72 +1108,72 @@
+    "synth": [
+     {
+      "key": "syn0",
+-     "out": "{{NAME_2}} (haftungsbeschränkt)\n{{ADRESSE_1}}\n\nRechnung Nr. 2187807\n\nSehr geehrte(r) Ilse von der Šimek,\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum 16/02/1974 auf IBAN {{IBAN_1}}.\nRückfragen: 040/{{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Koch",
+-     "tokens": 7
++     "out": "{{NAME_2}} (haftungsbeschränkt)\n{{ADRESSE_1}}\n\nRechnung Nr. 2187807\n\nSehr geehrte(r) Ilse von der Šimek,\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn1",
+-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_3}} e.V.\n{{NAME_2}}, {{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 18. April 1944. Steuer-ID: 07 370 119 647.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 6
++     "out": "{{NAME_1}}\n{{ADRESSE_1}}\n\n{{NAME_3}} e.V.\n{{NAME_2}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn2",
+-     "out": "{{NAME_5}}\n\nPatient: Petra van {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}śniewska.\n\nMit kollegialen Grüßen\n{{NAME_1}}śniewska",
++     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+      "tokens": 8
+     },
+     {
+      "key": "syn3",
+-     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}}.-Ing. von der Richter,\nsie schulden uns 7{{BETRAG_1}}. Zahlung an at628252687737295392. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von 3.0.184.85.\n",
+-     "tokens": 5
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 7{{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn4",
+-     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: Dieter de Bärtschi <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link www.linkedin.com/in/karlheinz-imek. Ich bin unter 0221/16914015 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
+-     "tokens": 5
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: Dieter de Bärtschi <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn5",
+-     "out": "{{NAME_2}} (haftungsbeschränkt)\n\nHalter: {{NAME_1}}\nAnschrift: {{ADRESSE_1}} im Breisgau\nKennzeichen: K-YC 7394\nFahrgestellnummer: CZXZZZ750XT118259\nAuszahlung auf es1291811520934795724061 oder Karte 3710 135244 79262.",
+-     "tokens": 3
++     "out": "{{NAME_2}} (haftungsbeschränkt)\n\nHalter: {{NAME_1}}\nAnschrift: {{ADRESSE_1}} Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 7
+     },
+     {
+      "key": "syn6",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich F. Dvořák, vertreten durch Herr {{NAME_1}}, sowie T. Kowalski zur Abgabe aller Erklärungen.",
+-     "tokens": 1
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich {{NAME_3}}, vertreten durch Herr {{NAME_2}}, sowie {{NAME_1}} aller Erklärungen.",
++     "tokens": 3
+     },
+     {
+      "key": "syn7",
+-     "out": "{{ORG_1}}\nAm Markt 29, {{ADRESSE_1}}\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 2{{BETRAG_1}}. Bitte überweisen Sie bis zum 26/08/1950 auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 9
++     "out": "{{ORG_1}}\n{{ADRESSE_1}}\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 2{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 10
+     },
+     {
+      "key": "syn8",
+-     "out": "Anna van {{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_3}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 13. Juni 1960. Steuer-ID: 30810518172.\n\nMit freundlichen Grüßen\n{{NAME_2}} van {{NAME_1}}",
+-     "tokens": 6
++     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn9",
+-     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, geboren am 23. März 1976\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn10",
+-     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 3{{BETRAG_1}}. Zahlung an es5516723628971385112005. {{NAME_1}}: +43 1 33152725. Zugriff erfolgte von 24.205.130.99.\n",
+-     "tokens": 4
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 3{{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn11",
+-     "out": "Von: Søren de Yilmaz <{{EMAIL_2}}>\nAn: {{NAME_2}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_1}},\nanbei der Link https://portal.firma.de/vorgang/326221. Ich bin unter +43 1 3144571 erreichbar.\n\nViele Grüße\nSøren de Yilmaz",
+-     "tokens": 4
++     "out": "Von: Søren de Yilmaz <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn12",
+-     "out": "{{NAME_2}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{NAME_1}}\nKennzeichen: B-B 5124\nFahrgestellnummer: YXNZZZ237LF781320\nAuszahlung auf {{IBAN_1}} oder Karte 5111 9135 {{TEL_1}}.",
+-     "tokens": 4
++     "out": "{{NAME_2}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{NAME_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 6
+     },
+     {
+      "key": "syn13",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich P. Braun, vertreten durch Herr {{NAME_2}}. van {{NAME_1}}, sowie Y. de Braun zur Abgabe aller Erklärungen.",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich {{NAME_2}}, vertreten durch Herr {{NAME_1}}, sowie Y. de Braun zur Abgabe aller Erklärungen.",
+      "tokens": 2
+     },
+     {
+@@ -1222,138 +1183,138 @@
+     },
+     {
+      "key": "syn15",
+-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 27 April 1981. Steuer-ID: 23 225 924 027.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 5
++     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn16",
+-     "out": "{{NAME_3}} (haftungsbeschränkt)\n\nPatient: Sabine von der Dvořák, geboren am 3. November 1968\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_2}}, sehr geehrter Herr {{NAME_1}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch Łucja Richter.\n\nMit kollegialen Grüßen\nŁucja Richter",
+-     "tokens": 4
++     "out": "{{NAME_4}} (haftungsbeschränkt)\n\nPatient: Sabine von der Dvořák, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn17",
+-     "out": "{{ORG_1}}\nMahnung\n\nSehr geehrter Herr van {{NAME_2}},\nsie schulden uns 5{{BETRAG_1}}. Zahlung an GB43 BRXW {{TEL_1}}. {{NAME_1}}: +41 44 725 000. Zugriff erfolgte von 2001:0db8:3008:0000:0000:acad:0370:7334.\n",
+-     "tokens": 5
++     "out": "{{ORG_1}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 5{{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn18",
+-     "out": "Von: Stefan de Wagner <{{EMAIL_2}}>\nAn: Stefan van {{NAME_3}}-Lechner <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link https://www.beispiel.de/kunde/62589?token=pslbll. Ich bin unter 0049 89 717187 erreichbar.\n\nViele Grüße\n{{NAME_1}} de Wagner",
+-     "tokens": 5
++     "out": "Von: Stefan de Wagner <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn19",
+-     "out": "{{NAME_2}}\n\nHalter: Lena van {{NAME_1}}: Kantonsstrasse 48, 9106 Wien\nKennzeichen: N-B 4147\nFahrgestellnummer: JVXZZZ121YA102297\nAuszahlung auf {{IBAN_1}} oder Karte 4792 5713 {{TEL_1}}.",
+-     "tokens": 4
++     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ADRESSE_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 7
+     },
+     {
+      "key": "syn20",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich O. Neumann, vertreten durch Herr {{NAME_1}}, sowie I. de Zimmermann zur Abgabe aller Erklärungen.",
+-     "tokens": 1
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich {{NAME_2}}, vertreten durch Herr {{NAME_1}}, sowie I. de Zimmermann zur Abgabe aller Erklärungen.",
++     "tokens": 2
+     },
+     {
+      "key": "syn21",
+-     "out": "{{NAME_2}}\n{{ADRESSE_1}}\n\nRechnung Nr. 3674750\n\nSehr geehrte(r) Stefan Yıldız,\nfür Ihre Bestellung berechnen wir 9{{BETRAG_1}}. Bitte überweisen Sie bis zum 15. April 1945 auf IBAN {{IBAN_1}}.\nRückfragen: 0160-3957664 oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}ía",
+-     "tokens": 6
++     "out": "{{NAME_3}}\n{{ADRESSE_1}}\n\nRechnung Nr. 3674750\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 9{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 9
+     },
+     {
+      "key": "syn22",
+-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 4 August 1976. Steuer-ID: 14 328 {{TEL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 6
++     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn23",
+-     "out": "{{NAME_4}} e.V.\n\nPatient: Jürgen de Schäfer, geboren am 11. Februar 1945\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}} von der Richter.\n\nMit kollegialen Grüßen\n{{NAME_1}} von der Richter",
+-     "tokens": 6
++     "out": "{{NAME_4}} e.V.\n\nPatient: Jürgen de Schäfer, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn24",
+-     "out": "{{NAME_3}} e.V.\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns {{BETRAG_1}}. Zahlung an IT56 O603 4859 5707 2503 1908 403. {{NAME_1}}: +43 1 9360239. Zugriff erfolgte von 71.165.185.246.\n",
+-     "tokens": 4
++     "out": "{{NAME_3}} e.V.\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns {{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn25",
+-     "out": "Von: Hannelore van {{NAME_1}} <{{EMAIL_2}}>\nAn: Łucja Schmidt-Weber <{{EMAIL_1}}>\nBetreff: Unterlagen\n\nHallo Łucja,\nanbei der Link https://portal.firma.de/vorgang/653246. Ich bin unter +43 1 74395998 erreichbar.\n\nViele Grüße\n{{NAME_2}} van {{NAME_1}}",
+-     "tokens": 5
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn26",
+-     "out": "{{NAME_1}}\n\nHalter: Petra von der Bauer\nAnschrift: {{ADRESSE_1}} Breisgau\nKennzeichen: M-TM 2488\nFahrgestellnummer: SZEZZZ644VT009979\nAuszahlung auf {{IBAN_1}} oder Karte 3779 416917 76686.",
+-     "tokens": 3
++     "out": "{{NAME_1}}\n\nHalter: Petra von der Bauer\nAnschrift: {{ADRESSE_1}} Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 6
+     },
+     {
+      "key": "syn27",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich R. van {{NAME_2}}ía, vertreten durch Herr {{NAME_1}}, sowie H. de Šimek zur Abgabe aller Erklärungen.",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich R. van {{NAME_2}}, vertreten durch Herr {{NAME_1}}, sowie H. de Šimek zur Abgabe aller Erklärungen.",
+      "tokens": 2
+     },
+     {
+      "key": "syn28",
+-     "out": "{{NAME_3}}\n{{ADRESSE_1}}\n\nRechnung Nr. 7807742\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 8{{BETRAG_1}}. Bitte überweisen Sie bis zum 26. Februar 1947 auf IBAN {{IBAN_1}}.\nRückfragen: 040/6914722 oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Richter",
+-     "tokens": 7
++     "out": "{{NAME_3}}\n{{ADRESSE_1}}\n\nRechnung Nr. 7807742\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 8{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Richter",
++     "tokens": 9
+     },
+     {
+      "key": "syn29",
+-     "out": "{{NAME_1}}\nAm Markt 70, 8471 Graz\n\n{{NAME_2}}\n{{ADRESSE_1}} Breisgau\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. Steuer-ID: 27297185274.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 5
++     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_2}}\n{{ADRESSE_1}} Breisgau\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn30",
+-     "out": "{{NAME_5}} e.V.\n\nPatient: Dieter von der Al-Farsi, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_4}}, sehr geehrter Herr {{NAME_3}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_2}}. Łucja van {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_2}}. Łucja van {{NAME_1}}",
+-     "tokens": 9
++     "out": "{{NAME_4}} e.V.\n\nPatient: Dieter von der Al-Farsi, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn31",
+-     "out": "{{NAME_3}} (haftungsbeschränkt)\nMahnung\n\nSehr geehrter Herr {{NAME_2}}śniewska,\nsie schulden uns 1{{BETRAG_1}}. Zahlung an de08486242308661475595. {{NAME_1}}: 030/94886556. Zugriff erfolgte von 90.15.39.113.\n",
+-     "tokens": 4
++     "out": "{{NAME_3}} (haftungsbeschränkt)\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 1{{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn32",
+-     "out": "Von: Oliver von der Yıldız <{{EMAIL_2}}>\nAn: Lukas de Kowalski <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link www.linkedin.com/in/alar-voigt. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}} von der Yıldız",
+-     "tokens": 5
++     "out": "Von: Oliver von der Yıldız <{{EMAIL_2}}>\nAn: Lukas de Kowalski <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 6
+     },
+     {
+      "key": "syn33",
+-     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}} de Bauer\nAnschrift: {{ADRESSE_1}} Breisgau\nKennzeichen: K-U 8022\nFahrgestellnummer: SLGZZZ739WS113506\nAuszahlung auf at476446497172759884 oder Karte 4671 8183 3751 1146.",
+-     "tokens": 3
++     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ADRESSE_1}} Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 7
+     },
+     {
+      "key": "syn34",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich P. von der Yıldız, vertreten durch Herr {{NAME_2}}, sowie F. van {{NAME_1}} zur Abgabe aller Erklärungen.",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich P. von der Yıldız, vertreten durch Herr {{NAME_2}}, sowie F. van {{NAME_1}} aller Erklärungen.",
+      "tokens": 2
+     },
+     {
+      "key": "syn35",
+-     "out": "{{NAME_3}}\n{{ADRESSE_1}}, 9949 Graz\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum 19. Oktober 1988 auf IBAN FR32 6192 4189 0885 7775 9148 676.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} von der Yilmaz",
+-     "tokens": 8
++     "out": "{{NAME_3}}\n{{ADRESSE_1}}\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 10
+     },
+     {
+      "key": "syn36",
+-     "out": "{{NAME_1}}ía\n{{ADRESSE_2}} Breisgau\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. Steuer-ID: 34061524563.\n\nMit freundlichen Grüßen\n{{NAME_1}}ía",
+-     "tokens": 6
++     "out": "{{NAME_1}}\n{{ADRESSE_2}} Breisgau\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn37",
+-     "out": "{{NAME_5}}\n\nPatient: Zoë de Schäfer, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_4}}, sehr geehrter Herr {{NAME_3}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_2}} van {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_2}} van {{NAME_1}}",
+-     "tokens": 9
++     "out": "{{NAME_4}}\n\nPatient: Zoë de Schäfer, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn38",
+-     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}}śniewska,\nsie schulden uns 3{{BETRAG_1}}. Zahlung an FR91 0148 1277 3047 7534 3910 542. {{NAME_1}}: 0151/{{TEL_1}}. Zugriff erfolgte von 2001:0db8:0846:0000:0000:aaea:0370:7334.\n",
+-     "tokens": 5
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 3{{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn39",
+-     "out": "Von: Jürgen de Wiśniewska <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link https://portal.firma.de/vorgang/{{TEL_1}}. Ich bin unter 0221-18642930 erreichbar.\n\nViele Grüße\n{{NAME_1}} de Wiśniewska",
+-     "tokens": 6
++     "out": "Von: Jürgen de Wiśniewska <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn40",
+-     "out": "{{NAME_1}}\n\nHalter: Tobias de Richter\nAnschrift: Bahnhofstrasse 81, 8747 Graz\nKennzeichen: DD-MX 2672\nFahrgestellnummer: GEKZZZ468AG415464\nAuszahlung auf it90k7167359565775215977463 oder Karte 4645 6362 4479 3752.",
+-     "tokens": 1
++     "out": "{{NAME_1}}\n\nHalter: Tobias de Richter\nAnschrift: {{ADRESSE_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 6
+     },
+     {
+      "key": "syn41",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich Ł. von der Kierkegaard, vertreten durch Herr {{NAME_1}}, sowie N. Obermaier zur Abgabe aller Erklärungen.",
+-     "tokens": 1
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich Ł. von der Kierkegaard, vertreten durch Herr {{NAME_2}}, sowie {{NAME_1}} aller Erklärungen.",
++     "tokens": 2
+     }
+    ]
+   }
+@@ -1363,14 +1324,8 @@
+   "cases": {
+    "NAME": {
+     "total": 24,
+-    "leaked": 5,
+-    "ids": [
+-     "n08",
+-     "n13",
+-     "n15",
+-     "n23",
+-     "n24"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "ORG": {
+     "total": 10,
+@@ -1379,12 +1334,8 @@
+    },
+    "ADR": {
+     "total": 9,
+-    "leaked": 3,
+-    "ids": [
+-     "a09",
+-     "a10",
+-     "a11"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "ORT": {
+     "total": 2,
+@@ -1393,46 +1344,23 @@
+    },
+    "KONTAKT": {
+     "total": 16,
+-    "leaked": 8,
+-    "ids": [
+-     "t06",
+-     "t08",
+-     "t09",
+-     "t10",
+-     "u01",
+-     "u02",
+-     "i01",
+-     "i02"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "FINANZ": {
+     "total": 20,
+-    "leaked": 7,
+-    "ids": [
+-     "f02",
+-     "f07",
+-     "f09",
+-     "f17",
+-     "f18",
+-     "f19",
+-     "f20"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "DATUM": {
+     "total": 6,
+-    "leaked": 2,
+-    "ids": [
+-     "d02",
+-     "d05"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "KFZ": {
+     "total": 2,
+-    "leaked": 2,
+-    "ids": [
+-     "k01",
+-     "k02"
+-    ]
++    "leaked": 0,
++    "ids": []
+    },
+    "MED": {
+     "total": 2,
+@@ -1441,10 +1369,8 @@
+    },
+    "NEG": {
+     "total": 20,
+-    "leaked": 3,
++    "leaked": 1,
+     "ids": [
+-     "x06",
+-     "x13",
+      "gn04"
+     ]
+    },
+@@ -1485,19 +1411,17 @@
+    },
+    "G-NUMMER": {
+     "total": 5,
+-    "leaked": 4,
++    "leaked": 3,
+     "ids": [
+      "ga19",
+      "ga20",
+-     "ga21",
+-     "ga23"
++     "ga21"
+     ]
+    },
+    "G-GEBURT": {
+     "total": 2,
+-    "leaked": 2,
++    "leaked": 1,
+     "ids": [
+-     "ga24",
+      "ga25"
+     ]
+    },
+@@ -1544,20 +1468,17 @@
+    },
+    "G-FORM": {
+     "total": 10,
+-    "leaked": 4,
++    "leaked": 2,
+     "ids": [
+      "gd01",
+-     "gd06",
+-     "gd07",
+-     "gd10"
++     "gd07"
+     ]
+    },
+    "G-AUSLAND": {
+     "total": 5,
+-    "leaked": 5,
++    "leaked": 4,
+     "ids": [
+      "ge01",
+-     "ge02",
+      "ge03",
+      "ge04",
+      "ge05"
+@@ -1565,10 +1486,9 @@
+    },
+    "G-SECRET": {
+     "total": 2,
+-    "leaked": 2,
++    "leaked": 1,
+     "ids": [
+-     "gf01",
+-     "gf02"
++     "gf01"
+     ]
+    }
+   },
+@@ -1579,11 +1499,11 @@
+    },
+    "NAME": {
+     "total": 66,
+-    "leaked": 18
++    "leaked": 2
+    },
+    "ADR": {
+     "total": 30,
+-    "leaked": 5
++    "leaked": 0
+    },
+    "ORT": {
+     "total": 30,
+@@ -1591,7 +1511,7 @@
+    },
+    "TEL": {
+     "total": 18,
+-    "leaked": 11
++    "leaked": 0
+    },
+    "EMAIL": {
+     "total": 18,
+@@ -1599,11 +1519,11 @@
+    },
+    "IBAN": {
+     "total": 18,
+-    "leaked": 9
++    "leaked": 0
+    },
+    "DATUM": {
+     "total": 18,
+-    "leaked": 12
++    "leaked": 0
+    },
+    "BETRAG": {
+     "total": 12,
+@@ -1611,27 +1531,27 @@
+    },
+    "TAXID": {
+     "total": 6,
+-    "leaked": 5
++    "leaked": 0
+    },
+    "IP": {
+     "total": 6,
+-    "leaked": 6
++    "leaked": 0
+    },
+    "URL": {
+     "total": 6,
+-    "leaked": 5
++    "leaked": 0
+    },
+    "KFZ": {
+     "total": 12,
+-    "leaked": 12
++    "leaked": 0
+    },
+    "CARD": {
+     "total": 6,
+-    "leaked": 4
++    "leaked": 0
+    }
+   },
+   "synthTotal": 276,
+-  "synthLeaked": 87,
++  "synthLeaked": 2,
+   "raw": {
+    "cases": [
+     {
+@@ -1651,8 +1571,8 @@
+     },
+     {
+      "key": "n04",
+-     "out": "Unterzeichnet von {{NAME_2}}. Dr. {{NAME_1}} am Montag.",
+-     "tokens": 2
++     "out": "{{NAME_1}} am Montag.",
++     "tokens": 1
+     },
+     {
+      "key": "n05",
+@@ -1671,8 +1591,8 @@
+     },
+     {
+      "key": "n08",
+-     "out": "HANS MEIER\nGeschäftsführer",
+-     "tokens": 0
++     "out": "{{NAME_1}}\nGeschäftsführer",
++     "tokens": 1
+     },
+     {
+      "key": "n09",
+@@ -1696,7 +1616,7 @@
+     },
+     {
+      "key": "n13",
+-     "out": "{{NAME_2}} und {{NAME_1}}-Lüdenscheidt unterschrieben.",
++     "out": "{{NAME_2}} und {{NAME_1}} unterschrieben.",
+      "tokens": 2
+     },
+     {
+@@ -1706,8 +1626,8 @@
+     },
+     {
+      "key": "n15",
+-     "out": "J. Müller und M. Schmidt haben zugestimmt.",
+-     "tokens": 0
++     "out": "{{NAME_2}} und {{NAME_1}} haben zugestimmt.",
++     "tokens": 2
+     },
+     {
+      "key": "n16",
+@@ -1741,18 +1661,18 @@
+     },
+     {
+      "key": "n22",
+-     "out": "Die Anwältin {{NAME_1}} vertritt den Kläger.",
++     "out": "Die {{NAME_1}} vertritt den Kläger.",
+      "tokens": 1
+     },
+     {
+      "key": "n23",
+-     "out": "Zeuge: Çağlar Yıldız, wohnhaft in {{ORT_1}}.",
+-     "tokens": 1
++     "out": "Zeuge: {{NAME_1}}, wohnhaft in {{ORT_1}}.",
++     "tokens": 2
+     },
+     {
+      "key": "n24",
+-     "out": "Von: J. R. Tolkien\nAn: M. {{NAME_1}}",
+-     "tokens": 1
++     "out": "Von: {{NAME_2}}\nAn: {{NAME_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "o01",
+@@ -1831,8 +1751,8 @@
+     },
+     {
+      "key": "a06",
+-     "out": "Anschrift: {{ORT_2}}, D-{{ORT_1}}",
+-     "tokens": 2
++     "out": "Anschrift: {{ORT_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "a07",
+@@ -1846,17 +1766,17 @@
+     },
+     {
+      "key": "a09",
+-     "out": "{{ORT_3}}, 4020 {{ORT_2}}, {{ORT_1}}",
+-     "tokens": 3
++     "out": "{{ORT_1}}, Österreich",
++     "tokens": 1
+     },
+     {
+      "key": "a10",
+-     "out": "Kantonsstrasse 12, 8001 {{ORT_1}}",
++     "out": "{{ORT_1}}",
+      "tokens": 1
+     },
+     {
+      "key": "a11",
+-     "out": "Bahnhofstrasse 7, {{ORT_1}}",
++     "out": "{{ADRESSE_1}}",
+      "tokens": 1
+     },
+     {
+@@ -1886,7 +1806,7 @@
+     },
+     {
+      "key": "t06",
+-     "out": "{{ORG_1}} 0049 89 123456",
++     "out": "{{TEL_1}}",
+      "tokens": 1
+     },
+     {
+@@ -1896,18 +1816,18 @@
+     },
+     {
+      "key": "t08",
+-     "out": "Rückruf unter 0151/23456789 erbeten.",
+-     "tokens": 0
++     "out": "Rückruf unter {{TEL_1}} erbeten.",
++     "tokens": 1
+     },
+     {
+      "key": "t09",
+-     "out": "Kontakt {{NAME_1}}: +43 1 5121234, {{ORT_1}}: +41 44 668 18 00",
++     "out": "Kontakt Österreich: {{TEL_2}}, Schweiz: {{TEL_1}}",
+      "tokens": 2
+     },
+     {
+      "key": "t10",
+-     "out": "Bitte unter (089) 12 34 56 78 zurückrufen.",
+-     "tokens": 0
++     "out": "Bitte unter {{TEL_1}} zurückrufen.",
++     "tokens": 1
+     },
+     {
+      "key": "e01",
+@@ -1921,23 +1841,23 @@
+     },
+     {
+      "key": "u01",
+-     "out": "Siehe https://www.beispiel.de/kunde/12345?token=abc",
+-     "tokens": 0
++     "out": "Siehe {{IP_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "u02",
+-     "out": "Profil: www.linkedin.com/in/max-mustermann",
+-     "tokens": 0
++     "out": "Profil: {{IP_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "i01",
+-     "out": "Zugriff von 192.168.178.20 um 10:15 Uhr",
+-     "tokens": 0
++     "out": "Zugriff von {{IP_1}} um 10:15 Uhr",
++     "tokens": 1
+     },
+     {
+      "key": "i02",
+-     "out": "Server 2001:0db8:85a3:0000:0000:8a2e:0370:7334 antwortet nicht.",
+-     "tokens": 0
++     "out": "Server {{IP_1}} antwortet nicht.",
++     "tokens": 1
+     },
+     {
+      "key": "f01",
+@@ -1946,8 +1866,8 @@
+     },
+     {
+      "key": "f02",
+-     "out": "iban: de89370400440532013000",
+-     "tokens": 0
++     "out": "iban: {{IBAN_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "f03",
+@@ -1971,8 +1891,8 @@
+     },
+     {
+      "key": "f07",
+-     "out": "Kreditkarte 4111 1111 1111 1111, gültig bis 12/26",
+-     "tokens": 0
++     "out": "Kreditkarte {{KARTE_1}}, gültig bis 12/26",
++     "tokens": 1
+     },
+     {
+      "key": "f08",
+@@ -1981,8 +1901,8 @@
+     },
+     {
+      "key": "f09",
+-     "out": "Steuer-ID: 12 345 678 901",
+-     "tokens": 0
++     "out": "{{KENNNR_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "f10",
+@@ -1996,7 +1916,7 @@
+     },
+     {
+      "key": "f12",
+-     "out": "SV-Nr. 12 {{TEL_1}} M 123",
++     "out": "{{KENNNR_1}}",
+      "tokens": 1
+     },
+     {
+@@ -2021,22 +1941,22 @@
+     },
+     {
+      "key": "f17",
+-     "out": "Zahlung an NL91 {{ORG_1}} {{TEL_1}} und GB29 NWBK 6016 1331 9268 19.",
++     "out": "Zahlung an {{IBAN_2}} und {{IBAN_1}}.",
+      "tokens": 2
+     },
+     {
+      "key": "f18",
+-     "out": "FR76 3000 6000 0112 3456 7890 189 sowie IT60 X054 2811 1010 {{TEL_1}}",
+-     "tokens": 1
++     "out": "{{IBAN_2}} sowie {{IBAN_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "f19",
+-     "out": "Karte: 5555 5555 5555 4444 und Amex 3782 822463 10005",
+-     "tokens": 0
++     "out": "Karte: {{KARTE_2}} und Amex {{KARTE_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "f20",
+-     "out": "Steuerliche {{NAME_1}} 65 929 970 489",
++     "out": "{{KENNNR_1}}",
+      "tokens": 1
+     },
+     {
+@@ -2046,8 +1966,8 @@
+     },
+     {
+      "key": "d02",
+-     "out": "Geburtsdatum: 12. März 1985",
+-     "tokens": 0
++     "out": "Geburtsdatum: {{DATUM_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "d03",
+@@ -2061,8 +1981,8 @@
+     },
+     {
+      "key": "d05",
+-     "out": "Born on 5 July 1990 in {{ORT_1}}.",
+-     "tokens": 1
++     "out": "Born on {{DATUM_1}} in {{ORT_1}}.",
++     "tokens": 2
+     },
+     {
+      "key": "d06",
+@@ -2071,13 +1991,13 @@
+     },
+     {
+      "key": "k01",
+-     "out": "Kennzeichen M-AB 1234",
+-     "tokens": 0
++     "out": "Kennzeichen {{KFZ_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "k02",
+-     "out": "Fahrzeug B-XY 99E, Fahrgestellnummer WVWZZZ1JZXW000001",
+-     "tokens": 0
++     "out": "Fahrzeug {{KFZ_2}}, Fahrgestellnummer {{KFZ_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "m01",
+@@ -2086,8 +2006,8 @@
+     },
+     {
+      "key": "m02",
+-     "out": "{{MEDIZIN_2}} einer Depression ({{MEDIZIN_1}}).",
+-     "tokens": 2
++     "out": "Patient leidet an einer Depression ({{MEDIZIN_1}}).",
++     "tokens": 1
+     },
+     {
+      "key": "x01",
+@@ -2116,8 +2036,8 @@
+     },
+     {
+      "key": "x06",
+-     "out": "Lieferung innerhalb {{ORT_1}}, Zahlung per Überweisung.",
+-     "tokens": 1
++     "out": "Lieferung innerhalb Deutschlands, Zahlung per Überweisung.",
++     "tokens": 0
+     },
+     {
+      "key": "x07",
+@@ -2151,8 +2071,8 @@
+     },
+     {
+      "key": "x13",
+-     "out": "Die Besprechung dauerte von 10:15:30 bis 11:45:10 Uhr, Rechnung Nr. {{TEL_1}}.",
+-     "tokens": 1
++     "out": "Die Besprechung dauerte von 10:15:30 bis 11:45:10 Uhr, Rechnung Nr. 0004711.",
++     "tokens": 0
+     },
+     {
+      "key": "x14",
+@@ -2191,7 +2111,7 @@
+     },
+     {
+      "key": "ga06",
+-     "out": "Die Tochter von {{NAME_2}}, {{NAME_1}}, besucht die 3b der Grundschule Am Park.",
++     "out": "Die {{NAME_2}}, {{NAME_1}}, besucht die 3b der Grundschule Am Park.",
+      "tokens": 2
+     },
+     {
+@@ -2226,8 +2146,8 @@
+     },
+     {
+      "key": "ga13",
+-     "out": "Handy privat: 0171-1234567 (nur WhatsApp), dienstl. +49 (89) 99 88 77-0",
+-     "tokens": 0
++     "out": "Handy privat: {{TEL_1}} (nur WhatsApp), dienstl. +49 (89) 99 88 77-0",
++     "tokens": 1
+     },
+     {
+      "key": "ga14",
+@@ -2256,8 +2176,8 @@
+     },
+     {
+      "key": "ga19",
+-     "out": "Kundennummer: 4711-0815, Vertragsnummer VN-2024/{{TEL_1}}, Mitarbeiter-Nr. 100245",
+-     "tokens": 1
++     "out": "Kundennummer: 4711-0815, Vertragsnummer VN-2024/009981, Mitarbeiter-Nr. 100245",
++     "tokens": 0
+     },
+     {
+      "key": "ga20",
+@@ -2276,13 +2196,13 @@
+     },
+     {
+      "key": "ga23",
+-     "out": "Steuer-IdNr. 86095742719 und SV-Nr. 65 170839 J 008",
+-     "tokens": 0
++     "out": "{{KENNNR_2}} und {{KENNNR_1}}",
++     "tokens": 2
+     },
+     {
+      "key": "ga24",
+-     "out": "{{NAME_1}} wurde am 3. Mai 1980 in {{ORT_1}} geboren, 44 Jahre alt.",
+-     "tokens": 2
++     "out": "{{NAME_1}} wurde am {{DATUM_1}} in {{ORT_1}} geboren, 44 Jahre alt.",
++     "tokens": 3
+     },
+     {
+      "key": "ga25",
+@@ -2376,8 +2296,8 @@
+     },
+     {
+      "key": "gd01",
+-     "out": "IBAN DE89 3704 {{TEL_1}} bitte nutzen.",
+-     "tokens": 1
++     "out": "IBAN DE89 3704 0044 0532 0130 00 bitte nutzen.",
++     "tokens": 0
+     },
+     {
+      "key": "gd02",
+@@ -2391,7 +2311,7 @@
+     },
+     {
+      "key": "gd04",
+-     "out": "IBAN: DE89 3704 {{TEL_1}}",
++     "out": "IBAN: DE89 3704 0044\n{{TEL_1}}",
+      "tokens": 1
+     },
+     {
+@@ -2401,8 +2321,8 @@
+     },
+     {
+      "key": "gd06",
+-     "out": "| Name | E-Mail | Telefon |\n| {{NAME_1}} | {{EMAIL_1}} | 0151 2345678 |",
+-     "tokens": 2
++     "out": "| Name | E-Mail | Telefon |\n| {{NAME_1}} | {{EMAIL_1}} | {{TEL_1}} |",
++     "tokens": 3
+     },
+     {
+      "key": "gd07",
+@@ -2421,18 +2341,18 @@
+     },
+     {
+      "key": "gd10",
+-     "out": "Er sagte: \"Rufen Sie Frau {{NAME_1}} unter 030 5551234 an.\"",
+-     "tokens": 1
++     "out": "Er sagte: \"Rufen Sie Frau {{NAME_1}} unter {{TEL_1}} an.\"",
++     "tokens": 2
+     },
+     {
+      "key": "ge01",
+-     "out": "Mr. {{NAME_2}}, 12 {{NAME_1}}, {{ORT_1}} SW1A 1AA, +44 20 7946 0958, NI number QQ 12 34 56 C.",
+-     "tokens": 3
++     "out": "Mr. {{NAME_2}}, 12 {{NAME_1}}, {{ORT_1}} SW1A 1AA, {{TEL_1}}, NI number QQ 12 34 56 C.",
++     "tokens": 4
+     },
+     {
+      "key": "ge02",
+-     "out": "{{NAME_1}}, 15 {{ORT_2}}, {{ORT_1}}, tél. +33 1 42 68 53 00.",
+-     "tokens": 3
++     "out": "{{NAME_1}}, 15 {{ORT_2}}, {{ORT_1}}, tél. {{TEL_1}} 00.",
++     "tokens": 4
+     },
+     {
+      "key": "ge03",
+@@ -2456,8 +2376,8 @@
+     },
+     {
+      "key": "gf02",
+-     "out": "Link zum Zurücksetzen: https://portal.firma.de/reset?token=a8f5f167f44f4964e6c998dee827110c",
+-     "tokens": 0
++     "out": "Link zum Zurücksetzen: {{IP_1}}",
++     "tokens": 1
+     },
+     {
+      "key": "gn01",
+@@ -2488,73 +2408,73 @@
+    "synth": [
+     {
+      "key": "syn0",
+-     "out": "{{NAME_2}} (haftungsbeschränkt)\n{{ADRESSE_1}}\n\nRechnung Nr. 2187807\n\nSehr geehrte(r) Ilse von der Šimek,\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum 16/02/1974 auf IBAN {{IBAN_1}}.\nRückfragen: 040/{{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_3}} (haftungsbeschränkt)\n{{ADRESSE_1}}\n\nRechnung Nr. 2187807\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 9
+     },
+     {
+      "key": "syn1",
+-     "out": "{{NAME_1}}\n{{ADRESSE_1}}\n\n{{NAME_3}} e.V.\n{{NAME_2}}, {{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 18. April 1944. Steuer-ID: 07 370 119 647.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 6
++     "out": "{{NAME_1}}\n{{ADRESSE_1}}\n\n{{NAME_2}} e.V.\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn2",
+-     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}śniewska.\n\nMit kollegialen Grüßen\n{{NAME_1}}śniewska",
++     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+      "tokens": 8
+     },
+     {
+      "key": "syn3",
+-     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}}.-Ing. von der Richter,\nsie schulden uns 7{{BETRAG_1}}. Zahlung an at628252687737295392. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von 3.0.184.85.\n",
+-     "tokens": 5
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 7{{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn4",
+-     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link www.linkedin.com/in/karlheinz-imek. Ich bin unter 0221/16914015 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
+-     "tokens": 6
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn5",
+-     "out": "{{ORG_1}} (haftungsbeschränkt)\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: K-YC 7394\nFahrgestellnummer: CZXZZZ750XT118259\nAuszahlung auf es1291811520934795724061 oder Karte 3710 135244 79262.",
+-     "tokens": 3
++     "out": "{{ORG_1}} (haftungsbeschränkt)\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 7
+     },
+     {
+      "key": "syn6",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich F. {{NAME_2}}, vertreten durch Herr {{NAME_1}}, sowie T. Kowalski zur Abgabe aller Erklärungen.",
+-     "tokens": 2
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich {{NAME_3}}, vertreten durch Herr {{NAME_2}}, sowie {{NAME_1}} aller Erklärungen.",
++     "tokens": 3
+     },
+     {
+      "key": "syn7",
+-     "out": "{{ORG_1}}\nAm Markt 29, {{ADRESSE_1}}\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 2{{BETRAG_1}}. Bitte überweisen Sie bis zum 26/08/1950 auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 9
++     "out": "{{ORG_1}}\n{{ADRESSE_1}}\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 2{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 10
+     },
+     {
+      "key": "syn8",
+-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_2}}\n{{ORT_1}}, {{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 13. Juni 1960. Steuer-ID: 30810518172.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 6
++     "out": "{{NAME_1}}\n{{ADRESSE_1}}\n\n{{NAME_2}}\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn9",
+-     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, geboren am 23. März 1976\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn10",
+-     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 3{{BETRAG_1}}. Zahlung an es5516723628971385112005. {{NAME_1}}: +43 1 33152725. Zugriff erfolgte von 24.205.130.99.\n",
+-     "tokens": 4
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 3{{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn11",
+-     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link https://portal.firma.de/vorgang/326221. Ich bin unter +43 1 3144571 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
+-     "tokens": 6
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn12",
+-     "out": "{{NAME_1}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{ORT_1}}\nKennzeichen: B-B 5124\nFahrgestellnummer: YXNZZZ237LF781320\nAuszahlung auf {{IBAN_1}} oder Karte 5111 9135 {{TEL_1}}.",
+-     "tokens": 4
++     "out": "{{NAME_1}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{ORT_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 6
+     },
+     {
+      "key": "syn13",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich P. Braun, vertreten durch Herr {{NAME_2}}. {{NAME_1}}, sowie Y. de Braun zur Abgabe aller Erklärungen.",
+-     "tokens": 2
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich {{NAME_3}}, vertreten durch Herr {{NAME_2}}, sowie {{NAME_1}} aller Erklärungen.",
++     "tokens": 3
+     },
+     {
+      "key": "syn14",
+@@ -2563,138 +2483,138 @@
+     },
+     {
+      "key": "syn15",
+-     "out": "{{NAME_1}}\n{{ADRESSE_1}}\n\n{{NAME_2}}\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 27 April 1981. Steuer-ID: 23 225 924 027.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 5
++     "out": "{{NAME_1}}\n{{ORT_2}}\n\n{{NAME_2}}\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn16",
+-     "out": "{{NAME_4}} (haftungsbeschränkt)\n\nPatient: {{NAME_3}}, geboren am 3. November 1968\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_2}}, sehr geehrter Herr {{NAME_1}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch Łucja Richter.\n\nMit kollegialen Grüßen\nŁucja Richter",
+-     "tokens": 5
++     "out": "{{NAME_5}} (haftungsbeschränkt)\n\nPatient: {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn17",
+-     "out": "{{ORG_1}}\nMahnung\n\nSehr geehrter Herr van {{NAME_2}},\nsie schulden uns 5{{BETRAG_1}}. Zahlung an GB43 BRXW {{TEL_1}}. {{NAME_1}}: +41 44 725 000. Zugriff erfolgte von 2001:0db8:3008:0000:0000:acad:0370:7334.\n",
+-     "tokens": 5
++     "out": "{{ORG_1}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 5{{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn18",
+-     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_4}} van {{NAME_3}}-Lechner <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link https://www.beispiel.de/kunde/62589?token=pslbll. Ich bin unter 0049 89 717187 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn19",
+-     "out": "{{NAME_2}}\n\nHalter: Lena van {{NAME_1}}: {{ORT_2}} 48, 9106 {{ORT_1}}\nKennzeichen: N-B 4147\nFahrgestellnummer: JVXZZZ121YA102297\nAuszahlung auf {{IBAN_1}} oder Karte 4792 5713 {{TEL_1}}.",
+-     "tokens": 6
++     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 7
+     },
+     {
+      "key": "syn20",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich O. Neumann, vertreten durch Herr {{NAME_1}}, sowie I. de Zimmermann zur Abgabe aller Erklärungen.",
+-     "tokens": 1
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich {{NAME_3}}, vertreten durch Herr {{NAME_2}}, sowie {{NAME_1}} aller Erklärungen.",
++     "tokens": 3
+     },
+     {
+      "key": "syn21",
+-     "out": "{{NAME_3}}\n{{ADRESSE_1}}\n\nRechnung Nr. 3674750\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 9{{BETRAG_1}}. Bitte überweisen Sie bis zum 15. April 1945 auf IBAN {{IBAN_1}}.\nRückfragen: 0160-3957664 oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_3}}\n{{ADRESSE_1}}\n\nRechnung Nr. 3674750\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 9{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 9
+     },
+     {
+      "key": "syn22",
+-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 4 August 1976. Steuer-ID: 14 328 {{TEL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 6
++     "out": "{{NAME_1}}\n{{ORT_1}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn23",
+-     "out": "{{NAME_5}} e.V.\n\nPatient: {{NAME_4}}, geboren am 11. Februar 1945\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch Dr. {{NAME_1}}.\n\nMit kollegialen Grüßen\nDr. {{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_5}} e.V.\n\nPatient: {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn24",
+-     "out": "{{NAME_3}} e.V.\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns {{BETRAG_1}}. Zahlung an IT56 O603 4859 5707 2503 1908 403. {{NAME_1}}: +43 1 9360239. Zugriff erfolgte von 71.165.185.246.\n",
+-     "tokens": 4
++     "out": "{{NAME_3}} e.V.\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns {{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn25",
+-     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: Łucja Schmidt-Weber <{{EMAIL_1}}>\nBetreff: Unterlagen\n\nHallo Łucja,\nanbei der Link https://portal.firma.de/vorgang/653246. Ich bin unter +43 1 74395998 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
+-     "tokens": 4
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn26",
+-     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: M-TM 2488\nFahrgestellnummer: SZEZZZ644VT009979\nAuszahlung auf {{IBAN_1}} oder Karte 3779 416917 76686.",
+-     "tokens": 4
++     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 7
+     },
+     {
+      "key": "syn27",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich R. van {{NAME_2}}ía, vertreten durch Herr {{NAME_1}}, sowie H. de Šimek zur Abgabe aller Erklärungen.",
+-     "tokens": 2
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich {{NAME_3}}, vertreten durch Herr {{NAME_2}}, sowie {{NAME_1}} aller Erklärungen.",
++     "tokens": 3
+     },
+     {
+      "key": "syn28",
+-     "out": "{{NAME_3}}\n{{ORT_1}}\n\nRechnung Nr. 7807742\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 8{{BETRAG_1}}. Bitte überweisen Sie bis zum 26. Februar 1947 auf IBAN {{IBAN_1}}.\nRückfragen: 040/6914722 oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "{{NAME_3}}\n{{ORT_1}}\n\nRechnung Nr. 7807742\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 8{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 9
+     },
+     {
+      "key": "syn29",
+-     "out": "{{NAME_1}}\nAm Markt 70, 8471 {{ORT_2}}\n\n{{NAME_2}}\n{{ORT_1}} im Breisgau\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. Steuer-ID: 27297185274.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 6
++     "out": "{{NAME_1}}\n{{ORT_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}} Breisgau\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn30",
+-     "out": "{{NAME_6}} e.V.\n\nPatient: {{NAME_5}}, {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_4}}, sehr geehrter Herr {{NAME_3}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_2}}. {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_2}}. {{NAME_1}}",
+-     "tokens": 10
++     "out": "{{NAME_5}} e.V.\n\nPatient: {{NAME_4}}, {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn31",
+-     "out": "{{NAME_3}} (haftungsbeschränkt)\nMahnung\n\nSehr geehrter Herr {{NAME_2}}śniewska,\nsie schulden uns 1{{BETRAG_1}}. Zahlung an de08486242308661475595. {{NAME_1}}: 030/94886556. Zugriff erfolgte von 90.15.39.113.\n",
+-     "tokens": 4
++     "out": "{{NAME_3}} (haftungsbeschränkt)\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 1{{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn32",
+-     "out": "Von: {{NAME_4}} Yıldız <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link www.linkedin.com/in/alar-voigt. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}} der {{ORG_1}}",
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
+      "tokens": 8
+     },
+     {
+      "key": "syn33",
+-     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}} de Bauer\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: K-U 8022\nFahrgestellnummer: SLGZZZ739WS113506\nAuszahlung auf at476446497172759884 oder Karte 4671 8183 3751 1146.",
+-     "tokens": 3
++     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 7
+     },
+     {
+      "key": "syn34",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich P. von der Yıldız, vertreten durch Herr {{NAME_2}}, sowie F. van {{NAME_1}} zur Abgabe aller Erklärungen.",
+-     "tokens": 2
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich {{NAME_3}}, vertreten durch Herr {{NAME_2}}, sowie {{NAME_1}} aller Erklärungen.",
++     "tokens": 3
+     },
+     {
+      "key": "syn35",
+-     "out": "{{NAME_3}}\n{{ADRESSE_1}}, 9949 {{ORT_1}}\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum 19. Oktober 1988 auf IBAN FR32 6192 4189 0885 7775 9148 676.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 9
++     "out": "{{NAME_3}}\n{{ORT_1}}\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 10
+     },
+     {
+      "key": "syn36",
+-     "out": "{{NAME_2}}ía\n{{ADRESSE_2}} Breisgau\n\n{{ORT_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. Steuer-ID: 34061524563.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
+-     "tokens": 6
++     "out": "{{NAME_1}}\n{{ADRESSE_2}} Breisgau\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. {{KENNNR_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn37",
+-     "out": "{{NAME_5}}\n\nPatient: Zoë de Schäfer, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_4}}, sehr geehrter Herr {{NAME_3}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_2}}. Dr. {{NAME_1}}.\n\nMit kollegialen Grüßen\nProf. Dr. {{NAME_1}}",
+-     "tokens": 8
++     "out": "{{NAME_4}}\n\nPatient: Zoë de Schäfer, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 7
+     },
+     {
+      "key": "syn38",
+-     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr Dr. {{NAME_2}},\nsie schulden uns 3{{BETRAG_1}}. Zahlung an FR91 0148 1277 3047 7534 3910 542. {{NAME_1}}: 0151/{{TEL_1}}. Zugriff erfolgte von 2001:0db8:0846:0000:0000:aaea:0370:7334.\n",
+-     "tokens": 5
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 3{{BETRAG_1}}. Zahlung an {{IBAN_1}}. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von {{IP_1}}.\n",
++     "tokens": 7
+     },
+     {
+      "key": "syn39",
+-     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link https://portal.firma.de/vorgang/{{TEL_1}}. Ich bin unter 0221-18642930 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
+-     "tokens": 7
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link {{IP_1}}. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 8
+     },
+     {
+      "key": "syn40",
+-     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_2}} 81, 8747 {{ORT_1}}\nKennzeichen: DD-MX 2672\nFahrgestellnummer: GEKZZZ468AG415464\nAuszahlung auf it90k7167359565775215977463 oder Karte 4645 6362 4479 3752.",
+-     "tokens": 4
++     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
++     "tokens": 7
+     },
+     {
+      "key": "syn41",
+-     "out": "Vollmacht\n\nHiermit bevollmächtige ich Ł. von {{NAME_2}}, vertreten durch Herr {{NAME_1}}, sowie N. Obermaier zur Abgabe aller Erklärungen.",
+-     "tokens": 2
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich Ł. von {{NAME_3}}, vertreten durch Herr {{NAME_2}}, sowie {{NAME_1}} aller Erklärungen.",
++     "tokens": 3
+     }
+    ]
+   }
+diff --git a/tests/golden/baseline.json b/tests/golden/baseline.json
+index d2cbad9..a574fb1 100644
+--- a/tests/golden/baseline.json
++++ b/tests/golden/baseline.json
+@@ -1,7 +1,6 @@
+ {
+- "aiActive": true,
+  "wordlist": {
+-  "out": "Kaufvertrag\n\nzwischen {{NAME_3}}, wohnhaft {{ADRESSE_2}} (nachfolgend \"Verkaeufer\")\nund der {{ORG_1}}, vertreten durch Frau {{NAME_2}}, {{ADRESSE_1}} (nachfolgend \"Kaeufer\").\n\n1. Der Kaufpreis betraegt {{BETRAG_1}} und ist bis zum {{DATUM_3}} auf das Konto IBAN {{IBAN_1}} (BIC {{BIC_1}}) zu ueberweisen.\n2. Rueckfragen richten Sie bitte an {{EMAIL_1}} oder telefonisch unter {{TEL_1}}.\n3. Der Vertrag wurde am {{DATUM_2}} in Berlin von {{NAME_1}} unterzeichnet.\n4. {{KENNNR_1}}, Kennzeichen M-AB 1234.\n\nOrt, Datum: Hamburg, den {{DATUM_1}}\n",
++  "out": "Kaufvertrag\n\nzwischen {{NAME_2}}, wohnhaft {{ADRESSE_2}} (nachfolgend \"Verkaeufer\")\nund der {{ORG_2}}, vertreten durch Frau {{NAME_1}}, {{ADRESSE_1}} (nachfolgend \"Kaeufer\").\n\n1. Der Kaufpreis betraegt {{BETRAG_1}} und ist bis zum {{DATUM_3}} auf das Konto IBAN {{IBAN_1}} (BIC {{BIC_1}}) zu ueberweisen.\n2. Rueckfragen richten Sie bitte an {{EMAIL_1}} oder telefonisch unter {{TEL_1}}.\n3. Der Vertrag wurde am {{DATUM_2}} in Berlin von {{ORG_1}} unterzeichnet.\n4. {{KENNNR_1}}, Kennzeichen {{KFZ_1}}.\n\nOrt, Datum: Hamburg, den {{DATUM_1}}\n",
+   "store": {
+    "{{DATUM_1}}": {
+     "v": "20.03.2024",
+@@ -9,16 +8,22 @@
+     "c": "#ec4899",
+     "m": "Regex (Pass 1)"
+    },
++   "{{KFZ_1}}": {
++    "v": "M-AB 1234",
++    "t": "KFZ",
++    "c": "#64748b",
++    "m": "Regex (Pass 1)"
++   },
+    "{{KENNNR_1}}": {
+     "v": "Steuernummer 143/815/08156",
+     "t": "KENNNR",
+     "c": "#84cc16",
+     "m": "Regex (Pass 1)"
+    },
+-   "{{NAME_1}}": {
++   "{{ORG_1}}": {
+     "v": "Hans Fischer fuer die Mustermann GmbH",
+-    "t": "NAME",
+-    "c": "#f59e0b",
++    "t": "ORG",
++    "c": "#8b5cf6",
+     "m": "Regex (Pass 2)"
+    },
+    "{{DATUM_2}}": {
+@@ -69,13 +74,13 @@
+     "c": "#3b82f6",
+     "m": "Regex (Pass 2)"
+    },
+-   "{{NAME_2}}": {
++   "{{NAME_1}}": {
+     "v": "Dr. Anna Weber",
+     "t": "NAME",
+     "c": "#f59e0b",
+     "m": "Regex (Pass 2)"
+    },
+-   "{{ORG_1}}": {
++   "{{ORG_2}}": {
+     "v": "Siemens AG",
+     "t": "ORG",
+     "c": "#8b5cf6",
+@@ -87,7 +92,7 @@
+     "c": "#3b82f6",
+     "m": "Regex (Pass 2)"
+    },
+-   "{{NAME_3}}": {
++   "{{NAME_2}}": {
+     "v": "Herrn Thomas Mueller",
+     "t": "NAME",
+     "c": "#f59e0b",
+@@ -96,7 +101,7 @@
+   }
+  },
+  "model": {
+-  "out": "Kaufvertrag\n\nzwischen {{NAME_2}}, wohnhaft {{ADRESSE_1}} (nachfolgend \"Verkaeufer\")\nund der {{ORG_3}}, vertreten durch Frau {{NAME_1}}, {{ORG_2}} (nachfolgend \"Kaeufer\").\n\n1. Der Kaufpreis betraegt {{BETRAG_1}} und ist bis zum {{DATUM_3}} auf das Konto IBAN {{IBAN_1}} (BIC {{BIC_1}}) zu ueberweisen.\n2. Rueckfragen richten Sie bitte an {{EMAIL_1}} oder telefonisch unter {{TEL_1}}.\n3. Der Vertrag wurde am {{DATUM_2}} in {{ORT_2}} von {{ORG_1}} unterzeichnet.\n4. {{KENNNR_1}}, Kennzeichen M-AB 1234.\n\nOrt, Datum: {{ORT_1}}, den {{DATUM_1}}\n",
++  "out": "Kaufvertrag\n\nzwischen {{NAME_2}}, wohnhaft {{ADRESSE_1}} (nachfolgend \"Verkaeufer\")\nund der {{ORG_3}}, vertreten durch Frau {{NAME_1}}, {{ORG_2}} (nachfolgend \"Kaeufer\").\n\n1. Der Kaufpreis betraegt {{BETRAG_1}} und ist bis zum {{DATUM_3}} auf das Konto IBAN {{IBAN_1}} (BIC {{BIC_1}}) zu ueberweisen.\n2. Rueckfragen richten Sie bitte an {{EMAIL_1}} oder telefonisch unter {{TEL_1}}.\n3. Der Vertrag wurde am {{DATUM_2}} in {{ORT_2}} von {{ORG_1}} unterzeichnet.\n4. {{KENNNR_1}}, Kennzeichen {{KFZ_1}}.\n\nOrt, Datum: {{ORT_1}}, den {{DATUM_1}}\n",
+   "store": {
+    "{{DATUM_1}}": {
+     "v": "20.03.2024",
+@@ -110,6 +115,12 @@
+     "c": "#3b82f6",
+     "m": "KI (NER-Modell)"
+    },
++   "{{KFZ_1}}": {
++    "v": "M-AB 1234",
++    "t": "KFZ",
++    "c": "#64748b",
++    "m": "Regex (Pass 1)"
++   },
+    "{{KENNNR_1}}": {
+     "v": "Steuernummer 143/815/08156",
+     "t": "KENNNR",
+@@ -202,4 +213,4 @@
+    }
+   }
+  }
+-}
+\ No newline at end of file
++}
+-- 
+2.43.0
+

@@ -1,0 +1,3356 @@
+From bd7e0607dfb8b343f79cc8bb0abbb3a50fe2dd86 Mon Sep 17 00:00:00 2001
+From: Alexander Arcangeli <alexander@arcangeli.eu>
+Date: Tue, 20 Oct 2026 11:10:28 +0200
+Subject: [PATCH 03/11] feat(test): Mess-Harness fuer die Erkennungsqualitaet
+ mit Ratsche
+
+- tests/eval: kuratierter Testsatz (cases.mjs, 106 Faelle), breiter DSGVO-Satz (cases-gdpr.mjs, 64 Faelle) und
+  seedbasierter Generator fuer synthetische Dokumente mit bekannter Wahrheit (generate.mjs, 42 Dokumente, 276 Werte).
+- Messgroesse: Lecks (ein Wert, der nach dem Anonymisieren noch im Text steht) und Falsch-Maskierungen
+  (Platzhalter in Texten ohne personenbezogene Daten), je Kategorie, mit und ohne KI.
+- tests/eval.test.mjs: Ratsche gegen tests/eval/baseline.json; Verbesserungen mit npm run eval:baseline festschreiben.
+- tests/eval/stress.mjs: Zeit, Hash und Rundreise fuer grosse Dokumente (Vergleich zweier Staende).
+- baseline.json: Stand v1.7.0 (Erkennung unveraendert).
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ package.json               |    4 +-
+ tests/eval.test.mjs        |   26 +
+ tests/eval/baseline.json   |   62 +
+ tests/eval/cases-gdpr.mjs  |   84 ++
+ tests/eval/cases.mjs       |  121 ++
+ tests/eval/generate.mjs    |  132 ++
+ tests/eval/out/result.json | 2702 ++++++++++++++++++++++++++++++++++++
+ tests/eval/run-eval.mjs    |   95 ++
+ tests/eval/stress.mjs      |   32 +
+ 9 files changed, 3257 insertions(+), 1 deletion(-)
+ create mode 100644 tests/eval.test.mjs
+ create mode 100644 tests/eval/baseline.json
+ create mode 100644 tests/eval/cases-gdpr.mjs
+ create mode 100644 tests/eval/cases.mjs
+ create mode 100644 tests/eval/generate.mjs
+ create mode 100644 tests/eval/out/result.json
+ create mode 100644 tests/eval/run-eval.mjs
+ create mode 100644 tests/eval/stress.mjs
+
+diff --git a/package.json b/package.json
+index 4590a50..787d2bd 100644
+--- a/package.json
++++ b/package.json
+@@ -20,7 +20,9 @@
+     "prebuild:linux": "node scripts/fetch-vendor.mjs",
+     "prebuild:all": "node scripts/fetch-vendor.mjs",
+     "prerelease": "node scripts/fetch-vendor.mjs",
+-    "golden:update": "node tests/golden/update.mjs"
++    "golden:update": "node tests/golden/update.mjs",
++    "eval": "node tests/eval/run-eval.mjs",
++    "eval:baseline": "node tests/eval/run-eval.mjs --baseline"
+   },
+   "build": {
+     "appId": "eu.arcangeli.privacyshield",
+diff --git a/tests/eval.test.mjs b/tests/eval.test.mjs
+new file mode 100644
+index 0000000..d33c556
+--- /dev/null
++++ b/tests/eval.test.mjs
+@@ -0,0 +1,26 @@
++// Ratsche fuer die Erkennungsqualitaet: Lecks (nicht maskierte personenbezogene Werte) und Falsch-Maskierungen
++// duerfen gegenueber tests/eval/baseline.json nie zunehmen. Verbesserungen: npm run eval:baseline.
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'fs';
++import { runEval, BASELINE } from './eval/run-eval.mjs';
++
++test('Erkennungsqualitaet faellt gegenueber der Baseline nicht zurueck', async () => {
++  const base = JSON.parse(fs.readFileSync(BASELINE, 'utf8'));
++  const results = await runEval({ withAI: true });
++  const problems = [];
++  const better = [];
++  for (const sum of results) {
++    const b = base[sum.mode];
++    assert.ok(b, 'Baseline fuer Modus fehlt: ' + sum.mode);
++    for (const [cat, v] of Object.entries(sum.cases)) {
++      const allowed = b.cases[cat] ?? 0;
++      if (v.leaked > allowed) problems.push(`${sum.mode}/${cat}: ${v.leaked} > ${allowed} (${v.ids.join(' ')})`);
++      if (v.leaked < allowed) better.push(`${sum.mode}/${cat}: ${v.leaked} < ${allowed}`);
++    }
++    if (sum.synthLeaked > b.synthLeaked) problems.push(`${sum.mode}/synthetisch: ${sum.synthLeaked} > ${b.synthLeaked}`);
++    if (sum.synthLeaked < b.synthLeaked) better.push(`${sum.mode}/synthetisch: ${sum.synthLeaked} < ${b.synthLeaked}`);
++  }
++  if (better.length) console.log('  Verbessert (Baseline mit "npm run eval:baseline" nachziehen):', better.join('; '));
++  assert.deepEqual(problems, [], 'Erkennung verschlechtert: ' + problems.join(' | '));
++});
+diff --git a/tests/eval/baseline.json b/tests/eval/baseline.json
+new file mode 100644
+index 0000000..eeb1f8d
+--- /dev/null
++++ b/tests/eval/baseline.json
+@@ -0,0 +1,62 @@
++{
++  "wortlisten": {
++    "cases": {
++      "NAME": 12,
++      "ORG": 2,
++      "ADR": 3,
++      "ORT": 1,
++      "KONTAKT": 8,
++      "FINANZ": 7,
++      "DATUM": 2,
++      "KFZ": 2,
++      "MED": 0,
++      "NEG": 2,
++      "G-NAME": 8,
++      "G-KONTAKT": 4,
++      "G-GERAET": 2,
++      "G-STANDORT": 2,
++      "G-NUMMER": 4,
++      "G-GEBURT": 2,
++      "G-GEHALT": 0,
++      "G-FAMILIE": 1,
++      "G-NATION": 1,
++      "G-ART9": 9,
++      "G-ART10": 3,
++      "G-FORM": 4,
++      "G-AUSLAND": 5,
++      "G-SECRET": 2
++    },
++    "synthLeaked": 109,
++    "synthTotal": 276
++  },
++  "ki": {
++    "cases": {
++      "NAME": 5,
++      "ORG": 0,
++      "ADR": 3,
++      "ORT": 0,
++      "KONTAKT": 8,
++      "FINANZ": 7,
++      "DATUM": 2,
++      "KFZ": 2,
++      "MED": 0,
++      "NEG": 3,
++      "G-NAME": 3,
++      "G-KONTAKT": 4,
++      "G-GERAET": 2,
++      "G-STANDORT": 2,
++      "G-NUMMER": 4,
++      "G-GEBURT": 2,
++      "G-GEHALT": 0,
++      "G-FAMILIE": 0,
++      "G-NATION": 1,
++      "G-ART9": 9,
++      "G-ART10": 3,
++      "G-FORM": 4,
++      "G-AUSLAND": 5,
++      "G-SECRET": 2
++    },
++    "synthLeaked": 87,
++    "synthTotal": 276
++  }
++}
+diff --git a/tests/eval/cases-gdpr.mjs b/tests/eval/cases-gdpr.mjs
+new file mode 100644
+index 0000000..efa03da
+--- /dev/null
++++ b/tests/eval/cases-gdpr.mjs
+@@ -0,0 +1,84 @@
++// Breiter DSGVO-Testsatz (Art. 4 Identifikatoren, Art. 9 besondere Kategorien, Art. 10 Strafdaten, Formatierungs- und
++// Zeichenvarianten, europaeische Sprachen, Zugangsdaten). Eintrag: [id, Gruppe, Text, [Fragmente die NICHT bleiben duerfen], Profil].
++// Gruppen mit "ART9"/"ART10" werden im Profil "Maximal" geprueft (Begriffslisten sind im Standardprofil bewusst aus).
++// Neue Fehler immer zuerst hier als Fall anlegen (rot), dann beheben (gruen).
++export const GDPR_RAW = [
++  // ---- A: direkte Identifikatoren, Varianten
++  ['a01','NAME-Reihenfolge','Müller, Hans (geb. Schmidt) wurde am Montag befragt.',['Müller','Hans','Schmidt']],
++  ['a02','NAME-Reihenfolge','Von: Müller, Hans <hans.mueller@firma.de>\nAn: Weber, Anna',['Müller','Hans','Weber','Anna','hans.mueller@firma.de']],
++  ['a03','NAME-Reihenfolge','MÜLLER, HANS\nGeschäftsführer der Beispiel GmbH',['MÜLLER','HANS']],
++  ['a04','NAME-Titel','Dr. med. univ. Katharina Freifrau von und zu Hohenberg-Lindenau hat unterschrieben.',['Katharina','Hohenberg']],
++  ['a05','NAME-Rufname','Alle nennen ihn nur "Hotte", eigentlich Horst Kleinschmidt aus Dortmund.',['Hotte','Kleinschmidt','Horst']],
++  ['a06','NAME-Beziehung','Die Tochter von Herrn Lehmann, Sophie, besucht die 3b der Grundschule Am Park.',['Lehmann','Sophie']],
++  ['a07','NAME-Anrede','Hallo Frau Schröder, danke für Ihre Nachricht. Gruß, Michael',['Schröder','Michael']],
++  ['a08','NAME-Anrede','Lieber Thomas, anbei die Unterlagen. Viele Grüße Sabine',['Thomas','Sabine']],
++  ['a09','NAME-Zeilenumbruch','Antragsteller: Maximilian\nFriedrich-Wilhelm Graf',['Maximilian','Graf']],
++  ['a10','KONTAKT-Handle','Instagram: @max_mustermann, X: @mmustermann85, Telegram t.me/maxmuster',['max_mustermann','mmustermann85','maxmuster']],
++  ['a11','KONTAKT-Obfuskation','Mail an max (at) firma (dot) de oder max[at]firma.de bitte.',['max (at) firma (dot) de','max[at]firma.de']],
++  ['a12','KONTAKT-Obfuskation','Rufen Sie an: null eins sieben eins, eins zwei drei vier fünf sechs sieben.',['eins zwei drei vier']],
++  ['a13','KONTAKT-Telefon','Handy privat: 0171-1234567 (nur WhatsApp), dienstl. +49 (89) 99 88 77-0',['1234567','99 88 77']],
++  ['a14','KONTAKT-Telefon','Tel: 0 89 / 12 34 56 78 · Mobil 0049 171 7654321',['12 34 56 78','7654321']],
++  ['a15','GERAET-ID','MAC 00:1A:2B:3C:4D:5E, IMEI 35-209900-176148-1, UUID 123e4567-e89b-12d3-a456-426614174000',['00:1A:2B:3C:4D:5E','35-209900-176148-1','123e4567-e89b-12d3-a456-426614174000']],
++  ['a16','GERAET-ID','Seriennummer SN-2024-00417, Gerät-ID: AB12CD34EF56',['00417','AB12CD34EF56']],
++  ['a17','STANDORT','Standort laut GPS: 48.137154, 11.576124 (Marienplatz).',['48.137154','11.576124']],
++  ['a18','STANDORT','Koordinaten 48°08\'13.7"N 11°34\'34.0"E wurden gespeichert.',['48°08\'13.7"N']],
++  ['a19','NUMMER-Kunde','Kundennummer: 4711-0815, Vertragsnummer VN-2024/009981, Mitarbeiter-Nr. 100245',['4711-0815','009981','100245']],
++  ['a20','NUMMER-Kunde','Matrikelnummer 2019-345678, Versicherungsnummer 12-3456789-A-001',['345678','3456789']],
++  ['a21','NUMMER-Ausweis','Reisepass C01X00T47, Führerschein B072RRE2I55, Personalausweis T22000129',['C01X00T47','B072RRE2I55','T22000129']],
++  ['a22','NUMMER-Ausweis','Pass-Nr. 123456789 gültig bis 03.05.2031, ausgestellt in Hannover',['123456789']],
++  ['a23','NUMMER-Steuer','Steuer-IdNr. 86095742719 und SV-Nr. 65 170839 J 008',['86095742719','170839']],
++  ['a24','GEBURT','Max wurde am 3. Mai 1980 in Hannover geboren, 44 Jahre alt.',['3. Mai 1980','Hannover']],
++  ['a25','GEBURT','Geburtsort: Bad Homburg v. d. Höhe, Geburtsname: Fröhlich',['Homburg','Fröhlich']],
++  ['a26','GEHALT','Bruttogehalt: 4.250,00 EUR monatlich, Bonus 1.500 €, Pfändung 320,50 EUR',['4.250,00','1.500','320,50']],
++  ['a27','FAMILIE','Verheiratet mit Petra, zwei Kinder (Luca, 7 und Mia, 4), ledig geboren Neumann.',['Petra','Luca','Mia','Neumann']],
++  ['a28','NATION','Staatsangehörigkeit: türkisch, Aufenthaltstitel gültig bis 12.2026 (Nr. 12345678)',['12345678']],
++  // ---- B: besondere Kategorien (Art. 9)
++  ['b01','ART9-Gesundheit','Diagnose: Multiple Sklerose (G35), seit 2019 in Behandlung mit Ocrelizumab.',['G35','Ocrelizumab','Multiple Sklerose'],'strict'],
++  ['b02','ART9-Gesundheit','Herr Becker ist vom 12.03. bis 26.03.2024 arbeitsunfähig (AU) wegen Bandscheibenvorfall.',['Becker','Bandscheibenvorfall'],'strict'],
++  ['b03','ART9-Gesundheit','Schwerbehinderung GdB 60, Merkzeichen G, HIV-positiv seit 2015.',['GdB 60','HIV'],'strict'],
++  ['b04','ART9-Gesundheit','Medikation: Metformin 1000 mg 1-0-1, Ramipril 5 mg, Sertralin 50 mg.',['Metformin','Ramipril','Sertralin'],'strict'],
++  ['b05','ART9-Gesundheit','Die Patientin ist schwanger (12. SSW), Rhesusfaktor negativ.',['schwanger','12. SSW'],'strict'],
++  ['b06','ART9-Religion','Konfession: römisch-katholisch, Kirchenaustritt am 01.02.2020.',['katholisch','Kirchenaustritt'],'strict'],
++  ['b07','ART9-Religion','Er ist Mitglied der Zeugen Jehovas und lehnt Bluttransfusionen ab.',['Zeugen Jehovas'],'strict'],
++  ['b08','ART9-Politik','Mitglied der Partei Die Linke seit 2012, Gewerkschaft ver.di Mitgliedsnr. 884422.',['Die Linke','ver.di','884422'],'strict'],
++  ['b09','ART9-Herkunft','Herkunft: Roma aus Rumänien; ethnische Zugehörigkeit: kurdisch.',['Roma','kurdisch'],'strict'],
++  ['b10','ART9-Sexualitaet','Er lebt in einer gleichgeschlechtlichen Partnerschaft mit Jonas.',['Jonas','gleichgeschlechtlichen'],'strict'],
++  ['b11','ART9-Biometrie','Fingerabdruck-Hash 9f86d081884c7d659a2feaa0c55ad015 und DNA-Profil D3S1358.',['9f86d081884c7d659a2feaa0c55ad015'],'strict'],
++  // ---- C: Strafdaten (Art. 10)
++  ['c01','ART10-Straf','Verurteilt wegen Betrugs (Az. 12 Ds 345/23), Bewährung bis 2026.',['345/23','Betrugs'],'strict'],
++  ['c02','ART10-Straf','Ermittlungsverfahren der Staatsanwaltschaft München I, Js 12345/24, gegen Herrn Aydin.',['12345/24','Aydin'],'strict'],
++  ['c03','ART10-Straf','Bußgeldbescheid: 120 EUR und 2 Punkte in Flensburg, Tatzeit 14.05.2024 um 08:12 Uhr.',['2 Punkte'],'strict'],
++  // ---- D: Formatierung / Zeichenvarianten
++  ['d01','FORM-NBSP','IBAN DE89 3704 0044 0532 0130 00 bitte nutzen.',['3704']],
++  ['d02','FORM-NBSP','Tel. +49 89 1234567 und E-Mail max@firma.de',['1234567','max@firma.de']],
++  ['d03','FORM-Unicode','Müller wohnt in der Hauptstraße 5, 10115 Berlin',['Müller']],
++  ['d04','FORM-Zeilenumbruch','IBAN: DE89 3704 0044\n0532 0130 00',['0532 0130']],
++  ['d05','FORM-Tabelle','Name\tGeburtsdatum\tIBAN\nAnna Weber\t12.03.1985\tDE89 3704 0044 0532 0130 00\nPeter Klein\t01.07.1990\tAT61 1904 3002 3457 3201',['Anna Weber','Peter Klein','12.03.1985','01.07.1990','3704 0044','1904 3002']],
++  ['d06','FORM-Tabelle','| Name | E-Mail | Telefon |\n| Lisa Braun | lisa.braun@x.de | 0151 2345678 |',['Lisa Braun','lisa.braun@x.de','2345678']],
++  ['d07','FORM-OCR','IBAN DE89 37O4 OO44 O532 O13O OO und Tel. O17I 234567O',['37O4']],
++  ['d08','FORM-Tippfehler','Hr. Mueler, wohnhaft Berlinn, Hauptsr. 5',['Mueler']],
++  ['d09','FORM-Fussnote','Seite 2 von 5 | Müller GmbH | Vertraulich | Geschäftsführer: Dieter Hahn',['Hahn']],
++  ['d10','FORM-Zitat','Er sagte: "Rufen Sie Frau Dr. Ellen Vogel unter 030 5551234 an."',['Vogel','5551234']],
++  // ---- E: Fremdsprachen / EU
++  ['e01','EN','Mr. John Smith, 12 Main Street, London SW1A 1AA, +44 20 7946 0958, NI number QQ 12 34 56 C.',['Smith','12 Main Street','SW1A 1AA','7946 0958','QQ 12 34 56 C']],
++  ['e02','FR','Madame Claire Dubois, 15 rue de la Paix, 75002 Paris, tél. +33 1 42 68 53 00.',['Dubois','15 rue de la Paix','75002','42 68 53 00']],
++  ['e03','IT','Sig. Marco Rossi, codice fiscale RSSMRC85T10A562S, via Roma 10, 00184 Roma.',['Rossi','RSSMRC85T10A562S','via Roma 10']],
++  ['e04','PL','Jan Kowalski, PESEL 44051401359, ul. Marszałkowska 12, 00-001 Warszawa.',['Kowalski','44051401359','Marszałkowska 12']],
++  ['e05','ES','Carlos García, DNI 12345678Z, calle Mayor 5, 28013 Madrid.',['García','12345678Z','calle Mayor 5']],
++  // ---- F: Passwoerter / Geheimnisse
++  ['f01','SECRET','Zugangsdaten: Benutzer: mmustermann, Passwort: Hund#2024!x, API-Key sk-live-4f8a9c2b1d7e',['mmustermann','Hund#2024!x','sk-live-4f8a9c2b1d7e']],
++  ['f02','SECRET','Link zum Zurücksetzen: https://portal.firma.de/reset?token=a8f5f167f44f4964e6c998dee827110c',['a8f5f167f44f4964e6c998dee827110c']],
++  // ---- G: Negativfaelle (nichts maskieren)
++  ['n01','NEG','Die Sitzung dauerte 90 Minuten; es wurden 12 Tagesordnungspunkte behandelt.',[]],
++  ['n02','NEG','Version 2.4.1 wurde am Freitag veröffentlicht (Build 20240315).',[]],
++  ['n03','NEG','Gemäß Art. 9 Abs. 2 lit. a DSGVO ist eine ausdrückliche Einwilligung erforderlich.',[]],
++  ['n04','NEG','Der Umsatz stieg um 12,5 Prozent auf 3,2 Millionen Euro.',[]],
++  ['n05','NEG','Bitte beachten: Die Hotline ist montags bis freitags von 8 bis 18 Uhr erreichbar.',[]],
++];
++
++// Einheitliches Format wie cases.mjs: Kategorie "G-<Gruppe>", Id mit "g" davor (keine Kollision mit cases.mjs)
++export const GDPR = GDPR_RAW.map(([id, grp, text, frags, profile]) => {
++  const head = grp.split('-')[0];
++  const cat = grp === 'NEG' ? 'NEG' : 'G-' + (['EN', 'FR', 'IT', 'PL', 'ES'].includes(head) ? 'AUSLAND' : head);
++  return ['g' + id, cat, text, frags, profile];
++});
+diff --git a/tests/eval/cases.mjs b/tests/eval/cases.mjs
+new file mode 100644
+index 0000000..2ca77ef
+--- /dev/null
++++ b/tests/eval/cases.mjs
+@@ -0,0 +1,121 @@
++// Kuratierter Testsatz fuer die Erkennungsqualitaet.
++// Eintrag: [id, Kategorie, Text, [Fragmente, die nach dem Anonymisieren NICHT mehr vorkommen duerfen], optional Profil ('standard' | 'medical' | 'finance')]
++// Kategorie NEG: Negativfall, hier darf kein Platzhalter entstehen (Schutz vor Ueber-Maskierung).
++// Neue Fehler immer ZUERST hier als Fall anlegen (rot), dann beheben (gruen).
++export const CASES = [
++  // --- Personen
++  ['n01', 'NAME', 'Sehr geehrter Herr Müller, vielen Dank für Ihre Anfrage.', ['Müller']],
++  ['n02', 'NAME', 'Sehr geehrte Frau Dr. Schmidt-Weber, anbei der Vertrag.', ['Schmidt', 'Weber']],
++  ['n03', 'NAME', 'Ansprechpartner: Max Mustermann', ['Max', 'Mustermann']],
++  ['n04', 'NAME', 'Unterzeichnet von Prof. Dr. Hans-Peter von der Heide am Montag.', ['Hans-Peter', 'Heide']],
++  ['n05', 'NAME', 'Patientin: Maria Gonzalez Lopez wurde am Dienstag aufgenommen.', ['Maria', 'Gonzalez', 'Lopez']],
++  ['n06', 'NAME', 'Gez. i.A. Fatima Yilmaz', ['Fatima', 'Yilmaz']],
++  ['n07', 'NAME', 'Herr Kowalski und Frau Nowak haben den Termin bestätigt.', ['Kowalski', 'Nowak']],
++  ['n08', 'NAME', 'HANS MEIER\nGeschäftsführer', ['MEIER', 'HANS']],
++  ['n09', 'NAME', 'Mit freundlichen Grüßen\nJürgen Beck', ['Jürgen', 'Beck']],
++  ['n10', 'NAME', 'Schneider hat gestern angerufen und den Auftrag storniert.', ['Schneider']],
++  ['n11', 'NAME', 'Der Kunde Nguyen Van An bittet um Rückruf.', ['Nguyen']],
++  ['n12', 'NAME', 'Mohammed Al-Farsi ist der Bevollmächtigte.', ['Mohammed', 'Farsi']],
++  ['n13', 'NAME', 'Jörg Bärtschi und Zoë Müller-Lüdenscheidt unterschrieben.', ['Bärtschi', 'Zoë', 'Lüdenscheidt']],
++  ['n14', 'NAME', 'Müllers Auto steht vor Annas Haus.', ['Müller', 'Anna']],
++  ['n15', 'NAME', 'J. Müller und M. Schmidt haben zugestimmt.', ['Müller', 'Schmidt']],
++  ['n16', 'NAME', 'Betreff: Kündigung durch Herrn Dieter Krüger, Kundennummer 4711', ['Krüger', 'Dieter']],
++  ['n17', 'NAME', 'Eltern: Thomas und Sabine Wagner', ['Thomas', 'Sabine', 'Wagner']],
++  ['n18', 'NAME', 'Vollmacht für Ing. Karl-Heinz Obermaier, geboren in Linz.', ['Karl-Heinz', 'Obermaier']],
++  ['n19', 'NAME', 'Frau Ilse Aigner-Lechner (Prokuristin) ist verhindert.', ['Ilse', 'Aigner', 'Lechner']],
++  ['n20', 'NAME', 'Rechnungsempfänger: Lena Hoffmann, Lieferung an Tobias Richter.', ['Lena', 'Hoffmann', 'Tobias', 'Richter']],
++  ['n21', 'NAME', 'Kontakt: José García und Søren Kierkegaard.', ['García', 'Kierkegaard']],
++  ['n22', 'NAME', 'Die Anwältin Łucja Wiśniewska vertritt den Kläger.', ['Wiśniewska']],
++  ['n23', 'NAME', 'Zeuge: Çağlar Yıldız, wohnhaft in Köln.', ['Yıldız']],
++  ['n24', 'NAME', 'Von: J. R. Tolkien\nAn: M. Schmidt', ['Tolkien', 'Schmidt']],
++  // --- Organisationen
++  ['o01', 'ORG', 'Auftragnehmer ist die Siemens AG.', ['Siemens']],
++  ['o02', 'ORG', 'Müller & Söhne GmbH & Co. KG liefert die Ware.', ['Söhne']],
++  ['o03', 'ORG', 'Die Bundesagentur für Arbeit hat den Bescheid erlassen.', ['Bundesagentur']],
++  ['o04', 'ORG', 'Das Konto führt die Deutsche Bank.', ['Deutsche Bank']],
++  ['o05', 'ORG', 'Dr. Müller Rechtsanwälte PartG mbB, Kanzlei am Ring', ['Müller']],
++  ['o06', 'ORG', 'Vertragspartner: Stadtwerke München GmbH', ['Stadtwerke']],
++  ['o07', 'ORG', 'Die ABC Consulting UG (haftungsbeschränkt) hat geliefert.', ['ABC Consulting']],
++  ['o08', 'ORG', 'Universität Heidelberg, Fakultät für Medizin', ['Universität Heidelberg']],
++  ['o09', 'ORG', 'Arbeitgeber: Beispiel Logistik e.K.', ['Beispiel Logistik']],
++  ['o10', 'ORG', 'Krankenkasse: AOK Bayern', ['AOK']],
++  // --- Adressen / Orte
++  ['a01', 'ADR', 'Wohnhaft in der Musterstraße 12, 80331 München.', ['Musterstraße 12', '80331']],
++  ['a02', 'ADR', 'Hauptstr. 5a, 10115 Berlin', ['Hauptstr', '10115']],
++  ['a03', 'ADR', 'Am Markt 3, 50667 Köln', ['Am Markt 3', '50667']],
++  ['a04', 'ADR', 'Postfach 1234, 20095 Hamburg', ['Postfach 1234', '20095']],
++  ['a05', 'ADR', 'Straße des 17. Juni 135, 10623 Berlin', ['17. Juni 135', '10623']],
++  ['a06', 'ADR', 'Anschrift: Lindenallee 7, D-04109 Leipzig', ['Lindenallee 7', '04109']],
++  ['a07', 'ORT', 'Wir treffen uns in Garmisch-Partenkirchen.', ['Garmisch-Partenkirchen']],
++  ['a08', 'ORT', 'Der Kläger wohnt in 79098 Freiburg im Breisgau.', ['79098']],
++  ['a09', 'ADR', 'Gartenweg 4, 4020 Linz, Österreich', ['Gartenweg 4', '4020']],
++  ['a10', 'ADR', 'Kantonsstrasse 12, 8001 Zürich', ['Kantonsstrasse 12', '8001']],
++  ['a11', 'ADR', 'Bahnhofstrasse 7, CH-8001 Zürich', ['Bahnhofstrasse 7', '8001']],
++  // --- Kontakt
++  ['t01', 'KONTAKT', 'Tel.: +49 89 1234567', ['1234567']],
++  ['t02', 'KONTAKT', 'Telefon 089/1234567', ['1234567']],
++  ['t03', 'KONTAKT', 'Mobil: 0170 1234567', ['1234567']],
++  ['t04', 'KONTAKT', 'Erreichbar unter +49 (0) 170 1234567.', ['1234567']],
++  ['t05', 'KONTAKT', 'Tel. 089 123 456-78', ['123 456']],
++  ['t06', 'KONTAKT', 'Zentrale 0049 89 123456', ['123456']],
++  ['t07', 'KONTAKT', 'Fax: 030-123456-0', ['123456']],
++  ['t08', 'KONTAKT', 'Rückruf unter 0151/23456789 erbeten.', ['23456789']],
++  ['t09', 'KONTAKT', 'Kontakt Österreich: +43 1 5121234, Schweiz: +41 44 668 18 00', ['5121234', '668 18 00']],
++  ['t10', 'KONTAKT', 'Bitte unter (089) 12 34 56 78 zurückrufen.', ['12 34 56 78']],
++  ['e01', 'KONTAKT', 'E-Mail: max.mustermann@firma.de', ['max.mustermann@firma.de']],
++  ['e02', 'KONTAKT', 'Schreiben Sie an a_b+test@sub.domain.co.uk bitte.', ['a_b+test@sub.domain.co.uk']],
++  ['u01', 'KONTAKT', 'Siehe https://www.beispiel.de/kunde/12345?token=abc', ['kunde/12345']],
++  ['u02', 'KONTAKT', 'Profil: www.linkedin.com/in/max-mustermann', ['max-mustermann']],
++  ['i01', 'KONTAKT', 'Zugriff von 192.168.178.20 um 10:15 Uhr', ['192.168.178.20']],
++  ['i02', 'KONTAKT', 'Server 2001:0db8:85a3:0000:0000:8a2e:0370:7334 antwortet nicht.', ['8a2e:0370']],
++  // --- Finanzen / Kennzahlen
++  ['f01', 'FINANZ', 'IBAN DE89 3704 0044 0532 0130 00', ['3704 0044 0532 0130 00']],
++  ['f02', 'FINANZ', 'iban: de89370400440532013000', ['370400440532013000']],
++  ['f03', 'FINANZ', 'Konto AT61 1904 3002 3457 3201', ['1904 3002 3457 3201']],
++  ['f04', 'FINANZ', 'Konto CH93 0076 2011 6238 5295 7', ['0076 2011 6238 5295 7']],
++  ['f05', 'FINANZ', 'BIC: COBADEFFXXX', ['COBADEFFXXX']],
++  ['f06', 'FINANZ', 'Kontonummer 532013000, BLZ 37040044', ['532013000', '37040044']],
++  ['f07', 'FINANZ', 'Kreditkarte 4111 1111 1111 1111, gültig bis 12/26', ['4111 1111 1111 1111']],
++  ['f08', 'FINANZ', 'Betrag: 1.234,56 EUR bzw. € 99,- netto', ['1.234,56', '99,-']],
++  ['f09', 'FINANZ', 'Steuer-ID: 12 345 678 901', ['12 345 678 901']],
++  ['f10', 'FINANZ', 'Steuernummer 143/815/08156', ['143/815/08156']],
++  ['f11', 'FINANZ', 'USt-IdNr. DE123456789', ['DE123456789']],
++  ['f12', 'FINANZ', 'SV-Nr. 12 010185 M 123', ['010185']],
++  ['f13', 'FINANZ', 'Krankenversichertennummer A123456789', ['A123456789']],
++  ['f14', 'FINANZ', 'Personalausweisnummer L01X00T47', ['L01X00T47']],
++  ['f15', 'FINANZ', 'Eingetragen: HRB 12345 B, Amtsgericht München', ['HRB 12345']],
++  ['f16', 'FINANZ', 'Aktenzeichen 12 O 345/21', ['345/21']],
++  ['f17', 'FINANZ', 'Zahlung an NL91 ABNA 0417 1643 00 und GB29 NWBK 6016 1331 9268 19.', ['0417 1643 00', '6016 1331 9268 19']],
++  ['f18', 'FINANZ', 'FR76 3000 6000 0112 3456 7890 189 sowie IT60 X054 2811 1010 0000 0123 456', ['3000 6000 0112 3456 7890 189', '1010 0000 0123 456']],
++  ['f19', 'FINANZ', 'Karte: 5555 5555 5555 4444 und Amex 3782 822463 10005', ['5555 5555 5555 4444', '822463 10005']],
++  ['f20', 'FINANZ', 'Steuerliche Identifikationsnummer 65 929 970 489', ['65 929 970 489']],
++  // --- Datum
++  ['d01', 'DATUM', 'geboren am 12.03.1985', ['12.03.1985']],
++  ['d02', 'DATUM', 'Geburtsdatum: 12. März 1985', ['12. März 1985']],
++  ['d03', 'DATUM', 'geb. 12.3.85 in Köln', ['12.3.85']],
++  ['d04', 'DATUM', 'Geburtstag 1985-03-12', ['1985-03-12']],
++  ['d05', 'DATUM', 'Born on 5 July 1990 in Wien.', ['5 July 1990']],
++  ['d06', 'DATUM', 'Geburtsdatum 03/12/1985', ['03/12/1985']],
++  // --- Kennzeichen
++  ['k01', 'KFZ', 'Kennzeichen M-AB 1234', ['M-AB 1234']],
++  ['k02', 'KFZ', 'Fahrzeug B-XY 99E, Fahrgestellnummer WVWZZZ1JZXW000001', ['B-XY 99E', 'WVWZZZ1JZXW000001']],
++  // --- Medizin (Profil "Medizin & Pflege")
++  ['m01', 'MED', 'Diagnose: Diabetes mellitus Typ 2 (E11.9), Metformin 500 mg', ['E11.9', 'Metformin'], 'medical'],
++  ['m02', 'MED', 'Patient leidet an einer Depression (F32.1).', ['F32.1'], 'medical'],
++  // --- Negativfaelle: hier darf NICHTS maskiert werden
++  ['x01', 'NEG', 'Der Vertrag wird nach deutschem Recht geschlossen und ist schriftlich zu bestätigen.', []],
++  ['x02', 'NEG', 'Gemäß Abs. 2 gilt die Frist von vierzehn Tagen.', []],
++  ['x03', 'NEG', 'Die Software läuft auf Windows, macOS und Linux.', []],
++  ['x04', 'NEG', 'Am Montag beginnt die Woche; im Januar ist es kalt.', []],
++  ['x05', 'NEG', 'Das Projekt wurde erfolgreich abgeschlossen. Vielen Dank für die gute Zusammenarbeit.', []],
++  ['x06', 'NEG', 'Lieferung innerhalb Deutschlands, Zahlung per Überweisung.', []],
++  ['x07', 'NEG', 'Anreden sind Herr, Frau, Doktor und Professor.', []],
++  ['x08', 'NEG', 'Die Datenbank enthält Tabellen und Indizes für das Reporting.', []],
++  ['x09', 'NEG', 'Bitte beachten Sie die Hinweise in der Anlage und senden Sie das Formular zurück.', []],
++  ['x10', 'NEG', 'Der Geschäftsführer und der Vorstand beschlossen eine Gewinnausschüttung.', []],
++  ['x11', 'NEG', 'Das Formular im Format DIN-A4 liegt bei, Version 1.2.3.4 der Software.', []],
++  ['x12', 'NEG', 'A. Allgemeines\nI. Einleitung\nB. Leistungen des Auftragnehmers', []],
++  ['x13', 'NEG', 'Die Besprechung dauerte von 10:15:30 bis 11:45:10 Uhr, Rechnung Nr. 0004711.', []],
++  ['x14', 'NEG', 'z. B. nach Art. 5 Abs. 1 lit. a der Verordnung, vgl. S. 12 ff.', []],
++  ['x15', 'NEG', 'Die Zahl 4111 oder 12345 und der Wert 3,14 sind keine personenbezogenen Daten.', []],
++];
+diff --git a/tests/eval/generate.mjs b/tests/eval/generate.mjs
+new file mode 100644
+index 0000000..3ae853a
+--- /dev/null
++++ b/tests/eval/generate.mjs
+@@ -0,0 +1,132 @@
++// Synthetische deutsche Dokumente mit bekannter Wahrheit (Ground Truth).
++// Gleicher Seed = gleiche Dokumente, damit Messungen vergleichbar bleiben.
++// Jedes Dokument: { template, text, truth: [{ type, frags: [Fragmente, die nach dem Anonymisieren verschwunden sein muessen] }] }
++
++export function rng(seed) {
++  let a = seed >>> 0;
++  return () => {
++    a = (a + 0x6d2b79f5) >>> 0;
++    let t = a;
++    t = Math.imul(t ^ (t >>> 15), t | 1);
++    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
++    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
++  };
++}
++
++const FIRST = ['Anna', 'Thomas', 'Sabine', 'Jürgen', 'Fatima', 'Lena', 'Tobias', 'Ilse', 'Karl-Heinz', 'Mohammed', 'Zoë', 'José', 'Søren', 'Łucja', 'Çağlar', 'Dieter', 'Birgit', 'Matthias', 'Nadine', 'Ömer', 'Katharina', 'Stefan', 'Yasemin', 'Florian', 'Hannelore', 'Lukas', 'Marlene', 'Oliver', 'Petra', 'Ralf'];
++const LAST = ['Müller', 'Schmidt-Weber', 'Krüger', 'Yilmaz', 'Hoffmann', 'Richter', 'Aigner-Lechner', 'Al-Farsi', 'García', 'Kierkegaard', 'Wiśniewska', 'Yıldız', 'Bärtschi', 'Obermaier', 'Nowak', 'Kowalski', 'Wagner', 'Becker', 'Schulz', 'Koch', 'Bauer', 'Schäfer', 'Neumann', 'Zimmermann', 'Dvořák', 'Šimek', 'Lüdenscheidt', 'Braun', 'Hartmann', 'Voigt'];
++const PART = ['', '', '', 'von der ', 'van ', 'de '];
++const TITLE = ['', '', 'Dr. ', 'Prof. Dr. ', 'Dipl.-Ing. '];
++const STREET = ['Musterstraße', 'Hauptstr.', 'Am Markt', 'Lindenallee', 'Gartenweg', 'Bahnhofstrasse', 'Kantonsstrasse', 'Schillerplatz', 'Rosenweg', 'Industriestraße', 'Berliner Allee', 'Kirchgasse'];
++const CITY_DE = ['München', 'Berlin', 'Köln', 'Hamburg', 'Leipzig', 'Freiburg im Breisgau', 'Stuttgart', 'Dresden', 'Nürnberg', 'Essen'];
++const CITY_4 = [['Linz', 'A-'], ['Zürich', 'CH-'], ['Graz', ''], ['Basel', ''], ['Wien', ''], ['Bern', 'CH-']];
++const ORG = ['Nordlicht Logistik GmbH', 'Müller & Söhne GmbH & Co. KG', 'Beispiel Consulting UG (haftungsbeschränkt)', 'Stadtwerke Beispielstadt GmbH', 'Kanzlei Schmidt & Partner PartG mbB', 'Alpenblick Hotel AG', 'Rheinland Versicherung AG', 'Praxis Dr. Weber', 'Sonnenhof Pflegedienst e.V.', 'Tannenberg Bau KG'];
++const MONTH_DE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
++const MONTH_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
++
++export function makeGen(seed) {
++  const r = rng(seed);
++  const pick = (a) => a[Math.floor(r() * a.length)];
++  const int = (lo, hi) => lo + Math.floor(r() * (hi - lo + 1));
++  const digits = (n) => Array.from({ length: n }, () => int(0, 9)).join('');
++  const letters = (n) => Array.from({ length: n }, () => String.fromCharCode(65 + int(0, 25))).join('');
++  const pad = (n, w = 2) => String(n).padStart(w, '0');
++
++  const mod97 = (s) => { let rem = 0; for (const ch of s) { const v = /\d/.test(ch) ? ch : String(ch.charCodeAt(0) - 55); for (const d of v) rem = (rem * 10 + +d) % 97; } return rem; };
++  const iban = (cc, bban) => { const chk = pad(98 - mod97(bban + cc + '00')); return cc + chk + bban; };
++  const IBANS = {
++    DE: () => iban('DE', digits(18)), AT: () => iban('AT', digits(16)), CH: () => iban('CH', digits(17)),
++    NL: () => iban('NL', letters(4) + digits(10)), FR: () => iban('FR', digits(23)), IT: () => iban('IT', letters(1) + digits(22)),
++    GB: () => iban('GB', letters(4) + digits(14)), ES: () => iban('ES', digits(20)),
++  };
++  const group4 = (s) => s.replace(/(.{4})/g, '$1 ').trim();
++  const luhnComplete = (prefix, len) => { let body = prefix + digits(len - prefix.length - 1); let sum = 0; for (let i = 0; i < body.length; i++) { let d = +body[body.length - 1 - i]; if (i % 2 === 0) { d *= 2; if (d > 9) d -= 9; } sum += d; } return body + ((10 - (sum % 10)) % 10); };
++
++  const g = {
++    pick, int, digits,
++    name(style) {
++      const first = pick(FIRST), last = pick(LAST), part = pick(PART), title = pick(TITLE);
++      const frags = [first, last.split('-').pop()];
++      if (part) frags.push(last);
++      const surname = part + last;
++      const forms = { full: `${first} ${surname}`, formal: `${title}${first} ${surname}`, herr: `Herr ${title}${surname}`, frau: `Frau ${title}${surname}`, initial: `${first[0]}. ${surname}` };
++      const text = forms[style || pick(['full', 'formal', 'herr', 'frau', 'initial'])];
++      const f = style === 'herr' || style === 'frau' ? [last.split('-').pop()] : text.startsWith(first[0] + '.') ? [last.split('-').pop()] : frags;
++      return { text, truth: { type: 'NAME', frags: f } };
++    },
++    org() { const o = pick(ORG); return { text: o, truth: { type: 'ORG', frags: [o.split(' ')[0] === 'Praxis' ? o : o.split(' ').slice(0, 2).join(' ')] } }; },
++    address() {
++      const st = pick(STREET), no = int(1, 150) + (r() < 0.2 ? pick(['a', 'b']) : '');
++      if (r() < 0.65) { const city = pick(CITY_DE), plz = digits(5); return { text: `${st} ${no}, ${plz} ${city}`, truth: [{ type: 'ADR', frags: [`${st} ${no}`, plz] }, { type: 'ORT', frags: [city.split(' ')[0]] }] }; }
++      const [city, pre] = pick(CITY_4), plz = String(int(1000, 9999));
++      return { text: `${st} ${no}, ${pre}${plz} ${city}`, truth: [{ type: 'ADR', frags: [`${st} ${no}`, plz] }, { type: 'ORT', frags: [city] }] };
++    },
++    phone() {
++      const a = pick(['89', '30', '40', '221', '711', '170', '151', '160']), s = digits(int(6, 8));
++      const forms = [`+49 ${a} ${s}`, `0${a}/${s}`, `0${a} ${s}`, `+49 (0)${a} ${s}`, `0049 ${a} ${s}`, `0${a}-${s}`, `+43 1 ${s}`, `+41 44 ${s.slice(0, 3)} ${s.slice(3)}`];
++      const t = pick(forms);
++      return { text: t, truth: { type: 'TEL', frags: [t.match(/\d+(?=\D*$)/)[0]] } };
++    },
++    email() { const e = `${pick(FIRST).toLowerCase().replace(/[^a-z]/g, '')}.${pick(LAST).toLowerCase().replace(/[^a-z]/g, '')}@${pick(['firma', 'beispiel', 'mail', 'kanzlei'])}.${pick(['de', 'com', 'at', 'ch'])}`; return { text: e, truth: { type: 'EMAIL', frags: [e] } }; },
++    url() { const u = pick([`https://www.beispiel.de/kunde/${int(1000, 99999)}?token=${letters(6).toLowerCase()}`, `www.linkedin.com/in/${pick(FIRST).toLowerCase().replace(/[^a-z]/g, '')}-${pick(LAST).toLowerCase().replace(/[^a-z]/g, '')}`, `https://portal.firma.de/vorgang/${digits(6)}`]); return { text: u, truth: { type: 'URL', frags: [u.replace(/^https?:\/\/(www\.)?/, '').split('/').slice(1).join('/') || u] } }; },
++    ip() { const v = r() < 0.7 ? `${int(1, 223)}.${int(0, 255)}.${int(0, 255)}.${int(1, 254)}` : `2001:0db8:${digits(4)}:0000:0000:${letters(4).toLowerCase().replace(/[g-z]/g, 'a')}:0370:7334`; return { text: v, truth: { type: 'IP', frags: [v.includes(':') ? v.split(':').slice(4).join(':') : v] } }; },
++    iban() { const cc = pick(Object.keys(IBANS)), raw = IBANS[cc](); const form = pick(['spaced', 'spaced', 'compact', 'lower']); const t = form === 'spaced' ? group4(raw) : form === 'compact' ? raw : raw.toLowerCase(); return { text: t, truth: { type: 'IBAN', frags: [t.slice(-9)] } }; },
++    card() { const brand = pick([['4', 16], ['51', 16], ['55', 16], ['37', 15]]); const n = luhnComplete(brand[0], brand[1]); const t = brand[1] === 15 ? `${n.slice(0, 4)} ${n.slice(4, 10)} ${n.slice(10)}` : group4(n); return { text: t, truth: { type: 'CARD', frags: [t.slice(-9)] } }; },
++    taxid() { const d = digits(11), t = pick([`${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5, 8)} ${d.slice(8)}`, d]); return { text: t, truth: { type: 'TAXID', frags: [t.slice(-6)] } }; },
++    date() {
++      const d = int(1, 28), m = int(1, 12), y = int(1940, 2005);
++      const forms = [`${pad(d)}.${pad(m)}.${y}`, `${d}. ${MONTH_DE[m - 1]} ${y}`, `${y}-${pad(m)}-${pad(d)}`, `${pad(d)}/${pad(m)}/${y}`, `${d} ${MONTH_EN[m - 1]} ${y}`];
++      const t = pick(forms); return { text: t, truth: { type: 'DATUM', frags: [t] } };
++    },
++    plate() { const p = `${pick(['M', 'B', 'HH', 'K', 'S', 'F', 'DD', 'N'])}-${letters(int(1, 2))} ${int(1, 9999)}${r() < 0.15 ? 'E' : ''}`; return { text: p, truth: { type: 'KFZ', frags: [p] } }; },
++    vin() { const v = (letters(3).replace(/[IOQ]/g, 'X') + 'ZZZ' + digits(3) + letters(2).replace(/[IOQ]/g, 'A') + digits(6)).slice(0, 17).padEnd(17, '0'); return { text: v, truth: { type: 'KFZ', frags: [v] } }; },
++    amount() { const t = `${int(10, 9999)},${pad(int(0, 99))} EUR`; return { text: t, truth: { type: 'BETRAG', frags: [t.split(' ')[0]] } }; },
++  };
++  return g;
++}
++
++// ---- Vorlagen: jede gibt { text, truth } zurueck ----
++const T = {
++  rechnung(g) {
++    const org = g.org(), cust = g.name('full'), adr = g.address(), tel = g.phone(), mail = g.email(), ib = g.iban(), dt = g.date(), am = g.amount();
++    return [`${org.text}\n${adr.text}\n\nRechnung Nr. ${g.digits(7)}\n\nSehr geehrte(r) ${cust.text},\nfür Ihre Bestellung berechnen wir ${am.text}. Bitte überweisen Sie bis zum ${dt.text} auf IBAN ${ib.text}.\nRückfragen: ${tel.text} oder ${mail.text}.\n\nMit freundlichen Grüßen\n${g.name('full').text}`, [org, cust, adr, tel, mail, ib, dt, am]];
++  },
++  kuendigung(g) {
++    const me = g.name('formal'), adr = g.address(), org = g.org(), oadr = g.address(), dt = g.date(), id = g.taxid();
++    return [`${me.text}\n${adr.text}\n\n${org.text}\n${oadr.text}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: ${dt.text}. Steuer-ID: ${id.text}.\n\nMit freundlichen Grüßen\n${me.text}`, [me, adr, org, oadr, { text: dt.text, truth: dt.truth }, { text: id.text, truth: id.truth }]];
++  },
++  arztbrief(g) {
++    const pat = g.name('full'), dt = g.date(), adr = g.address(), arzt = g.name('formal'), praxis = g.org();
++    return [`${praxis.text}\n\nPatient: ${pat.text}, geboren am ${dt.text}\nAnschrift: ${adr.text}\n\nSehr geehrte Frau Kollegin, sehr geehrter Herr Kollege,\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch ${arzt.text}.\n\nMit kollegialen Grüßen\n${arzt.text}`, [praxis, pat, dt, adr, arzt]];
++  },
++  mahnung(g) {
++    const s = g.name('herr'), ib = g.iban(), am = g.amount(), org = g.org(), tel = g.phone(), ip = g.ip();
++    return [`${org.text}\nMahnung\n\nSehr geehrter ${s.text},\nsie schulden uns ${am.text}. Zahlung an ${ib.text}. Telefonische Rückfragen: ${tel.text}. Zugriff erfolgte von ${ip.text}.\n`, [org, s, ib, am, tel, ip]];
++  },
++  mail(g) {
++    const a = g.name('full'), b = g.name('full'), ea = g.email(), eb = g.email(), tel = g.phone(), u = g.url();
++    return [`Von: ${a.text} <${ea.text}>\nAn: ${b.text} <${eb.text}>\nBetreff: Unterlagen\n\nHallo ${b.text.split(' ')[0]},\nanbei der Link ${u.text}. Ich bin unter ${tel.text} erreichbar.\n\nViele Grüße\n${a.text}`, [a, b, ea, eb, tel, u]];
++  },
++  schaden(g) {
++    const h = g.name('formal'), k = g.plate(), v = g.vin(), adr = g.address(), org = g.org(), ib = g.iban(), card = g.card();
++    return [`Schadensmeldung an ${org.text}\n\nHalter: ${h.text}\nAnschrift: ${adr.text}\nKennzeichen: ${k.text}\nFahrgestellnummer: ${v.text}\nAuszahlung auf ${ib.text} oder Karte ${card.text}.`, [org, h, adr, k, v, ib, card]];
++  },
++  vollmacht(g) {
++    const a = g.name('initial'), b = g.name('initial'), c = g.name('herr');
++    return [`Vollmacht\n\nHiermit bevollmächtige ich ${a.text}, vertreten durch ${c.text}, sowie ${b.text} zur Abgabe aller Erklärungen.`, [a, b, c]];
++  },
++};
++
++export const TEMPLATES = Object.keys(T);
++
++export function generateDocs(count, seed = 20261020) {
++  const g = makeGen(seed);
++  const docs = [];
++  for (let i = 0; i < count; i++) {
++    const name = TEMPLATES[i % TEMPLATES.length];
++    const [text, items] = T[name](g);
++    const truth = items.flatMap((it) => (Array.isArray(it.truth) ? it.truth : [it.truth]));
++    docs.push({ template: name, text, truth });
++  }
++  return docs;
++}
+diff --git a/tests/eval/out/result.json b/tests/eval/out/result.json
+new file mode 100644
+index 0000000..e65adcb
+--- /dev/null
++++ b/tests/eval/out/result.json
+@@ -0,0 +1,2702 @@
++[
++ {
++  "mode": "wortlisten",
++  "cases": {
++   "NAME": {
++    "total": 24,
++    "leaked": 12,
++    "ids": [
++     "n03",
++     "n04",
++     "n08",
++     "n10",
++     "n12",
++     "n13",
++     "n15",
++     "n17",
++     "n21",
++     "n22",
++     "n23",
++     "n24"
++    ]
++   },
++   "ORG": {
++    "total": 10,
++    "leaked": 2,
++    "ids": [
++     "o03",
++     "o10"
++    ]
++   },
++   "ADR": {
++    "total": 9,
++    "leaked": 3,
++    "ids": [
++     "a09",
++     "a10",
++     "a11"
++    ]
++   },
++   "ORT": {
++    "total": 2,
++    "leaked": 1,
++    "ids": [
++     "a07"
++    ]
++   },
++   "KONTAKT": {
++    "total": 16,
++    "leaked": 8,
++    "ids": [
++     "t06",
++     "t08",
++     "t09",
++     "t10",
++     "u01",
++     "u02",
++     "i01",
++     "i02"
++    ]
++   },
++   "FINANZ": {
++    "total": 20,
++    "leaked": 7,
++    "ids": [
++     "f02",
++     "f07",
++     "f09",
++     "f17",
++     "f18",
++     "f19",
++     "f20"
++    ]
++   },
++   "DATUM": {
++    "total": 6,
++    "leaked": 2,
++    "ids": [
++     "d02",
++     "d05"
++    ]
++   },
++   "KFZ": {
++    "total": 2,
++    "leaked": 2,
++    "ids": [
++     "k01",
++     "k02"
++    ]
++   },
++   "MED": {
++    "total": 2,
++    "leaked": 0,
++    "ids": []
++   },
++   "NEG": {
++    "total": 20,
++    "leaked": 2,
++    "ids": [
++     "x13",
++     "gn04"
++    ]
++   },
++   "G-NAME": {
++    "total": 9,
++    "leaked": 8,
++    "ids": [
++     "ga01",
++     "ga02",
++     "ga03",
++     "ga04",
++     "ga05",
++     "ga06",
++     "ga07",
++     "ga09"
++    ]
++   },
++   "G-KONTAKT": {
++    "total": 5,
++    "leaked": 4,
++    "ids": [
++     "ga10",
++     "ga11",
++     "ga12",
++     "ga13"
++    ]
++   },
++   "G-GERAET": {
++    "total": 2,
++    "leaked": 2,
++    "ids": [
++     "ga15",
++     "ga16"
++    ]
++   },
++   "G-STANDORT": {
++    "total": 2,
++    "leaked": 2,
++    "ids": [
++     "ga17",
++     "ga18"
++    ]
++   },
++   "G-NUMMER": {
++    "total": 5,
++    "leaked": 4,
++    "ids": [
++     "ga19",
++     "ga20",
++     "ga21",
++     "ga23"
++    ]
++   },
++   "G-GEBURT": {
++    "total": 2,
++    "leaked": 2,
++    "ids": [
++     "ga24",
++     "ga25"
++    ]
++   },
++   "G-GEHALT": {
++    "total": 1,
++    "leaked": 0,
++    "ids": []
++   },
++   "G-FAMILIE": {
++    "total": 1,
++    "leaked": 1,
++    "ids": [
++     "ga27"
++    ]
++   },
++   "G-NATION": {
++    "total": 1,
++    "leaked": 1,
++    "ids": [
++     "ga28"
++    ]
++   },
++   "G-ART9": {
++    "total": 11,
++    "leaked": 9,
++    "ids": [
++     "gb01",
++     "gb02",
++     "gb03",
++     "gb04",
++     "gb05",
++     "gb06",
++     "gb08",
++     "gb09",
++     "gb11"
++    ]
++   },
++   "G-ART10": {
++    "total": 3,
++    "leaked": 3,
++    "ids": [
++     "gc01",
++     "gc02",
++     "gc03"
++    ]
++   },
++   "G-FORM": {
++    "total": 10,
++    "leaked": 4,
++    "ids": [
++     "gd01",
++     "gd06",
++     "gd07",
++     "gd10"
++    ]
++   },
++   "G-AUSLAND": {
++    "total": 5,
++    "leaked": 5,
++    "ids": [
++     "ge01",
++     "ge02",
++     "ge03",
++     "ge04",
++     "ge05"
++    ]
++   },
++   "G-SECRET": {
++    "total": 2,
++    "leaked": 2,
++    "ids": [
++     "gf01",
++     "gf02"
++    ]
++   }
++  },
++  "synth": {
++   "ORG": {
++    "total": 30,
++    "leaked": 0
++   },
++   "NAME": {
++    "total": 66,
++    "leaked": 36
++   },
++   "ADR": {
++    "total": 30,
++    "leaked": 5
++   },
++   "ORT": {
++    "total": 30,
++    "leaked": 4
++   },
++   "TEL": {
++    "total": 18,
++    "leaked": 11
++   },
++   "EMAIL": {
++    "total": 18,
++    "leaked": 0
++   },
++   "IBAN": {
++    "total": 18,
++    "leaked": 9
++   },
++   "DATUM": {
++    "total": 18,
++    "leaked": 12
++   },
++   "BETRAG": {
++    "total": 12,
++    "leaked": 0
++   },
++   "TAXID": {
++    "total": 6,
++    "leaked": 5
++   },
++   "IP": {
++    "total": 6,
++    "leaked": 6
++   },
++   "URL": {
++    "total": 6,
++    "leaked": 5
++   },
++   "KFZ": {
++    "total": 12,
++    "leaked": 12
++   },
++   "CARD": {
++    "total": 6,
++    "leaked": 4
++   }
++  },
++  "synthTotal": 276,
++  "synthLeaked": 109,
++  "raw": {
++   "cases": [
++    {
++     "key": "n01",
++     "out": "Sehr geehrter Herr {{NAME_2}}, vielen Dank für Ihre {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "n02",
++     "out": "Sehr geehrte Frau {{NAME_1}}, anbei der Vertrag.",
++     "tokens": 1
++    },
++    {
++     "key": "n03",
++     "out": "Ansprechpartner: Max Mustermann",
++     "tokens": 0
++    },
++    {
++     "key": "n04",
++     "out": "Unterzeichnet von {{NAME_1}} von der Heide am Montag.",
++     "tokens": 1
++    },
++    {
++     "key": "n05",
++     "out": "Patientin: {{NAME_1}} wurde am Dienstag aufgenommen.",
++     "tokens": 1
++    },
++    {
++     "key": "n06",
++     "out": "Gez. i.A. {{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "n07",
++     "out": "Herr {{NAME_2}} und Frau {{NAME_1}} haben den Termin bestätigt.",
++     "tokens": 2
++    },
++    {
++     "key": "n08",
++     "out": "HANS MEIER\nGeschäftsführer",
++     "tokens": 0
++    },
++    {
++     "key": "n09",
++     "out": "Mit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "n10",
++     "out": "Schneider hat gestern angerufen und den Auftrag storniert.",
++     "tokens": 0
++    },
++    {
++     "key": "n11",
++     "out": "Der Kunde {{NAME_1}} An bittet um Rückruf.",
++     "tokens": 1
++    },
++    {
++     "key": "n12",
++     "out": "Mohammed Al-Farsi ist der Bevollmächtigte.",
++     "tokens": 0
++    },
++    {
++     "key": "n13",
++     "out": "{{NAME_1}} und Zoë Müller-Lüdenscheidt unterschrieben.",
++     "tokens": 1
++    },
++    {
++     "key": "n14",
++     "out": "{{NAME_2}} steht vor {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "n15",
++     "out": "J. Müller und M. Schmidt haben zugestimmt.",
++     "tokens": 0
++    },
++    {
++     "key": "n16",
++     "out": "Betreff: Kündigung durch {{NAME_1}}, Kundennummer 4711",
++     "tokens": 1
++    },
++    {
++     "key": "n17",
++     "out": "Eltern: Thomas und {{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "n18",
++     "out": "Vollmacht für {{NAME_1}}, geboren in Linz.",
++     "tokens": 1
++    },
++    {
++     "key": "n19",
++     "out": "Frau {{NAME_1}} (Prokuristin) ist verhindert.",
++     "tokens": 1
++    },
++    {
++     "key": "n20",
++     "out": "Rechnungsempfänger: {{NAME_2}}, Lieferung an {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "n21",
++     "out": "Kontakt: José García und Søren Kierkegaard.",
++     "tokens": 0
++    },
++    {
++     "key": "n22",
++     "out": "Die Anwältin Łucja Wiśniewska vertritt den Kläger.",
++     "tokens": 0
++    },
++    {
++     "key": "n23",
++     "out": "Zeuge: Çağlar Yıldız, wohnhaft in Köln.",
++     "tokens": 0
++    },
++    {
++     "key": "n24",
++     "out": "Von: J. R. Tolkien\nAn: M. Schmidt",
++     "tokens": 0
++    },
++    {
++     "key": "o01",
++     "out": "{{ORG_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "o02",
++     "out": "{{ORG_1}} liefert die Ware.",
++     "tokens": 1
++    },
++    {
++     "key": "o03",
++     "out": "Die Bundesagentur für {{NAME_1}} hat den Bescheid erlassen.",
++     "tokens": 1
++    },
++    {
++     "key": "o04",
++     "out": "Das Konto führt die {{NAME_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "o05",
++     "out": "{{NAME_1}} mbB, Kanzlei am Ring",
++     "tokens": 1
++    },
++    {
++     "key": "o06",
++     "out": "Vertragspartner: {{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "o07",
++     "out": "{{ORG_1}} (haftungsbeschränkt) hat geliefert.",
++     "tokens": 1
++    },
++    {
++     "key": "o08",
++     "out": "{{NAME_1}}, Fakultät für Medizin",
++     "tokens": 1
++    },
++    {
++     "key": "o09",
++     "out": "Arbeitgeber: {{NAME_1}} e.K.",
++     "tokens": 1
++    },
++    {
++     "key": "o10",
++     "out": "Krankenkasse: AOK Bayern",
++     "tokens": 0
++    },
++    {
++     "key": "a01",
++     "out": "{{ADRESSE_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "a02",
++     "out": "{{ADRESSE_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "a03",
++     "out": "{{ADRESSE_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "a04",
++     "out": "{{ADRESSE_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "a05",
++     "out": "Straße des 17. {{ADRESSE_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "a06",
++     "out": "Anschrift: {{ADRESSE_2}}, D-{{ADRESSE_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "a07",
++     "out": "Wir treffen uns in Garmisch-Partenkirchen.",
++     "tokens": 0
++    },
++    {
++     "key": "a08",
++     "out": "Der Kläger wohnt in {{ADRESSE_1}} Breisgau.",
++     "tokens": 1
++    },
++    {
++     "key": "a09",
++     "out": "{{ADRESSE_1}}, 4020 Linz, Österreich",
++     "tokens": 1
++    },
++    {
++     "key": "a10",
++     "out": "Kantonsstrasse 12, 8001 Zürich",
++     "tokens": 0
++    },
++    {
++     "key": "a11",
++     "out": "Bahnhofstrasse 7, {{ADRESSE_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t01",
++     "out": "{{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t02",
++     "out": "{{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t03",
++     "out": "{{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t04",
++     "out": "Erreichbar unter {{TEL_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "t05",
++     "out": "{{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t06",
++     "out": "Zentrale 0049 89 123456",
++     "tokens": 0
++    },
++    {
++     "key": "t07",
++     "out": "{{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t08",
++     "out": "Rückruf unter 0151/23456789 erbeten.",
++     "tokens": 0
++    },
++    {
++     "key": "t09",
++     "out": "Kontakt {{NAME_1}}: +43 1 5121234, Schweiz: +41 44 668 18 00",
++     "tokens": 1
++    },
++    {
++     "key": "t10",
++     "out": "Bitte unter (089) 12 34 56 78 zurückrufen.",
++     "tokens": 0
++    },
++    {
++     "key": "e01",
++     "out": "E-Mail: {{EMAIL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "e02",
++     "out": "Schreiben Sie an {{EMAIL_1}} bitte.",
++     "tokens": 1
++    },
++    {
++     "key": "u01",
++     "out": "Siehe https://www.beispiel.de/kunde/12345?token=abc",
++     "tokens": 0
++    },
++    {
++     "key": "u02",
++     "out": "Profil: www.linkedin.com/in/max-mustermann",
++     "tokens": 0
++    },
++    {
++     "key": "i01",
++     "out": "Zugriff von 192.168.178.20 um 10:15 Uhr",
++     "tokens": 0
++    },
++    {
++     "key": "i02",
++     "out": "Server 2001:0db8:85a3:0000:0000:8a2e:0370:7334 antwortet nicht.",
++     "tokens": 0
++    },
++    {
++     "key": "f01",
++     "out": "IBAN {{IBAN_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f02",
++     "out": "iban: de89370400440532013000",
++     "tokens": 0
++    },
++    {
++     "key": "f03",
++     "out": "Konto {{IBAN_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f04",
++     "out": "Konto {{IBAN_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f05",
++     "out": "BIC: {{BIC_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f06",
++     "out": "{{IBAN_2}}, {{IBAN_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "f07",
++     "out": "Kreditkarte 4111 1111 1111 1111, gültig bis 12/26",
++     "tokens": 0
++    },
++    {
++     "key": "f08",
++     "out": "Betrag: {{BETRAG_2}} bzw. {{BETRAG_1}},- netto",
++     "tokens": 2
++    },
++    {
++     "key": "f09",
++     "out": "Steuer-ID: 12 345 678 901",
++     "tokens": 0
++    },
++    {
++     "key": "f10",
++     "out": "{{KENNNR_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f11",
++     "out": "{{KENNNR_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f12",
++     "out": "SV-Nr. 12 {{TEL_1}} M 123",
++     "tokens": 1
++    },
++    {
++     "key": "f13",
++     "out": "Kranken{{KENNNR_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f14",
++     "out": "{{KENNNR_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f15",
++     "out": "Eingetragen: {{KENNNR_1}} B, {{NAME_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "f16",
++     "out": "{{KENNNR_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f17",
++     "out": "Zahlung an NL91 ABNA {{TEL_1}} und GB29 NWBK 6016 1331 9268 19.",
++     "tokens": 1
++    },
++    {
++     "key": "f18",
++     "out": "FR76 3000 6000 0112 3456 7890 189 sowie IT60 X054 2811 1010 {{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f19",
++     "out": "Karte: 5555 5555 5555 4444 und Amex 3782 822463 10005",
++     "tokens": 0
++    },
++    {
++     "key": "f20",
++     "out": "Steuerliche {{NAME_1}} 65 929 970 489",
++     "tokens": 1
++    },
++    {
++     "key": "d01",
++     "out": "{{DATUM_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "d02",
++     "out": "Geburtsdatum: 12. März 1985",
++     "tokens": 0
++    },
++    {
++     "key": "d03",
++     "out": "{{DATUM_1}} in Köln",
++     "tokens": 1
++    },
++    {
++     "key": "d04",
++     "out": "Geburtstag {{DATUM_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "d05",
++     "out": "Born on 5 July 1990 in Wien.",
++     "tokens": 0
++    },
++    {
++     "key": "d06",
++     "out": "{{DATUM_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "k01",
++     "out": "Kennzeichen M-AB 1234",
++     "tokens": 0
++    },
++    {
++     "key": "k02",
++     "out": "Fahrzeug B-XY 99E, Fahrgestellnummer WVWZZZ1JZXW000001",
++     "tokens": 0
++    },
++    {
++     "key": "m01",
++     "out": "{{MEDIZIN_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "m02",
++     "out": "{{MEDIZIN_2}} einer Depression ({{MEDIZIN_1}}).",
++     "tokens": 2
++    },
++    {
++     "key": "x01",
++     "out": "Der Vertrag wird nach deutschem Recht geschlossen und ist schriftlich zu bestätigen.",
++     "tokens": 0
++    },
++    {
++     "key": "x02",
++     "out": "Gemäß Abs. 2 gilt die Frist von vierzehn Tagen.",
++     "tokens": 0
++    },
++    {
++     "key": "x03",
++     "out": "Die Software läuft auf Windows, macOS und Linux.",
++     "tokens": 0
++    },
++    {
++     "key": "x04",
++     "out": "Am Montag beginnt die Woche; im Januar ist es kalt.",
++     "tokens": 0
++    },
++    {
++     "key": "x05",
++     "out": "Das Projekt wurde erfolgreich abgeschlossen. Vielen Dank für die gute Zusammenarbeit.",
++     "tokens": 0
++    },
++    {
++     "key": "x06",
++     "out": "Lieferung innerhalb Deutschlands, Zahlung per Überweisung.",
++     "tokens": 0
++    },
++    {
++     "key": "x07",
++     "out": "Anreden sind Herr, Frau, Doktor und Professor.",
++     "tokens": 0
++    },
++    {
++     "key": "x08",
++     "out": "Die Datenbank enthält Tabellen und Indizes für das Reporting.",
++     "tokens": 0
++    },
++    {
++     "key": "x09",
++     "out": "Bitte beachten Sie die Hinweise in der Anlage und senden Sie das Formular zurück.",
++     "tokens": 0
++    },
++    {
++     "key": "x10",
++     "out": "Der Geschäftsführer und der Vorstand beschlossen eine Gewinnausschüttung.",
++     "tokens": 0
++    },
++    {
++     "key": "x11",
++     "out": "Das Formular im Format DIN-A4 liegt bei, Version 1.2.3.4 der Software.",
++     "tokens": 0
++    },
++    {
++     "key": "x12",
++     "out": "A. Allgemeines\nI. Einleitung\nB. Leistungen des Auftragnehmers",
++     "tokens": 0
++    },
++    {
++     "key": "x13",
++     "out": "Die Besprechung dauerte von 10:15:30 bis 11:45:10 Uhr, Rechnung Nr. {{TEL_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "x14",
++     "out": "z. B. nach Art. 5 Abs. 1 lit. a der Verordnung, vgl. S. 12 ff.",
++     "tokens": 0
++    },
++    {
++     "key": "x15",
++     "out": "Die Zahl 4111 oder 12345 und der Wert 3,14 sind keine personenbezogenen Daten.",
++     "tokens": 0
++    },
++    {
++     "key": "ga01",
++     "out": "Müller, Hans (geb. Schmidt) wurde am Montag befragt.",
++     "tokens": 0
++    },
++    {
++     "key": "ga02",
++     "out": "Von: Müller, Hans <{{EMAIL_1}}>\nAn: Weber, Anna",
++     "tokens": 1
++    },
++    {
++     "key": "ga03",
++     "out": "MÜLLER, HANS\nGeschäftsführer der {{ORG_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "ga04",
++     "out": "Dr. med. univ. {{NAME_1}} von und zu Hohenberg-Lindenau hat unterschrieben.",
++     "tokens": 1
++    },
++    {
++     "key": "ga05",
++     "out": "Alle nennen ihn nur \"Hotte\", eigentlich {{NAME_1}} aus Dortmund.",
++     "tokens": 1
++    },
++    {
++     "key": "ga06",
++     "out": "Die Tochter von {{NAME_1}}, Sophie, besucht die 3b der Grundschule Am Park.",
++     "tokens": 1
++    },
++    {
++     "key": "ga07",
++     "out": "{{NAME_2}}, danke für Ihre {{NAME_1}}. Gruß, Michael",
++     "tokens": 2
++    },
++    {
++     "key": "ga08",
++     "out": "Lieber {{NAME_2}}, anbei die Unterlagen. Viele Grüße {{NAME_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "ga09",
++     "out": "Antragsteller: Maximilian\n{{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "ga10",
++     "out": "Instagram: @max_mustermann, X: @mmustermann85, Telegram t.me/maxmuster",
++     "tokens": 0
++    },
++    {
++     "key": "ga11",
++     "out": "Mail an max (at) firma (dot) de oder max[at]firma.de bitte.",
++     "tokens": 0
++    },
++    {
++     "key": "ga12",
++     "out": "Rufen Sie an: null eins sieben eins, eins zwei drei vier fünf sechs sieben.",
++     "tokens": 0
++    },
++    {
++     "key": "ga13",
++     "out": "Handy privat: 0171-1234567 (nur WhatsApp), dienstl. +49 (89) 99 88 77-0",
++     "tokens": 0
++    },
++    {
++     "key": "ga14",
++     "out": "{{TEL_2}} · {{TEL_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "ga15",
++     "out": "MAC 00:1A:2B:3C:4D:5E, IMEI 35-209900-176148-1, UUID 123e4567-e89b-12d3-a456-426614174000",
++     "tokens": 0
++    },
++    {
++     "key": "ga16",
++     "out": "Seriennummer {{KENNNR_1}}, Gerät-ID: AB12CD34EF56",
++     "tokens": 1
++    },
++    {
++     "key": "ga17",
++     "out": "Standort laut GPS: 48.137154, 11.576124 (Marienplatz).",
++     "tokens": 0
++    },
++    {
++     "key": "ga18",
++     "out": "Koordinaten 48°08'13.7\"N 11°34'34.0\"E wurden gespeichert.",
++     "tokens": 0
++    },
++    {
++     "key": "ga19",
++     "out": "Kundennummer: 4711-0815, Vertragsnummer VN-2024/{{TEL_1}}, Mitarbeiter-Nr. 100245",
++     "tokens": 1
++    },
++    {
++     "key": "ga20",
++     "out": "Matrikelnummer 2019-345678, Versicherungsnummer 12-3456789-A-001",
++     "tokens": 0
++    },
++    {
++     "key": "ga21",
++     "out": "{{KENNNR_2}}, Führerschein B072RRE2I55, {{KENNNR_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "ga22",
++     "out": "{{KENNNR_1}} gültig bis {{DATUM_1}}, ausgestellt in Hannover",
++     "tokens": 2
++    },
++    {
++     "key": "ga23",
++     "out": "Steuer-IdNr. 86095742719 und SV-Nr. 65 170839 J 008",
++     "tokens": 0
++    },
++    {
++     "key": "ga24",
++     "out": "Max wurde am 3. Mai 1980 in Hannover geboren, 44 Jahre alt.",
++     "tokens": 0
++    },
++    {
++     "key": "ga25",
++     "out": "Geburtsort: Bad Homburg v. d. Höhe, Geburtsname: Fröhlich",
++     "tokens": 0
++    },
++    {
++     "key": "ga26",
++     "out": "Bruttogehalt: {{BETRAG_3}} monatlich, Bonus {{BETRAG_2}}, Pfändung {{BETRAG_1}}",
++     "tokens": 3
++    },
++    {
++     "key": "ga27",
++     "out": "Verheiratet mit {{NAME_1}}, zwei Kinder (Luca, 7 und Mia, 4), ledig geboren Neumann.",
++     "tokens": 1
++    },
++    {
++     "key": "ga28",
++     "out": "Staatsangehörigkeit: türkisch, Aufenthaltstitel gültig bis 12.2026 (Nr. 12345678)",
++     "tokens": 0
++    },
++    {
++     "key": "gb01",
++     "out": "Diagnose: {{NAME_2}} (G35), seit 2019 in Behandlung mit {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "gb02",
++     "out": "Herr {{NAME_1}} ist vom 12.03. bis {{DATUM_1}} arbeitsunfähig (AU) wegen Bandscheibenvorfall.",
++     "tokens": 2
++    },
++    {
++     "key": "gb03",
++     "out": "Schwerbehinderung GdB 60, Merkzeichen G, HIV-positiv seit 2015.",
++     "tokens": 0
++    },
++    {
++     "key": "gb04",
++     "out": "Medikation: Metformin 1000 mg 1-0-1, Ramipril 5 mg, Sertralin 50 mg.",
++     "tokens": 0
++    },
++    {
++     "key": "gb05",
++     "out": "Die Patientin ist schwanger (12. SSW), Rhesusfaktor negativ.",
++     "tokens": 0
++    },
++    {
++     "key": "gb06",
++     "out": "Konfession: römisch-katholisch, Kirchenaustritt am {{DATUM_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "gb07",
++     "out": "Er ist Mitglied der {{NAME_1}} und lehnt Bluttransfusionen ab.",
++     "tokens": 1
++    },
++    {
++     "key": "gb08",
++     "out": "Mitglied der Partei Die Linke seit 2012, Gewerkschaft ver.di {{KENNNR_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "gb09",
++     "out": "Herkunft: Roma aus Rumänien; ethnische Zugehörigkeit: kurdisch.",
++     "tokens": 0
++    },
++    {
++     "key": "gb10",
++     "out": "{{ORG_1}} mit {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "gb11",
++     "out": "Fingerabdruck-Hash 9f86d081884c7d659a2feaa0c55ad015 und DNA-Profil D3S1358.",
++     "tokens": 0
++    },
++    {
++     "key": "gc01",
++     "out": "Verurteilt wegen Betrugs ({{KENNNR_1}} Ds 345/23), Bewährung bis 2026.",
++     "tokens": 1
++    },
++    {
++     "key": "gc02",
++     "out": "Ermittlungsverfahren der {{NAME_2}} I, Js 12345/24, gegen {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "gc03",
++     "out": "Bußgeldbescheid: {{BETRAG_1}} und 2 Punkte in Flensburg, Tatzeit {{DATUM_1}} um 08:12 Uhr.",
++     "tokens": 2
++    },
++    {
++     "key": "gd01",
++     "out": "IBAN DE89 3704 {{TEL_1}} bitte nutzen.",
++     "tokens": 1
++    },
++    {
++     "key": "gd02",
++     "out": "{{TEL_1}} und E-Mail {{EMAIL_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "gd03",
++     "out": "{{ADRESSE_2}}, {{ADRESSE_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "gd04",
++     "out": "IBAN: DE89 3704 {{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "gd05",
++     "out": "Name\tGeburtsdatum\tIBAN\n{{NAME_2}}\t{{DATUM_2}}\t{{IBAN_2}}\n{{NAME_1}}\t{{DATUM_1}}\t{{IBAN_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "gd06",
++     "out": "| Name | E-Mail | Telefon |\n| {{NAME_1}} | {{EMAIL_1}} | 0151 2345678 |",
++     "tokens": 2
++    },
++    {
++     "key": "gd07",
++     "out": "IBAN DE89 37O4 OO44 O532 O13O OO und Tel. O17I 234567O",
++     "tokens": 0
++    },
++    {
++     "key": "gd08",
++     "out": "Hr. {{NAME_1}}, wohnhaft Berlinn, Hauptsr. 5",
++     "tokens": 1
++    },
++    {
++     "key": "gd09",
++     "out": "Seite 2 von 5 | {{ORG_1}} | Vertraulich | Geschäftsführer: {{NAME_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "gd10",
++     "out": "Er sagte: \"Rufen Sie Frau {{NAME_1}} unter 030 5551234 an.\"",
++     "tokens": 1
++    },
++    {
++     "key": "ge01",
++     "out": "Mr. {{NAME_2}}, 12 {{NAME_1}}, London SW1A 1AA, +44 20 7946 0958, NI number QQ 12 34 56 C.",
++     "tokens": 2
++    },
++    {
++     "key": "ge02",
++     "out": "{{NAME_1}}, 15 rue de la Paix, {{ADRESSE_1}}, tél. +33 1 42 68 53 00.",
++     "tokens": 2
++    },
++    {
++     "key": "ge03",
++     "out": "Sig. {{NAME_1}}, codice fiscale RSSMRC85T10A562S, via {{ADRESSE_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "ge04",
++     "out": "Jan {{NAME_1}}, PESEL 44051401359, ul. Marszałkowska 12, 00-001 Warszawa.",
++     "tokens": 1
++    },
++    {
++     "key": "ge05",
++     "out": "{{NAME_1}}ía, DNI 12345678Z, calle {{ADRESSE_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "gf01",
++     "out": "Zugangsdaten: Benutzer: mmustermann, Passwort: Hund#2024!x, API-Key sk-live-4f8a9c2b1d7e",
++     "tokens": 0
++    },
++    {
++     "key": "gf02",
++     "out": "Link zum Zurücksetzen: https://portal.firma.de/reset?token=a8f5f167f44f4964e6c998dee827110c",
++     "tokens": 0
++    },
++    {
++     "key": "gn01",
++     "out": "Die Sitzung dauerte 90 Minuten; es wurden 12 Tagesordnungspunkte behandelt.",
++     "tokens": 0
++    },
++    {
++     "key": "gn02",
++     "out": "Version 2.4.1 wurde am Freitag veröffentlicht (Build 20240315).",
++     "tokens": 0
++    },
++    {
++     "key": "gn03",
++     "out": "Gemäß Art. 9 Abs. 2 lit. a DSGVO ist eine ausdrückliche Einwilligung erforderlich.",
++     "tokens": 0
++    },
++    {
++     "key": "gn04",
++     "out": "Der Umsatz stieg um 12,5 Prozent auf 3,2 {{NAME_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "gn05",
++     "out": "Bitte beachten: Die Hotline ist montags bis freitags von 8 bis 18 Uhr erreichbar.",
++     "tokens": 0
++    }
++   ],
++   "synth": [
++    {
++     "key": "syn0",
++     "out": "{{NAME_2}} (haftungsbeschränkt)\n{{ADRESSE_1}}\n\nRechnung Nr. 2187807\n\nSehr geehrte(r) Ilse von der Šimek,\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum 16/02/1974 auf IBAN {{IBAN_1}}.\nRückfragen: 040/{{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Koch",
++     "tokens": 7
++    },
++    {
++     "key": "syn1",
++     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_3}} e.V.\n{{NAME_2}}, {{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 18. April 1944. Steuer-ID: 07 370 119 647.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "syn2",
++     "out": "{{NAME_5}}\n\nPatient: Petra van {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}śniewska.\n\nMit kollegialen Grüßen\n{{NAME_1}}śniewska",
++     "tokens": 8
++    },
++    {
++     "key": "syn3",
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}}.-Ing. von der Richter,\nsie schulden uns 7{{BETRAG_1}}. Zahlung an at628252687737295392. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von 3.0.184.85.\n",
++     "tokens": 5
++    },
++    {
++     "key": "syn4",
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: Dieter de Bärtschi <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link www.linkedin.com/in/karlheinz-imek. Ich bin unter 0221/16914015 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 5
++    },
++    {
++     "key": "syn5",
++     "out": "{{NAME_2}} (haftungsbeschränkt)\n\nHalter: {{NAME_1}}\nAnschrift: {{ADRESSE_1}} im Breisgau\nKennzeichen: K-YC 7394\nFahrgestellnummer: CZXZZZ750XT118259\nAuszahlung auf es1291811520934795724061 oder Karte 3710 135244 79262.",
++     "tokens": 3
++    },
++    {
++     "key": "syn6",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich F. Dvořák, vertreten durch Herr {{NAME_1}}, sowie T. Kowalski zur Abgabe aller Erklärungen.",
++     "tokens": 1
++    },
++    {
++     "key": "syn7",
++     "out": "{{ORG_1}}\nAm Markt 29, {{ADRESSE_1}}\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 2{{BETRAG_1}}. Bitte überweisen Sie bis zum 26/08/1950 auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 9
++    },
++    {
++     "key": "syn8",
++     "out": "Anna van {{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_3}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 13. Juni 1960. Steuer-ID: 30810518172.\n\nMit freundlichen Grüßen\n{{NAME_2}} van {{NAME_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "syn9",
++     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, geboren am 23. März 1976\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 7
++    },
++    {
++     "key": "syn10",
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 3{{BETRAG_1}}. Zahlung an es5516723628971385112005. {{NAME_1}}: +43 1 33152725. Zugriff erfolgte von 24.205.130.99.\n",
++     "tokens": 4
++    },
++    {
++     "key": "syn11",
++     "out": "Von: Søren de Yilmaz <{{EMAIL_2}}>\nAn: {{NAME_2}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_1}},\nanbei der Link https://portal.firma.de/vorgang/326221. Ich bin unter +43 1 3144571 erreichbar.\n\nViele Grüße\nSøren de Yilmaz",
++     "tokens": 4
++    },
++    {
++     "key": "syn12",
++     "out": "{{NAME_2}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{NAME_1}}\nKennzeichen: B-B 5124\nFahrgestellnummer: YXNZZZ237LF781320\nAuszahlung auf {{IBAN_1}} oder Karte 5111 9135 {{TEL_1}}.",
++     "tokens": 4
++    },
++    {
++     "key": "syn13",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich P. Braun, vertreten durch Herr {{NAME_2}}. van {{NAME_1}}, sowie Y. de Braun zur Abgabe aller Erklärungen.",
++     "tokens": 2
++    },
++    {
++     "key": "syn14",
++     "out": "{{NAME_3}}\n{{ADRESSE_1}}\n\nRechnung Nr. 5954503\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 1{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 9
++    },
++    {
++     "key": "syn15",
++     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 27 April 1981. Steuer-ID: 23 225 924 027.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 5
++    },
++    {
++     "key": "syn16",
++     "out": "{{NAME_3}} (haftungsbeschränkt)\n\nPatient: Sabine von der Dvořák, geboren am 3. November 1968\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_2}}, sehr geehrter Herr {{NAME_1}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch Łucja Richter.\n\nMit kollegialen Grüßen\nŁucja Richter",
++     "tokens": 4
++    },
++    {
++     "key": "syn17",
++     "out": "{{ORG_1}}\nMahnung\n\nSehr geehrter Herr van {{NAME_2}},\nsie schulden uns 5{{BETRAG_1}}. Zahlung an GB43 BRXW {{TEL_1}}. {{NAME_1}}: +41 44 725 000. Zugriff erfolgte von 2001:0db8:3008:0000:0000:acad:0370:7334.\n",
++     "tokens": 5
++    },
++    {
++     "key": "syn18",
++     "out": "Von: Stefan de Wagner <{{EMAIL_2}}>\nAn: Stefan van {{NAME_3}}-Lechner <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link https://www.beispiel.de/kunde/62589?token=pslbll. Ich bin unter 0049 89 717187 erreichbar.\n\nViele Grüße\n{{NAME_1}} de Wagner",
++     "tokens": 5
++    },
++    {
++     "key": "syn19",
++     "out": "{{NAME_2}}\n\nHalter: Lena van {{NAME_1}}: Kantonsstrasse 48, 9106 Wien\nKennzeichen: N-B 4147\nFahrgestellnummer: JVXZZZ121YA102297\nAuszahlung auf {{IBAN_1}} oder Karte 4792 5713 {{TEL_1}}.",
++     "tokens": 4
++    },
++    {
++     "key": "syn20",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich O. Neumann, vertreten durch Herr {{NAME_1}}, sowie I. de Zimmermann zur Abgabe aller Erklärungen.",
++     "tokens": 1
++    },
++    {
++     "key": "syn21",
++     "out": "{{NAME_2}}\n{{ADRESSE_1}}\n\nRechnung Nr. 3674750\n\nSehr geehrte(r) Stefan Yıldız,\nfür Ihre Bestellung berechnen wir 9{{BETRAG_1}}. Bitte überweisen Sie bis zum 15. April 1945 auf IBAN {{IBAN_1}}.\nRückfragen: 0160-3957664 oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}ía",
++     "tokens": 6
++    },
++    {
++     "key": "syn22",
++     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 4 August 1976. Steuer-ID: 14 328 {{TEL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "syn23",
++     "out": "{{NAME_4}} e.V.\n\nPatient: Jürgen de Schäfer, geboren am 11. Februar 1945\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}} von der Richter.\n\nMit kollegialen Grüßen\n{{NAME_1}} von der Richter",
++     "tokens": 6
++    },
++    {
++     "key": "syn24",
++     "out": "{{NAME_3}} e.V.\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns {{BETRAG_1}}. Zahlung an IT56 O603 4859 5707 2503 1908 403. {{NAME_1}}: +43 1 9360239. Zugriff erfolgte von 71.165.185.246.\n",
++     "tokens": 4
++    },
++    {
++     "key": "syn25",
++     "out": "Von: Hannelore van {{NAME_1}} <{{EMAIL_2}}>\nAn: Łucja Schmidt-Weber <{{EMAIL_1}}>\nBetreff: Unterlagen\n\nHallo Łucja,\nanbei der Link https://portal.firma.de/vorgang/653246. Ich bin unter +43 1 74395998 erreichbar.\n\nViele Grüße\n{{NAME_2}} van {{NAME_1}}",
++     "tokens": 5
++    },
++    {
++     "key": "syn26",
++     "out": "{{NAME_1}}\n\nHalter: Petra von der Bauer\nAnschrift: {{ADRESSE_1}} Breisgau\nKennzeichen: M-TM 2488\nFahrgestellnummer: SZEZZZ644VT009979\nAuszahlung auf {{IBAN_1}} oder Karte 3779 416917 76686.",
++     "tokens": 3
++    },
++    {
++     "key": "syn27",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich R. van {{NAME_2}}ía, vertreten durch Herr {{NAME_1}}, sowie H. de Šimek zur Abgabe aller Erklärungen.",
++     "tokens": 2
++    },
++    {
++     "key": "syn28",
++     "out": "{{NAME_3}}\n{{ADRESSE_1}}\n\nRechnung Nr. 7807742\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 8{{BETRAG_1}}. Bitte überweisen Sie bis zum 26. Februar 1947 auf IBAN {{IBAN_1}}.\nRückfragen: 040/6914722 oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Richter",
++     "tokens": 7
++    },
++    {
++     "key": "syn29",
++     "out": "{{NAME_1}}\nAm Markt 70, 8471 Graz\n\n{{NAME_2}}\n{{ADRESSE_1}} Breisgau\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. Steuer-ID: 27297185274.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 5
++    },
++    {
++     "key": "syn30",
++     "out": "{{NAME_5}} e.V.\n\nPatient: Dieter von der Al-Farsi, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_4}}, sehr geehrter Herr {{NAME_3}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_2}}. Łucja van {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_2}}. Łucja van {{NAME_1}}",
++     "tokens": 9
++    },
++    {
++     "key": "syn31",
++     "out": "{{NAME_3}} (haftungsbeschränkt)\nMahnung\n\nSehr geehrter Herr {{NAME_2}}śniewska,\nsie schulden uns 1{{BETRAG_1}}. Zahlung an de08486242308661475595. {{NAME_1}}: 030/94886556. Zugriff erfolgte von 90.15.39.113.\n",
++     "tokens": 4
++    },
++    {
++     "key": "syn32",
++     "out": "Von: Oliver von der Yıldız <{{EMAIL_2}}>\nAn: Lukas de Kowalski <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link www.linkedin.com/in/alar-voigt. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}} von der Yıldız",
++     "tokens": 5
++    },
++    {
++     "key": "syn33",
++     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}} de Bauer\nAnschrift: {{ADRESSE_1}} Breisgau\nKennzeichen: K-U 8022\nFahrgestellnummer: SLGZZZ739WS113506\nAuszahlung auf at476446497172759884 oder Karte 4671 8183 3751 1146.",
++     "tokens": 3
++    },
++    {
++     "key": "syn34",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich P. von der Yıldız, vertreten durch Herr {{NAME_2}}, sowie F. van {{NAME_1}} zur Abgabe aller Erklärungen.",
++     "tokens": 2
++    },
++    {
++     "key": "syn35",
++     "out": "{{NAME_3}}\n{{ADRESSE_1}}, 9949 Graz\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum 19. Oktober 1988 auf IBAN FR32 6192 4189 0885 7775 9148 676.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} von der Yilmaz",
++     "tokens": 8
++    },
++    {
++     "key": "syn36",
++     "out": "{{NAME_1}}ía\n{{ADRESSE_2}} Breisgau\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. Steuer-ID: 34061524563.\n\nMit freundlichen Grüßen\n{{NAME_1}}ía",
++     "tokens": 6
++    },
++    {
++     "key": "syn37",
++     "out": "{{NAME_5}}\n\nPatient: Zoë de Schäfer, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_4}}, sehr geehrter Herr {{NAME_3}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_2}} van {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_2}} van {{NAME_1}}",
++     "tokens": 9
++    },
++    {
++     "key": "syn38",
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}}śniewska,\nsie schulden uns 3{{BETRAG_1}}. Zahlung an FR91 0148 1277 3047 7534 3910 542. {{NAME_1}}: 0151/{{TEL_1}}. Zugriff erfolgte von 2001:0db8:0846:0000:0000:aaea:0370:7334.\n",
++     "tokens": 5
++    },
++    {
++     "key": "syn39",
++     "out": "Von: Jürgen de Wiśniewska <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link https://portal.firma.de/vorgang/{{TEL_1}}. Ich bin unter 0221-18642930 erreichbar.\n\nViele Grüße\n{{NAME_1}} de Wiśniewska",
++     "tokens": 6
++    },
++    {
++     "key": "syn40",
++     "out": "{{NAME_1}}\n\nHalter: Tobias de Richter\nAnschrift: Bahnhofstrasse 81, 8747 Graz\nKennzeichen: DD-MX 2672\nFahrgestellnummer: GEKZZZ468AG415464\nAuszahlung auf it90k7167359565775215977463 oder Karte 4645 6362 4479 3752.",
++     "tokens": 1
++    },
++    {
++     "key": "syn41",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich Ł. von der Kierkegaard, vertreten durch Herr {{NAME_1}}, sowie N. Obermaier zur Abgabe aller Erklärungen.",
++     "tokens": 1
++    }
++   ]
++  }
++ },
++ {
++  "mode": "ki",
++  "cases": {
++   "NAME": {
++    "total": 24,
++    "leaked": 5,
++    "ids": [
++     "n08",
++     "n13",
++     "n15",
++     "n23",
++     "n24"
++    ]
++   },
++   "ORG": {
++    "total": 10,
++    "leaked": 0,
++    "ids": []
++   },
++   "ADR": {
++    "total": 9,
++    "leaked": 3,
++    "ids": [
++     "a09",
++     "a10",
++     "a11"
++    ]
++   },
++   "ORT": {
++    "total": 2,
++    "leaked": 0,
++    "ids": []
++   },
++   "KONTAKT": {
++    "total": 16,
++    "leaked": 8,
++    "ids": [
++     "t06",
++     "t08",
++     "t09",
++     "t10",
++     "u01",
++     "u02",
++     "i01",
++     "i02"
++    ]
++   },
++   "FINANZ": {
++    "total": 20,
++    "leaked": 7,
++    "ids": [
++     "f02",
++     "f07",
++     "f09",
++     "f17",
++     "f18",
++     "f19",
++     "f20"
++    ]
++   },
++   "DATUM": {
++    "total": 6,
++    "leaked": 2,
++    "ids": [
++     "d02",
++     "d05"
++    ]
++   },
++   "KFZ": {
++    "total": 2,
++    "leaked": 2,
++    "ids": [
++     "k01",
++     "k02"
++    ]
++   },
++   "MED": {
++    "total": 2,
++    "leaked": 0,
++    "ids": []
++   },
++   "NEG": {
++    "total": 20,
++    "leaked": 3,
++    "ids": [
++     "x06",
++     "x13",
++     "gn04"
++    ]
++   },
++   "G-NAME": {
++    "total": 9,
++    "leaked": 3,
++    "ids": [
++     "ga03",
++     "ga05",
++     "ga09"
++    ]
++   },
++   "G-KONTAKT": {
++    "total": 5,
++    "leaked": 4,
++    "ids": [
++     "ga10",
++     "ga11",
++     "ga12",
++     "ga13"
++    ]
++   },
++   "G-GERAET": {
++    "total": 2,
++    "leaked": 2,
++    "ids": [
++     "ga15",
++     "ga16"
++    ]
++   },
++   "G-STANDORT": {
++    "total": 2,
++    "leaked": 2,
++    "ids": [
++     "ga17",
++     "ga18"
++    ]
++   },
++   "G-NUMMER": {
++    "total": 5,
++    "leaked": 4,
++    "ids": [
++     "ga19",
++     "ga20",
++     "ga21",
++     "ga23"
++    ]
++   },
++   "G-GEBURT": {
++    "total": 2,
++    "leaked": 2,
++    "ids": [
++     "ga24",
++     "ga25"
++    ]
++   },
++   "G-GEHALT": {
++    "total": 1,
++    "leaked": 0,
++    "ids": []
++   },
++   "G-FAMILIE": {
++    "total": 1,
++    "leaked": 0,
++    "ids": []
++   },
++   "G-NATION": {
++    "total": 1,
++    "leaked": 1,
++    "ids": [
++     "ga28"
++    ]
++   },
++   "G-ART9": {
++    "total": 11,
++    "leaked": 9,
++    "ids": [
++     "gb01",
++     "gb02",
++     "gb03",
++     "gb04",
++     "gb05",
++     "gb06",
++     "gb08",
++     "gb09",
++     "gb11"
++    ]
++   },
++   "G-ART10": {
++    "total": 3,
++    "leaked": 3,
++    "ids": [
++     "gc01",
++     "gc02",
++     "gc03"
++    ]
++   },
++   "G-FORM": {
++    "total": 10,
++    "leaked": 4,
++    "ids": [
++     "gd01",
++     "gd06",
++     "gd07",
++     "gd10"
++    ]
++   },
++   "G-AUSLAND": {
++    "total": 5,
++    "leaked": 5,
++    "ids": [
++     "ge01",
++     "ge02",
++     "ge03",
++     "ge04",
++     "ge05"
++    ]
++   },
++   "G-SECRET": {
++    "total": 2,
++    "leaked": 2,
++    "ids": [
++     "gf01",
++     "gf02"
++    ]
++   }
++  },
++  "synth": {
++   "ORG": {
++    "total": 30,
++    "leaked": 0
++   },
++   "NAME": {
++    "total": 66,
++    "leaked": 18
++   },
++   "ADR": {
++    "total": 30,
++    "leaked": 5
++   },
++   "ORT": {
++    "total": 30,
++    "leaked": 0
++   },
++   "TEL": {
++    "total": 18,
++    "leaked": 11
++   },
++   "EMAIL": {
++    "total": 18,
++    "leaked": 0
++   },
++   "IBAN": {
++    "total": 18,
++    "leaked": 9
++   },
++   "DATUM": {
++    "total": 18,
++    "leaked": 12
++   },
++   "BETRAG": {
++    "total": 12,
++    "leaked": 0
++   },
++   "TAXID": {
++    "total": 6,
++    "leaked": 5
++   },
++   "IP": {
++    "total": 6,
++    "leaked": 6
++   },
++   "URL": {
++    "total": 6,
++    "leaked": 5
++   },
++   "KFZ": {
++    "total": 12,
++    "leaked": 12
++   },
++   "CARD": {
++    "total": 6,
++    "leaked": 4
++   }
++  },
++  "synthTotal": 276,
++  "synthLeaked": 87,
++  "raw": {
++   "cases": [
++    {
++     "key": "n01",
++     "out": "Sehr geehrter Herr {{NAME_2}}, vielen Dank für Ihre {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "n02",
++     "out": "Sehr geehrte Frau {{NAME_1}}, anbei der Vertrag.",
++     "tokens": 1
++    },
++    {
++     "key": "n03",
++     "out": "Ansprechpartner: {{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "n04",
++     "out": "Unterzeichnet von {{NAME_2}}. Dr. {{NAME_1}} am Montag.",
++     "tokens": 2
++    },
++    {
++     "key": "n05",
++     "out": "Patientin: {{NAME_1}} wurde am Dienstag aufgenommen.",
++     "tokens": 1
++    },
++    {
++     "key": "n06",
++     "out": "Gez. i.A. {{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "n07",
++     "out": "Herr {{NAME_2}} und Frau {{NAME_1}} haben den Termin bestätigt.",
++     "tokens": 2
++    },
++    {
++     "key": "n08",
++     "out": "HANS MEIER\nGeschäftsführer",
++     "tokens": 0
++    },
++    {
++     "key": "n09",
++     "out": "Mit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "n10",
++     "out": "{{NAME_1}} hat gestern angerufen und den Auftrag storniert.",
++     "tokens": 1
++    },
++    {
++     "key": "n11",
++     "out": "Der Kunde {{NAME_1}} bittet um Rückruf.",
++     "tokens": 1
++    },
++    {
++     "key": "n12",
++     "out": "{{NAME_1}} ist der Bevollmächtigte.",
++     "tokens": 1
++    },
++    {
++     "key": "n13",
++     "out": "{{NAME_2}} und {{NAME_1}}-Lüdenscheidt unterschrieben.",
++     "tokens": 2
++    },
++    {
++     "key": "n14",
++     "out": "{{NAME_2}} steht vor {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "n15",
++     "out": "J. Müller und M. Schmidt haben zugestimmt.",
++     "tokens": 0
++    },
++    {
++     "key": "n16",
++     "out": "Betreff: Kündigung durch {{NAME_1}}, Kundennummer 4711",
++     "tokens": 1
++    },
++    {
++     "key": "n17",
++     "out": "Eltern: {{NAME_2}} und {{NAME_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "n18",
++     "out": "Vollmacht für {{NAME_1}}, geboren in {{ORT_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "n19",
++     "out": "Frau {{NAME_1}} (Prokuristin) ist verhindert.",
++     "tokens": 1
++    },
++    {
++     "key": "n20",
++     "out": "Rechnungsempfänger: {{NAME_2}}, Lieferung an {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "n21",
++     "out": "Kontakt: {{NAME_2}} und {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "n22",
++     "out": "Die Anwältin {{NAME_1}} vertritt den Kläger.",
++     "tokens": 1
++    },
++    {
++     "key": "n23",
++     "out": "Zeuge: Çağlar Yıldız, wohnhaft in {{ORT_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "n24",
++     "out": "Von: J. R. Tolkien\nAn: M. {{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "o01",
++     "out": "{{ORG_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "o02",
++     "out": "{{ORG_1}} liefert die Ware.",
++     "tokens": 1
++    },
++    {
++     "key": "o03",
++     "out": "Die {{ORG_1}} hat den Bescheid erlassen.",
++     "tokens": 1
++    },
++    {
++     "key": "o04",
++     "out": "Das Konto führt die {{NAME_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "o05",
++     "out": "{{NAME_1}} mbB, Kanzlei am Ring",
++     "tokens": 1
++    },
++    {
++     "key": "o06",
++     "out": "Vertragspartner: {{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "o07",
++     "out": "{{ORG_1}} (haftungsbeschränkt) hat geliefert.",
++     "tokens": 1
++    },
++    {
++     "key": "o08",
++     "out": "{{ORG_1}}, Fakultät für Medizin",
++     "tokens": 1
++    },
++    {
++     "key": "o09",
++     "out": "Arbeitgeber: {{NAME_1}} e.K.",
++     "tokens": 1
++    },
++    {
++     "key": "o10",
++     "out": "Krankenkasse: {{ORG_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "a01",
++     "out": "{{ORT_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "a02",
++     "out": "{{ORT_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "a03",
++     "out": "{{ORT_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "a04",
++     "out": "{{ORT_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "a05",
++     "out": "Straße des 17. {{ORT_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "a06",
++     "out": "Anschrift: {{ORT_2}}, D-{{ORT_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "a07",
++     "out": "Wir treffen uns in {{ORT_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "a08",
++     "out": "Der Kläger wohnt in {{ADRESSE_1}} Breisgau.",
++     "tokens": 1
++    },
++    {
++     "key": "a09",
++     "out": "{{ORT_3}}, 4020 {{ORT_2}}, {{ORT_1}}",
++     "tokens": 3
++    },
++    {
++     "key": "a10",
++     "out": "Kantonsstrasse 12, 8001 {{ORT_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "a11",
++     "out": "Bahnhofstrasse 7, {{ORT_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t01",
++     "out": "{{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t02",
++     "out": "{{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t03",
++     "out": "{{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t04",
++     "out": "Erreichbar unter {{TEL_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "t05",
++     "out": "{{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t06",
++     "out": "{{ORG_1}} 0049 89 123456",
++     "tokens": 1
++    },
++    {
++     "key": "t07",
++     "out": "{{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "t08",
++     "out": "Rückruf unter 0151/23456789 erbeten.",
++     "tokens": 0
++    },
++    {
++     "key": "t09",
++     "out": "Kontakt {{NAME_1}}: +43 1 5121234, {{ORT_1}}: +41 44 668 18 00",
++     "tokens": 2
++    },
++    {
++     "key": "t10",
++     "out": "Bitte unter (089) 12 34 56 78 zurückrufen.",
++     "tokens": 0
++    },
++    {
++     "key": "e01",
++     "out": "E-Mail: {{EMAIL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "e02",
++     "out": "Schreiben Sie an {{EMAIL_1}} bitte.",
++     "tokens": 1
++    },
++    {
++     "key": "u01",
++     "out": "Siehe https://www.beispiel.de/kunde/12345?token=abc",
++     "tokens": 0
++    },
++    {
++     "key": "u02",
++     "out": "Profil: www.linkedin.com/in/max-mustermann",
++     "tokens": 0
++    },
++    {
++     "key": "i01",
++     "out": "Zugriff von 192.168.178.20 um 10:15 Uhr",
++     "tokens": 0
++    },
++    {
++     "key": "i02",
++     "out": "Server 2001:0db8:85a3:0000:0000:8a2e:0370:7334 antwortet nicht.",
++     "tokens": 0
++    },
++    {
++     "key": "f01",
++     "out": "IBAN {{IBAN_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f02",
++     "out": "iban: de89370400440532013000",
++     "tokens": 0
++    },
++    {
++     "key": "f03",
++     "out": "Konto {{IBAN_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f04",
++     "out": "Konto {{IBAN_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f05",
++     "out": "BIC: {{BIC_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f06",
++     "out": "{{IBAN_2}}, {{IBAN_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "f07",
++     "out": "Kreditkarte 4111 1111 1111 1111, gültig bis 12/26",
++     "tokens": 0
++    },
++    {
++     "key": "f08",
++     "out": "Betrag: {{BETRAG_2}} bzw. {{BETRAG_1}},- netto",
++     "tokens": 2
++    },
++    {
++     "key": "f09",
++     "out": "Steuer-ID: 12 345 678 901",
++     "tokens": 0
++    },
++    {
++     "key": "f10",
++     "out": "{{KENNNR_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f11",
++     "out": "{{KENNNR_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f12",
++     "out": "SV-Nr. 12 {{TEL_1}} M 123",
++     "tokens": 1
++    },
++    {
++     "key": "f13",
++     "out": "Kranken{{KENNNR_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f14",
++     "out": "{{KENNNR_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f15",
++     "out": "Eingetragen: {{KENNNR_1}} B, {{ORG_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "f16",
++     "out": "{{KENNNR_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f17",
++     "out": "Zahlung an NL91 {{ORG_1}} {{TEL_1}} und GB29 NWBK 6016 1331 9268 19.",
++     "tokens": 2
++    },
++    {
++     "key": "f18",
++     "out": "FR76 3000 6000 0112 3456 7890 189 sowie IT60 X054 2811 1010 {{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "f19",
++     "out": "Karte: 5555 5555 5555 4444 und Amex 3782 822463 10005",
++     "tokens": 0
++    },
++    {
++     "key": "f20",
++     "out": "Steuerliche {{NAME_1}} 65 929 970 489",
++     "tokens": 1
++    },
++    {
++     "key": "d01",
++     "out": "{{DATUM_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "d02",
++     "out": "Geburtsdatum: 12. März 1985",
++     "tokens": 0
++    },
++    {
++     "key": "d03",
++     "out": "{{DATUM_1}} in {{ORT_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "d04",
++     "out": "Geburtstag {{DATUM_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "d05",
++     "out": "Born on 5 July 1990 in {{ORT_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "d06",
++     "out": "{{DATUM_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "k01",
++     "out": "Kennzeichen M-AB 1234",
++     "tokens": 0
++    },
++    {
++     "key": "k02",
++     "out": "Fahrzeug B-XY 99E, Fahrgestellnummer WVWZZZ1JZXW000001",
++     "tokens": 0
++    },
++    {
++     "key": "m01",
++     "out": "{{MEDIZIN_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "m02",
++     "out": "{{MEDIZIN_2}} einer Depression ({{MEDIZIN_1}}).",
++     "tokens": 2
++    },
++    {
++     "key": "x01",
++     "out": "Der Vertrag wird nach deutschem Recht geschlossen und ist schriftlich zu bestätigen.",
++     "tokens": 0
++    },
++    {
++     "key": "x02",
++     "out": "Gemäß Abs. 2 gilt die Frist von vierzehn Tagen.",
++     "tokens": 0
++    },
++    {
++     "key": "x03",
++     "out": "Die Software läuft auf Windows, macOS und Linux.",
++     "tokens": 0
++    },
++    {
++     "key": "x04",
++     "out": "Am Montag beginnt die Woche; im Januar ist es kalt.",
++     "tokens": 0
++    },
++    {
++     "key": "x05",
++     "out": "Das Projekt wurde erfolgreich abgeschlossen. Vielen Dank für die gute Zusammenarbeit.",
++     "tokens": 0
++    },
++    {
++     "key": "x06",
++     "out": "Lieferung innerhalb {{ORT_1}}, Zahlung per Überweisung.",
++     "tokens": 1
++    },
++    {
++     "key": "x07",
++     "out": "Anreden sind Herr, Frau, Doktor und Professor.",
++     "tokens": 0
++    },
++    {
++     "key": "x08",
++     "out": "Die Datenbank enthält Tabellen und Indizes für das Reporting.",
++     "tokens": 0
++    },
++    {
++     "key": "x09",
++     "out": "Bitte beachten Sie die Hinweise in der Anlage und senden Sie das Formular zurück.",
++     "tokens": 0
++    },
++    {
++     "key": "x10",
++     "out": "Der Geschäftsführer und der Vorstand beschlossen eine Gewinnausschüttung.",
++     "tokens": 0
++    },
++    {
++     "key": "x11",
++     "out": "Das Formular im Format DIN-A4 liegt bei, Version 1.2.3.4 der Software.",
++     "tokens": 0
++    },
++    {
++     "key": "x12",
++     "out": "A. Allgemeines\nI. Einleitung\nB. Leistungen des Auftragnehmers",
++     "tokens": 0
++    },
++    {
++     "key": "x13",
++     "out": "Die Besprechung dauerte von 10:15:30 bis 11:45:10 Uhr, Rechnung Nr. {{TEL_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "x14",
++     "out": "z. B. nach Art. 5 Abs. 1 lit. a der Verordnung, vgl. S. 12 ff.",
++     "tokens": 0
++    },
++    {
++     "key": "x15",
++     "out": "Die Zahl 4111 oder 12345 und der Wert 3,14 sind keine personenbezogenen Daten.",
++     "tokens": 0
++    },
++    {
++     "key": "ga01",
++     "out": "{{NAME_3}}, {{NAME_2}} (geb. {{NAME_1}}) wurde am Montag befragt.",
++     "tokens": 3
++    },
++    {
++     "key": "ga02",
++     "out": "Von: {{NAME_4}}, {{NAME_3}} <{{EMAIL_1}}>\nAn: {{NAME_2}}, {{NAME_1}}",
++     "tokens": 5
++    },
++    {
++     "key": "ga03",
++     "out": "MÜLLER, HANS\nGeschäftsführer der {{ORG_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "ga04",
++     "out": "Dr. med. univ. {{NAME_1}} von und zu {{ORT_1}} hat unterschrieben.",
++     "tokens": 2
++    },
++    {
++     "key": "ga05",
++     "out": "Alle nennen ihn nur \"Hotte\", eigentlich {{NAME_1}} aus {{ORT_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "ga06",
++     "out": "Die Tochter von {{NAME_2}}, {{NAME_1}}, besucht die 3b der Grundschule Am Park.",
++     "tokens": 2
++    },
++    {
++     "key": "ga07",
++     "out": "{{NAME_3}}, danke für Ihre {{NAME_2}}. Gruß, {{NAME_1}}",
++     "tokens": 3
++    },
++    {
++     "key": "ga08",
++     "out": "Lieber {{NAME_2}}, anbei die Unterlagen. Viele Grüße {{NAME_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "ga09",
++     "out": "Antragsteller: Maximilian\n{{NAME_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "ga10",
++     "out": "Instagram: @max_mustermann, X: @mmustermann85, Telegram t.me/maxmuster",
++     "tokens": 0
++    },
++    {
++     "key": "ga11",
++     "out": "Mail an max (at) firma (dot) de oder max[at]firma.de bitte.",
++     "tokens": 0
++    },
++    {
++     "key": "ga12",
++     "out": "Rufen Sie an: null eins sieben eins, eins zwei drei vier fünf sechs sieben.",
++     "tokens": 0
++    },
++    {
++     "key": "ga13",
++     "out": "Handy privat: 0171-1234567 (nur WhatsApp), dienstl. +49 (89) 99 88 77-0",
++     "tokens": 0
++    },
++    {
++     "key": "ga14",
++     "out": "{{TEL_2}} · {{TEL_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "ga15",
++     "out": "{{ORG_1}} 00:1A:2B:3C:4D:5E, IMEI 35-209900-176148-1, UUID 123e4567-e89b-12d3-a456-426614174000",
++     "tokens": 1
++    },
++    {
++     "key": "ga16",
++     "out": "Seriennummer {{KENNNR_1}}, Gerät-ID: AB12CD34EF56",
++     "tokens": 1
++    },
++    {
++     "key": "ga17",
++     "out": "Standort laut GPS: 48.137154, 11.576124 ({{ORT_1}}).",
++     "tokens": 1
++    },
++    {
++     "key": "ga18",
++     "out": "Koordinaten 48°08'13.7\"N 11°34'34.0\"E wurden gespeichert.",
++     "tokens": 0
++    },
++    {
++     "key": "ga19",
++     "out": "Kundennummer: 4711-0815, Vertragsnummer VN-2024/{{TEL_1}}, Mitarbeiter-Nr. 100245",
++     "tokens": 1
++    },
++    {
++     "key": "ga20",
++     "out": "Matrikelnummer 2019-345678, Versicherungsnummer 12-3456789-A-001",
++     "tokens": 0
++    },
++    {
++     "key": "ga21",
++     "out": "{{KENNNR_2}}, Führerschein B072RRE2I55, {{KENNNR_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "ga22",
++     "out": "{{KENNNR_1}} gültig bis {{DATUM_1}}, ausgestellt in {{ORT_1}}",
++     "tokens": 3
++    },
++    {
++     "key": "ga23",
++     "out": "Steuer-IdNr. 86095742719 und SV-Nr. 65 170839 J 008",
++     "tokens": 0
++    },
++    {
++     "key": "ga24",
++     "out": "{{NAME_1}} wurde am 3. Mai 1980 in {{ORT_1}} geboren, 44 Jahre alt.",
++     "tokens": 2
++    },
++    {
++     "key": "ga25",
++     "out": "Geburtsort: {{ORT_1}} Höhe, Geburtsname: Fröhlich",
++     "tokens": 1
++    },
++    {
++     "key": "ga26",
++     "out": "Bruttogehalt: {{BETRAG_3}} monatlich, Bonus {{BETRAG_2}}, Pfändung {{BETRAG_1}}",
++     "tokens": 3
++    },
++    {
++     "key": "ga27",
++     "out": "Verheiratet mit {{NAME_4}}, zwei Kinder ({{NAME_3}}, 7 und {{NAME_2}}, 4), ledig geboren {{NAME_1}}.",
++     "tokens": 4
++    },
++    {
++     "key": "ga28",
++     "out": "Staatsangehörigkeit: türkisch, Aufenthaltstitel gültig bis 12.2026 (Nr. 12345678)",
++     "tokens": 0
++    },
++    {
++     "key": "gb01",
++     "out": "Diagnose: {{NAME_2}} (G35), seit 2019 in Behandlung mit {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "gb02",
++     "out": "Herr {{NAME_1}} ist vom 12.03. bis {{DATUM_1}} arbeitsunfähig (AU) wegen Bandscheibenvorfall.",
++     "tokens": 2
++    },
++    {
++     "key": "gb03",
++     "out": "Schwerbehinderung GdB 60, Merkzeichen G, HIV-positiv seit 2015.",
++     "tokens": 0
++    },
++    {
++     "key": "gb04",
++     "out": "Medikation: Metformin 1000 mg 1-0-1, Ramipril 5 mg, Sertralin 50 mg.",
++     "tokens": 0
++    },
++    {
++     "key": "gb05",
++     "out": "Die Patientin ist schwanger (12. SSW), Rhesusfaktor negativ.",
++     "tokens": 0
++    },
++    {
++     "key": "gb06",
++     "out": "Konfession: römisch-katholisch, Kirchenaustritt am {{DATUM_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "gb07",
++     "out": "Er ist Mitglied der {{NAME_1}} und lehnt Bluttransfusionen ab.",
++     "tokens": 1
++    },
++    {
++     "key": "gb08",
++     "out": "Mitglied der Partei {{ORG_1}} seit 2012, Gewerkschaft ver.di {{KENNNR_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "gb09",
++     "out": "Herkunft: {{ORT_2}} aus {{ORT_1}}; ethnische Zugehörigkeit: kurdisch.",
++     "tokens": 2
++    },
++    {
++     "key": "gb10",
++     "out": "{{ORG_1}} mit {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "gb11",
++     "out": "Fingerabdruck-Hash 9f86d081884c7d659a2feaa0c55ad015 und DNA-Profil D3S1358.",
++     "tokens": 0
++    },
++    {
++     "key": "gc01",
++     "out": "Verurteilt wegen Betrugs ({{KENNNR_1}} Ds 345/23), Bewährung bis 2026.",
++     "tokens": 1
++    },
++    {
++     "key": "gc02",
++     "out": "Ermittlungsverfahren der {{NAME_2}} I, Js 12345/24, gegen {{NAME_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "gc03",
++     "out": "Bußgeldbescheid: {{BETRAG_1}} und 2 Punkte in {{ORT_1}}, Tatzeit {{DATUM_1}} um 08:12 Uhr.",
++     "tokens": 3
++    },
++    {
++     "key": "gd01",
++     "out": "IBAN DE89 3704 {{TEL_1}} bitte nutzen.",
++     "tokens": 1
++    },
++    {
++     "key": "gd02",
++     "out": "{{TEL_1}} und E-Mail {{EMAIL_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "gd03",
++     "out": "{{ORT_1}}, {{ADRESSE_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "gd04",
++     "out": "IBAN: DE89 3704 {{TEL_1}}",
++     "tokens": 1
++    },
++    {
++     "key": "gd05",
++     "out": "Name\tGeburtsdatum\tIBAN\n{{NAME_2}}\t{{DATUM_2}}\t{{IBAN_2}}\n{{NAME_1}}\t{{DATUM_1}}\t{{IBAN_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "gd06",
++     "out": "| Name | E-Mail | Telefon |\n| {{NAME_1}} | {{EMAIL_1}} | 0151 2345678 |",
++     "tokens": 2
++    },
++    {
++     "key": "gd07",
++     "out": "IBAN DE89 37O4 OO44 O532 O13O OO und Tel. O17I 234567O",
++     "tokens": 0
++    },
++    {
++     "key": "gd08",
++     "out": "Hr. {{NAME_1}}, wohnhaft Berlinn, Hauptsr. 5",
++     "tokens": 1
++    },
++    {
++     "key": "gd09",
++     "out": "Seite 2 von 5 | {{ORG_1}} | Vertraulich | Geschäftsführer: {{NAME_1}}",
++     "tokens": 2
++    },
++    {
++     "key": "gd10",
++     "out": "Er sagte: \"Rufen Sie Frau {{NAME_1}} unter 030 5551234 an.\"",
++     "tokens": 1
++    },
++    {
++     "key": "ge01",
++     "out": "Mr. {{NAME_2}}, 12 {{NAME_1}}, {{ORT_1}} SW1A 1AA, +44 20 7946 0958, NI number QQ 12 34 56 C.",
++     "tokens": 3
++    },
++    {
++     "key": "ge02",
++     "out": "{{NAME_1}}, 15 {{ORT_2}}, {{ORT_1}}, tél. +33 1 42 68 53 00.",
++     "tokens": 3
++    },
++    {
++     "key": "ge03",
++     "out": "Sig. {{NAME_1}}, codice fiscale RSSMRC85T10A562S, via {{ORT_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "ge04",
++     "out": "{{NAME_1}}, PESEL 44051401359, {{ORT_2}} 12, 00-001 {{ORT_1}}.",
++     "tokens": 3
++    },
++    {
++     "key": "ge05",
++     "out": "{{NAME_1}}, DNI 12345678Z, calle {{ORT_1}}.",
++     "tokens": 2
++    },
++    {
++     "key": "gf01",
++     "out": "Zugangsdaten: Benutzer: mmustermann, Passwort: Hund#2024!x, API-Key sk-live-4f8a9c2b1d7e",
++     "tokens": 0
++    },
++    {
++     "key": "gf02",
++     "out": "Link zum Zurücksetzen: https://portal.firma.de/reset?token=a8f5f167f44f4964e6c998dee827110c",
++     "tokens": 0
++    },
++    {
++     "key": "gn01",
++     "out": "Die Sitzung dauerte 90 Minuten; es wurden 12 Tagesordnungspunkte behandelt.",
++     "tokens": 0
++    },
++    {
++     "key": "gn02",
++     "out": "Version 2.4.1 wurde am Freitag veröffentlicht (Build 20240315).",
++     "tokens": 0
++    },
++    {
++     "key": "gn03",
++     "out": "Gemäß Art. 9 Abs. 2 lit. a DSGVO ist eine ausdrückliche Einwilligung erforderlich.",
++     "tokens": 0
++    },
++    {
++     "key": "gn04",
++     "out": "Der Umsatz stieg um 12,5 Prozent auf 3,2 {{NAME_1}}.",
++     "tokens": 1
++    },
++    {
++     "key": "gn05",
++     "out": "Bitte beachten: Die Hotline ist montags bis freitags von 8 bis 18 Uhr erreichbar.",
++     "tokens": 0
++    }
++   ],
++   "synth": [
++    {
++     "key": "syn0",
++     "out": "{{NAME_2}} (haftungsbeschränkt)\n{{ADRESSE_1}}\n\nRechnung Nr. 2187807\n\nSehr geehrte(r) Ilse von der Šimek,\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum 16/02/1974 auf IBAN {{IBAN_1}}.\nRückfragen: 040/{{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
++    },
++    {
++     "key": "syn1",
++     "out": "{{NAME_1}}\n{{ADRESSE_1}}\n\n{{NAME_3}} e.V.\n{{NAME_2}}, {{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 18. April 1944. Steuer-ID: 07 370 119 647.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "syn2",
++     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, geboren am {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}śniewska.\n\nMit kollegialen Grüßen\n{{NAME_1}}śniewska",
++     "tokens": 8
++    },
++    {
++     "key": "syn3",
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}}.-Ing. von der Richter,\nsie schulden uns 7{{BETRAG_1}}. Zahlung an at628252687737295392. {{NAME_1}}: {{TEL_1}}. Zugriff erfolgte von 3.0.184.85.\n",
++     "tokens": 5
++    },
++    {
++     "key": "syn4",
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link www.linkedin.com/in/karlheinz-imek. Ich bin unter 0221/16914015 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "syn5",
++     "out": "{{ORG_1}} (haftungsbeschränkt)\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: K-YC 7394\nFahrgestellnummer: CZXZZZ750XT118259\nAuszahlung auf es1291811520934795724061 oder Karte 3710 135244 79262.",
++     "tokens": 3
++    },
++    {
++     "key": "syn6",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich F. {{NAME_2}}, vertreten durch Herr {{NAME_1}}, sowie T. Kowalski zur Abgabe aller Erklärungen.",
++     "tokens": 2
++    },
++    {
++     "key": "syn7",
++     "out": "{{ORG_1}}\nAm Markt 29, {{ADRESSE_1}}\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 2{{BETRAG_1}}. Bitte überweisen Sie bis zum 26/08/1950 auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 9
++    },
++    {
++     "key": "syn8",
++     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{NAME_2}}\n{{ORT_1}}, {{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 13. Juni 1960. Steuer-ID: 30810518172.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "syn9",
++     "out": "{{NAME_5}}\n\nPatient: {{NAME_4}}, geboren am 23. März 1976\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_1}}",
++     "tokens": 7
++    },
++    {
++     "key": "syn10",
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns 3{{BETRAG_1}}. Zahlung an es5516723628971385112005. {{NAME_1}}: +43 1 33152725. Zugriff erfolgte von 24.205.130.99.\n",
++     "tokens": 4
++    },
++    {
++     "key": "syn11",
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link https://portal.firma.de/vorgang/326221. Ich bin unter +43 1 3144571 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "syn12",
++     "out": "{{NAME_1}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{ORT_1}}\nKennzeichen: B-B 5124\nFahrgestellnummer: YXNZZZ237LF781320\nAuszahlung auf {{IBAN_1}} oder Karte 5111 9135 {{TEL_1}}.",
++     "tokens": 4
++    },
++    {
++     "key": "syn13",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich P. Braun, vertreten durch Herr {{NAME_2}}. {{NAME_1}}, sowie Y. de Braun zur Abgabe aller Erklärungen.",
++     "tokens": 2
++    },
++    {
++     "key": "syn14",
++     "out": "{{NAME_3}}\n{{ADRESSE_1}}\n\nRechnung Nr. 5954503\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 1{{BETRAG_1}}. Bitte überweisen Sie bis zum {{DATUM_1}} auf IBAN {{IBAN_1}}.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 9
++    },
++    {
++     "key": "syn15",
++     "out": "{{NAME_1}}\n{{ADRESSE_1}}\n\n{{NAME_2}}\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 27 April 1981. Steuer-ID: 23 225 924 027.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 5
++    },
++    {
++     "key": "syn16",
++     "out": "{{NAME_4}} (haftungsbeschränkt)\n\nPatient: {{NAME_3}}, geboren am 3. November 1968\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_2}}, sehr geehrter Herr {{NAME_1}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch Łucja Richter.\n\nMit kollegialen Grüßen\nŁucja Richter",
++     "tokens": 5
++    },
++    {
++     "key": "syn17",
++     "out": "{{ORG_1}}\nMahnung\n\nSehr geehrter Herr van {{NAME_2}},\nsie schulden uns 5{{BETRAG_1}}. Zahlung an GB43 BRXW {{TEL_1}}. {{NAME_1}}: +41 44 725 000. Zugriff erfolgte von 2001:0db8:3008:0000:0000:acad:0370:7334.\n",
++     "tokens": 5
++    },
++    {
++     "key": "syn18",
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_4}} van {{NAME_3}}-Lechner <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link https://www.beispiel.de/kunde/62589?token=pslbll. Ich bin unter 0049 89 717187 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 7
++    },
++    {
++     "key": "syn19",
++     "out": "{{NAME_2}}\n\nHalter: Lena van {{NAME_1}}: {{ORT_2}} 48, 9106 {{ORT_1}}\nKennzeichen: N-B 4147\nFahrgestellnummer: JVXZZZ121YA102297\nAuszahlung auf {{IBAN_1}} oder Karte 4792 5713 {{TEL_1}}.",
++     "tokens": 6
++    },
++    {
++     "key": "syn20",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich O. Neumann, vertreten durch Herr {{NAME_1}}, sowie I. de Zimmermann zur Abgabe aller Erklärungen.",
++     "tokens": 1
++    },
++    {
++     "key": "syn21",
++     "out": "{{NAME_3}}\n{{ADRESSE_1}}\n\nRechnung Nr. 3674750\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 9{{BETRAG_1}}. Bitte überweisen Sie bis zum 15. April 1945 auf IBAN {{IBAN_1}}.\nRückfragen: 0160-3957664 oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
++    },
++    {
++     "key": "syn22",
++     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: 4 August 1976. Steuer-ID: 14 328 {{TEL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "syn23",
++     "out": "{{NAME_5}} e.V.\n\nPatient: {{NAME_4}}, geboren am 11. Februar 1945\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_3}}, sehr geehrter Herr {{NAME_2}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch Dr. {{NAME_1}}.\n\nMit kollegialen Grüßen\nDr. {{NAME_1}}",
++     "tokens": 7
++    },
++    {
++     "key": "syn24",
++     "out": "{{NAME_3}} e.V.\nMahnung\n\nSehr geehrter Herr {{NAME_2}},\nsie schulden uns {{BETRAG_1}}. Zahlung an IT56 O603 4859 5707 2503 1908 403. {{NAME_1}}: +43 1 9360239. Zugriff erfolgte von 71.165.185.246.\n",
++     "tokens": 4
++    },
++    {
++     "key": "syn25",
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: Łucja Schmidt-Weber <{{EMAIL_1}}>\nBetreff: Unterlagen\n\nHallo Łucja,\nanbei der Link https://portal.firma.de/vorgang/653246. Ich bin unter +43 1 74395998 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 4
++    },
++    {
++     "key": "syn26",
++     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: M-TM 2488\nFahrgestellnummer: SZEZZZ644VT009979\nAuszahlung auf {{IBAN_1}} oder Karte 3779 416917 76686.",
++     "tokens": 4
++    },
++    {
++     "key": "syn27",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich R. van {{NAME_2}}ía, vertreten durch Herr {{NAME_1}}, sowie H. de Šimek zur Abgabe aller Erklärungen.",
++     "tokens": 2
++    },
++    {
++     "key": "syn28",
++     "out": "{{NAME_3}}\n{{ORT_1}}\n\nRechnung Nr. 7807742\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 8{{BETRAG_1}}. Bitte überweisen Sie bis zum 26. Februar 1947 auf IBAN {{IBAN_1}}.\nRückfragen: 040/6914722 oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 7
++    },
++    {
++     "key": "syn29",
++     "out": "{{NAME_1}}\nAm Markt 70, 8471 {{ORT_2}}\n\n{{NAME_2}}\n{{ORT_1}} im Breisgau\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. Steuer-ID: 27297185274.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "syn30",
++     "out": "{{NAME_6}} e.V.\n\nPatient: {{NAME_5}}, {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrte Frau {{NAME_4}}, sehr geehrter Herr {{NAME_3}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_2}}. {{NAME_1}}.\n\nMit kollegialen Grüßen\n{{NAME_2}}. {{NAME_1}}",
++     "tokens": 10
++    },
++    {
++     "key": "syn31",
++     "out": "{{NAME_3}} (haftungsbeschränkt)\nMahnung\n\nSehr geehrter Herr {{NAME_2}}śniewska,\nsie schulden uns 1{{BETRAG_1}}. Zahlung an de08486242308661475595. {{NAME_1}}: 030/94886556. Zugriff erfolgte von 90.15.39.113.\n",
++     "tokens": 4
++    },
++    {
++     "key": "syn32",
++     "out": "Von: {{NAME_4}} Yıldız <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link www.linkedin.com/in/alar-voigt. Ich bin unter {{TEL_1}} erreichbar.\n\nViele Grüße\n{{NAME_1}} der {{ORG_1}}",
++     "tokens": 8
++    },
++    {
++     "key": "syn33",
++     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}} de Bauer\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: K-U 8022\nFahrgestellnummer: SLGZZZ739WS113506\nAuszahlung auf at476446497172759884 oder Karte 4671 8183 3751 1146.",
++     "tokens": 3
++    },
++    {
++     "key": "syn34",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich P. von der Yıldız, vertreten durch Herr {{NAME_2}}, sowie F. van {{NAME_1}} zur Abgabe aller Erklärungen.",
++     "tokens": 2
++    },
++    {
++     "key": "syn35",
++     "out": "{{NAME_3}}\n{{ADRESSE_1}}, 9949 {{ORT_1}}\n\nRechnung Nr. {{TEL_2}}\n\nSehr geehrte(r) {{NAME_2}},\nfür Ihre Bestellung berechnen wir 7{{BETRAG_1}}. Bitte überweisen Sie bis zum 19. Oktober 1988 auf IBAN FR32 6192 4189 0885 7775 9148 676.\nRückfragen: {{TEL_1}} oder {{EMAIL_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 9
++    },
++    {
++     "key": "syn36",
++     "out": "{{NAME_2}}ía\n{{ADRESSE_2}} Breisgau\n\n{{ORT_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\nhiermit kündige ich meinen Vertrag. Mein Geburtsdatum: {{DATUM_1}}. Steuer-ID: 34061524563.\n\nMit freundlichen Grüßen\n{{NAME_1}}",
++     "tokens": 6
++    },
++    {
++     "key": "syn37",
++     "out": "{{NAME_5}}\n\nPatient: Zoë de Schäfer, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrte Frau {{NAME_4}}, sehr geehrter Herr {{NAME_3}},\nder Patient wurde ambulant behandelt. Die Weiterbehandlung erfolgt durch {{NAME_2}}. Dr. {{NAME_1}}.\n\nMit kollegialen Grüßen\nProf. Dr. {{NAME_1}}",
++     "tokens": 8
++    },
++    {
++     "key": "syn38",
++     "out": "{{NAME_3}}\nMahnung\n\nSehr geehrter Herr Dr. {{NAME_2}},\nsie schulden uns 3{{BETRAG_1}}. Zahlung an FR91 0148 1277 3047 7534 3910 542. {{NAME_1}}: 0151/{{TEL_1}}. Zugriff erfolgte von 2001:0db8:0846:0000:0000:aaea:0370:7334.\n",
++     "tokens": 5
++    },
++    {
++     "key": "syn39",
++     "out": "Von: {{NAME_1}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: Unterlagen\n\n{{NAME_2}},\nanbei der Link https://portal.firma.de/vorgang/{{TEL_1}}. Ich bin unter 0221-18642930 erreichbar.\n\nViele Grüße\n{{NAME_1}}",
++     "tokens": 7
++    },
++    {
++     "key": "syn40",
++     "out": "{{NAME_2}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_2}} 81, 8747 {{ORT_1}}\nKennzeichen: DD-MX 2672\nFahrgestellnummer: GEKZZZ468AG415464\nAuszahlung auf it90k7167359565775215977463 oder Karte 4645 6362 4479 3752.",
++     "tokens": 4
++    },
++    {
++     "key": "syn41",
++     "out": "Vollmacht\n\nHiermit bevollmächtige ich Ł. von {{NAME_2}}, vertreten durch Herr {{NAME_1}}, sowie N. Obermaier zur Abgabe aller Erklärungen.",
++     "tokens": 2
++    }
++   ]
++  }
++ }
++]
+\ No newline at end of file
+diff --git a/tests/eval/run-eval.mjs b/tests/eval/run-eval.mjs
+new file mode 100644
+index 0000000..9e3e1af
+--- /dev/null
++++ b/tests/eval/run-eval.mjs
+@@ -0,0 +1,95 @@
++// Misst die Erkennungsqualitaet in der echten App (Electron, ohne Netz).
++//   node tests/eval/run-eval.mjs             Tabelle ausgeben
++//   node tests/eval/run-eval.mjs --baseline  tests/eval/baseline.json neu schreiben (nur nach bewusster Verbesserung)
++import fs from 'fs';
++import path from 'path';
++import { fileURLToPath } from 'url';
++import { launchApp, toolFrame } from '../helpers.mjs';
++import { CASES as CURATED } from './cases.mjs';
++import { GDPR } from './cases-gdpr.mjs';
++import { generateDocs } from './generate.mjs';
++
++const HERE = path.dirname(fileURLToPath(import.meta.url));
++export const BASELINE = path.join(HERE, 'baseline.json');
++const CASES = [...CURATED, ...GDPR];
++export const SYNTH_DOCS = 42; // 6 Vorlagen x 7, fest, damit Messungen vergleichbar bleiben
++
++async function runIn(frame, items) {
++  // items: [{ key, text, profile }] -> [{ key, out, tokens }]
++  return frame.evaluate(async (list) => {
++    const res = []; let lastProfile = null;
++    for (const it of list) {
++      const prof = it.profile || 'standard';
++      if (prof !== lastProfile) { applyProfile(PROFILES.find((p) => p.id === prof) || PROFILES[0]); lastProfile = prof; }
++      document.getElementById('IT').value = it.text; aiCache = { key: null, spans: [] };
++      await anon();
++      const out = document.getElementById('AT').value;
++      res.push({ key: it.key, out, tokens: (out.match(/\{\{[A-Z_0-9]+\}\}/g) || []).length });
++    }
++    return res;
++  }, items);
++}
++
++export function summarize(mode, caseRes, synthRes, docs) {
++  const byCat = {};
++  for (const [id, cat, , frags] of CASES) {
++    const r = caseRes.find((x) => x.key === id);
++    const c = (byCat[cat] ||= { total: 0, leaked: 0, ids: [] });
++    if (cat === 'NEG') { c.total++; if (r.tokens > 0) { c.leaked++; c.ids.push(id); } }
++    else { c.total++; if (frags.some((f) => r.out.includes(f))) { c.leaked++; c.ids.push(id); } }
++  }
++  const syn = {}; let total = 0, leaked = 0;
++  docs.forEach((d, i) => {
++    const out = synthRes[i].out;
++    for (const t of d.truth) {
++      const k = (syn[t.type] ||= { total: 0, leaked: 0 });
++      k.total++; total++;
++      if (t.frags.some((f) => out.includes(f))) { k.leaked++; leaked++; }
++    }
++  });
++  return { mode, cases: byCat, synth: syn, synthTotal: total, synthLeaked: leaked };
++}
++
++export async function runEval({ withAI }) {
++  const a = await launchApp({ offline: true });
++  try {
++    const f = await toolFrame(a.win);
++    await a.win.waitForTimeout(800);
++    const docs = generateDocs(SYNTH_DOCS);
++    const items = CASES.map(([id, , text, , profile]) => ({ key: id, text, profile }));
++    const synth = docs.map((d, i) => ({ key: 'syn' + i, text: d.text }));
++    const out = [];
++    for (const ai of withAI ? [false, true] : [false]) {
++      // tolerant gegenueber aelteren Staenden (ohne KI-Modus): dort genuegt das explizite Laden des Modells
++      await f.evaluate(async (useAI) => {
++        if (typeof setAIMode === 'function') setAIMode(useAI ? 'auto' : 'off');
++        if (useAI) { await loadAIModel(); if (typeof AI_IDLE_MS !== 'undefined') AI_IDLE_MS = 3600000; }
++      }, ai);
++      if (ai && !(await f.evaluate(() => !!nerPipeline))) throw new Error('KI-Modell nicht geladen');
++      const cr = await runIn(f, items);
++      const sr = await runIn(f, synth);
++      out.push({ ...summarize(ai ? 'ki' : 'wortlisten', cr, sr, docs), raw: { cases: cr, synth: sr } });
++    }
++    return out;
++  } finally { await a.close(); }
++}
++
++function table(sum) {
++  const cats = Object.keys(sum.cases).sort();
++  const lines = [`Modus ${sum.mode}: Handfaelle ${cats.filter((c) => c !== 'NEG').reduce((a, c) => a + sum.cases[c].leaked, 0)} undicht | Negativfaelle falsch maskiert ${sum.cases.NEG ? sum.cases.NEG.leaked : 0} | Synthetik ${sum.synthLeaked}/${sum.synthTotal} undicht`];
++  for (const c of cats) lines.push(`   ${c.padEnd(8)} ${String(sum.cases[c].leaked).padStart(2)}/${String(sum.cases[c].total).padEnd(3)} ${sum.cases[c].ids.join(' ')}`);
++  lines.push('   Synthetik je Typ: ' + Object.entries(sum.synth).map(([k, v]) => `${k} ${v.leaked}/${v.total}`).join(', '));
++  return lines.join('\n');
++}
++
++if (process.argv[1] === fileURLToPath(import.meta.url)) {
++  const res = await runEval({ withAI: true });
++  for (const s of res) console.log(table(s));
++  fs.mkdirSync(path.join(HERE, 'out'), { recursive: true });
++  fs.writeFileSync(path.join(HERE, 'out', 'result.json'), JSON.stringify(res, null, 1));
++  if (process.argv.includes('--baseline')) {
++    const base = Object.fromEntries(res.map((s) => [s.mode, { cases: Object.fromEntries(Object.entries(s.cases).map(([c, v]) => [c, v.leaked])), synthLeaked: s.synthLeaked, synthTotal: s.synthTotal }]));
++    fs.writeFileSync(BASELINE, JSON.stringify(base, null, 2) + '\n');
++    console.log('baseline.json geschrieben');
++  }
++}
+diff --git a/tests/eval/stress.mjs b/tests/eval/stress.mjs
+new file mode 100644
+index 0000000..b151e9f
+--- /dev/null
++++ b/tests/eval/stress.mjs
+@@ -0,0 +1,32 @@
++// Stresstest fuer grosse Dokumente mit vielen verschiedenen Entitaeten.
++// Ausgabe je Groesse: Zeit, Hash der anonymisierten Ausgabe + des Mappings, Rundreise deanon(anon(x)) == x.
++// Zwei Programmstaende vergleichen: gleiche Hashes = identisches Verhalten.
++import crypto from 'crypto';
++import { launchApp, toolFrame } from '../helpers.mjs';
++
++const SIZES = (process.argv[2] || '100,400,1000').split(',').map(Number);
++const a = await launchApp({ offline: true });
++try {
++  const f = await toolFrame(a.win); await a.win.waitForTimeout(800);
++  for (const n of SIZES) {
++    const r = await f.evaluate(async (n) => {
++      const blk = (i) => `Vertrag Nr. ${100000 + i}: Herr Thomas Muster${i} (geb. ${(i % 28) + 1}.0${(i % 9) + 1}.19${60 + (i % 40)}), wohnhaft Musterstraße ${(i % 200) + 1}, ${10000 + (i % 80000)} Beispielstadt, erreichbar unter user${i}@beispiel-${i}.de oder +49 89 ${1000000 + i}. IBAN DE89 3704 0044 0532 ${String(i).padStart(4, '0')} 00. Die Firma Beispiel${i} GmbH zahlt ${i},50 EUR. Frau Anna Schmidt${i} unterschreibt am 12.03.20${10 + (i % 15)}.\n`;
++      const text = Array.from({ length: n }, (_, i) => blk(i)).join('');
++      document.getElementById('IT').value = text;
++      const t0 = performance.now();
++      await anon();
++      const ms = Math.round(performance.now() - t0);
++      const out = document.getElementById('AT').value;
++      const mapping = JSON.stringify(store);
++      document.getElementById('AR').value = out;
++      deanon();
++      const roundtrip = document.getElementById('RT').value === text;
++      // erneutes Anonymisieren desselben Textes muss dasselbe Ergebnis liefern (keine Zustandsreste)
++      await anon();
++      const again = document.getElementById('AT').value === out;
++      return { chars: text.length, entities: Object.keys(store).length, ms, out, mapping, roundtrip, again };
++    }, n);
++    const h = (x) => crypto.createHash('sha256').update(x).digest('hex').slice(0, 12);
++    console.log(JSON.stringify({ n, chars: r.chars, entities: r.entities, ms: r.ms, outHash: h(r.out), mapHash: h(r.mapping), roundtrip: r.roundtrip, stableOnRerun: r.again }));
++  }
++} finally { await a.close(); }
+-- 
+2.43.0
+

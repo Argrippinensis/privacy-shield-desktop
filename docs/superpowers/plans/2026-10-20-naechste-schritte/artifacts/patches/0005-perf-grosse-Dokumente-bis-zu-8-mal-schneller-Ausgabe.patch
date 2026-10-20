@@ -1,0 +1,192 @@
+From d5e65f0fa9be14b59d414f107abe46ce01484a0d Mon Sep 17 00:00:00 2001
+From: Alexander Arcangeli <alexander@arcangeli.eu>
+Date: Tue, 20 Oct 2026 11:11:54 +0200
+Subject: [PATCH 05/11] perf: grosse Dokumente bis zu 8-mal schneller, Ausgabe
+ unveraendert
+
+Die Zeit wuchs quadratisch mit der Zahl verschiedener Entitaeten (6.000 Entitaeten: 10,9 s, davon 7,9 s in tok()).
+- tok(): Rueckwaerts-Index Wert -> Token statt linearer Suche.
+- resolveSpanOverlaps(): zweite Phase mit Binaersuche, nur Nachbarn pruefen.
+- anon(): Text in einem Durchgang zusammensetzen statt n-mal zu kopieren; deanon(): ein Durchgang.
+- computePass1(): letztes Ergebnis merken (wird mit KI zweimal gebraucht), Kopie je Aufruf.
+Messung: 617 Entitaeten 167 -> 75 ms, 2.417: 1.509 -> 175 ms, 6.017: 10.874 -> 1.472 ms; Hash von Text und
+Mapping identisch, Rundreise exakt, 148 Faelle des Harness identisch. tests/perf.test.mjs sichert das ab.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ app/privacy-shield.html | 64 ++++++++++++++++++++++++++++++-----------
+ tests/perf.test.mjs     | 35 ++++++++++++++++++++++
+ 2 files changed, 83 insertions(+), 16 deletions(-)
+ create mode 100644 tests/perf.test.mjs
+
+diff --git a/app/privacy-shield.html b/app/privacy-shield.html
+index c0d6c57..55c7aed 100644
+--- a/app/privacy-shield.html
++++ b/app/privacy-shield.html
+@@ -4203,7 +4203,14 @@
+           return !isCapsPersonName(val);
+         return false;
+       }
++      let lastP1 = { text: null, sig: null, res: null };
+       function computePass1(text) {
++        const sig = ENTS.map((e) => (e.on ? 1 : 0)).join("") + "|" + cvars.map((c) => c.n + "\u0001" + c.p).join("\u0002");
++        if (!(lastP1.text === text && lastP1.sig === sig)) lastP1 = { text: text, sig: sig, res: computePass1Uncached(text) };
++        // Kopie liefern: postProcessSpans veraendert die Treffer (start/end), das darf spaetere Aufrufe nicht beeinflussen.
++        return { p1: lastP1.res.p1.map((x) => Object.assign({}, x)), maskedText: lastP1.res.maskedText };
++      }
++      function computePass1Uncached(text) {
+         const pass1 = [];
+         for (const cv of cvars) {
+           let rx;
+@@ -4385,19 +4392,23 @@
+         working.sort(function (a, b) {
+           return (a.prio || 5) - (b.prio || 5) || b.end - b.start - (a.end - a.start) || a.start - b.start;
+         });
++        // Akzeptierte Treffer sind ueberlappungsfrei und nach Start sortiert: es genuegt, die Nachbarn zu pruefen.
+         const accepted = [];
+         for (const s of working) {
+-          let ok = true;
+-          for (const a of accepted)
+-            if (s.start < a.end && a.start < s.end) {
+-              ok = false;
+-              break;
+-            }
+-          if (ok) accepted.push(s);
++          let lo = 0,
++            hi = accepted.length;
++          while (lo < hi) {
++            const mid = (lo + hi) >> 1;
++            if (accepted[mid].start < s.start) lo = mid + 1;
++            else hi = mid;
++          }
++          const prev = accepted[lo - 1],
++            next = accepted[lo];
++          if (prev && prev.end > s.start) continue;
++          if (next && next.start < s.end) continue;
++          accepted.splice(lo, 0, s);
+         }
+-        return accepted.sort(function (a, b) {
+-          return a.start - b.start;
+-        });
++        return accepted;
+       }
+       function postProcessSpans(text, cands) {
+         const ADDR_LEAD = /^(?:Sitz|Anschrift|Adresse|Geschäftssitz|Wohnsitz|Lieferadresse|Rechnungsadresse)[ \t]+/;
+@@ -4533,12 +4544,16 @@
+             await ensureAISpans(input);
+           }
+           const spans = collectEntities(input);
+-          let txt = input;
++          // Token in unveraenderter Reihenfolge (von hinten) vergeben, Text aber in einem Durchgang zusammensetzen.
++          const parts = [];
++          let tail = input.length;
+           for (let i = spans.length - 1; i >= 0; i--) {
+             const s = spans[i];
+-            const token = tok(s.val, s.pfx, s.col, s.meth);
+-            txt = txt.slice(0, s.start) + token + txt.slice(s.end);
++            parts.push(input.slice(s.end, tail), tok(s.val, s.pfx, s.col, s.meth));
++            tail = s.start;
+           }
++          parts.push(input.slice(0, tail));
++          const txt = parts.reverse().join("");
+           document.getElementById("AT").value = txt;
+           renderMap();
+           setStep(2);
+@@ -4554,10 +4569,23 @@
+         cnt[pfx] = (cnt[pfx] || 0) + 1;
+         return String(cnt[pfx]);
+       }
++      // Rueckwaerts-Index Wert -> erstes Token. Wird neu aufgebaut, sobald `store` ein neues Objekt ist (Zuruecksetzen).
++      let storeIdx = new Map(),
++        storeIdxFor = null;
++      function storeIndex() {
++        if (storeIdxFor !== store) {
++          storeIdx = new Map();
++          for (const [t, d] of Object.entries(store)) if (!storeIdx.has(d.v)) storeIdx.set(d.v, t);
++          storeIdxFor = store;
++        }
++        return storeIdx;
++      }
+       function tok(val, pfx, col, meth) {
+         const cleanVal = val.replace(/\{\{[^}]*\}\}/g, "").trim();
+         if (!cleanVal || cleanVal.length < 2) return val;
+-        for (const [t, d] of Object.entries(store)) if (d.v === cleanVal) return t;
++        const idx = storeIndex();
++        const known = idx.get(cleanVal);
++        if (known !== undefined) return known;
+         const suffix = smartSuffix(cleanVal, pfx);
+         let base = "{{" + pfx + "_" + suffix + "}}";
+         if (store[base] && store[base].v !== cleanVal) {
+@@ -4565,6 +4593,7 @@
+           base = "{{" + pfx + "_" + suffix + "_" + cnt[pfx] + "}}";
+         }
+         store[base] = { v: cleanVal, t: pfx, c: col, m: meth };
++        if (!idx.has(cleanVal)) idx.set(cleanVal, base);
+         return base;
+       }
+       function deanon() {
+@@ -4577,8 +4606,10 @@
+           toast("Kein Mapping vorhanden", "e");
+           return;
+         }
+-        let r = ai;
+-        for (const [t, d] of Object.entries(store)) r = r.split(t).join(d.v);
++        const tokens = Object.keys(store).sort((a, b) => b.length - a.length);
++        const r = tokens.length
++          ? ai.replace(new RegExp(tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g"), (m) => store[m].v)
++          : ai;
+         document.getElementById("RT").value = r;
+         setStep(4);
+         toast("Originaldaten erfolgreich eingesetzt", "s");
+@@ -5107,6 +5138,7 @@
+                 };
+                 const col = colorMap[typStr] || "#8b5cf6";
+                 store[token] = { v: origVal, t: typStr || "IMPORT", c: col, m: methStr };
++                if (!storeIndex().has(origVal)) storeIndex().set(origVal, token);
+                 imported++;
+               }
+             }
+diff --git a/tests/perf.test.mjs b/tests/perf.test.mjs
+new file mode 100644
+index 0000000..00838b7
+--- /dev/null
++++ b/tests/perf.test.mjs
+@@ -0,0 +1,35 @@
++// Grosse Dokumente mit vielen verschiedenen Entitaeten: bleiben schnell, Rundreise und Wiederholung sind exakt.
++// (Vorher wuchs die Zeit quadratisch: 6.000 Entitaeten brauchten ueber 10 s.) Auf langsamen Rechnern: PS_SKIP_PERF=1.
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { launchApp, toolFrame } from './helpers.mjs';
++
++const SKIP = process.env.PS_SKIP_PERF === '1';
++
++for (const { blocks, budgetMs } of [{ blocks: 400, budgetMs: 1000 }, { blocks: 1000, budgetMs: 6000 }]) {
++  test(`Grosses Dokument (${blocks} Abschnitte) wird zuegig anonymisiert und ist rueckfuehrbar`, { skip: SKIP }, async () => {
++    const a = await launchApp({ offline: true });
++    try {
++      const f = await toolFrame(a.win);
++      const r = await f.evaluate(async (n) => {
++        if (typeof setAIMode === 'function') setAIMode('off');
++        const blk = (i) => `Vertrag Nr. ${100000 + i}: Herr Thomas Muster${i} (geb. ${(i % 28) + 1}.0${(i % 9) + 1}.19${60 + (i % 40)}), wohnhaft Musterstraße ${(i % 200) + 1}, ${10000 + (i % 80000)} Beispielstadt, erreichbar unter user${i}@beispiel-${i}.de oder +49 89 ${1000000 + i}. IBAN DE89 3704 0044 0532 ${String(i).padStart(4, '0')} 00. Die Firma Beispiel${i} GmbH zahlt ${i},50 EUR. Frau Anna Schmidt${i} unterschreibt am 12.03.20${10 + (i % 15)}.\n`;
++        const text = Array.from({ length: n }, (_, i) => blk(i)).join('');
++        document.getElementById('IT').value = text;
++        const t0 = performance.now();
++        await anon();
++        const ms = Math.round(performance.now() - t0);
++        const out = document.getElementById('AT').value;
++        document.getElementById('AR').value = out;
++        deanon();
++        const roundtrip = document.getElementById('RT').value === text;
++        await anon();
++        return { ms, entities: Object.keys(store).length, roundtrip, stable: document.getElementById('AT').value === out };
++      }, blocks);
++      console.log(`  ${blocks} Abschnitte, ${r.entities} Entitaeten: ${r.ms} ms (Budget ${budgetMs} ms)`);
++      assert.ok(r.roundtrip, 'deanon(anon(x)) ergibt nicht den Originaltext');
++      assert.ok(r.stable, 'erneutes Anonymisieren liefert ein anderes Ergebnis');
++      assert.ok(r.ms < budgetMs, `zu langsam: ${r.ms} ms > ${budgetMs} ms`);
++    } finally { await a.close(); }
++  });
++}
+-- 
+2.43.0
+
