@@ -12,7 +12,7 @@ Du uebernimmst als Orchestrator das Projekt "PrivacyShield 2.0". Du hast kein Vo
 
 KONTEXT
 - PrivacyShield ist ein Werkzeug, das Dokumente lokal anonymisiert, bevor sie eine KI erreichen (Namen, Nummern, Adressen werden durch Platzhalter ersetzt). Desktop-App (Electron): ~/projects/privacy-shield-desktop, GitHub Argrippinensis/privacy-shield-desktop. Die Website ~/projects/arcangeli-website fasst du NICHT an (Deploy und Aenderungen nur nach ausdruecklicher Freigabe des Nutzers).
-- Stand: Version 1.8.0 ist veroeffentlicht (Tag v1.8.0 auf main); sie ist die Basis fuer 2.0. Ziel dieses Auftrags: Version 2.0 (Vertrauen: Gegenpruefung, Bericht, verschluesselte Zuordnung; Dokumente: Mehrfachverarbeitung, weitere Formate; Erkennung; Bedienung; Betrieb) planmaessig bauen, testen, perfektionieren und in Betas bis zur Freigabe bringen.
+- Stand: Version 1.8.0 ist veroeffentlicht (Tag v1.8.0 auf main); sie ist die Basis fuer 2.0. Ziel dieses Auftrags: Version 2.0 (Vertrauen: Gegenpruefung, Bericht, verschluesselte Zuordnung; Dokumente: Mehrfachverarbeitung, weitere Formate; Erkennung; Bedienung; Betrieb) planmaessig bauen, gruendlich testen und perfektionieren (keine Betas; Veroeffentlichung von 2.0.0 nur nach ausdruecklicher Freigabe des Nutzers).
 - Der gesamte Plan liegt auf dem Git-Branch plan/v2-0 (Ordner docs/superpowers/plans/2026-10-20-v2-0/ und docs/superpowers/plans/2026-10-20-naechste-schritte/). Der Nutzer schreibt Deutsch; antworte Deutsch, knapp. Seine globale Datei ~/CLAUDE.md enthaelt Hausregeln (keine Emojis, nie git add -A, Cloudflare-Regeln) und wird automatisch geladen: halte sie ein.
 
 SCHRITT S0: BOOTSTRAP (jede Sitzung)
