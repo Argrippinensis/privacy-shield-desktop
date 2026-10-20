@@ -8,6 +8,9 @@ import { fileURLToPath } from 'url';
 
 const require = createRequire(import.meta.url);
 const { _electron } = require('playwright-core');
+// Plattform- und Paketmerkmale fuer Tests, die nur dort sinnvoll sind
+export const PACKAGED = !!process.env.PS_PACKAGED_BIN;          // gebautes Programm statt Quelltext: Quelltext-Varianten (makeAppVariant) greifen nicht
+export const MAC = process.platform === 'darwin';               // unsigniert: manueller Update-Weg, kein automatischer Installer
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const electronPath = require('electron');
 

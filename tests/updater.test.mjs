@@ -1,7 +1,7 @@
 // Updater: Nutzer werden nie ausgesperrt; wo Installieren nicht geht, gibt es einen manuellen Weg.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { launchApp, toolFrame, startUpdateServer } from './helpers.mjs';
+import { launchApp, toolFrame, startUpdateServer, MAC } from './helpers.mjs';
 
 const FORCED_STATE = JSON.stringify({ version: '99.0.0', dismissCount: 3 });
 const css = (win, id) => win.evaluate((i) => getComputedStyle(document.getElementById(i)).display, id);
@@ -21,7 +21,7 @@ test('Manueller Modus: Hinweis statt Zwangs-Dialog, Download-Seite oeffnet im Br
   } finally { await a.close(); await srv.close(); }
 });
 
-test('Automatischer Modus: nach 3x Spaeter kommt der Pflicht-Dialog, bei Fehlschlag gibt es einen Ausweg', async () => {
+test('Automatischer Modus: nach 3x Spaeter kommt der Pflicht-Dialog, bei Fehlschlag gibt es einen Ausweg', { skip: MAC && 'macOS: manueller Update-Weg (unsigniert)' }, async () => {
   const srv = await startUpdateServer();
   const a = await launchApp({ env: { PS_FORCE_DEV_UPDATE: '1', PS_UPDATE_FEED: srv.url, APPIMAGE: '/tmp/ps-fake.AppImage' }, files: { 'update-state.json': FORCED_STATE } });
   try {
@@ -36,7 +36,7 @@ test('Automatischer Modus: nach 3x Spaeter kommt der Pflicht-Dialog, bei Fehlsch
   } finally { await a.close(); await srv.close(); }
 });
 
-test('Ohne gespeicherte Ablehnungen erscheint nur das Banner mit Zaehler', async () => {
+test('Ohne gespeicherte Ablehnungen erscheint nur das Banner mit Zaehler', { skip: MAC && 'macOS: manueller Update-Weg (unsigniert)' }, async () => {
   const srv = await startUpdateServer();
   const a = await launchApp({ env: { PS_FORCE_DEV_UPDATE: '1', PS_UPDATE_FEED: srv.url, APPIMAGE: '/tmp/ps-fake.AppImage' } });
   try {

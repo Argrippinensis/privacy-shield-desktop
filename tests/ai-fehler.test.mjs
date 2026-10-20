@@ -2,7 +2,7 @@
 // Hintergrund: Ein Nutzer sah nur "Modell konnte nicht geladen werden" ohne Grund (Modelldatei fehlte oder war blockiert).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { launchApp, toolFrame, runAnon, makeAppVariant } from './helpers.mjs';
+import { launchApp, toolFrame, runAnon, makeAppVariant, PACKAGED } from './helpers.mjs';
 
 const panel = (f) => f.evaluate(() => ({ visible: getComputedStyle(document.getElementById('aiStatusError')).display !== 'none', reason: document.getElementById('aiErrorReason').textContent, code: lastAIError && lastAIError.code }));
 
@@ -11,7 +11,8 @@ for (const [name, opts, code, texts] of [
   ['Modelldatei unvollstaendig (abgeschnitten)', { truncateModelTo: 10_485_760 }, 'ASSETS', [/10,0 MB statt 129,1 MB/, /neu installieren/]],
   ['Modelldatei fehlt und kein Manifest (nur Fehlermeldung des Laders)', { dropModel: true, dropManifest: true }, 'MODEL_FILE', [/nicht gefunden/, /neu installieren/]],
 ]) {
-  test(`KI-Start schlaegt fehl: ${name} -> Ursache sichtbar, Standard-Erkennung laeuft`, async () => {
+  // Gegen das gebaute Programm nicht moeglich (die Installation laesst sich nicht als Variante beschaedigen): laeuft im Quelltext-Lauf der CI
+  test(`KI-Start schlaegt fehl: ${name} -> Ursache sichtbar, Standard-Erkennung laeuft`, { skip: PACKAGED && 'braucht Quelltext-Variante (laeuft in ci.yml)' }, async () => {
     const v = makeAppVariant(opts);
     const a = await launchApp({ offline: true, appDir: v.dir });
     try {
