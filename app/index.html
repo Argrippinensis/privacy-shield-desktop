@@ -118,11 +118,12 @@
   <div id="update-banner">
     <div class="banner-text">
       <div class="banner-title" id="banner-title"></div>
-      <div class="banner-hint">Diese Meldung ist nur 3x wegklickbar, danach wird das Update durchgefuhrt.</div>
+      <div class="banner-hint" id="banner-hint">Diese Meldung ist nur 3x wegklickbar, danach wird das Update durchgeführt.</div>
+      <div class="banner-hint" id="banner-notes"></div>
     </div>
     <div class="banner-actions">
       <button class="btn-later" id="btn-later" onclick="handleLater()">Spater</button>
-      <button class="btn-update" onclick="handleUpdate()">Jetzt aktualisieren</button>
+      <button class="btn-update" id="btn-update" onclick="handleUpdate()">Jetzt aktualisieren</button>
     </div>
   </div>
 
@@ -138,6 +139,8 @@
       <div id="install-msg">Installation lauft, App wird neu gestartet...</div>
       <div class="dialog-actions" id="dialog-actions">
         <button class="btn-force-update" id="btn-force-update" onclick="handleForceUpdate()">Jetzt aktualisieren</button>
+        <button class="btn-quit" id="btn-manual" style="display:none" onclick="handleManualDownload()">Manuell herunterladen</button>
+        <button class="btn-quit" id="btn-continue" style="display:none" onclick="handleContinue()">Ohne Update fortfahren</button>
         <button class="btn-quit" id="btn-quit" onclick="handleQuit()">Programm schliessen</button>
       </div>
     </div>
@@ -163,14 +166,26 @@
 
   <script>
     let pendingVersion = null;
+    // manueller Weg: Installation nicht automatisch möglich (z. B. macOS ohne Signatur, .deb) -> nur Hinweis und Download-Seite
+    let updateManual = false;
+    // Wer das Update nicht installieren kann, darf die App trotzdem benutzen (gilt bis zum nächsten Start)
+    let ignoreForced = false;
+    if (window.electronAPI) window.electronAPI.getUpdateMode().then(function (m) { updateManual = !!m.manual; }).catch(function () {});
+    function forcedAllowed() { return !updateManual && !ignoreForced; }
 
-    function showBanner(version, dismissCount) {
+    function showBanner(version, dismissCount, notes) {
       pendingVersion = version;
       document.getElementById('banner-title').textContent =
-        'Neue Version ' + version + ' verfugbar — jetzt aktualisieren';
+        'Neue Version ' + version + ' verfügbar' + (updateManual ? '' : ' — jetzt aktualisieren');
       const btnLater = document.getElementById('btn-later');
       const remaining = 3 - dismissCount;
-      btnLater.textContent = 'Spater (' + remaining + 'x)';
+      btnLater.textContent = updateManual ? 'Später' : 'Später (' + Math.max(remaining, 0) + '×)';
+      document.getElementById('banner-hint').textContent = updateManual
+        ? 'Diese Version wird nicht automatisch installiert. Bitte laden Sie sie von der Download-Seite herunter.'
+        : (remaining > 0 ? 'Diese Meldung ist nur 3× wegklickbar, danach wird das Update durchgeführt.' : '');
+      document.getElementById('banner-notes').textContent = notes || '';
+      document.getElementById('banner-notes').style.display = notes ? 'block' : 'none';
+      document.getElementById('btn-update').textContent = updateManual ? 'Jetzt herunterladen' : 'Jetzt aktualisieren';
       document.getElementById('update-banner').style.display = 'flex';
     }
 
@@ -190,16 +205,28 @@
       if (!pendingVersion || !window.electronAPI) return;
       const { dismissCount } = await window.electronAPI.dismissUpdate(pendingVersion);
       hideBanner();
-      if (dismissCount >= 3) {
+      if (dismissCount >= 3 && forcedAllowed()) {
         showForcedDialog(pendingVersion);
       }
     }
 
     async function handleUpdate() {
       hideBanner();
-      if (window.electronAPI) {
-        await window.electronAPI.startDownload();
-      }
+      if (!window.electronAPI) return;
+      if (updateManual) await window.electronAPI.openDownloadPage();
+      else await window.electronAPI.startDownload();
+    }
+
+    async function handleManualDownload() {
+      if (window.electronAPI) await window.electronAPI.openDownloadPage();
+    }
+
+    // Aus dem Fehlerzustand heraus ohne Update weiterarbeiten
+    function handleContinue() {
+      ignoreForced = true;
+      document.getElementById('forced-update-overlay').style.display = 'none';
+      document.getElementById('btn-manual').style.display = 'none';
+      document.getElementById('btn-continue').style.display = 'none';
     }
 
     async function handleForceUpdate() {
@@ -218,11 +245,12 @@
     }
 
     if (window.electronAPI) {
-      window.electronAPI.onUpdateAvailable(({ version, dismissCount }) => {
-        if (dismissCount >= 3) {
+      window.electronAPI.onUpdateAvailable(({ version, dismissCount, manual, notes }) => {
+        updateManual = !!manual;
+        if (dismissCount >= 3 && forcedAllowed()) {
           showForcedDialog(version);
         } else {
-          showBanner(version, dismissCount);
+          showBanner(version, dismissCount, notes);
         }
       });
 
@@ -263,6 +291,8 @@
         if (btnForce) { btnForce.disabled = false; btnForce.textContent = 'Erneut versuchen'; }
         if (btnQuit) btnQuit.disabled = false;
         document.getElementById('dialog-actions').style.display = 'flex';
+        document.getElementById('btn-manual').style.display = 'inline-block';
+        document.getElementById('btn-continue').style.display = 'inline-block';
         document.getElementById('forced-update-overlay').style.display = 'flex';
         // For status-dialog if open
         const statusOverlay = document.getElementById('update-status-overlay');
@@ -324,8 +354,9 @@
         document.getElementById('status-message').textContent =
           'Version ' + result.version + ' ist verfügbar. Sie verwenden Version ' + (result.currentVersion || '?') + '.';
         document.getElementById('btn-status-update').style.display = 'inline-block';
-        document.getElementById('btn-status-update').textContent = 'Jetzt aktualisieren';
+        document.getElementById('btn-status-update').textContent = result.manual ? 'Jetzt herunterladen' : 'Jetzt aktualisieren';
         document.getElementById('btn-status-update').disabled = false;
+        updateManual = !!result.manual;
         pendingVersion = result.version;
       } else if (result.error) {
         document.getElementById('status-icon').textContent = '⚠️';
@@ -345,6 +376,7 @@
 
     async function handleStatusUpdate() {
       if (!window.electronAPI) return;
+      if (updateManual) { await window.electronAPI.openDownloadPage(); return; }
       document.getElementById('btn-status-update').disabled = true;
       document.getElementById('btn-status-update').textContent = 'Download läuft...';
       document.getElementById('status-progress-wrap').style.display = 'block';

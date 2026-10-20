@@ -8,8 +8,32 @@ const { Readable } = require('stream');
 // Nur fuer Tests: Updater auch ohne gepacktes Programm ausfuehren (liest dev-app-update.yml).
 if (process.env.PS_FORCE_DEV_UPDATE === '1') autoUpdater.forceDevUpdateConfig = true;
 
+// Nur fuer Tests: Update-Quelle ist ein lokaler Mock-Server statt GitHub.
+if (process.env.PS_UPDATE_FEED) autoUpdater.setFeedURL({ provider: 'generic', url: process.env.PS_UPDATE_FEED });
+
 autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = false;
+
+// Seite mit allen Installern; dorthin fuehrt der manuelle Update-Weg.
+const DOWNLOAD_PAGE = 'https://arcangeli.eu/desktop/';
+
+// Automatisches Installieren gibt es nur, wo es technisch funktioniert: Windows (NSIS), Linux-AppImage und ein
+// signiertes macOS-Programm (package.json: "signedMac": true). Sonst wird nur auf die neue Version hingewiesen.
+function canInstallUpdates() {
+  if (process.env.PS_FORCE_MANUAL_UPDATE === '1') return false;
+  if (process.platform === 'win32') return true;
+  if (process.platform === 'linux') return !!process.env.APPIMAGE;
+  if (process.platform === 'darwin') return require('./package.json').signedMac === true;
+  return false;
+}
+const MANUAL_UPDATE = !canInstallUpdates();
+
+// Release-Notes (Text oder Liste von { note }) als kurzer Klartext
+function plainNotes(n) {
+  if (!n) return '';
+  const raw = Array.isArray(n) ? n.map((x) => (x && x.note) || '').join('\n') : String(n);
+  return raw.replace(/<[^>]*>/g, '').trim().slice(0, 400);
+}
 
 let mainWindow;
 // Nur ein vom Nutzer gestarteter Download darf den Fehler-Dialog ausloesen.
@@ -246,7 +270,17 @@ ipcMain.handle('dismiss-update', (event, version) => {
   return { dismissCount: state.dismissCount };
 });
 
+ipcMain.handle('get-update-mode', () => ({ manual: MANUAL_UPDATE }));
+
+ipcMain.handle('open-download-page', () => {
+  openExternalSafe(DOWNLOAD_PAGE);
+});
+
 ipcMain.handle('start-download', async () => {
+  if (MANUAL_UPDATE) {
+    openExternalSafe(DOWNLOAD_PAGE);
+    return;
+  }
   downloadActive = true;
   try {
     // Ohne vorherige erfolgreiche Pruefung (z. B. nach "Erneut versuchen") zuerst pruefen.
@@ -274,7 +308,7 @@ ipcMain.handle('check-for-updates', () => {
         settled = true;
         clearTimeout(timeout);
         cleanup();
-        resolve({ updateAvailable: true, version: info.version, currentVersion: app.getVersion() });
+        resolve({ updateAvailable: true, version: info.version, currentVersion: app.getVersion(), manual: MANUAL_UPDATE });
       }
     };
 
@@ -332,7 +366,9 @@ function setupAutoUpdater() {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-available', {
         version: info.version,
-        dismissCount: state.dismissCount
+        dismissCount: state.dismissCount,
+        manual: MANUAL_UPDATE,
+        notes: plainNotes(info.releaseNotes)
       });
     }
   });
