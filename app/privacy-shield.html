@@ -1987,6 +1987,62 @@
     <script src="vendor/jspdf/jspdf.umd.min.js"></script>
     <script src="vendor/jszip/jszip.min.js"></script>
     <script>
+      // Begriffslisten fuer besondere Kategorien (Art. 9 und 10 DSGVO). Ein Begriff verraet die Eigenschaft einer Person
+      // (Krankheit, Religion, Gewerkschaft, Strafdaten ...). Wortlisten koennen auch in unverfaenglichen Texten treffen;
+      // deshalb nur in den Profilen "Medizin" und "Maximal" aktiv. Wortanfang muss stimmen, Endungen sind erlaubt.
+      const SENSITIVE_WORDS = [
+        // Gesundheit: Krankheiten und Zustaende
+        "Diabetes", "Krebs", "Karzinom", "Tumor", "Leukämie", "Lymphom", "Melanom", "Metastase", "Multiple Sklerose", "Parkinson",
+        "Alzheimer", "Demenz", "Epilepsie", "Depression", "Burnout", "Angststörung", "Panikattacke", "Schizophreni", "Psychose",
+        "Posttraumatische", "Autismus", "Hepatitis", "Tuberkulose", "Herzinfarkt", "Schlaganfall", "Herzinsuffizienz", "Bluthochdruck",
+        "Asthma", "Rheuma", "Arthrose", "Bandscheibenvorfall", "Osteoporose", "Migräne", "Chemotherapie", "Strahlentherapie",
+        "Dialyse", "Fehlgeburt", "Abtreibung", "Schwangerschaftsabbruch", "Unfruchtbarkeit", "Alkoholismus", "Alkoholabhängigkeit",
+        "Drogenabhängigkeit", "Suchterkrankung", "Suizid", "Selbstmord", "Essstörung", "Anorexie", "Bulimie", "Schwerbehinderung",
+        "Pflegegrad", "Arbeitsunfähigkeit", "arbeitsunfähig", "Krankschreibung", "Neurodermitis", "Endometriose", "Mukoviszidose",
+        "Hämophilie", "Morbus", "schwanger", "Schwangerschaft",
+        // Gesundheit: Wirkstoffe und Praeparate (Auswahl)
+        "Metformin", "Insulin", "Ramipril", "Sertralin", "Citalopram", "Escitalopram", "Fluoxetin", "Venlafaxin", "Duloxetin",
+        "Amitriptylin", "Mirtazapin", "Quetiapin", "Olanzapin", "Risperidon", "Aripiprazol", "Clozapin", "Haloperidol", "Lithium",
+        "Methylphenidat", "Ritalin", "Lorazepam", "Diazepam", "Tavor", "Valium", "Zolpidem", "Oxycodon", "Morphin", "Fentanyl",
+        "Methadon", "Tramadol", "Levothyroxin", "Bisoprolol", "Metoprolol", "Amlodipin", "Simvastatin", "Atorvastatin", "Pantoprazol",
+        "Omeprazol", "Marcumar", "Phenprocoumon", "Xarelto", "Rivaroxaban", "Eliquis", "Apixaban", "Prednisolon", "Cortison",
+        "Humira", "Adalimumab", "Ocrelizumab", "Interferon", "Truvada", "Biktarvy", "Tamoxifen", "Letrozol", "Cisplatin",
+        "Methotrexat", "Gabapentin", "Pregabalin", "Levodopa", "Donepezil", "Lamotrigin", "Valproat", "Carbamazepin",
+        "Levetiracetam", "Naltrexon", "Buprenorphin",
+        // Religion und Weltanschauung
+        "katholisch", "evangelisch", "evangelisch-lutherisch", "ev.-luth.", "muslimisch", "Muslim", "islamisch", "jüdisch",
+        "Judentum", "buddhistisch", "hinduistisch", "Zeugen Jehovas", "Mormonen", "Freikirche", "Konfession", "Kirchenaustritt",
+        "Kirchenmitglied", "Atheist", "konfessionslos",
+        // Politik und Gewerkschaft
+        "Die Linke", "Die Grünen", "Bündnis 90", "Freie Wähler", "Piratenpartei", "Parteimitglied", "Parteieintritt", "ver.di",
+        "IG Metall", "IG BCE", "IG BAU", "Gewerkschaftsmitglied", "Gewerkschaftszugehörigkeit",
+        // Herkunft
+        "kurdisch", "türkischstämmig", "Migrationshintergrund", "Hautfarbe", "Asylbewerber", "Spätaussiedler", "Sinti",
+        // Sexualleben
+        "homosexuell", "schwul", "lesbisch", "bisexuell", "transgender", "transsexuell", "gleichgeschlechtlich", "Sexualleben",
+        "sexuelle Orientierung", "intersexuell",
+        // Strafdaten
+        "verurteilt", "Verurteilung", "vorbestraft", "Vorstrafe", "Straftat", "Ermittlungsverfahren", "Strafverfahren",
+        "Strafbefehl", "Haftstrafe", "Freiheitsstrafe", "Bewährung", "Untersuchungshaft", "Inhaftierung", "Strafanzeige",
+        "Betrug", "Diebstahl", "Körperverletzung", "Unterschlagung", "Steuerhinterziehung", "Bußgeldbescheid", "Führungszeugnis",
+        "Strafregister",
+        // Biometrie und Genetik
+        "Fingerabdruck", "Gentest", "genetisch", "Iris-Scan", "Gesichtserkennung", "Stimmprofil", "biometrisch",
+      ];
+      // Kurzformen: nur exakt (Grossschreibung), ohne Endungen
+      const SENSITIVE_EXACT = ["HIV", "AIDS", "ADHS", "PTBS", "COPD", "DNA", "CDU", "CSU", "SPD", "FDP", "AfD", "BSW", "GEW", "EVG", "NGG", "DGB", "GdP"];
+      const SENSITIVE_RX = [
+        new RegExp(
+          "(?<![A-Za-z0-9_\\u00C0-\\u024F])(?:" +
+            SENSITIVE_WORDS.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "[ \\t]+")).join("|") +
+            ")[A-Za-zäöüß]*",
+          "gi",
+        ),
+        new RegExp("(?<![A-Za-z0-9_\\u00C0-\\u024F])(?:" + SENSITIVE_EXACT.join("|") + ")(?![A-Za-z0-9_\\u00C0-\\u024F])", "g"),
+        /\bGdB[ \t]?\d{2,3}\b/g,
+        /\b\d{1,2}\.[ \t]?SSW\b/g,
+        /\b\d{1,2}[ \t]+Punkte?[ \t]+in[ \t]+Flensburg\b/gi,
+      ];
       const ENTS = [
         {
           id: "email",
@@ -1995,7 +2051,10 @@
           col: "#06b6d4",
           on: true,
           pfx: "EMAIL",
-          rx: [/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g],
+          rx: [
+            /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g,
+            /([a-zA-Z0-9._%+\-]+[ \t]*(?:\(at\)|\[at\]|\{at\}|\(ät\)|\[ät\])[ \t]*[a-zA-Z0-9\-]+(?:[ \t]*(?:\(dot\)|\[dot\]|\(punkt\)|\.)[ \t]*[a-zA-Z0-9\-]+)*[ \t]*(?:\(dot\)|\[dot\]|\(punkt\)|\.)[ \t]*[a-zA-Z]{2,})/g,
+          ],
         },
         {
           id: "iban",
@@ -2005,7 +2064,7 @@
           on: true,
           pfx: "IBAN",
           rx: [
-            /\b([A-Za-z]{2}\d{2}[ \t]{1,3}[A-Za-z0-9]{4}(?![A-Za-z0-9])(?:[ \t]{1,3}(?=[A-Za-z0-9]{0,3}\d)[A-Za-z0-9]{4}(?![A-Za-z0-9])){1,6}(?:[ \t]{1,3}\d{1,4}(?![A-Za-z0-9]))?)/g,
+            /\b([A-Za-z]{2}\d{2}[ \t]{1,3}[A-Za-z0-9]{4}(?![A-Za-z0-9])(?:[ \t]{1,3}(?=[A-Za-z0-9]{0,3}\d)[A-Za-z0-9]{4}(?![A-Za-z0-9])){1,6}(?:[ \t]{1,3}[\dO]{1,4}(?![A-Za-z0-9]))?)/g,
             /\b([A-Za-z]{2}\d{2}[A-Za-z0-9]{11,30})\b/g,
             /(Konto(?:nummer|nr\.?)?[\s:]+[\d\s]{6,18}\d)/gi,
             /((?:BLZ|Bankleitzahl)[\s:]+\d{8})/gi,
@@ -2019,6 +2078,66 @@
           on: true,
           pfx: "KARTE",
           rx: [/\b((?:\d{4}[ \-]){3}\d{1,7}|\d{4}[ \-]\d{6}[ \-]\d{5}|\d{13,19})\b/g],
+        },
+        {
+          id: "device",
+          lbl: "Geräte-Kennungen",
+          desc: "MAC-Adresse, IMEI, UUID, Seriennummern",
+          col: "#475569",
+          on: true,
+          pfx: "GERAET",
+          rx: [
+            /(?<![0-9A-Fa-f:\-])((?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2})(?![0-9A-Fa-f:\-])/g,
+            /(?<![\d\-])(\d{2}[ \-]?\d{6}[ \-]?\d{6}[ \-]?\d)(?![\d\-])/g,
+            /\b([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\b/g,
+            /(?<=(?:Seriennummer|Serien-?Nr\.?|Gerät(?:e)?-?ID|Device-?ID|Geräte-?Nr\.?|IMEI|Chassis-?Nr\.?)[ \t:#]*)([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/g,
+          ],
+        },
+        {
+          id: "account",
+          lbl: "Benutzerkonten & Zugangsdaten",
+          desc: "Benutzernamen, @-Handles, Passwörter, API-Schlüssel, Token",
+          col: "#dc2626",
+          on: true,
+          pfx: "KONTO",
+          rx: [
+            /(?<![\w@.\/])(@[A-Za-z0-9_]{3,30})(?![\w@])/g,
+            /(?<![\w@.\/-])((?:t\.me|wa\.me|linkedin\.com\/in|instagram\.com|facebook\.com|x\.com|twitter\.com|xing\.com\/profile|tiktok\.com\/@)\/[A-Za-z0-9_.\-\/]{2,60})/gi,
+            /(?<=(?:Benutzer(?:name)?|User(?:name)?|Login|Nutzername|Account|Kennung)[ \t]*[:=][ \t]*)([A-Za-z0-9._\-@]{3,40})/g,
+            /(?<=(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer)[ \t]*[:=]?[ \t]*)(\S{4,64})/gi,
+            /\b((?:sk|pk|rk|api|key|tok|secret|ghp|gho|xox[abp])[-_][A-Za-z0-9_\-]{12,64})\b/g,
+            /\b(eyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,})\b/g,
+            /\b([0-9a-fA-F]{32}|[0-9a-fA-F]{40}|[0-9a-fA-F]{64})\b/g,
+          ],
+        },
+        {
+          id: "geo",
+          lbl: "Standortdaten",
+          desc: "GPS-Koordinaten (Dezimalgrad, Grad/Minuten/Sekunden)",
+          col: "#0d9488",
+          on: true,
+          pfx: "STANDORT",
+          rx: [
+            /(?<![\d.])(-?\d{1,2}\.\d{4,8}[ \t]*[,;][ \t]*-?\d{1,3}\.\d{4,8})(?![\d.])/g,
+            /(\d{1,3}°[ \t]?\d{1,2}['′][ \t]?\d{1,2}(?:[.,]\d+)?["″]?[ \t]?[NSOEW][ \t,;]*\d{1,3}°[ \t]?\d{1,2}['′][ \t]?\d{1,2}(?:[.,]\d+)?["″]?[ \t]?[NSOEW])/g,
+          ],
+        },
+        {
+          id: "intlid",
+          lbl: "Ausländische Kennungen",
+          desc: "Codice fiscale, PESEL, DNI/NIE, UK National Insurance, AHV, Postleitzahlen (UK, PL, NL)",
+          col: "#7c3aed",
+          on: true,
+          pfx: "KENNNR",
+          rx: [
+            /\b([A-Z]{6}\d{2}[A-EHLMPR-T]\d{2}[A-Z]\d{3}[A-Z])\b/g,
+            /(?<=PESEL[ \t:]*)(\d{11})\b/gi,
+            /\b(\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-HJ-NP-TV-Z])\b/g,
+            /\b([A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z][ ]?\d{2}[ ]?\d{2}[ ]?\d{2}[ ]?[A-D])\b/g,
+            /\b(756\.\d{4}\.\d{4}\.\d{2})\b/g,
+            /\b([A-Z]{1,2}\d[A-Z\d]?[ ]?\d[A-Z]{2})\b/g,
+            /(?<=(?:NIE|DNI|NIF|BSN|Burgerservicenummer|AHV-?Nr\.?|Sozialversicherungsnummer)[ \t:]*)([A-Z0-9][A-Z0-9.\- ]{6,16})/g,
+          ],
         },
         {
           id: "bic",
@@ -2041,8 +2160,9 @@
           pfx: "TEL",
           rx: [
             /((?:Tel(?:efon)?\.?(?:[ \-]?(?:Nr|Nummer)\.?)?|Fon|Fax|Mobil(?:e|funk)?|Handy|Rufnummer|Durchwahl|Zentrale)[\s:\.]*(?:\+|00)?\d[\d\s\-\(\)\/\.]{6,24})/gi,
-            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\d{1,5}(?:[ \t\-\.\/]?\d{2,8}){1,3})(?!\d)/g,
+            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\(?\d{1,5}\)?(?:[ \t\-\.\/]?\d{2,8}){1,3})(?!\d)/g,
             /(?<![\d\/\-\.])(\(?0[1-9]\d{1,4}\)?[ \t\/\-\.]?\d{2,10}(?:[ \t\-\.]\d{1,6}){0,3})(?!\d)/g,
+            /\b((?:(?:null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun)[ ,\-]+){6,}(?:null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun))\b/gi,
           ],
         },
         {
@@ -2082,10 +2202,13 @@
           rx: [
             /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)[ \t:]*[\d \t\/\-]{8,18})/gi,
             /((?:USt\.?-?Id(?:Nr\.?)?|Umsatzsteuer-?ID|VAT)[\s:]*[A-Z]{0,2}\d{7,12})/gi,
-            /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?)[\s:]*[A-Z0-9]{6,14})/gi,
+            /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?|Führerschein(?:nummer)?|FS-?Nr\.?|Aufenthaltstitel(?:-?Nr\.?)?)[ \t:]*[A-Z0-9]{6,14})/gi,
+            /(?<=(?:Kunden|Vertrags|Mitarbeiter|Personal|Matrikel|Versicherungs|Policen|Mandanten|Patienten|Fall|Antrags|Referenz|Bestell|Konto|Teilnehmer|Mitglieds|Lizenz|Buchungs|Sendungs|Ticket)-?(?:nummer|nr\.?|no\.?|id)[ \t:#]*)([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/gi,
             /(HR[AB]\s*(?:Nr\.?\s*)?\d{3,8})/g,
             /((?:Aktenzeichen|Az\.?)[\s:]+(?:\d{1,4}\s+[A-Z]{1,5}\s+)?[\w\/\.\-]{2,30})/g,
             /\b(\d{1,3}\s+[A-Z]{1,5}\s+\d{3,6}\/\d{2,4})\b/g,
+            /\b(\d{1,3}[ \t]?(?:Js|Ds|Cs|Gs|Ls|Ns|OWi|StVK|KLs|VRs)[ \t]?\d{1,6}\/\d{2})\b/g,
+            /\b((?:Js|Ds)[ \t]?\d{1,6}\/\d{2})\b/g,
             /((?:Sozialversicherungs(?:nummer|nr\.?)?|SV-?(?:Nr|Nummer)\.?|Rentenversicherungs(?:nummer|nr\.?)|RVNR|SVNR)[ \t:]*\d{2}[ \t\-]?\d{6}[ \t\-]?[A-Z][ \t]?\d{3})/gi,
             /((?:ISIN|WKN)[\s:]+[A-Z0-9]{6,12})/gi,
             /(Steuerberater(?:-?Nr\.?|nummer)[\s:]*[\d\/\-]{5,15})/gi,
@@ -2119,6 +2242,13 @@
           on: true,
           pfx: "ADRESSE",
           rx: [
+            /(?<=(?:Geburtsort|Wohnort|Standort|Einsatzort|Tatort)[ \t]*[:=][ \t]*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ.\- ]{2,40}?)(?=[,;\n]|$)/g,
+            /(\b\d{1,4}[a-z]?,?[ \t]+(?:rue|avenue|boulevard|av\.|bd|impasse|chemin)[ \t]+(?:de[ \t]+(?:la[ \t]+)?|du[ \t]+|des[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30})/g,
+            /(\b(?:via|viale|piazza|corso|vicolo)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
+            /(\b(?:calle|avenida|paseo|plaza|c\/)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4})/g,
+            /(\bul\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
+            /(\b\d{1,4}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?[ \t]+(?:Street|Road|Lane|Avenue|Drive|Way|Close|Square|Gardens)\b)/g,
+            /(\b\d{2}-\d{3}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}|(?<=,[ \t]*)\d{5}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?=[ \t]*(?:\.|$)))/g,
             /([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*(?:[A-Z]{1,2}-)?\d{4,5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
             /([A-ZÜÄÖ][a-züäöß \-]+(?:stra(?:ß|ss)e|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
             /(\b\d{5}[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,28})\b/g,
@@ -2157,6 +2287,8 @@
             /(?<=[^\n\s][ \t])((?:[A-HJ-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
             /(?:^|\n)[ \t]*((?:[J-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
             /(?<![A-Za-z0-9_À-ɏ])([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?[ \t]+[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
+            /(?<=\b(?:Vorname|Nachname|Familienname|Geburtsname|Mädchenname|Rufname|Künstlername|Name|Namen|Unterzeichner|Antragsteller(?:in)?|Patient(?:in)?|Versicherte[rn]?)[ \t]*[:=][ \t]*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})?)/g,
+            /(?<=\b(?:geboren|geb\.)[ \t]+)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![\w.])/g,
             /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2}))/g,
             /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
           ],
@@ -2197,6 +2329,15 @@
           ],
         },
         {
+          id: "sensitive",
+          lbl: "Besondere Kategorien (Art. 9/10 DSGVO)",
+          desc: "Gesundheit, Medikamente, Religion, Gewerkschaft, Partei, Herkunft, Sexualleben, Strafdaten (Begriffslisten)",
+          col: "#be123c",
+          on: false,
+          pfx: "SENSIBEL",
+          rx: SENSITIVE_RX,
+        },
+        {
           id: "med",
           lbl: "Medizinische Daten",
           desc: "Diagnosen, ICD-Codes, Patientendaten",
@@ -2211,6 +2352,10 @@
         },
       ];
       const SW = new Set([
+        "Millionen",
+        "Milliarden",
+        "Euro",
+        "Prozent",
         "Deutschland",
         "Deutschlands",
         "Österreich",
@@ -3125,7 +3270,7 @@
           lbl: "Standard",
           badge: "Empfohlen",
           desc: "Für die meisten Anwendungsfälle. Erkennt persönliche Daten, Kontaktdaten, Finanzdaten und Identifikationsnummern.",
-          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "org", "name", "ip"],
+          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "device", "account", "geo", "intlid", "org", "name", "ip"],
           tags: ["Namen", "Adressen", "IBAN", "Karten", "BIC", "Telefon", "E-Mail", "Daten", "Steuer-IDs", "Beträge", "Kfz", "IP/Links"],
           note: "",
         },
@@ -3134,7 +3279,7 @@
           lbl: "Finanzen & Recht",
           badge: "",
           desc: "Für Anwaltskanzleien, Steuerberatung und Banken. Wie Standard — zusätzlich mit Aktenzeichen, Handelsregisternummern und Sozialversicherungsnummern.",
-          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "org", "name", "ip"],
+          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "device", "account", "geo", "intlid", "org", "name", "ip"],
           tags: ["+ Aktenzeichen", "+ HR-Nummern", "+ SV-Nummern", "Alle Standardfelder"],
           note: "Gleiche Kategorien wie Standard, jedoch mit erweiterten Mustern für rechtliche und steuerliche Dokumente.",
         },
@@ -3143,8 +3288,17 @@
           lbl: "Medizin & Pflege",
           badge: "",
           desc: "Für Kliniken, Praxen und Pflegedienste. Enthält zusätzlich ICD-Codes, Diagnosen und Patientendaten. Finanzdaten (IBAN, Beträge) werden nicht erkannt.",
-          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "paragraf", "ip"],
+          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "sensitive", "paragraf", "ip", "device", "account", "geo", "intlid"],
           tags: ["+ ICD-Codes", "+ Diagnosen", "+ Patientendaten", "Ohne IBAN & Beträge"],
+          note: "",
+        },
+        {
+          id: "strict",
+          lbl: "Maximal",
+          badge: "",
+          desc: "Alle Kategorien aktiv, auch besondere Kategorien (Art. 9/10 DSGVO), Funktionen und Paragraphen. Kann mehr maskieren als nötig; das Ergebnis bitte prüfen.",
+          ents: ENTS.map((e) => e.id),
+          tags: ["Alle Kategorien", "Art. 9/10 DSGVO", "Maximaler Schutz"],
           note: "",
         },
         {
@@ -4075,6 +4229,10 @@
         IP: 1,
         KARTE: 1,
         KFZ: 2,
+        SENSIBEL: 2,
+        GERAET: 1,
+        KONTO: 1,
+        STANDORT: 2,
         TEL: 2,
         BETRAG: 2,
         DATUM: 2,
@@ -4087,8 +4245,8 @@
         NAME: 5,
         ORT: 5,
       };
-      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip", "card", "vehicle"]);
-      const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med"]);
+      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip", "card", "vehicle", "device", "account", "geo", "intlid"]);
+      const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med", "sensitive"]);
       function isWhitelisted(v) {
         return whitelist.some(function (w) {
           return w && v.toLowerCase().includes(w.toLowerCase());
@@ -4114,10 +4272,39 @@
       }
       // Wertpruefung fuer harte Treffer. Muss schon beim Sammeln laufen: ein unplausibler Treffer
       // (z. B. PLZ 05331 als Telefonnummer) wuerde sonst die spaetere Adress-Erkennung verdraengen.
+      function luhnOk(d) {
+        let sum = 0;
+        for (let i = 0; i < d.length; i++) {
+          let n = Number(d[d.length - 1 - i]);
+          if (i % 2 === 1) {
+            n *= 2;
+            if (n > 9) n -= 9;
+          }
+          sum += n;
+        }
+        return sum % 10 === 0;
+      }
+      function validIntlId(val) {
+        const v = val.replace(/[ .\-]/g, "").toUpperCase();
+        if (/^\d{8}[A-Z]$/.test(v) || /^[XYZ]\d{7}[A-Z]$/.test(v)) {
+          // spanische DNI/NIE: Kontrollbuchstabe = Rest der Zahl durch 23
+          const num = Number((v[0] === "X" ? "0" : v[0] === "Y" ? "1" : v[0] === "Z" ? "2" : v[0]) + v.slice(1, 8));
+          return "TRWAGMYFPDXBNJZSQVHLCKE"[num % 23] === v[8];
+        }
+        if (/^\d{11}$/.test(v)) {
+          // polnische PESEL: Pruefsumme
+          const w = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+          const sum = w.reduce((a, x, i) => a + x * Number(v[i]), 0);
+          return (10 - (sum % 10)) % 10 === Number(v[10]);
+        }
+        return true;
+      }
       // Liefert den (ggf. gekuerzten) Wert oder null, wenn der Treffer unplausibel ist.
-      function hardValue(pfx, val) {
+      function hardValue(pfx, val, id) {
+        if (id === "device" && /^\d{2}[ \-]?\d{6}[ \-]?\d{6}[ \-]?\d$/.test(val)) return luhnOk(val.replace(/\D/g, "")) ? val : null;
+        if (id === "intlid" && !validIntlId(val)) return null;
         if (pfx === "KARTE") return isValidCard(val) ? val : null;
-        if (pfx === "TEL") return val.replace(/\D/g, "").length >= 7 ? val : null;
+        if (pfx === "TEL") return /^[A-Za-zäöüß ,\-]+$/.test(val) || val.replace(/\D/g, "").length >= 7 ? val : null;
         if (pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val)) {
           const exp = IBAN_LEN[val.slice(0, 2).toUpperCase()];
           if (exp) {
@@ -4131,7 +4318,8 @@
               }
             }
           }
-          return isValidIBANFormat(val) ? val : null;
+          // OCR-Verwechslung "O" statt "0" in der Kontonummer tolerieren (nur fuer die Pruefung)
+          return isValidIBANFormat(val.slice(0, 4) + val.slice(4).replace(/O/g, "0")) ? val : null;
         }
         return val;
       }
@@ -4250,7 +4438,7 @@
               const raw = gval !== null ? gval : m[0];
               let val = raw.trim();
               if (!val || val.length < 2) continue;
-              val = hardValue(e.pfx, val);
+              val = hardValue(e.pfx, val, e.id);
               if (!val) continue;
               const off = (gval !== null ? m[0].indexOf(raw) : 0) + (raw.length - raw.replace(/^\s+/, "").length);
               pass1.push({
@@ -4327,6 +4515,7 @@
             if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(vt)) continue;
             if (s.pfx === "ORG" && /^(?:AG|GmbH|KG|OHG|GbR|UG|SE|eG|Ltd\.?|Inc\.?|Corp\.?)[ \t]/.test(vt)) continue;
             if (SW.has(vt) || SW.has(vt.replace(/[^A-Za-züäöÄÖÜß]/g, ""))) continue;
+            if (s.pfx === "NAME" && vt.split(/\s+/).every((w) => SW.has(w))) continue;
             pass2.push({
               start: s.start,
               end: s.end,
@@ -4529,6 +4718,13 @@
           if (pe) pe.textContent = "";
         }
       }
+      // Gleich lange Normalisierung fuer die Erkennung (Positionen bleiben gueltig): geschuetzte/schmale Leerzeichen
+      // und Vollbreiten-Ziffern/-Buchstaben werden zu gewoehnlichen Zeichen. Ausgegeben wird weiterhin der Originaltext.
+      function normalizeForDetection(t) {
+        return t
+          .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, " ")
+          .replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
+      }
       async function anonCore() {
         const input = document.getElementById("IT").value;
         if (!input.trim()) {
@@ -4539,11 +4735,13 @@
         cnt = {};
         try {
           await ensureAIReady();
-          if (nerPipeline && aiCache.key !== input) {
+          const det = normalizeForDetection(input);
+          if (nerPipeline && aiCache.key !== det) {
             toast("KI-Analyse läuft...", "s");
-            await ensureAISpans(input);
+            await ensureAISpans(det);
           }
-          const spans = collectEntities(input);
+          const spans = collectEntities(det);
+          spans.forEach((sp) => (sp.val = input.slice(sp.start, sp.end)));
           // Token in unveraenderter Reihenfolge (von hinten) vergeben, Text aber in einem Durchgang zusammensetzen.
           const parts = [];
           let tail = input.length;
