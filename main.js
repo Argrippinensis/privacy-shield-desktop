@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell, protocol, session } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, protocol, session, clipboard } = require('electron');
 const path = require("path")
 const os = require("os");
 const { autoUpdater } = require('electron-updater');
@@ -268,6 +268,11 @@ ipcMain.handle('dismiss-update', (event, version) => {
   state.dismissCount++;
   saveUpdateState(state);
   return { dismissCount: state.dismissCount };
+});
+
+// Kleine Textmengen in die Zwischenablage (Diagnose); Laenge begrenzt
+ipcMain.handle('copy-text', (event, text) => {
+  if (typeof text === 'string' && text.length <= 5000) clipboard.writeText(text);
 });
 
 ipcMain.handle('get-update-mode', () => ({ manual: MANUAL_UPDATE }));

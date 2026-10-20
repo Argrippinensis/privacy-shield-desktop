@@ -122,7 +122,7 @@
       <div class="banner-hint" id="banner-notes"></div>
     </div>
     <div class="banner-actions">
-      <button class="btn-later" id="btn-later" onclick="handleLater()">Spater</button>
+      <button class="btn-later" id="btn-later" onclick="handleLater()">Später</button>
       <button class="btn-update" id="btn-update" onclick="handleUpdate()">Jetzt aktualisieren</button>
     </div>
   </div>
@@ -135,36 +135,47 @@
         <div id="progress-label">Download... 0%</div>
         <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
       </div>
-      <div id="download-error-msg">Download fehlgeschlagen — bitte versuchen Sie es spater erneut.</div>
-      <div id="install-msg">Installation lauft, App wird neu gestartet...</div>
+      <div id="download-error-msg">Download fehlgeschlagen — bitte versuchen Sie es später erneut.</div>
+      <div id="install-msg">Installation läuft, App wird neu gestartet...</div>
       <div class="dialog-actions" id="dialog-actions">
         <button class="btn-force-update" id="btn-force-update" onclick="handleForceUpdate()">Jetzt aktualisieren</button>
         <button class="btn-quit" id="btn-manual" style="display:none" onclick="handleManualDownload()">Manuell herunterladen</button>
         <button class="btn-quit" id="btn-continue" style="display:none" onclick="handleContinue()">Ohne Update fortfahren</button>
-        <button class="btn-quit" id="btn-quit" onclick="handleQuit()">Programm schliessen</button>
+        <button class="btn-quit" id="btn-quit" onclick="handleQuit()">Programm schließen</button>
       </div>
     </div>
   </div>
 
   <div id="update-status-overlay">
     <div class="dialog">
-      <div class="status-icon" id="status-icon">⏳</div>
+      <div class="status-icon" id="status-icon"></div>
       <h2 id="status-title">Suche nach Updates...</h2>
       <p id="status-message">Bitte warten Sie einen Moment.</p>
       <div id="status-progress-wrap">
         <div id="status-progress-label">Download... 0%</div>
         <div id="status-progress-bar-bg"><div id="status-progress-bar-fill"></div></div>
       </div>
-      <div id="status-error-msg" style="display:none;color:#dc2626;font-size:12px;margin-bottom:14px">Download fehlgeschlagen — bitte versuchen Sie es spater erneut.</div>
-      <div id="status-install-msg" style="display:none;color:#16a34a;font-size:13px;margin-bottom:14px;font-weight:600">Installation lauft, App wird neu gestartet...</div>
+      <div id="status-error-msg" style="display:none;color:#dc2626;font-size:12px;margin-bottom:14px">Download fehlgeschlagen — bitte versuchen Sie es später erneut.</div>
+      <div id="status-install-msg" style="display:none;color:#16a34a;font-size:13px;margin-bottom:14px;font-weight:600">Installation läuft, App wird neu gestartet...</div>
       <div id="status-actions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="btn-force-update" id="btn-status-update" onclick="handleStatusUpdate()" style="display:none">Jetzt aktualisieren</button>
-        <button class="btn-close" onclick="closeStatusDialog()">Schliessen</button>
+        <button class="btn-close" onclick="closeStatusDialog()">Schließen</button>
       </div>
     </div>
   </div>
 
   <script>
+    // Statussymbole als SVG (keine Emojis)
+    const SVG_OPEN = '<svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="#1a3a5c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+    const ICONS = {
+      wait: SVG_OPEN + '<path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 2 4l3 2-3 2a5 5 0 0 0-2 4v4M17 2v4a5 5 0 0 1-2 4l-3 2 3 2a5 5 0 0 1 2 4v4"/></svg>',
+      warn: SVG_OPEN + '<path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18h.01"/></svg>',
+      info: SVG_OPEN + '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>',
+      clock: SVG_OPEN + '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+      ok: SVG_OPEN + '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/></svg>'
+    };
+    function setStatusIcon(kind) { document.getElementById('status-icon').innerHTML = ICONS[kind]; }
+
     let pendingVersion = null;
     // manueller Weg: Installation nicht automatisch möglich (z. B. macOS ohne Signatur, .deb) -> nur Hinweis und Download-Seite
     let updateManual = false;
@@ -327,10 +338,33 @@
       document.getElementById('update-status-overlay').style.display = 'none';
     }
 
+
+    // Diagnose für Support-Anfragen: nur technische Angaben, keine Dokumentinhalte, nichts wird gesendet
+    async function copyDiagnostics() {
+      const lines = [];
+      try {
+        const api = window.electronAPI;
+        const s = await api.getSystemStats();
+        const v = await api.getAppVersion();
+        const w = document.getElementById('tool-frame').contentWindow;
+        const model = w.nerPipeline ? 'aktiv (' + w.nerPipeline.info.threads + ' Thread(s))' : 'nicht geladen';
+        lines.push('PrivacyShield ' + v, 'Plattform: ' + api.platform,
+          'Arbeitsspeicher: ' + s.ram.total + ' GB gesamt, ' + s.ram.percent + '% belegt, App ' + s.app.memory + ' MB',
+          'Prozessor: ' + s.cpu.cores + 'x ' + s.cpu.model,
+          'KI-Modus: ' + w.aiMode() + ', Modell: ' + model,
+          'Cross-Origin-Isolation: ' + w.crossOriginIsolated,
+          'Zeitpunkt: ' + new Date().toISOString());
+      } catch (e) { lines.push('Fehler beim Sammeln der Angaben: ' + e.message); }
+      await window.electronAPI.copyText(lines.join('\n'));
+      const b = document.getElementById('btn-diag');
+      b.textContent = 'Kopiert';
+      setTimeout(function () { b.textContent = 'Diagnose kopieren'; }, 2000);
+    }
+
     async function checkForUpdatesManually() {
       const overlay = document.getElementById('update-status-overlay');
       overlay.style.display = 'flex';
-      document.getElementById('status-icon').textContent = '⏳';
+      setStatusIcon('wait');
       document.getElementById('status-title').textContent = 'Suche nach Updates...';
       document.getElementById('status-message').textContent = 'Bitte warten Sie einen Moment.';
       document.getElementById('btn-status-update').style.display = 'none';
@@ -340,7 +374,7 @@
       document.getElementById('status-actions').style.display = 'flex';
 
       if (!window.electronAPI) {
-        document.getElementById('status-icon').textContent = '⚠️';
+        setStatusIcon('warn');
         document.getElementById('status-title').textContent = 'Nicht verfügbar';
         document.getElementById('status-message').textContent = 'Die Update-Prüfung ist nur in der Desktop-App möglich. Besuchen Sie arcangeli.eu für die neueste Version.';
         return;
@@ -349,7 +383,7 @@
       const result = await window.electronAPI.checkForUpdates();
 
       if (result.updateAvailable) {
-        document.getElementById('status-icon').textContent = '🆕';
+        setStatusIcon('info');
         document.getElementById('status-title').textContent = 'Update verfügbar';
         document.getElementById('status-message').textContent =
           'Version ' + result.version + ' ist verfügbar. Sie verwenden Version ' + (result.currentVersion || '?') + '.';
@@ -359,15 +393,15 @@
         updateManual = !!result.manual;
         pendingVersion = result.version;
       } else if (result.error) {
-        document.getElementById('status-icon').textContent = '⚠️';
+        setStatusIcon('warn');
         document.getElementById('status-title').textContent = 'Fehler';
         document.getElementById('status-message').textContent = 'Update-Prüfung fehlgeschlagen: ' + result.error + '. Bitte prüfen Sie Ihre Internetverbindung.';
       } else if (result.timeout) {
-        document.getElementById('status-icon').textContent = '⏰';
+        setStatusIcon('clock');
         document.getElementById('status-title').textContent = 'Zeitüberschreitung';
         document.getElementById('status-message').textContent = 'Die Update-Prüfung dauerte zu lange. Bitte prüfen Sie Ihre Internetverbindung.';
       } else {
-        document.getElementById('status-icon').textContent = '✅';
+        setStatusIcon('ok');
         document.getElementById('status-title').textContent = 'Kein Update verfügbar';
         document.getElementById('status-message').textContent =
           'Sie verwenden die neueste Version (' + (result.currentVersion || '?') + ').';
@@ -386,9 +420,10 @@
     }
   </script>
 
-<div id="update-check-btn" style="position:fixed;top:8px;right:8px;z-index:9998;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);padding:6px 12px;border-radius:6px;display:flex;gap:8px;align-items:center">
+<div id="update-check-btn" style="position:fixed;bottom:8px;left:8px;z-index:9998;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);padding:6px 10px;border-radius:6px;display:flex;gap:8px;align-items:center">
   <span style="color:rgba(255,255,255,0.7);font-size:11px;font-family:system-ui,sans-serif" id="version-label">Lade...</span>
-  <button onclick="checkForUpdatesManually()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:system-ui,sans-serif">🔄 Updates</button>
+  <button onclick="checkForUpdatesManually()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:system-ui,sans-serif">Updates</button>
+  <button id="btn-diag" onclick="copyDiagnostics()" title="Systeminformationen für Support-Anfragen kopieren (enthält keine Dokumentinhalte)" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:system-ui,sans-serif">Diagnose kopieren</button>
 </div>
 
 <div id="sysstats">RAM — | CPU — | App — MB</div>

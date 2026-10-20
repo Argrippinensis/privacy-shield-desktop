@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   dismissUpdate: (version) => ipcRenderer.invoke('dismiss-update', version),
   startDownload: () => ipcRenderer.invoke('start-download'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  copyText: (text) => ipcRenderer.invoke('copy-text', text),
   getUpdateMode: () => ipcRenderer.invoke('get-update-mode'),
   openDownloadPage: () => ipcRenderer.invoke('open-download-page'),
   quitApp: () => ipcRenderer.invoke('quit-app'),
