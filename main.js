@@ -275,6 +275,27 @@ ipcMain.handle('copy-text', (event, text) => {
   if (typeof text === 'string' && text.length <= 5000) clipboard.writeText(text);
 });
 
+// Prueft die mitgelieferten Dateien (Modell, Bibliotheken) gegen app/vendor-manifest.json.
+// deep=true berechnet zusaetzlich die SHA-256 der Modelldateien (ca. 1 s fuer 135 MB).
+async function checkAssets(deep) {
+  let manifest;
+  try { manifest = JSON.parse(fs.readFileSync(path.join(APP_ROOT, 'vendor-manifest.json'), 'utf8')); }
+  catch { return { manifest: false, ok: true, missing: [], wrongSize: [], corrupt: [], appRoot: APP_ROOT }; }
+  const missing = [], wrongSize = [], corrupt = [];
+  for (const f of manifest.files) {
+    let st;
+    try { st = fs.statSync(path.join(APP_ROOT, f.path)); } catch { missing.push(f.path); continue; }
+    if (st.size !== f.size) { wrongSize.push({ path: f.path, expected: f.size, actual: st.size }); continue; }
+    if (deep && f.path.startsWith('models/') && f.sha256) {
+      const h = require('crypto').createHash('sha256');
+      await require('stream/promises').pipeline(fs.createReadStream(path.join(APP_ROOT, f.path)), h);
+      if (h.digest('hex') !== f.sha256) corrupt.push(f.path);
+    }
+  }
+  return { manifest: true, ok: !missing.length && !wrongSize.length && !corrupt.length, missing, wrongSize, corrupt, appRoot: APP_ROOT };
+}
+ipcMain.handle('check-assets', (event, deep) => checkAssets(!!deep));
+
 ipcMain.handle('get-update-mode', () => ({ manual: MANUAL_UPDATE }));
 
 ipcMain.handle('open-download-page', () => {

@@ -26,3 +26,16 @@ test('Versions- und Update-Leiste liegt unten und verdeckt die Navigation des To
     assert.ok(box.top > box.height / 2, 'Leiste muss in der unteren Haelfte liegen');
   } finally { await a.close(); }
 });
+
+test('Diagnose meldet ein aktives Modell mit Thread-Zahl', async () => {
+  const a = await launchApp({ offline: true });
+  try {
+    const f = await toolFrame(a.win);
+    await f.evaluate(async () => { document.getElementById('IT').value = 'Herr Thomas Müller'; await anon(); }); // KI startet bei Bedarf
+    await a.win.click('#btn-diag');
+    await a.win.waitForTimeout(600);
+    const text = await a.app.evaluate(({ clipboard }) => clipboard.readText());
+    assert.match(text, /Modell: aktiv \(\d+ Thread/);
+    assert.match(text, /KI-Fehler: keiner/);
+  } finally { await a.close(); }
+});

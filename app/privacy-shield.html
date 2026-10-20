@@ -1393,10 +1393,16 @@
                   </button>
                 </div>
                 <div id="aiStatusError" style="display: none">
-                  <p class="text-xs" style="color: #dc2626">Modell konnte nicht geladen werden.</p>
-                  <p class="text-xs" style="color: #666; margin-top: 6px">
-                    Die Standard-Erkennung (Regex + Klicken) funktioniert ohne Einschränkung.
+                  <p class="text-xs" style="color: #dc2626; font-weight: 600">KI-Erkennung konnte nicht starten.</p>
+                  <p id="aiErrorReason" class="text-xs" style="color: #444; margin-top: 6px; line-height: 1.5"></p>
+                  <p class="text-xs" style="color: #666; margin-top: 6px; line-height: 1.5">
+                    Die Standard-Erkennung (Regeln und Wortlisten) läuft weiter, erkennt aber weniger, vor allem Namen,
+                    Firmen und Orte. Bitte das Ergebnis dann besonders sorgfältig prüfen.
                   </p>
+                  <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap">
+                    <button class="btn btn-ghost" style="font-size: 11px; padding: 4px 10px" onclick="retryAIModel()">Erneut versuchen</button>
+                    <button class="btn btn-ghost" style="font-size: 11px; padding: 4px 10px" onclick="copyAIErrorDetails()">Details kopieren</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3522,6 +3528,10 @@
       }
       async function loadF(file) {
         const ext = file.name.split(".").pop().toLowerCase();
+        if (file.size === 0) {
+          toast("Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.", "e");
+          return;
+        }
         if (file.size > 30 * 1024 * 1024) {
           toast("Datei zu groß (max 30 MB)", "e");
           return;
@@ -4049,6 +4059,7 @@
       // Vor jeder Analyse: Modell bei Bedarf laden, ausser bei wenig Arbeitsspeicher
       async function ensureAIReady() {
         if (aiMode() !== "auto" || nerPipeline || aiLoading) return;
+        if (Date.now() - aiFailedAt < 60000) return;
         if (await checkMemoryHint()) return;
         await loadAIModel();
       }
@@ -4102,10 +4113,83 @@
           console.error("NER-Modell konnte nicht geladen werden:", err);
           nerPipeline = null;
           localAIMode = true;
+          aiFailedAt = Date.now();
+          lastAIError = await diagnoseAIError(err);
+          document.getElementById("aiErrorReason").textContent = lastAIError.reason;
           aiSetState("error");
+          toast("KI-Erkennung konnte nicht starten. Grund steht im KI-Panel; es gilt die Standard-Erkennung.", "e");
         } finally {
           aiLoading = false;
         }
+      }
+
+      // ---- Fehlerdiagnose: der Nutzer sieht, WARUM das Modell nicht startet (die Konsole ist in der App nicht zugaenglich)
+      let lastAIError = null;
+      let aiFailedAt = 0;
+      function fmtMB(n) {
+        return (n / 1048576).toFixed(1).replace(".", ",") + " MB";
+      }
+      async function diagnoseAIError(err) {
+        const msg = String((err && err.message) || err || "");
+        let assets = null;
+        try {
+          if (window.parent !== window && window.parent.electronAPI && window.parent.electronAPI.checkAssets)
+            assets = await window.parent.electronAPI.checkAssets(false);
+        } catch (e) {}
+        let code = "UNKNOWN";
+        if (assets && assets.manifest && !assets.ok) code = "ASSETS";
+        else if (/protobuf|failed to load model|invalid (?:onnx )?model|corrupt|unexpected end|session\. ERROR_CODE/i.test(msg)) code = "MODEL_CORRUPT";
+        else if (/not found locally|could not locate file|unable to get model file|\b404\b/i.test(msg)) code = "MODEL_FILE";
+        else if (/out of memory|could not allocate|allocation failed|RangeError|Aborted\(\)/i.test(msg)) code = "MEMORY";
+        else if (/failed to fetch|networkerror|load failed|ERR_[A-Z_]+/i.test(msg)) code = "NETWORK";
+        else if (/webassembly|compileerror|linkerror|wasm|SharedArrayBuffer|worker/i.test(msg)) code = "WASM";
+        const bad = assets
+          ? assets.missing.map((p) => p.split("/").pop() + " fehlt").concat(assets.wrongSize.map((w) => w.path.split("/").pop() + ": " + fmtMB(w.actual) + " statt " + fmtMB(w.expected)))
+          : [];
+        const reinstall = "Bitte PrivacyShield neu installieren. Häufige Ursache: Ein Virenschutz hat die große Modelldatei (135 MB) blockiert oder in Quarantäne verschoben.";
+        const texts = {
+          ASSETS: "Dateien der Installation fehlen oder sind unvollständig (" + bad.slice(0, 3).join("; ") + "). " + reinstall,
+          MODEL_FILE: "Die Modelldatei wurde nicht gefunden. " + reinstall,
+          MODEL_CORRUPT: "Die Modelldatei ist beschädigt oder unvollständig. " + reinstall,
+          MEMORY: "Es ist nicht genug freier Arbeitsspeicher für das KI-Modell frei (ca. 0,7 GB nötig). Bitte andere Programme schließen und erneut versuchen.",
+          NETWORK: "Die Modelldateien konnten nicht geladen werden (Netzwerk). Bitte die Verbindung prüfen; in Firmennetzwerken wird huggingface.co oft blockiert.",
+          WASM: "Die Laufzeitumgebung der KI (WebAssembly) konnte nicht starten. Bitte das Programm neu starten; hilft das nicht, „Details kopieren“ und weitergeben.",
+          UNKNOWN: "Unbekannter Fehler. Bitte „Details kopieren“ und weitergeben.",
+        };
+        return { code: code, message: msg.slice(0, 600), assets: assets, reason: texts[code] + " [" + code + "]", time: new Date().toISOString() };
+      }
+      // Fuer die Shell ("Diagnose kopieren"): let-Variablen sind von aussen nicht lesbar, Funktionen schon.
+      function aiDiagnosticState() {
+        return { model: nerPipeline ? nerPipeline.info : null, error: lastAIError };
+      }
+      function aiErrorDetailsText() {
+        const e = lastAIError || { code: "-", message: "kein Fehler gemerkt" };
+        const a = e.assets;
+        return [
+          "PrivacyShield KI-Fehler",
+          "Code: " + e.code,
+          "Meldung: " + e.message,
+          "Zeitpunkt: " + (e.time || "-"),
+          "Cross-Origin-Isolation: " + window.crossOriginIsolated,
+          "Kerne: " + navigator.hardwareConcurrency + ", Speicher laut Browser: " + (navigator.deviceMemory || "?") + " GB",
+          "Installationsprüfung: " + (a ? (a.manifest ? (a.ok ? "alle Dateien vorhanden" : "fehlt: " + a.missing.join(", ") + " | falsche Größe: " + a.wrongSize.map((w) => w.path + " " + w.actual + "/" + w.expected).join(", ")) : "kein Manifest") : "nicht verfügbar"),
+          "Installationsordner: " + (a && a.appRoot ? a.appRoot : "-"),
+          "Browser: " + navigator.userAgent,
+        ].join("\n");
+      }
+      async function copyAIErrorDetails() {
+        const text = aiErrorDetailsText();
+        try {
+          if (window.parent !== window && window.parent.electronAPI && window.parent.electronAPI.copyText) await window.parent.electronAPI.copyText(text);
+          else await navigator.clipboard.writeText(text);
+          toast("Details kopiert", "s");
+        } catch (e) {
+          toast("Kopieren nicht möglich", "e");
+        }
+      }
+      async function retryAIModel() {
+        aiFailedAt = 0;
+        await loadAIModel();
       }
 
       // Gibt den Arbeitsspeicher des Modells frei (ca. 0,5 GB) und kehrt zur Wortlisten-Erkennung zurueck.

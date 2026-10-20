@@ -14,6 +14,14 @@ der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.
 - Adressen: Schweizer und österreichische Schreibweise, vierstellige Postleitzahlen.
 - Weniger Fehlalarme (Länder, "Zentrale", Rechnungsnummern mit führenden Nullen).
 
+### Fehlerdiagnose
+- Startet die KI-Erkennung nicht, nennt die App jetzt den Grund (fehlende oder unvollständige Modelldatei, zu wenig Arbeitsspeicher,
+  Laufzeitfehler) samt Lösungshinweis statt nur "Modell konnte nicht geladen werden". Knöpfe "Erneut versuchen" und "Details kopieren".
+- Die Installation wird beim Fehler gegen ein Manifest geprüft (Dateien und Größen); "Diagnose kopieren" enthält den KI-Fehler.
+- Bei Thread- oder Speicherproblemen wird einmal automatisch mit einem Rechenthread wiederholt.
+- Leere Dateien (0 Bytes, z. B. nur online in OneDrive vorhanden) werden erklärt statt stumm angezeigt.
+- Der Hinweis zur Standard-Erkennung sagt ehrlich, dass sie weniger erkennt (bisher: "ohne Einschränkung").
+
 ### Bedienung und Leistung
 - KI-Erkennung ist standardmäßig aktiv: Das Modell startet bei der ersten Analyse und gibt nach 5 Minuten Leerlauf den Speicher frei.
 - Große Dokumente werden bis zu 8-mal schneller anonymisiert.

@@ -70,6 +70,11 @@ async function worker() {
 }
 await Promise.all(Array.from({ length: 4 }, worker));
 
+// Manifest fuer die Programmpruefung zur Laufzeit (main.js: check-assets): Pfad, Groesse, SHA-256 je mitgelieferter Datei.
+// Erkennt, ob Modell oder Bibliotheken nach der Installation fehlen oder beschaedigt sind (z. B. durch einen Virenschutz).
+if (!problems) {
+  fs.writeFileSync(path.join(APP, 'vendor-manifest.json'), JSON.stringify({ files: lock.files.map((f) => ({ path: f.dest, size: f.size, sha256: f.sha256 })) }) + '\n');
+}
 if (args.has('--update-lock') && !problems) {
   fs.writeFileSync(LOCK, JSON.stringify(lock, null, 2) + '\n');
   console.log('vendor.lock.json aktualisiert');

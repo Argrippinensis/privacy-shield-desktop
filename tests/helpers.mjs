@@ -107,3 +107,28 @@ export function startUpdateServer({ version = '99.0.0', notes = '' } = {}) {
   });
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ url: `http://127.0.0.1:${server.address().port}`, hits, close: () => new Promise((r) => server.close(r)) })));
 }
+
+// Kopie des Programms mit absichtlich beschaedigter Installation (fuer Fehlerdiagnose-Tests).
+// dropModel: Modelldatei fehlt; truncateModelTo: Modelldatei auf n Bytes gekuerzt; dropManifest: vendor-manifest.json fehlt.
+// Alles andere wird verknuepft (Verzeichnisse als "junction": unter Windows ohne Administratorrechte moeglich).
+export function makeAppVariant({ dropModel = false, truncateModelTo = null, dropManifest = false } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-variant-'));
+  for (const f of ['main.js', 'preload.js', 'package.json']) fs.copyFileSync(path.join(ROOT, f), path.join(dir, f));
+  for (const d of ['node_modules', 'assets']) fs.symlinkSync(path.join(ROOT, d), path.join(dir, d), 'junction');
+  fs.mkdirSync(path.join(dir, 'app'));
+  for (const e of fs.readdirSync(path.join(ROOT, 'app'))) {
+    if (e === 'models' || (e === 'vendor-manifest.json' && dropManifest)) continue;
+    const src = path.join(ROOT, 'app', e);
+    if (fs.statSync(src).isDirectory()) fs.symlinkSync(src, path.join(dir, 'app', e), 'junction');
+    else fs.copyFileSync(src, path.join(dir, 'app', e));
+  }
+  const rel = path.join('models', 'Xenova', 'distilbert-base-multilingual-cased-ner-hrl');
+  fs.mkdirSync(path.join(dir, 'app', rel, 'onnx'), { recursive: true });
+  for (const f of fs.readdirSync(path.join(ROOT, 'app', rel))) if (f !== 'onnx') fs.copyFileSync(path.join(ROOT, 'app', rel, f), path.join(dir, 'app', rel, f));
+  if (!dropModel) {
+    const src = path.join(ROOT, 'app', rel, 'onnx', 'model_quantized.onnx'), dst = path.join(dir, 'app', rel, 'onnx', 'model_quantized.onnx');
+    if (truncateModelTo) { const b = Buffer.alloc(truncateModelTo); const fd = fs.openSync(src, 'r'); fs.readSync(fd, b, 0, b.length, 0); fs.closeSync(fd); fs.writeFileSync(dst, b); }
+    else fs.copyFileSync(src, dst);
+  }
+  return { dir, cleanup: () => fs.rmSync(dir, { recursive: true, force: true }) };
+}

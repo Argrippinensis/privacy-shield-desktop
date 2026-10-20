@@ -347,12 +347,14 @@
         const s = await api.getSystemStats();
         const v = await api.getAppVersion();
         const w = document.getElementById('tool-frame').contentWindow;
-        const model = w.nerPipeline ? 'aktiv (' + w.nerPipeline.info.threads + ' Thread(s))' : 'nicht geladen';
+        const st = w.aiDiagnosticState();
+        const model = st.model ? 'aktiv (' + st.model.threads + ' Thread(s))' : 'nicht geladen';
         lines.push('PrivacyShield ' + v, 'Plattform: ' + api.platform,
           'Arbeitsspeicher: ' + s.ram.total + ' GB gesamt, ' + s.ram.percent + '% belegt, App ' + s.app.memory + ' MB',
           'Prozessor: ' + s.cpu.cores + 'x ' + s.cpu.model,
           'KI-Modus: ' + w.aiMode() + ', Modell: ' + model,
           'Cross-Origin-Isolation: ' + w.crossOriginIsolated,
+          'KI-Fehler: ' + (st.error ? st.error.code + ' - ' + st.error.message.slice(0, 160) : 'keiner'),
           'Zeitpunkt: ' + new Date().toISOString());
       } catch (e) { lines.push('Fehler beim Sammeln der Angaben: ' + e.message); }
       await window.electronAPI.copyText(lines.join('\n'));
