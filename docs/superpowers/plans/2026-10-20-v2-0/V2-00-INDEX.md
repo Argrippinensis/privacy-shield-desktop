@@ -62,16 +62,17 @@ nur an, wenn `allowPrerelease` gesetzt ist; normale Nutzer bekommen sie nicht. T
 
 ## 4. Rollen und Modellwahl
 
-| Rolle | Aufgabe | Modell / Denkaufwand | Wann |
-|---|---|---|---|
-| **Orchestrator** | Pakete wählen, Rollen starten, Ergebnis prüfen, Status pflegen, Gates stellen | Sonnet, mittel (oder der Nutzer per `/loop`) | immer |
-| **Test-Autor** | rote Tests aus der Spezifikation | Sonnet, niedrig | jedes Paket mit Logik |
-| **Implementierer** | Tests grün machen, nur erlaubte Dateien | **Haiku, niedrig** bei Paketen mit Marke "H" (rein mechanisch, volle Spezifikation); **Sonnet, niedrig bis mittel** bei Marke "S" (Urteil, Oberfläche) | je Paket |
-| **Prüfer** | Diff gegen Spezifikation, Suite, Regeln; frischer Kontext | Sonnet, niedrig | jedes Paket |
-| **Entwurfsprüfung UI** | Screenshots, Bedienbarkeit | Sonnet, mittel, Skill `frontend-design` | D1, D2, D3 |
+Der Nutzer wechselt **nie** das Modell: Er startet eine Sitzung (Sonnet, Denkaufwand mittel); der Orchestrator setzt Modell und Denkaufwand je Unteragent über das Profil in `loop/V2-QUEUE.json` (Einzelheiten und Begründung: `V2-LOOP.md` Abschnitt 8).
 
-Haiku ist für Marke "H" geeignet, weil Test und Spezifikation die Arbeit eingrenzen. Es ist **nicht** geeignet für: Fehlersuche in CI, Regex-Randfälle ohne Testfall,
-Entwurfsentscheidungen, Oberflächengestaltung. Diese Pakete tragen "S". Fällt ein "H"-Paket zweimal durch, wechselt der Orchestrator auf Sonnet niedrig (Stopp-Regel des Vorgängerplans: nicht ewig wiederholen).
+| Rolle | Aufgabe | Standardprofil `sonnet` |
+|---|---|---|
+| **Orchestrator** | Pakete wählen, Rollen starten, Ergebnis prüfen, Status pflegen, Fragen stellen | die Sitzung selbst (Sonnet, mittel) |
+| **Test-Autor** | rote Tests aus der Spezifikation | Sonnet; low (bau), medium (denk), high (spike) |
+| **Implementierer** | Tests grün machen, nur erlaubte Dateien | Sonnet; low (bau), high (denk), xhigh (spike) |
+| **Prüfer** | Diff gegen Spezifikation, frischer Kontext (nur wo Urteil nötig: `review`) | Sonnet; medium, bei Kryptografie xhigh |
+| **Phasenprüfer** | Gegenprobe an Meilensteinen | Sonnet; xhigh |
+
+Haiku ist optional (Profil `gemischt`: Bau-Implementierer mit Haiku, spart Verbrauch). Es ist ungeeignet für Fehlersuche in CI, Regex-Randfälle ohne Testfall, Entwurfsentscheidungen und Oberflächengestaltung; diese Pakete sind in beiden Profilen "denk" oder "spike". Fällt ein "bau"-Paket zweimal durch, wechselt der Orchestrator für den dritten Versuch auf "denk" (high).
 
 ## 5. Pakete
 

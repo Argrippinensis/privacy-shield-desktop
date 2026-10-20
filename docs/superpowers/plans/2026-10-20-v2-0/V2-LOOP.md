@@ -46,7 +46,7 @@ Fragen werden **gebündelt und knapp** gestellt: eine Zeile Frage, Empfehlung, S
 2. **Automatisch:** ein geplanter Auslöser (Cron, z. B. alle 2 Stunden) startet bei jedem Lauf eine **frische Sitzung** mit dem Prompt. Läuft noch eine Sitzung (Sperre frisch), beendet sich der neue Lauf sofort ("noop", wenige Tausend Token). Ist das Limit erschöpft, schlägt der Start fehl, ohne etwas zu verbrauchen; nach dem Zurücksetzen arbeitet der nächste Lauf weiter. Das ersetzt "der Nutzer triggert wieder".
 
 **Einführung in Stufen (Pflicht, damit nichts Ungeprüftes unbeaufsichtigt läuft):**
-1. *Probelauf von Hand:* Der Orchestrator führt Vorabprüfung und **ein** kleines Paket (A1.m, Haiku) komplett durch; der Nutzer liest den Bericht.
+1. *Probelauf von Hand:* Der Orchestrator führt Vorabprüfung, die Planhärtung P0 und das Paket F2 (Unit-Läufer, Electron 44) mit der ganzen Pipeline durch; der Nutzer liest den Bericht.
 2. *Probelauf mit Auslöser, Tagesbetrieb:* Auslöser an, aber nur Pakete der Phase 1 und 2 (Vertrauen).
 3. *Volle Freigabe* des Dauerbetriebs bis zur Phase Abschluss (ohne Release 2.0.0).
 
@@ -74,3 +74,32 @@ Fragen werden **gebündelt und knapp** gestellt: eine Zeile Frage, Empfehlung, S
 | eine Frage beantworten | im Chat: `F3: ja` (oder `nein, weil ...`) |
 | einen Release freigeben | im Chat ausdrücklich, z. B. "Ja, 2.0.0-beta.1 veröffentlichen" (oder Dauerfreigabe, siehe `V2-FREIGABEN.md`) |
 | ein Paket neu starten | `queue.mjs reopen <id>` |
+
+## 8. Modelle und Denkaufwand: kein Umschalten durch den Nutzer
+
+**Eine Sitzung, ein Modell.** Der Nutzer startet **eine** Sitzung (Sonnet, Denkaufwand mittel) und wechselt nie. Der Orchestrator selbst führt nur Listen und Prüfbefehle aus (Buchhaltung) und braucht kein hohes Denkniveau. Modell und Denkaufwand der **Unteragenten** setzt er je Aufruf über die Parameter `model` und `effort` des Agent-Werkzeugs. Die Werte kommen aus dem **Profil** in `loop/V2-QUEUE.json` (aufgelöst von `queue.mjs next` im Feld `roles` je Paket).
+
+**Aufteilung nach Art der Aufgabe, nicht nach Zeit** (die schwierigen Pakete liegen über das ganze Projekt verteilt: Kern, Erkennung, Oberflächen, Abnahme):
+
+| Art (`tier`) | Pakete | Test-Autor | Implementierer | Prüfer |
+|---|---|---|---|---|
+| **spike** (Entscheiden, Planen) | P0 Planhärtung, F1.spike | high | **xhigh** | (Orchestrator liest das Ergebnis) |
+| **denk** (Urteil, Entwurf, Randfälle) | F1, C1 (3 Durchläufe), C2, B1.w, D1.w, D2, E1, F3, F4, G1 | medium | **high** | medium |
+| **bau** (Modul mit fertigen Tests, mechanische Verdrahtung) | alle übrigen (A1, A2, A3, A4, B1.m, B2, C3, D1.m, D3, E2 ...) | low | **low** | nur wenn `review: true` (alle `.w`, A3, D1.m, D3): medium, bei Kryptografie xhigh |
+| **Phasenprüfung** | an Meilensteinen | | | **xhigh** |
+
+Profile (Befehl `node loop/queue.mjs profile [name]`): **`sonnet`** (Standard, nur Sonnet) und **`gemischt`** (Bau-Implementierer mit Haiku, spart Verbrauch). Umstellen ändert nur diese Auflösung; Pakete, Tests und Prüfungen bleiben gleich. Empfehlung: `sonnet`, solange das Limit nicht der Engpass ist.
+
+Hinweis: Zeitgesteuerte Sitzungen erben das Modell der erzeugenden Sitzung; der Denkaufwand der Sitzung selbst ist dort unerheblich, weil das Denken in den Unteragenten sitzt.
+
+## 9. Planhärtung (Paket P0, einmalig, höchster Denkaufwand)
+
+Zweck: Bevor irgendetwas gebaut wird, prüft eine Instanz mit **xhigh** den ganzen Plan gegen den echten Code und behebt Lücken. Ein Fehler im Plan kostet später in jedem Paket.
+
+Auftrag (Unteragent, Sonnet xhigh, frischer Kontext, arbeitet im Plan-Worktree auf `plan/v2-0`, erlaubte Dateien: nur `docs/superpowers/plans/2026-10-20-v2-0/**`):
+1. **Existenz:** Jede in den Paketdokumenten genannte Datei, Funktion, Zeile, Option und Kommandozeile gegen den echten Code in `v2/main` prüfen (`grep -n`, `node -e`). Abweichungen im Plan korrigieren.
+2. **Ausführbarkeit der Spezifikation:** Kann ein Test-Autor aus dem Abschnitt jedes Pakets **ohne Rückfrage** Tests schreiben (Eingaben, erwartete Ausgaben, Fehlercodes eindeutig)? Lücken füllen; mehrdeutige Stellen entscheiden (Klasse A, Eintrag in `V2-ENTSCHEIDUNGEN.md`).
+3. **Annahmen messen statt glauben:** mindestens (a) PBKDF2 mit 600.000 Iterationen: Dauer in Node und in der Electron-Seite auf diesem Rechner (Ziel unter 2 s; sonst Iterationen/Hinweis anpassen); (b) `crypto.subtle` in der App-Seite `app://ps/` verfügbar (sicherer Kontext); (c) JSZip aus `app/vendor` in Node ladbar (Tests B2); (d) `electron-updater` ignoriert Pre-releases ohne `allowPrerelease` (Dokumentation/Quelltext prüfen); (e) `npm run test:unit` nach F2 in unter 5 s; (f) Windows-Verhalten der Kommandozeile (E1) gegen die Dokumentation von Electron prüfen; (g) `axe-core` lässt sich in der App per `addScriptTag` ausführen.
+4. **Paketgröße:** Pakete, bei denen mehr als etwa 300 Zeilen Änderung oder mehr als 3 Dateien zu erwarten sind, teilen (Eintrag in `make-queue.py`, danach `python3 -I loop/make-queue.py > loop/V2-QUEUE.json`, `node loop/selftest.mjs` grün).
+5. **Abnahmebefehle** je Paket auf Lauffähigkeit prüfen (Trockenlauf des Befehls, soweit ohne die Implementierung möglich).
+6. Ergebnis: überarbeitete Dokumente und Liste, Bericht mit allen Änderungen (Datei, Grund). Keine Codeänderung außerhalb des Plans.

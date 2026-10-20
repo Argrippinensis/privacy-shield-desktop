@@ -2,6 +2,7 @@
 // Arbeitsliste und Sperre fuer den 2.0-Orchestrator (deterministisch, ohne Modell).
 //   node queue.mjs status | summary | next [--max N] [--include-kann]
 //   node queue.mjs claim <id> <owner> | heartbeat <id> | done <id> <commit> | block <id> "<grund>" | defer <id> "<grund>" | reopen <id>
+//   node queue.mjs profile [sonnet|gemischt]        Modellprofil anzeigen / umstellen (sonnet = nur Sonnet, gemischt = Bau-Pakete mit Haiku)
 //   node queue.mjs milestones | ms-done <id> "<notiz>"   erreichte Meilensteine (Pre-release, Final) anzeigen / abhaken
 //   node queue.mjs reap [--ttl-min 45]            abgelaufene Leases zurueck auf "offen"
 //   node queue.mjs lock acquire|heartbeat|release [<owner>]   globale Sperre (nur ein Orchestrator gleichzeitig), TTL 30 min
@@ -71,11 +72,23 @@ function pickBatch(q, max, includeKann) {
   return chosen;
 }
 
+// Rollen eines Pakets nach Profil aufloesen: wer (Modell) mit welchem Denkaufwand.
+function roles(q, p) {
+  const prof = q.profiles[process.env.PS_PROFILE || q.profile];
+  if (!prof) die(`Unbekanntes Profil ${process.env.PS_PROFILE || q.profile}`, 2);
+  const impl = { model: (p.tier === 'bau' && prof.implementer.bauModel) || prof.implementer.model, effort: prof.implementer[p.tier] };
+  return {
+    testAutor: p.tests.length ? { model: prof.testAutor.model, effort: prof.testAutor[p.tier] } : null,
+    implementer: impl,
+    pruefer: p.review ? { model: prof.pruefer.model, effort: p.crypto ? prof.pruefer.crypto : prof.pruefer.normal } : null,
+  };
+}
+
 const cmd = process.argv[2];
 switch (cmd) {
   case 'status': {
     const q = load();
-    for (const p of q.packages) out(`${p.status.padEnd(10)} ${p.id.padEnd(9)} ${p.mark} ${p.serial ? 'seriell ' : 'parallel'} v${p.attempts}  ${p.title}${p.kann ? ' (Kann)' : ''}${p.status === 'blockiert' ? ' :: ' + p.notes : ''}`);
+    for (const p of q.packages) out(`${p.status.padEnd(10)} ${p.id.padEnd(9)} ${p.tier.padEnd(5)} ${p.serial ? 'seriell ' : 'parallel'} v${p.attempts}  ${p.title}${p.kann ? ' (Kann)' : ''}${p.status === 'blockiert' ? ' :: ' + p.notes : ''}`);
     break;
   }
   case 'summary': {
@@ -86,7 +99,7 @@ switch (cmd) {
   }
   case 'next': {
     const q = load(); const reaped = reap(q, 45); if (reaped.length) save(q);
-    out(pickBatch(q, Number(arg('--max', 1)), flag('--include-kann')));
+    out(pickBatch(q, Number(arg('--max', 1)), flag('--include-kann')).map((p) => ({ ...p, roles: roles(q, p), audit: q.profiles[process.env.PS_PROFILE || q.profile].audit })));
     break;
   }
   case 'claim': {
@@ -102,6 +115,12 @@ switch (cmd) {
   case 'block': { const q = load(); const p = get(q, process.argv[3]); p.status = 'blockiert'; p.notes = process.argv[4] || ''; p.lease = null; save(q); break; }
   case 'defer': { const q = load(); const p = get(q, process.argv[3]); p.status = 'verschoben'; p.notes = process.argv[4] || ''; p.lease = null; save(q); break; }
   case 'reopen': { const q = load(); const p = get(q, process.argv[3]); p.status = 'offen'; p.attempts = 0; p.lease = null; p.notes = ''; save(q); break; }
+  case 'profile': {
+    const q = load(); const n = process.argv[3];
+    if (n) { if (!q.profiles[n]) die(`Unbekanntes Profil ${n} (vorhanden: ${Object.keys(q.profiles).join(', ')})`, 2); q.profile = n; save(q); }
+    out({ profile: q.profile, vorhanden: Object.keys(q.profiles) });
+    break;
+  }
   case 'milestones': {
     const q = load();
     out((q.milestones || []).filter((m) => m.status === 'offen' && m.after.every((d) => isDone(get(q, d)))));
@@ -125,5 +144,5 @@ switch (cmd) {
     break;
   }
   case 'stopped': process.exit(fs.existsSync(STOP) ? 0 : 1); break;
-  default: die('Aufruf: queue.mjs status|summary|next|claim|heartbeat|done|block|defer|reopen|milestones|ms-done|reap|lock|stopped', 2);
+  default: die('Aufruf: queue.mjs status|summary|next|claim|heartbeat|done|block|defer|reopen|profile|milestones|ms-done|reap|lock|stopped', 2);
 }

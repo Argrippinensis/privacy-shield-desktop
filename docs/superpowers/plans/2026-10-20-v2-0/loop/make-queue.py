@@ -4,12 +4,19 @@ U = 'npm run test:unit'
 def e2e(f): return f'xvfb-run -a node --test --test-concurrency=1 tests/{f}'
 def unit(f): return f'node --test tests/unit/{f}'
 P = []
-def add(id, title, doc, mark, deps, allowed, tests, accept, serial=False, kann=False, model=None, effort='low', parallel=None):
-    P.append(dict(id=id, title=title, doc=doc, mark=mark, model=model or ('haiku' if mark == 'H' else 'sonnet'), effort=effort,
+DENK = {'F1', 'C1.1', 'C1.2', 'C1.3', 'C2', 'D1.w', 'D2', 'E1', 'F3', 'F4', 'G1', 'B1.w'}
+SPIKE = {'P0', 'F1.spike'}
+REVIEW = {'A3.m', 'A3.w', 'D1.m', 'D3'}                 # zusaetzlich: alle ".w" und alle Nicht-"bau"-Pakete
+CRYPTO = {'A3.m', 'A3.w'}
+def add(id, title, doc, mark, deps, allowed, tests, accept, serial=False, kann=False, model=None, effort=None, parallel=None):
+    tier = 'spike' if id in SPIKE else ('denk' if id in DENK else 'bau')
+    P.append(dict(id=id, title=title, doc=doc, tier=tier, review=(tier != 'bau' or id.endswith('.w') or id in REVIEW), crypto=(id in CRYPTO),
                   serial=serial, parallel=(not serial) if parallel is None else parallel, kann=kann, deps=deps,
                   allowed=allowed, tests=tests, accept=accept, status='offen', attempts=0, branch='', commit='', lease=None, notes=''))
 HTML = 'app/privacy-shield.html'
-add('F2', 'Unit-Laeufer, Electron 44, Haertung', 'V2-F-fundament.md#f2', 'S', [],
+add('P0', 'Planhaertung: Spezifikationen gegen den echten Code pruefen und nachbessern', 'V2-LOOP.md#planhaertung', 'S', [],
+    ['docs/superpowers/plans/2026-10-20-v2-0/**'], [], [], serial=True)
+add('F2', 'Unit-Laeufer, Electron 44, Haertung', 'V2-F-fundament.md#f2', 'S', ['P0'],
     ['package.json', 'package-lock.json', '.github/workflows/*.yml', 'tests/helpers.mjs', 'tests/unit/**', 'tests/shell.test.mjs', 'tests/hygiene.test.mjs', 'main.js', 'preload.js', 'app/index.html', 'THIRD_PARTY_NOTICES.md'],
     ['tests/unit/**', 'tests/shell.test.mjs'], [U, 'xvfb-run -a npm test'], serial=True)
 add('F1.spike', 'Machbarkeitspruefung Kernauslagerung (Go/Nein)', 'V2-F-fundament.md#f1', 'S', ['F2'],
@@ -52,4 +59,16 @@ M = [
   dict(id='rc1', version='2.0.0-rc.1', kind='prerelease', after=['C2', 'D2', 'E1', 'E2'], audit=True, status='offen', note=''),
   dict(id='final', version='2.0.0', kind='final', after=['G1'], audit=True, status='offen', note='Gate: nur mit schriftlicher Freigabe des Nutzers'),
 ]
-print(json.dumps({'version': 1, 'maxAttempts': 3, 'packages': P, 'milestones': M}, indent=1, ensure_ascii=False))
+PROFILES = {
+  # Standard: nur Sonnet, Denkaufwand nach Art der Aufgabe (kein Wechsel durch den Nutzer noetig)
+  'sonnet': dict(testAutor=dict(model='sonnet', bau='low', denk='medium', spike='high'),
+                 implementer=dict(model='sonnet', bau='low', denk='high', spike='xhigh'),
+                 pruefer=dict(model='sonnet', normal='medium', crypto='xhigh'),
+                 audit=dict(model='sonnet', effort='xhigh')),
+  # Sparvariante: Bau-Pakete (Module mit fertigen Tests) mit Haiku
+  'gemischt': dict(testAutor=dict(model='sonnet', bau='low', denk='medium', spike='high'),
+                   implementer=dict(model='sonnet', bau='low', denk='high', spike='xhigh', bauModel='haiku'),
+                   pruefer=dict(model='sonnet', normal='medium', crypto='xhigh'),
+                   audit=dict(model='sonnet', effort='xhigh')),
+}
+print(json.dumps({'version': 2, 'maxAttempts': 3, 'profile': 'sonnet', 'profiles': PROFILES, 'packages': P, 'milestones': M}, indent=1, ensure_ascii=False))

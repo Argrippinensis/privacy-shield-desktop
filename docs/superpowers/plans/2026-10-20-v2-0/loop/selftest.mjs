@@ -14,7 +14,19 @@ const q = (...a) => { const r = spawnSync('node', [path.join(HERE, 'queue.mjs'),
 const ids = (r) => JSON.parse(r.out).map((p) => p.id);
 let n = 0; const t = (name, fn) => { fn(); n++; console.log('  ok  ' + name); };
 
-t('Start: nur F2 bereit', () => assert.deepEqual(ids(q('next', '--max', '3')), ['F2']));
+t('Start: nur P0 (Planhaertung) bereit, mit Rollen laut Profil', () => {
+  const b = JSON.parse(q('next', '--max', '3').out); assert.deepEqual(b.map((p) => p.id), ['P0']);
+  assert.equal(b[0].roles.implementer.model, 'sonnet'); assert.equal(b[0].roles.implementer.effort, 'xhigh'); assert.equal(b[0].roles.testAutor, null);
+});
+t('Rollen: Bau-Paket Sonnet niedrig, Krypto-Pruefer xhigh; Profil gemischt nutzt Haiku fuer Bau', () => {
+  const all = JSON.parse(fs.readFileSync(env.PS_QUEUE, 'utf8')); all.packages.filter((p) => p.id !== 'P0').forEach((p) => { p.status = 'offen'; }); all.packages.find((p) => p.id === 'P0').status = 'fertig'; all.packages.find((p) => p.id === 'F2').status = 'fertig'; fs.writeFileSync(env.PS_QUEUE, JSON.stringify(all));
+  const b = JSON.parse(q('next', '--max', '9').out); const a1 = b.find((p) => p.id === 'A1.m'); const a3 = b.find((p) => p.id === 'A3.m');
+  assert.deepEqual(a1.roles.implementer, { model: 'sonnet', effort: 'low' }); assert.equal(a1.roles.pruefer, null); assert.equal(a3.roles.pruefer.effort, 'xhigh');
+  q('profile', 'gemischt'); const g = JSON.parse(q('next', '--max', '9').out).find((p) => p.id === 'A1.m'); assert.deepEqual(g.roles.implementer, { model: 'haiku', effort: 'low' });
+  q('profile', 'sonnet'); assert.equal(q('profile', 'unbekannt').code, 2);
+  const fresh = JSON.parse(fs.readFileSync(path.join(HERE, 'V2-QUEUE.json'), 'utf8')); fs.writeFileSync(env.PS_QUEUE, JSON.stringify(fresh)); q('claim', 'P0', 'x'); q('done', 'P0', 'c0');
+});
+t('Nach P0: nur F2 bereit', () => assert.deepEqual(ids(q('next', '--max', '3')), ['F2']));
 t('claim setzt laeuft und zaehlt Versuch', () => { assert.equal(q('claim', 'F2', 'test').code, 0); assert.equal(q('claim', 'F2', 'test').code, 1); });
 t('waehrend F2 laeuft: nichts weiter bereit', () => assert.deepEqual(ids(q('next', '--max', '3')), []));
 t('done gibt Folgepakete frei: Module parallel, ein serielles', () => {
@@ -38,7 +50,7 @@ t('Meilenstein erscheint erst, wenn alle Voraussetzungen fertig sind', () => {
   assert.deepEqual(JSON.parse(q('milestones').out).map((m) => m.id), ['beta1']);
   q('ms-done', 'beta1', 'ok'); assert.deepEqual(JSON.parse(q('milestones').out).map((m) => m.id), []);
 });
-t('Kann-Pakete nie ohne Flag', () => { const all = JSON.parse(fs.readFileSync(env.PS_QUEUE, 'utf8')).packages; for (const p of all) if (p.status === 'offen' && !p.kann) p.status = 'fertig'; fs.writeFileSync(env.PS_QUEUE, JSON.stringify({ version: 1, maxAttempts: 3, packages: all })); assert.deepEqual(ids(q('next', '--max', '9')), []); assert.ok(ids(q('next', '--max', '9', '--include-kann')).length > 0); });
+t('Kann-Pakete nie ohne Flag', () => { const whole = JSON.parse(fs.readFileSync(env.PS_QUEUE, 'utf8')); for (const p of whole.packages) if (p.status === 'offen' && !p.kann) p.status = 'fertig'; fs.writeFileSync(env.PS_QUEUE, JSON.stringify(whole)); assert.deepEqual(ids(q('next', '--max', '9')), []); assert.ok(ids(q('next', '--max', '9', '--include-kann')).length > 0); });
 
 // gate.mjs in einem Wegwerf-Repository
 const repo = path.join(tmp, 'repo'); fs.mkdirSync(path.join(repo, 'app/lib'), { recursive: true }); fs.mkdirSync(path.join(repo, 'tests/unit'), { recursive: true });
@@ -60,8 +72,8 @@ t('Autocommit: jede Aenderung der Liste wird committet', () => {
   const r2 = path.join(tmp, 'qrepo'); fs.mkdirSync(r2); const gg = (...a) => execFileSync('git', ['-C', r2, '-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { encoding: 'utf8' });
   gg('init', '-q', '-b', 'main'); fs.copyFileSync(path.join(HERE, 'V2-QUEUE.json'), path.join(r2, 'q.json')); gg('add', 'q.json'); gg('commit', '-q', '-m', 'start');
   const e2 = { ...env, PS_QUEUE: path.join(r2, 'q.json'), PS_AUTOCOMMIT: '1', GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' };
-  const rr = spawnSync('node', [path.join(HERE, 'queue.mjs'), 'claim', 'F2', 'x'], { env: e2, encoding: 'utf8' }); assert.equal(rr.status, 0, rr.stderr);
-  assert.match(gg('log', '--oneline', '-1'), /chore\(queue\): claim F2/);
+  const rr = spawnSync('node', [path.join(HERE, 'queue.mjs'), 'claim', 'P0', 'x'], { env: e2, encoding: 'utf8' }); assert.equal(rr.status, 0, rr.stderr);
+  assert.match(gg('log', '--oneline', '-1'), /chore\(queue\): claim P0/);
 });
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`${n} Pruefungen bestanden`);

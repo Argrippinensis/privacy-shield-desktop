@@ -13,12 +13,13 @@ Teil **A** ist der Orchestrator-Prompt (immer derselbe, wiederholbar, auch für 
 Du bist der Orchestrator fuer PrivacyShield 2.0. Du arbeitest im Dauerbetrieb selbstaendig. Du fragst den Nutzer NICHT im Chat nach dem naechsten Schritt. Fragen gehen nur in die Fragenliste (Regeln unten). Dieser Prompt ist immer derselbe: Der gesamte Zustand steht in Dateien und Git, nicht in deinem Gedaechtnis.
 
 KONSTANTEN
-  REPO=~/projects/privacy-shield-desktop   PLAN=/tmp/ps-planwt   D=$PLAN/docs/superpowers/plans/2026-10-20-v2-0
+  REPO=~/projects/ps-v2 (eigener Klon fuer die 2.0-Arbeit; das Arbeitsverzeichnis ~/projects/privacy-shield-desktop des Nutzers bleibt unberuehrt)   PLAN=/tmp/ps-planwt   D=$PLAN/docs/superpowers/plans/2026-10-20-v2-0
   Q="env PS_AUTOCOMMIT=1 node $D/loop/queue.mjs"     GATE="node $D/loop/gate.mjs"
   OWNER=orch-<Datum-Uhrzeit>   (ein eindeutiger Name fuer diese Sitzung)
 
 SCHRITT 1: START (jede Sitzung)
-  1. git -C $REPO worktree prune; falls $PLAN fehlt: git -C $REPO worktree add $PLAN plan/v2-0.  (Der Plan lebt auf dem Branch plan/v2-0; der Zustand der Liste wird dort committet.)
+  0. Existiert $REPO nicht: git clone git@github.com:Argrippinensis/privacy-shield-desktop.git $REPO; vorhandene Ordner app/vendor und app/models aus ~/projects/privacy-shield-desktop hineinkopieren (spart den Download; npm run fetch-vendor prueft die Summen).
+  1. git -C ~/projects/privacy-shield-desktop worktree prune; falls $PLAN fehlt: git -C ~/projects/privacy-shield-desktop worktree add $PLAN plan/v2-0.  (Der Plan lebt auf dem Branch plan/v2-0; der Zustand der Liste wird dort committet.)
   2. $Q stopped  -> Exit 0 bedeutet: Stopp-Datei vorhanden. Sitzung sofort beenden (kurze Meldung).
   3. $Q lock acquire $OWNER  -> schlaegt es fehl (Exit 3): eine andere Sitzung arbeitet; beenden ("noop").
   4. $Q reap  (verwaiste Pakete einer abgebrochenen Sitzung zurueck auf "offen").
@@ -33,18 +34,19 @@ SCHRITT 2: SCHLEIFE (hoechstens 3 serielle Pakete je Sitzung; dann sauberes Ende
   c. BATCH=$($Q next --max 3)  -> JSON-Liste bereiter Pakete (Module parallel, hoechstens ein serielles). Leer: pruefe $Q summary; sind noch blockierte Pakete da, melde sie; sonst Ende (alles erledigt oder nur Kann-Pakete).
   d. Fuer jedes Paket im BATCH: $Q claim <id> $OWNER, dann die PIPELINE (parallele Pakete gleichzeitig mit Unteragenten im Hintergrund starten; waehrenddessen Tests/CI nutzen, nicht untaetig warten).
 
-  PIPELINE je Paket P (Felder aus dem Batch: id, mark, model, effort, allowed, tests, accept, doc):
+  PIPELINE je Paket P (Felder aus dem Batch: id, tier, roles, allowed, tests, accept, doc):
+   Sonderfall P0 (Planhaertung): keine Worktree-Pipeline; ein Unteragent (P.roles.implementer, Auftrag aus V2-LOOP.md Abschnitt 9) arbeitet im Plan-Worktree $PLAN; GATE mit --repo $PLAN und --base <Commit vor P0>; danach $Q done P0 <Commit>. Nach P0 neu lesen, was sich im Plan geaendert hat.
    1. Worktree: git -C $REPO worktree add /tmp/ps-wt/<id> -b v2/<id> v2/main
-   2. Wenn P.tests nicht leer: TEST-AUTOR (Vorlage B1; Agent, model sonnet, effort low; er arbeitet in /tmp/ps-wt/<id>). SELBST pruefen: Tests ausfuehren: sie muessen ROT sein, aus dem richtigen Grund (Funktion/Modul fehlt oder falsches Ergebnis, kein Syntax-/Importfehler im Test). Ein Nachbesserungsversuch. Commit-Hash als TESTCOMMIT merken.
-   3. IMPLEMENTIERER (Vorlage B2; model und effort aus P: Marke H = haiku/low, Marke S = sonnet mit dem Feld effort). Nur die erlaubten Dateien.
-   4. $Q heartbeat <id>. GATE: $GATE <id> --repo /tmp/ps-wt/<id> --base v2/main --test-commit $TESTCOMMIT . Ausgabe ist JSON; ok=false: EIN Reparaturversuch (Implementierer mit den fehlgeschlagenen Pruefungen und der echten Ausgabe); bei erneutem Fehler Wechsel auf sonnet/low; bei erneutem Fehler: $Q block <id> "<kurzer Grund>", Push-Nachricht, naechstes Paket.
-   5. PRUEFER (Vorlage B3, frischer Kontext, sonnet/low) nur wenn P.mark == S, oder P.id in A3.m, A3.w, oder P.id endet auf ".w", oder P.id in D1.m, D2, D3. Bei "Maengel": ein Zyklus zurueck an den Implementierer, danach block. Bei Oberflaeche: Screenshots (1280 und 900 Pixel Breite) mit Playwright erzeugen, selbst ansehen, Skill frontend-design:frontend-design zur Beurteilung.
+   2. Wenn P.tests nicht leer: TEST-AUTOR (Vorlage B1; Agent mit model und effort aus P.roles.testAutor; er arbeitet in /tmp/ps-wt/<id>). SELBST pruefen: Tests ausfuehren: sie muessen ROT sein, aus dem richtigen Grund (Funktion/Modul fehlt oder falsches Ergebnis, kein Syntax-/Importfehler im Test). Ein Nachbesserungsversuch. Commit-Hash als TESTCOMMIT merken.
+   3. IMPLEMENTIERER (Vorlage B2; model und effort aus P.roles.implementer). Nur die erlaubten Dateien.
+   4. $Q heartbeat <id>. GATE: $GATE <id> --repo /tmp/ps-wt/<id> --base v2/main --test-commit $TESTCOMMIT . Ausgabe ist JSON; ok=false: EIN Reparaturversuch (Implementierer mit den fehlgeschlagenen Pruefungen und der echten Ausgabe); bei erneutem Fehler dritter Versuch mit dem Aufwand der Stufe "denk" (high); bei erneutem Fehler: $Q block <id> "<kurzer Grund>", Push-Nachricht, naechstes Paket.
+   5. PRUEFER (Vorlage B3, frischer Kontext, model und effort aus P.roles.pruefer) nur wenn P.roles.pruefer nicht null ist. Bei "Maengel": ein Zyklus zurueck an den Implementierer, danach block. Bei Oberflaeche: Screenshots (1280 und 900 Pixel Breite) mit Playwright erzeugen, selbst ansehen, Skill frontend-design:frontend-design zur Beurteilung.
    6. MERGE (nacheinander, nie gleichzeitig): git -C $REPO checkout v2/main; git -C $REPO merge --no-ff v2/<id> -m "feat(<id>): <Titel>" (Commit-Zeile "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"). Danach npm run test:unit; bei seriellen Paketen und bei Erkennungsaenderungen zusaetzlich xvfb-run -a npm test und npm run eval (Lecks nie schlechter, Fehlalarme 0). Rot nach dem Merge: Merge zuruecknehmen (git revert -m 1), Paket blockieren.
    7. $Q done <id> <MergeCommit>; git -C $REPO worktree remove --force /tmp/ps-wt/<id>; git -C $REPO push -u origin v2/main (Branch-Push ist kein Veroeffentlichen); existiert noch kein Pull-Request: gh pr create --draft --base main --head v2/main --title "PrivacyShield 2.0 (in Arbeit)" mit kurzem Text.
 
 SCHRITT 3: MEILENSTEINE (Pre-release und Final)
   Fuer jeden Meilenstein aus "$Q milestones":
-  - Wenn audit=true: PHASENPRUEFUNG (Vorlage B4; Agent, sonnet, effort medium, frischer Kontext). Befunde werden neue Pakete (Eintrag in die Liste, Marke S) oder Fragen.
+  - Wenn audit=true: PHASENPRUEFUNG (Vorlage B4; Agent mit model und effort aus dem Feld audit des Batch bzw. $Q profile: Standard sonnet/xhigh; frischer Kontext). Befunde werden neue Pakete (Eintrag in die Liste, Marke S) oder Fragen.
   - kind=prerelease: Ist in V2-FREIGABEN.md die Freigabe V2-1 erteilt (Wortlaut und Datum eingetragen) und sind ALLE Bedingungen erfuellt (xvfb-run -a npm test, npm run eval, CI auf drei Systemen gruen, verify-release ohne FEHLER nach dem Build), dann: package.json Version setzen, CHANGELOG-Abschnitt, Tag, Build beobachten (gh run watch), Release als Pre-release pruefen (node scripts/verify-release.mjs <Tag> --upgrade-from v1.8.0), $Q ms-done <id> "<Tag>". Fehlt die Freigabe: Frage (Klasse C) in V2-FRAGEN.md, Push-Nachricht, NICHT veroeffentlichen, mit Paketen weiterarbeiten.
   - kind=final: IMMER Gate: Frage (Klasse C) in V2-FRAGEN.md plus Push-Nachricht; nichts veroeffentlichen ohne ausdrueckliche schriftliche Freigabe fuer 2.0.0 final in V2-FREIGABEN.md.
 
@@ -62,7 +64,7 @@ SCHRITT 4: ENDE DER SITZUNG (nach 3 seriellen Paketen, leerer Liste, Stopp oder 
   4. Kurze Meldung (Deutsch, hoechstens 10 Zeilen): erledigt (mit Testausgaben, letzte Zeilen), blockiert (mit Fehlermeldung), offene Fragen, naechste Meilensteine.
 ```
 
-**Probelauf:** Dem Prompt die Zeile `PROBELAUF: Fuehre nur die Schritte 1 und 2 fuer das Paket A1.m aus und beende dann mit Schritt 4.` voranstellen.
+**Probelauf:** Dem Prompt die Zeile `PROBELAUF: Fuehre nur die Pakete P0 und F2 vollstaendig aus (ganze Pipeline), dann Schritt 4.` voranstellen.
 
 **Nicht interaktiver Auslöser:** Derselbe Prompt, zusätzlich als erste Zeile `NICHT INTERAKTIV: Es antwortet niemand im Chat. Fragen nur in V2-FRAGEN.md und per Push-Nachricht.`
 
@@ -72,7 +74,7 @@ SCHRITT 4: ENDE DER SITZUNG (nach 3 seriellen Paketen, leerer Liste, Stopp oder 
 
 `<PLAN>` = `/tmp/ps-planwt`; Paketdokumente liegen in `<PLAN>/docs/superpowers/plans/2026-10-20-v2-0/` (Feld `doc` der Arbeitsliste: Datei und Abschnitt).
 
-### B1: Test-Autor (Sonnet, niedrig)
+### B1: Test-Autor (Modell und Aufwand aus `roles.testAutor`)
 
 ```
 Du schreibst NUR Tests fuer das Paket <PAKET> von PrivacyShield 2.0. Worktree: <PFAD>, Branch <BRANCH>.
@@ -83,7 +85,7 @@ Du schreibst NUR Tests fuer das Paket <PAKET> von PrivacyShield 2.0. Worktree: <
 5. Bericht: Namen der Testfaelle und die letzten 15 Zeilen des roten Laufs. Ist ein Fall in der Spezifikation nicht eindeutig: im Bericht nennen, nicht raten.
 ```
 
-### B2: Implementierer (Haiku niedrig bei Marke H, sonst Sonnet)
+### B2: Implementierer (Modell und Aufwand aus `roles.implementer`)
 
 ```
 Du machst die roten Tests des Pakets <PAKET> gruen. Worktree: <PFAD>, Branch <BRANCH>.
@@ -96,7 +98,7 @@ Du machst die roten Tests des Pakets <PAKET> gruen. Worktree: <PFAD>, Branch <BR
 7. Bericht: geaenderte Dateien mit Zeilenzahl, letzte 15 Zeilen der Testlaeufe, offene Punkte.
 ```
 
-### B3: Prüfer (Sonnet, niedrig, frischer Kontext)
+### B3: Prüfer (Modell und Aufwand aus `roles.pruefer`, frischer Kontext)
 
 ```
 Du pruefst das Paket <PAKET> von PrivacyShield 2.0 unabhaengig. Worktree: <PFAD>, Branch <BRANCH> gegen <BASIS>. Mechanisches (Geltungsbereich, Emojis, Geheimnisse, Modulreinheit, Abnahmebefehle) hat bereits das Pruefskript gate.mjs bestaetigt; du beurteilst, was ein Skript nicht kann.
@@ -106,7 +108,7 @@ Du pruefst das Paket <PAKET> von PrivacyShield 2.0 unabhaengig. Worktree: <PFAD>
 4. Urteil: "In Ordnung" oder "Maengel" mit nummerierter Liste (Datei:Zeile, was, warum). Keine Codeaenderungen.
 ```
 
-### B4: Phasenprüfer (Sonnet, mittel, frischer Kontext)
+### B4: Phasenprüfer (Sonnet, xhigh, frischer Kontext)
 
 ```
 Du pruefst eine ganze Phase von PrivacyShield 2.0 unabhaengig und versuchst, sie kaputt zu machen. Phase: <PAKETLISTE>. Repository: <REPO> auf Branch v2/main.
