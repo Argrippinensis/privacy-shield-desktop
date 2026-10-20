@@ -68,11 +68,14 @@
    ],
    "tests": [],
    "accept": [],
-   "status": "offen",
-   "attempts": 0,
+   "status": "laeuft",
+   "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": null,
+   "lease": {
+    "owner": "orch-20261020",
+    "ts": 1792531020059
+   },
    "notes": ""
   },
   {
