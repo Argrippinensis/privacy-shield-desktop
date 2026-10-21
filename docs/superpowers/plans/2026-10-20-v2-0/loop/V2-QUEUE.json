@@ -228,14 +228,11 @@
     "xvfb-run -a npm run eval",
     "npm run build:linux && PS_PACKAGED_BIN=dist/linux-unpacked/privacy-shield-desktop xvfb-run -a npm test"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1025",
-    "ts": 1792571154063
-   },
+   "commit": "77a4bcb20e38f2f3700002ab8ba5c583c343f3e6",
+   "lease": null,
    "notes": ""
   },
   {
