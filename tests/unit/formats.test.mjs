@@ -35,9 +35,20 @@ async function zipWith(files) {
   return z.generateAsync({ type: 'uint8array' });
 }
 
+// Laedt ein echtes ZIP und ueberschreibt die Kopfgroessen in files[name]._data (wie JSZip sie aus dem
+// Zentralverzeichnis liest). Ein gefaelschtes Zentralverzeichnis mit grosser komprimierter Groesse
+// ausserhalb der Daten wuerde schon in loadAsync mit 'Corrupted zip' scheitern.
 async function loadPatched(files, fn) {
-  const bytes = await zipWith(files);
-  return JSZip.loadAsync(patchSizes(bytes, fn));
+  const zip = await JSZip.loadAsync(await zipWith(files));
+  for (const [name, f] of Object.entries(zip.files)) {
+    if (f.dir) continue;
+    const r = fn(name);
+    if (r) {
+      f._data.compressedSize = r.comp;
+      f._data.uncompressedSize = r.uncomp;
+    }
+  }
+  return zip;
 }
 
 async function guardCode(zip) {
