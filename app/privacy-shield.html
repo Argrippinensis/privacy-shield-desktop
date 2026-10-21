@@ -1627,6 +1627,17 @@
                     </button>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  id="LCBAND"
+                  role="status"
+                  aria-live="polite"
+                  aria-controls="LCLIST"
+                  aria-expanded="false"
+                  onclick="toggleLCList()"
+                  style="display: none; align-items: center; gap: 8px; width: 100%; border: 0; border-bottom: 1px solid #e5e5e5; padding: 8px 14px; font: inherit; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer"
+                ></button>
+                <div id="LCLIST" style="display: none; border-bottom: 1px solid #e5e5e5; background: #fffbeb; padding: 6px 14px"></div>
                 <div class="tool-panel-body" style="padding: 12px">
                   <textarea
                     id="AT"
@@ -1990,6 +2001,9 @@
     <script src="vendor/tesseract/tesseract.min.js"></script>
     <script src="vendor/jspdf/jspdf.umd.min.js"></script>
     <script src="vendor/jszip/jszip.min.js"></script>
+    <script src="lib/placeholder.js"></script>
+    <script src="lib/leakcheck.js"></script>
+    <script src="lib/marks.js"></script>
     <script src="lib/detect.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
@@ -1998,7 +2012,10 @@
         cnt = {},
         cvars = [],
         curProf = "standard",
-        whitelist = [];
+        whitelist = [],
+        manualMarks = PSLib.marks.create(),
+        lcIgnored = new Set(),
+        lcLast = null;
       (function boot() {
         const pg = document.getElementById("PG");
         PROFILES.forEach((p) => {
@@ -2689,11 +2706,102 @@
       function collectEntities(text) {
         return PSDetect.detect(text, {
           ents: activeEntIds(),
-          cvars: cvars,
+          cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
           whitelist: whitelist,
           wordlists: localAIMode,
           aiSpans: aiCache.key === text ? aiCache.spans : null,
         });
+      }
+      // Gegenpruefung: Erkennung ein zweites Mal ueber das Ergebnis
+      function runLeakCheck() {
+        const at = document.getElementById("AT").value;
+        const r = PSLib.leakcheck.scan(at, {
+          detect: (t) =>
+            PSDetect.detect(t, {
+              ents: activeEntIds(),
+              cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+              whitelist: [],
+              wordlists: localAIMode,
+              aiSpans: null,
+            }),
+          whitelist: whitelist,
+        });
+        r.findings = r.findings.filter((f) => !lcIgnored.has(f.type + "\u0000" + at.slice(f.start, f.end)));
+        r.count = r.findings.length;
+        r.clean = r.count === 0 && !r.error;
+        lcLast = { at: at, res: r };
+        renderLeakCheck();
+        return r;
+      }
+      function lcIcon(ok) {
+        return ok
+          ? '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+          : '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2l6.5 11.5h-13z M8 6.5v3 M8 11.6v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      }
+      function renderLeakCheck() {
+        const band = document.getElementById("LCBAND");
+        const list = document.getElementById("LCLIST");
+        if (!band || !lcLast) return;
+        const r = lcLast.res;
+        band.style.display = "flex";
+        if (r.error) {
+          band.style.background = "#fffbeb";
+          band.style.color = "#92400e";
+          band.innerHTML = lcIcon(false) + "<span>Gegenprüfung: nicht möglich</span>";
+        } else if (r.clean) {
+          band.style.background = "#ecfdf5";
+          band.style.color = "#047857";
+          band.innerHTML = lcIcon(true) + "<span>Gegenprüfung: keine Auffälligkeiten</span>";
+          list.style.display = "none";
+        } else {
+          band.style.background = "#fffbeb";
+          band.style.color = "#92400e";
+          band.innerHTML =
+            lcIcon(false) + "<span>Gegenprüfung: " + (r.count === 1 ? "1 möglicher Rest" : r.count + " mögliche Reste") + "</span>";
+        }
+        band.style.cursor = r.clean || r.error ? "default" : "pointer";
+        band.setAttribute("aria-expanded", list.style.display === "none" ? "false" : "true");
+        list.innerHTML = r.findings
+          .map(
+            (f, i) =>
+              '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12px;border-top:' +
+              (i ? "1px solid #fde68a" : "0") +
+              '"><span class="pill" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d">' +
+              esc(f.type) +
+              '</span><code style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#444">' +
+              esc(f.snippet) +
+              '</code><button type="button" class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="lcMask(' +
+              i +
+              ')">Maskieren</button><button type="button" class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="lcIgnore(' +
+              i +
+              ')">Ignorieren</button></div>',
+          )
+          .join("");
+      }
+      function toggleLCList() {
+        const list = document.getElementById("LCLIST");
+        if (!lcLast || !lcLast.res.findings.length) return;
+        list.style.display = list.style.display === "none" ? "block" : "none";
+        document.getElementById("LCBAND").setAttribute("aria-expanded", list.style.display === "none" ? "false" : "true");
+      }
+      function lcValue(i) {
+        const f = lcLast && lcLast.res.findings[i];
+        return f ? { f: f, value: lcLast.at.slice(f.start, f.end) } : null;
+      }
+      async function lcMask(i) {
+        const x = lcValue(i);
+        if (!x) return;
+        if (!PSLib.marks.add(manualMarks, { value: x.value, pfx: x.f.type })) {
+          toast("Dieser Wert kann nicht markiert werden", "e");
+          return;
+        }
+        await reanon();
+      }
+      function lcIgnore(i) {
+        const x = lcValue(i);
+        if (!x) return;
+        lcIgnored.add(x.f.type + "\u0000" + x.value);
+        runLeakCheck();
       }
       let anonBusy = false;
       async function anon() {
@@ -2702,6 +2810,7 @@
           return;
         }
         anonBusy = true;
+        lcIgnored = new Set();
         const btn = document.getElementById("ANONBTN");
         if (btn) btn.disabled = true;
         try {
@@ -2731,7 +2840,7 @@
           }
           const r = PSDetect.anonymize(input, {
             ents: activeEntIds(),
-            cvars: cvars,
+            cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
             whitelist: whitelist,
             wordlists: localAIMode,
             aiSpans: aiCache.key === det ? aiCache.spans : null,
@@ -2747,6 +2856,7 @@
           document.getElementById("REANON").style.display = "inline-flex";
           updTokenCount();
           toast(Object.keys(store).length + " Entitäten anonymisiert", "s");
+          runLeakCheck();
         } catch (err) {
           toast("Fehler: " + err.message, "e");
         }
@@ -3146,12 +3256,7 @@
       }
       function tokenizeAnnotateWord(start, word, pfx, color) {
         if (word.startsWith("{{") && word.endsWith("}}")) return;
-        const token = PSDetect.token({ store, cnt }, word, pfx, color, "Annotieren");
-        const ta = document.getElementById("IT");
-        ta.value = ta.value.substring(0, start) + token + ta.value.substring(start + word.length);
-        buildAnnotateOverlay();
-        renderMap();
-        toast("→ " + token, "s");
+        addManualMark(word, pfx);
       }
       function showAnnotatePopup(start, word) {
         closePopup();
@@ -3187,12 +3292,14 @@
         }
         closePopup();
         if (typeof start !== "number" || !word) return;
-        const token = PSDetect.token({ store, cnt }, word, pfx, color, "Annotieren (manuell)");
-        const ta = document.getElementById("IT");
-        ta.value = ta.value.substring(0, start) + token + ta.value.substring(start + word.length);
-        buildAnnotateOverlay();
-        renderMap();
-        toast("→ " + token, "s");
+        addManualMark(word, pfx);
+      }
+      // Manuelle Markierung als Daten: Eingabetext bleibt unveraendert, Ersetzung beim Anonymisieren
+      function addManualMark(word, pfx) {
+        if (PSLib.marks.add(manualMarks, { value: word, pfx: pfx })) {
+          buildAnnotateOverlay();
+          toast("Markiert als " + pfx + ": wird beim Anonymisieren ersetzt", "s");
+        } else toast("Dieser Wert kann nicht markiert werden", "e");
       }
       function closePopup() {
         const popup = document.getElementById("AMP");
