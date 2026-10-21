@@ -301,11 +301,14 @@
     "xvfb-run -a node tests/eval/diff-reference.mjs",
     "xvfb-run -a npm run eval"
    ],
-   "status": "offen",
-   "attempts": 1,
+   "status": "laeuft",
+   "attempts": 2,
    "branch": "",
    "commit": "",
-   "lease": null,
+   "lease": {
+    "owner": "orch-20261021-182735",
+    "ts": 1792600097037
+   },
    "notes": "[Lease abgelaufen 2026-10-21T16:27:38.928Z]"
   },
   {
