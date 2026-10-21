@@ -34,13 +34,24 @@
       { name: 'AES-GCM', length: 256 }, false, [use]);
   }
 
+  // Test-Hooks nur als eigene Eigenschaft, Uint8Array exakter Laenge; sonst Zufall
+  function hook(o, name, len) {
+    if (!Object.hasOwn(o, name)) return globalThis.crypto.getRandomValues(new Uint8Array(len));
+    const v = o[name];
+    if (!(v instanceof Uint8Array) || v.length !== len) throw new PSMapError('CORRUPT');
+    return v;
+  }
+
   async function encrypt(payload, password, opts) {
     const o = opts || {};
     const pw = pwBytes(password);
     const iterations = o.iterations === undefined ? STD_IT : o.iterations;
     if (!Number.isInteger(iterations) || iterations < 1 || iterations > MAX_IT) throw new PSMapError('CORRUPT');
-    const salt = o._salt || globalThis.crypto.getRandomValues(new Uint8Array(16));
-    const iv = o._iv || globalThis.crypto.getRandomValues(new Uint8Array(12));
+    const salt = hook(o, '_salt', 16);
+    const iv = hook(o, '_iv', 12);
+    let json;
+    try { json = JSON.stringify(payload); } catch (e) { throw new PSMapError('CORRUPT'); }
+    if (typeof json !== 'string') throw new PSMapError('CORRUPT');
     const head = new Uint8Array(HEAD);
     head.set(MAGIC, 0);
     head[4] = 1; head[5] = 1;
@@ -49,7 +60,7 @@
     head.set(iv, 26);
     const k = await key(pw, salt, iterations, 'encrypt');
     const ct = new Uint8Array(await subtle().encrypt({ name: 'AES-GCM', iv, additionalData: head }, k,
-      new TextEncoder().encode(JSON.stringify(payload))));
+      new TextEncoder().encode(json)));
     const out = new Uint8Array(HEAD + ct.length);
     out.set(head, 0);
     out.set(ct, HEAD);
@@ -66,8 +77,8 @@
     const pw = pwBytes(password);
     const head = b.slice(0, HEAD);
     let plain;
+    const k = await key(pw, head.slice(10, 26), iterations, 'decrypt');
     try {
-      const k = await key(pw, head.slice(10, 26), iterations, 'decrypt');
       plain = await subtle().decrypt({ name: 'AES-GCM', iv: head.slice(26, 38), additionalData: head }, k, b.slice(HEAD));
     } catch (e) { throw new PSMapError('WRONG_PASSWORD'); }
     try { return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(plain)); }
