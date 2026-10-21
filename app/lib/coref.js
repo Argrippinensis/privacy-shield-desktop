@@ -7,64 +7,84 @@
   'use strict';
 
   // Anreden und Titel am Anfang (mit oder ohne Punkt, wo ueblich)
-  const TITLE = /^(herr|frau|hr\.|fr\.|dr\.?|prof\.?|dipl\.-ing\.|mag\.|ing\.|med\.|jur\.|rer\.|nat\.)$/i;
+  const TITLE = /^(herr|herrn|frau|hr\.|hrn\.|fr\.|frl\.|dr\.?|dr\.-ing\.|prof\.?|dipl\.-ing\.|dipl\.-kfm\.|mag\.|ing\.|med\.|jur\.|rer\.|nat\.)$/i;
   const PARTICLE = new Set(['von', 'van', 'de', 'zu', 'zur', 'vom', 'ter', 'ten', 'di', 'da', 'le', 'la', 'bin', 'ibn', 'der', 'den', 'dem']);
-  const INITIAL = /^\p{L}\.$/u;
+  // Initiale: "H." oder mit Bindestrich "H.-P."
+  const INITIAL = /^\p{L}\.(?:-\p{L}\.)*$/u;
 
   const norm = (s) => s.normalize('NFC').toLowerCase();
 
-  // Zerlegung eines Namenstexts in { given: [Woerter], surname: 'text', initial: 'x'|null }; null bei leerem Rest
+  // Zerlegung in { toks: Vornamen-Woerter samt Initialen, parts: Bindestrichteile, given: ausgeschriebene Vornamen, surname }
   function parse(str) {
     const words = str.normalize('NFC').split(/\s+/).filter(Boolean);
     while (words.length && TITLE.test(words[0])) words.shift();
-    if (!words.length) return null;
+    if (!words.length || INITIAL.test(words[words.length - 1])) return null;
     let i = words.length - 1; // letztes Wort ist Nachname, davor stehende Zusaetze gehoeren dazu
     while (i > 0 && PARTICLE.has(words[i - 1].toLowerCase())) i--;
-    const given = words.slice(0, i);
-    const surname = norm(words.slice(i).join(' '));
-    const names = given.filter((w) => !INITIAL.test(w)).map(norm);
-    const initials = given.filter((w) => INITIAL.test(w));
-    return { given: names, initial: initials.length ? norm(initials[0])[0] : null, hasGiven: given.length > 0, surname };
+    const raw = words.slice(0, i);
+    const toks = raw.map(norm);
+    const parts = [];
+    raw.forEach((w) => norm(w).split('-').forEach((x) => { if (x) parts.push(x); }));
+    return {
+      toks,
+      parts,
+      given: raw.filter((w) => !INITIAL.test(w)).map(norm),
+      initials: raw.length > 0 && raw.every((w) => INITIAL.test(w)),
+      surname: norm(words.slice(i).join(' ')),
+    };
   }
 
   function link(spans, text) {
-    const infos = spans.map((s) => (s && s.pfx === 'NAME' ? parse(String(text).slice(s.start, s.end)) : null));
+    const infos = spans.map((s) => {
+      if (!s || s.pfx !== 'NAME') return null;
+      const t = typeof text === 'string' && s.end > s.start ? text.slice(s.start, s.end) : '';
+      return parse(t);
+    });
 
-    // VOLL-Personen: mindestens ein ausgeschriebener Vorname plus Nachname
+    // VOLL-Personen: mindestens ein ausgeschriebener Vorname plus Nachname (Mittelinitialen zaehlen zum Schluessel)
     const persons = new Map();
     infos.forEach((p) => {
-      if (p && p.given.length) persons.set(p.given.join(' ') + '|' + p.surname, p);
+      if (p && p.given.length) {
+        const key = p.toks.join(' ') + '|' + p.surname;
+        if (!persons.has(key)) persons.set(key, { key, given: p.given, parts: p.parts, surname: p.surname });
+      }
     });
-    const list = [...persons.entries()].map(([key, p]) => ({ key, given: p.given, surname: p.surname }));
+    const list = [...persons.values()];
     const bySurname = (sn) => list.filter((q) => q.surname === sn);
+    const byGiven = (g) => list.filter((q) => q.given.includes(g));
     const uniq = (arr) => (arr.length === 1 ? arr[0].key : null);
 
     return spans.map((s, idx) => {
+      if (!s || s.pfx !== 'NAME') return Object.assign({}, s);
       const p = infos[idx];
-      if (!p) return Object.assign({}, s);
       let form = null;
       let personKey = null;
-      if (p.given.length) {
+      if (!p) {
+        // nur Titel, leer oder unbrauchbar: ohne Verknuepfung
+      } else if (p.given.length) {
         form = 'VOLL';
-        personKey = p.given.join(' ') + '|' + p.surname;
-      } else if (p.hasGiven) {
-        // nur Initiale(n) plus Nachname
+        personKey = p.toks.join(' ') + '|' + p.surname;
+      } else if (p.initials) {
+        // nur Initialen plus Nachname: alle Initialen muessen der Reihe nach passen
         form = 'KURZ';
-        const m = bySurname(p.surname).filter((q) => q.given.some((g) => g[0] === p.initial));
+        const m = bySurname(p.surname).filter((q) => p.parts.length <= q.parts.length && p.parts.every((x, k) => x[0] === q.parts[k][0]));
         personKey = uniq(m);
       } else {
         const w = p.surname;
-        let m = bySurname(w);
-        if (!m.length && w.length - 1 > 3 && w.endsWith('s')) m = bySurname(w.slice(0, -1)); // Genitiv-s
-        if (m.length) {
+        let sn = bySurname(w);
+        let gv = byGiven(w);
+        // Genitiv-s nur, wenn das Wort selbst weder Nachname noch Vorname ist
+        if (!sn.length && !gv.length && w.length - 1 > 3 && w.endsWith('s')) {
+          const stem = w.slice(0, -1);
+          sn = bySurname(stem);
+          gv = byGiven(stem);
+        }
+        if (sn.length) {
           form = 'NACHNAME';
-          personKey = uniq(m);
-        } else {
-          m = list.filter((q) => q.given.includes(w));
-          if (m.length) {
-            form = 'VORNAME';
-            personKey = uniq(m);
-          }
+          personKey = gv.length ? null : uniq(sn); // Doppelrolle: nicht eindeutig
+        } else if (gv.length) {
+          form = 'VORNAME';
+          personKey = uniq(gv);
         }
       }
       return Object.assign({}, s, { personKey, form });
