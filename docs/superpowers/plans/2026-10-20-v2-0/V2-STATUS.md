@@ -35,3 +35,4 @@ Der Orchestrator ändert nur diese Datei und den Branch `v2/main`; jede Statusä
 
 | Datum | Pakete | Ergebnis | Offene Fragen an den Nutzer |
 |---|---|---|---|
+| 2026-10-21 | Probelauf: P0 und F2 fertig (Gate gruen, 96/96, Differenztest 0 von 645). Hinweise Pruefer F2: captureDownloads verwirft Klicks auf Anker ohne download-Attribut (in F2.h/B1 beheben); loadlib-Test ohne Fehlercode. Offen: Fragen F1-F5 (Frist 2026-10-24). Naechster Schritt: F1.a, F2.e |
