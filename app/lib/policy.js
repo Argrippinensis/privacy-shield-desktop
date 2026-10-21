@@ -10,6 +10,7 @@
   // Alle deutschen Texte des Moduls (spaeter mechanisch auf t() umstellbar)
   const TEXT = {
     unbegrenzt: 'Unbegrenzte Wiederholungen (* und +) sind nicht erlaubt. Schreiben Sie z. B. {1,20}.',
+    aufwand: 'Das Muster ist zu aufwendig (Wiederholungen mal feste Zeichenfolge). Verwenden Sie kleinere Grenzen oder weniger feste Zeichen nach den Wiederholungen.',
     verschachtelt: (max) => 'Die Wiederholungen sind zu verschachtelt (Produkt der Obergrenzen über ' + max + '). Verwenden Sie kleinere Grenzen.',
     rueckverweis: 'Rückverweise sind nicht erlaubt.',
     vorausschau: 'Vorausschau, Rückschau und benannte Gruppen sind nicht erlaubt.',
@@ -58,6 +59,7 @@
   const MAX_PATTERN = 200;
   const MAX_UPPER = 64;
   const MAX_PRODUCT = 1000;
+  const MAX_AUFWAND = 3000; // Produkt der Obergrenzen mal feste Laenge (gemessen: 1000 Einheiten bis ca. 0,65 s je 100.000 Zeichen)
   const FORBIDDEN_KEYS = ['__proto__', 'constructor', 'prototype'];
   const ID_RE = /^[a-z][a-z0-9_-]{0,31}$/;
   const CATEGORY_RE = /^[A-Z][A-Z0-9_]{1,19}$/;
@@ -67,6 +69,9 @@
   const QUANTOR_RE = /\{(\d+)(?:(,)(\d*))?\}/y;
 
   // ---- Regex-Pruefer: echter Parser der sicheren Teilmenge ----
+
+  const EINZEL = { zweige: 0, laenge: 1 };
+  const NULL_LAENGE = { zweige: 0, laenge: 0 };
 
   class Abgelehnt extends Error {}
   const nein = (msg) => { throw new Abgelehnt(msg); };
@@ -81,32 +86,37 @@
       if (produkt > MAX_PRODUCT) nein(TEXT.verschachtelt(MAX_PRODUCT));
     };
 
-    // Alternative (a|b|...) -> Anzahl der Zweige
+    // Alternative (a|b|...) -> { zweige, laenge } (laenge = feste Strecke, die je Wahlmoeglichkeit erneut geprueft wird)
     function alternative(tiefe) {
       let zweige = 0;
+      let laenge = 0;
       for (;;) {
-        folge(tiefe);
+        laenge = Math.max(laenge, folge(tiefe));
         zweige++;
         if (p[i] === '|') { i++; continue; }
-        return zweige;
+        return { zweige, laenge };
       }
     }
 
+    // -> feste Strecke der Folge
     function folge(tiefe) {
+      let summe = 0;
       while (i < n && p[i] !== '|' && !(p[i] === ')' && tiefe > 0)) {
         const gruppe = atom(tiefe);
-        quantor(gruppe);
+        const oben = quantor(gruppe);
+        summe += gruppe.laenge * oben;
       }
+      return summe;
     }
 
-    // -> null (kein Gruppenatom) oder { zweige }
+    // -> { zweige, laenge }; zweige ist 0 bei Nicht-Gruppen
     function atom(tiefe) {
       const c = p[i];
       if (c === '\\') {
         const d = p[i + 1];
         if (d !== undefined && (/[1-9]/.test(d) || d === 'k')) nein(TEXT.rueckverweis);
         i += 2;
-        return null;
+        return EINZEL;
       }
       if (c === '[') {
         i++;
@@ -116,7 +126,7 @@
           else if (p[i] === ']') { i++; break; }
           else i++;
         }
-        return null;
+        return EINZEL;
       }
       if (c === '(') {
         i++;
@@ -124,43 +134,51 @@
           if (p[i + 1] !== ':') nein(TEXT.vorausschau);
           i += 2;
         }
-        const zweige = alternative(tiefe + 1);
+        const { zweige, laenge } = alternative(tiefe + 1);
         if (p[i] !== ')') nein(TEXT.syntax);
         i++;
         if (zweige > 1) mal(zweige);
-        return { zweige };
+        return { zweige, laenge };
       }
       i++; // Zeichen, ".", "^", "$" oder ein einzelnes "{" ohne Quantorform
-      return null;
+      return c === '^' || c === '$' ? NULL_LAENGE : EINZEL;
     }
 
+    // -> Faktor fuer die feste Strecke: 1 ohne Quantor, n bei {n}, 0 bei veraenderlichen Teilen (die zaehlt das Produkt)
     function quantor(gruppe) {
       const c = p[i];
       if (c === '*' || c === '+') nein(TEXT.unbegrenzt);
       let faktor = 0;
+      let wdh = 1;
       let nurFrage = false;
       if (c === '?') {
         i++;
         faktor = 2;
+        wdh = 0;
         nurFrage = true;
       } else if (c === '{') {
         QUANTOR_RE.lastIndex = i; // klebend: ganze Zahl lesen, nie abschneiden (wie V8)
         const m = QUANTOR_RE.exec(p);
-        if (!m) return; // Klammer ohne Quantorform ist ein Literal
+        if (!m) return 1; // Klammer ohne Quantorform ist ein Literal
         if (m[2] && m[3] === '') nein(TEXT.unbegrenzt);
         const oben = Number(m[2] ? m[3] : m[1]);
         if (!(oben <= MAX_UPPER)) nein(TEXT.obergrenze(MAX_UPPER));
-        const unten = Number(m[1]);
-        faktor = m[2] ? Math.max(oben - unten + 1, 1) : 1; // Zahl der Wiederholungsmoeglichkeiten
+        // Spezifikation: {m,n} zaehlt n, {n} zaehlt 1. Bei m = 0 gibt es n + 1 Moeglichkeiten
+        // (wie bei ?), das gilt als Faktor, sonst wuerde a{0,2} 9-mal durchgehen.
+        faktor = m[2] ? (Number(m[1]) === 0 ? oben + 1 : Math.max(oben, 1)) : 1;
+        wdh = !m[2] || m[1] === m[3] ? oben : 0;
         i += m[0].length;
-      } else return;
-      if (gruppe && !nurFrage) nein(TEXT.gruppeQuantor);
-      if (gruppe && gruppe.zweige > 1) nein(TEXT.gruppeAlternative);
+      } else return 1;
+      if (gruppe.zweige > 0 && !nurFrage) nein(TEXT.gruppeQuantor);
+      if (gruppe.zweige > 1) nein(TEXT.gruppeAlternative);
+      if (gruppe.zweige > 0) wdh = 1; // Inhalt der optionalen Gruppe wird je Wahl erneut geprueft
       if (p[i] === '?') i++; // genügsame Variante, gleiche Obergrenze
       mal(faktor);
+      return wdh;
     }
 
-    alternative(0);
+    const gesamt = alternative(0);
+    if (produkt * (gesamt.laenge + 1) > MAX_AUFWAND) nein(TEXT.aufwand);
   }
 
   function checkPattern(pattern, flags) {
@@ -283,7 +301,11 @@
 
   // ---- toSpans ----
 
-  const wortZeichen = (c) => c !== undefined && c !== '' && WORD_CHAR_RE.test(c);
+  // Wortzeichen an Position e (ganzes Zeichen, auch ausserhalb der BMP)
+  const wortZeichenAn = (t, e) => {
+    const cp = t.codePointAt(e);
+    return cp !== undefined && WORD_CHAR_RE.test(String.fromCodePoint(cp));
+  };
 
   // Kleinschreibung zeichenweise und laengenerhaltend (z. B. U+0130 bleibt unveraendert, Sigma stets gleich)
   function klein(s) {
@@ -369,6 +391,7 @@
     while ((m = re.exec(maskiert)) !== null) {
       if (m[0].length === 0) { re.lastIndex++; continue; }
       if (m[0].indexOf('\u0000') === -1) out.push(spanVon(regel, text, m.index, m.index + m[0].length));
+      else re.lastIndex = m.index + 1; // verworfener Treffer darf einen echten spaeteren nicht verdecken
     }
   }
 
@@ -385,7 +408,7 @@
       const laengen = trieSuche(wurzel, heu, s);
       for (let k = laengen.length - 1; k >= 0; k--) { // je Start der laengste Treffer; Ueberlappung loest der Kern
         const e = s + laengen[k];
-        if (wortZeichen(maskiert[e])) continue; // Wortgrenze danach
+        if (wortZeichenAn(maskiert, e)) continue; // Wortgrenze danach
         if (maskiert.slice(s, e).indexOf('\u0000') !== -1) continue;
         out.push(spanVon(regel, text, s, e));
         break;

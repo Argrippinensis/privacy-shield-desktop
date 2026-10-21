@@ -595,8 +595,9 @@ test('checkPattern: a{1,10}a{1,10}a{1,10}b (10*10*10 = 1000) bleibt zulaessig', 
   assert.equal(P.checkPattern('a{1,10}a{1,10}a{1,10}b', '').ok, true);
 });
 
-test('checkPattern: a{2,11}a{2,11}a{2,11}b (10 Moeglichkeiten je Quantor, 1000) bleibt zulaessig', () => {
-  assert.equal(P.checkPattern('a{2,11}a{2,11}a{2,11}b', '').ok, true);
+test('checkPattern: {m,n} zaehlt n (Spezifikation): a{2,10} dreimal zulaessig, a{2,11} dreimal nicht', () => {
+  assert.equal(P.checkPattern('a{2,10}a{2,10}a{2,10}b', '').ok, true);
+  assert.equal(P.checkPattern('a{2,11}a{2,11}a{2,11}b', '').ok, false, '11 * 11 * 11 = 1331');
 });
 
 test('toSpans: Treffer derselben Listenregel duerfen sich ueberlappen', () => {
@@ -678,4 +679,60 @@ test('checkPattern: Ablehnungsgruende nennen das Kernwort (Unbegrenzte, Rueckver
     assert.equal(r.ok, false, muster);
     assert.match(r.error, kern, muster);
   }
+});
+
+// ---- Nachbesserung C3.m: Aufwandsgrenze, Zaehlung, Randfaelle ----
+
+test('checkPattern: feste Reststrecke zaehlt mit (Aufwandsgrenze), Muster mit langer fester Strecke werden abgelehnt', () => {
+  const abgelehnt = {
+    'a? x9 + a{64} x30': 'a?'.repeat(9) + 'a{64}'.repeat(30) + 'b',
+    'a{1,64} + a{64} x35': 'a{1,64}' + 'a{64}'.repeat(35) + 'b',
+    'a{1,10}a{1,10}a{1,9} + a{64} x30': 'a{1,10}a{1,10}a{1,9}' + 'a{64}'.repeat(30) + 'b',
+  };
+  for (const [name, muster] of Object.entries(abgelehnt)) {
+    const r = P.checkPattern(muster, '');
+    assert.equal(r.ok, false, name);
+    assert.match(r.error, /aufwendig|Produkt/, name);
+  }
+});
+
+test('checkPattern: Aufwandsgrenze laesst uebliche Muster zu', () => {
+  for (const m of ['a{1,10}a{1,10}a{1,10}b', 'a{1,30}a{1,30}b', 'K-\\d{6}', '[A-Z]{2}\\d{5,10}', '\\d{3}\\.\\d{3}\\.\\d{3}', 'a{1,64}b']) {
+    assert.equal(P.checkPattern(m, '').ok, true, m);
+  }
+});
+
+test('checkPattern: Fehlertext der Aufwandsgrenze enthaelt keinen Mustertext', () => {
+  const r = P.checkPattern('geheim?'.repeat(2) + 'a{64}'.repeat(30), '');
+  assert.equal(r.ok, false);
+  assert.doesNotMatch(r.error, /geheim/);
+});
+
+test('checkPattern: {m,n} zaehlt n, a{60,64} viermal wird abgelehnt', () => {
+  const r = P.checkPattern('a{60,64}'.repeat(4) + 'b', '');
+  assert.equal(r.ok, false);
+  assert.match(r.error, /Produkt/);
+});
+
+test('checkPattern: zulaessige Muster laufen auf 100.000 Zeichen unter 3 s (grosszuegige Grenze)', () => {
+  const text = 'a'.repeat(100000);
+  for (const m of ['a{1,10}a{1,10}a{1,10}b', 'a{1,6}a{1,6}a{16}a{16}a{16}b', 'a{1,40}a{64}b']) {
+    assert.equal(P.checkPattern(m, '').ok, true, m);
+    const t0 = Date.now();
+    new RegExp(m, 'g').test(text);
+    assert.ok(Date.now() - t0 < 3000, m);
+  }
+});
+
+test('toSpans: Listenbegriff vor einem Buchstaben ausserhalb der BMP trifft nicht (Wortgrenze)', () => {
+  const p = parseOk([regelListe({ terms: ['Alpha'], profiles: ['*'] })]);
+  assert.equal(P.toSpans(p, 'Alpha\u{1D400}', 'standard').length, 0, 'mathematisches A ist ein Buchstabe');
+  assert.equal(P.toSpans(p, 'Alpha\u{1F600}', 'standard').length, 1, 'Symbol ist kein Wortzeichen');
+  assert.equal(P.toSpans(p, 'Alpha', 'standard').length, 1);
+});
+
+test('toSpans: verworfener Regex-Treffer mit Platzhalter verdeckt keinen echten Treffer', () => {
+  const p = parseOk([regelRegex({ pattern: '.{1,4}X' })]);
+  const s = P.toSpans(p, '{{NAME_1}}abX', 'standard');
+  assert.deepEqual(s.map(x => [x.start, x.end]), [[10, 13]]);
 });
