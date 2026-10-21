@@ -301,15 +301,12 @@
     "xvfb-run -a node tests/eval/diff-reference.mjs",
     "xvfb-run -a npm run eval"
    ],
-   "status": "laeuft",
+   "status": "offen",
    "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1414",
-    "ts": 1792584904676
-   },
-   "notes": ""
+   "lease": null,
+   "notes": "[Lease abgelaufen 2026-10-21T16:27:38.928Z]"
   },
   {
    "id": "M1.m",
@@ -1053,15 +1050,12 @@
    "accept": [
     "node --test tests/unit/policy.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "offen",
    "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1414",
-    "ts": 1792585594762
-   },
-   "notes": ""
+   "lease": null,
+   "notes": "[Lease abgelaufen 2026-10-21T16:27:38.928Z]"
   },
   {
    "id": "C3.w",
