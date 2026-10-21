@@ -7,6 +7,51 @@
 })(typeof self !== 'undefined' ? self : this, function (placeholder) {
   'use strict';
 
+  // Alle deutschen Texte des Moduls (spaeter mechanisch auf t() umstellbar)
+  const TEXT = {
+    unbegrenzt: 'Unbegrenzte Wiederholungen (* und +) sind nicht erlaubt. Schreiben Sie z. B. {1,20}.',
+    verschachtelt: (max) => 'Die Wiederholungen sind zu verschachtelt (Produkt der Obergrenzen über ' + max + '). Verwenden Sie kleinere Grenzen.',
+    rueckverweis: 'Rückverweise sind nicht erlaubt.',
+    vorausschau: 'Vorausschau, Rückschau und benannte Gruppen sind nicht erlaubt.',
+    syntax: 'Ungültige Regex-Syntax.',
+    obergrenze: (max) => 'Die Obergrenze einer Wiederholung darf höchstens ' + max + ' sein.',
+    gruppeQuantor: 'Wiederholungen auf Gruppen sind nicht erlaubt (nur ?).',
+    gruppeAlternative: 'Alternativen in einer Gruppe mit Wiederholung sind nicht erlaubt.',
+    musterFehlt: 'Das Muster fehlt oder ist kein Text.',
+    musterLeer: 'Das Muster darf nicht leer sein.',
+    musterLang: (max) => 'Das Muster ist zu lang (höchstens ' + max + ' Zeichen).',
+    flags: 'Zulässige Flags sind nur "" und "i".',
+    keinText: 'Die Richtlinie ist kein Text.',
+    zuGross: 'Die Richtliniendatei ist größer als 1 MiB.',
+    keinJson: 'Die Datei ist kein gültiges JSON.',
+    verbotenerSchluessel: (k) => 'Verbotener Schlüssel: ' + k,
+    keinObjekt: 'Die Richtlinie muss ein Objekt sein.',
+    version: 'Nicht unterstützte Version (erwartet: 1).',
+    nameFehlt: 'Feld "name" fehlt oder ist kein Text.',
+    nameLang: 'Feld "name" ist länger als 80 Zeichen.',
+    rulesFehlt: 'Feld "rules" fehlt oder ist keine Liste.',
+    zuvieleRegeln: (max) => 'Mehr als ' + max + ' Regeln.',
+    regelId: (id) => 'Regel "' + id + '"',
+    regelNr: (nr) => 'Regel Nr. ' + nr,
+    regelKeinObjekt: 'ist kein Objekt.',
+    idFehlt: 'Feld "id" fehlt oder entspricht nicht ^[a-z][a-z0-9_-]{0,31}$.',
+    idDoppelt: 'doppelte id.',
+    labelFehlt: 'Feld "label" fehlt oder ist kein Text.',
+    labelLang: 'Feld "label" ist länger als 80 Zeichen.',
+    termsFehlt: 'Feld "terms" fehlt oder ist keine Liste.',
+    termsLeer: 'Feld "terms" ist leer.',
+    begriffUngueltig: (nr) => 'Begriff Nr. ' + nr + ' ist ungültig (1 bis 200 Zeichen, beginnt mit Buchstabe oder Ziffer).',
+    weitereBegriffe: (anz) => anz + ' weitere ungültige Begriffe.',
+    caseSensitive: 'Feld "caseSensitive" muss wahr oder falsch sein.',
+    typ: 'Feld "type" muss "regex" oder "list" sein.',
+    kategorie: 'Feld "category" entspricht nicht ^[A-Z][A-Z0-9_]{1,19}$.',
+    profile: 'Feld "profiles" muss eine nicht leere Liste von Profil-Ids sein.',
+    enabled: 'Feld "enabled" muss wahr oder falsch sein.',
+    zuvieleBegriffe: (max) => 'Insgesamt höchstens ' + max + ' Begriffe je Datei erlaubt.',
+    methode: 'Eigene Regel',
+    regelUngueltig: (nr) => 'Die Richtlinie enthält eine ungültige Regel (Nr. ' + nr + ') und kann nicht angewendet werden.',
+  };
+
   const MAX_BYTES = 1024 * 1024;
   const MAX_RULES = 100;
   const MAX_TERMS = 5000;
@@ -19,13 +64,12 @@
   const TERM_START_RE = /^[\p{L}\p{N}]/u;
   const WORD_CHAR_RE = /[\p{L}\p{N}_]/u;
   const WORD_RUN_RE = /[\p{L}\p{N}_]+/gu;
+  const QUANTOR_RE = /\{(\d+)(?:(,)(\d*))?\}/y;
 
   // ---- Regex-Pruefer: echter Parser der sicheren Teilmenge ----
 
   class Abgelehnt extends Error {}
   const nein = (msg) => { throw new Abgelehnt(msg); };
-
-  const MSG_UNBEGRENZT = 'Unbegrenzte Wiederholungen (* und +) sind nicht erlaubt. Schreiben Sie z. B. {1,20}.';
 
   // Zerlegt das (bereits syntaktisch gueltige) Muster; wirft Abgelehnt bei Verstoss.
   function pruefeTeilmenge(p) {
@@ -34,7 +78,7 @@
     let produkt = 1;
     const mal = (f) => {
       produkt *= f;
-      if (produkt > MAX_PRODUCT) nein('Die Wiederholungen sind zu verschachtelt (Produkt der Obergrenzen über ' + MAX_PRODUCT + '). Verwenden Sie kleinere Grenzen.');
+      if (produkt > MAX_PRODUCT) nein(TEXT.verschachtelt(MAX_PRODUCT));
     };
 
     // Alternative (a|b|...) -> Anzahl der Zweige
@@ -60,7 +104,7 @@
       const c = p[i];
       if (c === '\\') {
         const d = p[i + 1];
-        if (d !== undefined && (/[1-9]/.test(d) || d === 'k')) nein('Rückverweise sind nicht erlaubt.');
+        if (d !== undefined && (/[1-9]/.test(d) || d === 'k')) nein(TEXT.rueckverweis);
         i += 2;
         return null;
       }
@@ -77,11 +121,11 @@
       if (c === '(') {
         i++;
         if (p[i] === '?') {
-          if (p[i + 1] !== ':') nein('Vorausschau, Rückschau und benannte Gruppen sind nicht erlaubt.');
+          if (p[i + 1] !== ':') nein(TEXT.vorausschau);
           i += 2;
         }
         const zweige = alternative(tiefe + 1);
-        if (p[i] !== ')') nein('Ungültige Regex-Syntax.');
+        if (p[i] !== ')') nein(TEXT.syntax);
         i++;
         if (zweige > 1) mal(zweige);
         return { zweige };
@@ -92,7 +136,7 @@
 
     function quantor(gruppe) {
       const c = p[i];
-      if (c === '*' || c === '+') nein(MSG_UNBEGRENZT);
+      if (c === '*' || c === '+') nein(TEXT.unbegrenzt);
       let faktor = 0;
       let nurFrage = false;
       if (c === '?') {
@@ -100,16 +144,18 @@
         faktor = 2;
         nurFrage = true;
       } else if (c === '{') {
-        const m = /^\{(\d+)(?:(,)(\d*))?\}/.exec(p.slice(i, i + 24));
+        QUANTOR_RE.lastIndex = i; // klebend: ganze Zahl lesen, nie abschneiden (wie V8)
+        const m = QUANTOR_RE.exec(p);
         if (!m) return; // Klammer ohne Quantorform ist ein Literal
-        if (m[2] && m[3] === '') nein(MSG_UNBEGRENZT);
+        if (m[2] && m[3] === '') nein(TEXT.unbegrenzt);
         const oben = Number(m[2] ? m[3] : m[1]);
-        if (oben > MAX_UPPER) nein('Die Obergrenze einer Wiederholung darf höchstens ' + MAX_UPPER + ' sein.');
-        faktor = m[2] ? Math.max(oben, 1) : 1;
+        if (!(oben <= MAX_UPPER)) nein(TEXT.obergrenze(MAX_UPPER));
+        const unten = Number(m[1]);
+        faktor = m[2] ? Math.max(oben - unten + 1, 1) : 1; // Zahl der Wiederholungsmoeglichkeiten
         i += m[0].length;
       } else return;
-      if (gruppe && !nurFrage) nein('Wiederholungen auf Gruppen sind nicht erlaubt (nur ?).');
-      if (gruppe && gruppe.zweige > 1) nein('Alternativen in einer Gruppe mit Wiederholung sind nicht erlaubt.');
+      if (gruppe && !nurFrage) nein(TEXT.gruppeQuantor);
+      if (gruppe && gruppe.zweige > 1) nein(TEXT.gruppeAlternative);
       if (p[i] === '?') i++; // genügsame Variante, gleiche Obergrenze
       mal(faktor);
     }
@@ -118,12 +164,12 @@
   }
 
   function checkPattern(pattern, flags) {
-    if (typeof pattern !== 'string') return { ok: false, error: 'Das Muster fehlt oder ist kein Text.' };
-    if (pattern.length === 0) return { ok: false, error: 'Das Muster darf nicht leer sein.' };
-    if (pattern.length > MAX_PATTERN) return { ok: false, error: 'Das Muster ist zu lang (höchstens ' + MAX_PATTERN + ' Zeichen).' };
+    if (typeof pattern !== 'string') return { ok: false, error: TEXT.musterFehlt };
+    if (pattern.length === 0) return { ok: false, error: TEXT.musterLeer };
+    if (pattern.length > MAX_PATTERN) return { ok: false, error: TEXT.musterLang(MAX_PATTERN) };
     const f = flags === undefined ? '' : flags;
-    if (f !== '' && f !== 'i') return { ok: false, error: 'Zulässige Flags sind nur "" und "i".' };
-    try { new RegExp(pattern, f); } catch (e) { return { ok: false, error: 'Ungültige Regex-Syntax.' }; }
+    if (f !== '' && f !== 'i') return { ok: false, error: TEXT.flags };
+    try { new RegExp(pattern, f); } catch (e) { return { ok: false, error: TEXT.syntax }; }
     try { pruefeTeilmenge(pattern); } catch (e) {
       if (e instanceof Abgelehnt) return { ok: false, error: e.message };
       throw e;
@@ -155,22 +201,22 @@
   }
 
   function parse(jsonString) {
-    if (typeof jsonString !== 'string') return { ok: false, errors: ['Die Richtlinie ist kein Text.'] };
+    if (typeof jsonString !== 'string') return { ok: false, errors: [TEXT.keinText] };
     if (jsonString.length > MAX_BYTES || (jsonString.length * 3 > MAX_BYTES && byteLaenge(jsonString) > MAX_BYTES)) {
-      return { ok: false, errors: ['Die Richtliniendatei ist größer als 1 MiB.'] };
+      return { ok: false, errors: [TEXT.zuGross] };
     }
     let data;
-    try { data = JSON.parse(jsonString); } catch (e) { return { ok: false, errors: ['Die Datei ist kein gültiges JSON.'] }; }
+    try { data = JSON.parse(jsonString); } catch (e) { return { ok: false, errors: [TEXT.keinJson] }; }
     const verboten = verbotenerSchluessel(data);
-    if (verboten !== null) return { ok: false, errors: ['Verbotener Schlüssel: ' + verboten] };
-    if (!isObj(data)) return { ok: false, errors: ['Die Richtlinie muss ein Objekt sein.'] };
+    if (verboten !== null) return { ok: false, errors: [TEXT.verbotenerSchluessel(verboten)] };
+    if (!isObj(data)) return { ok: false, errors: [TEXT.keinObjekt] };
 
     const errors = [];
-    if (data.version !== 1) errors.push('Nicht unterstützte Version (erwartet: 1).');
-    if (typeof data.name !== 'string') errors.push('Feld "name" fehlt oder ist kein Text.');
-    else if (data.name.length > 80) errors.push('Feld "name" ist länger als 80 Zeichen.');
-    if (!Array.isArray(data.rules)) errors.push('Feld "rules" fehlt oder ist keine Liste.');
-    else if (data.rules.length > MAX_RULES) errors.push('Mehr als ' + MAX_RULES + ' Regeln.');
+    if (data.version !== 1) errors.push(TEXT.version);
+    if (typeof data.name !== 'string') errors.push(TEXT.nameFehlt);
+    else if (data.name.length > 80) errors.push(TEXT.nameLang);
+    if (!Array.isArray(data.rules)) errors.push(TEXT.rulesFehlt);
+    else if (data.rules.length > MAX_RULES) errors.push(TEXT.zuvieleRegeln(MAX_RULES));
 
     const rules = [];
     if (Array.isArray(data.rules) && data.rules.length <= MAX_RULES) {
@@ -178,14 +224,14 @@
       let termSumme = 0;
       data.rules.forEach((r, idx) => {
         const hat = (typeof r === 'object' && r !== null && !Array.isArray(r) && typeof r.id === 'string' && ID_RE.test(r.id));
-        const wer = hat ? 'Regel "' + r.id + '"' : 'Regel Nr. ' + (idx + 1);
+        const wer = hat ? TEXT.regelId(r.id) : TEXT.regelNr(idx + 1);
         const fehl = (msg) => errors.push(wer + ': ' + msg);
-        if (!isObj(r)) return fehl('ist kein Objekt.');
-        if (!hat) fehl('Feld "id" fehlt oder entspricht nicht ^[a-z][a-z0-9_-]{0,31}$.');
-        else if (gesehen.has(r.id)) fehl('doppelte id.');
+        if (!isObj(r)) return fehl(TEXT.regelKeinObjekt);
+        if (!hat) fehl(TEXT.idFehlt);
+        else if (gesehen.has(r.id)) fehl(TEXT.idDoppelt);
         else gesehen.add(r.id);
-        if (typeof r.label !== 'string') fehl('Feld "label" fehlt oder ist kein Text.');
-        else if (r.label.length > 80) fehl('Feld "label" ist länger als 80 Zeichen.');
+        if (typeof r.label !== 'string') fehl(TEXT.labelFehlt);
+        else if (r.label.length > 80) fehl(TEXT.labelLang);
         const out = { id: hat ? r.id : '', label: typeof r.label === 'string' ? r.label : '', type: r.type };
 
         if (r.type === 'regex') {
@@ -195,53 +241,52 @@
           out.pattern = r.pattern;
           out.flags = flags;
         } else if (r.type === 'list') {
-          if (!Array.isArray(r.terms)) fehl('Feld "terms" fehlt oder ist keine Liste.');
-          else if (r.terms.length < 1) fehl('Feld "terms" ist leer.');
+          if (!Array.isArray(r.terms)) fehl(TEXT.termsFehlt);
+          else if (r.terms.length < 1) fehl(TEXT.termsLeer);
           else {
             termSumme += r.terms.length;
             let bad = 0;
             r.terms.forEach((t, k) => {
               if (typeof t === 'string' && t.length >= 1 && t.length <= 200 && TERM_START_RE.test(t)) return;
-              if (++bad <= 5) fehl('Begriff Nr. ' + (k + 1) + ' ist ungültig (1 bis 200 Zeichen, beginnt mit Buchstabe oder Ziffer).');
+              if (++bad <= 5) fehl(TEXT.begriffUngueltig(k + 1));
             });
-            if (bad > 5) fehl((bad - 5) + ' weitere ungültige Begriffe.');
+            if (bad > 5) fehl(TEXT.weitereBegriffe(bad - 5));
           }
-          if (r.caseSensitive !== undefined && typeof r.caseSensitive !== 'boolean') fehl('Feld "caseSensitive" muss wahr oder falsch sein.');
+          if (r.caseSensitive !== undefined && typeof r.caseSensitive !== 'boolean') fehl(TEXT.caseSensitive);
           out.terms = Array.isArray(r.terms) ? r.terms.filter((t) => typeof t === 'string') : [];
           out.caseSensitive = r.caseSensitive === true;
         } else {
-          fehl('Feld "type" muss "regex" oder "list" sein.');
+          fehl(TEXT.typ);
         }
 
         const category = r.category === undefined ? 'EIGEN' : r.category;
-        if (typeof category !== 'string' || !CATEGORY_RE.test(category)) fehl('Feld "category" entspricht nicht ^[A-Z][A-Z0-9_]{1,19}$.');
+        if (typeof category !== 'string' || !CATEGORY_RE.test(category)) fehl(TEXT.kategorie);
         out.category = category;
 
         const profiles = r.profiles === undefined ? ['*'] : r.profiles;
         if (!Array.isArray(profiles) || profiles.length < 1 || !profiles.every((x) => typeof x === 'string' && x.length >= 1 && x.length <= 64)) {
-          fehl('Feld "profiles" muss eine nicht leere Liste von Profil-Ids sein.');
+          fehl(TEXT.profile);
         }
         out.profiles = Array.isArray(profiles) ? profiles.filter((x) => typeof x === 'string') : ['*'];
 
-        if (r.enabled !== undefined && typeof r.enabled !== 'boolean') fehl('Feld "enabled" muss wahr oder falsch sein.');
+        if (r.enabled !== undefined && typeof r.enabled !== 'boolean') fehl(TEXT.enabled);
         out.enabled = r.enabled !== false;
         rules.push(out);
       });
-      if (termSumme > MAX_TERMS) errors.push('Insgesamt höchstens ' + MAX_TERMS + ' Begriffe je Datei erlaubt.');
+      if (termSumme > MAX_TERMS) errors.push(TEXT.zuvieleBegriffe(MAX_TERMS));
     }
 
     if (errors.length) return { ok: false, errors };
-    return { ok: true, policy: { version: 1, name: data.name, rules } };
+    for (const r of rules) { Object.freeze(r.terms); Object.freeze(r.profiles); Object.freeze(r); }
+    return { ok: true, policy: Object.freeze({ version: 1, name: data.name, rules: Object.freeze(rules) }) };
   }
 
   // ---- toSpans ----
 
   const wortZeichen = (c) => c !== undefined && c !== '' && WORD_CHAR_RE.test(c);
 
-  // Kleinschreibung, die die Laenge erhaelt (z. B. U+0130 bleibt unveraendert)
+  // Kleinschreibung zeichenweise und laengenerhaltend (z. B. U+0130 bleibt unveraendert, Sigma stets gleich)
   function klein(s) {
-    const low = s.toLowerCase();
-    if (low.length === s.length) return low;
     let out = '';
     for (const ch of s) {
       const l = ch.toLowerCase();
@@ -315,11 +360,10 @@
   }
 
   function spanVon(regel, text, start, end) {
-    return { start, end, pfx: regel.category, col: '#ff3b30', id: 'custom', prio: 0, meth: 'Eigene Regel', hard: true, val: text.slice(start, end) };
+    return { start, end, pfx: regel.category, col: '#ff3b30', id: 'custom', prio: 0, meth: TEXT.methode, hard: true, val: text.slice(start, end) };
   }
 
   function sucheRegex(regel, maskiert, text, out) {
-    if (!checkPattern(regel.pattern, regel.flags).ok) return; // nie ungeprueft ausfuehren
     const re = new RegExp(regel.pattern, 'g' + (regel.flags || ''));
     let m;
     while ((m = re.exec(maskiert)) !== null) {
@@ -333,23 +377,27 @@
     if (idx.size === 0) return;
     const heu = regel.caseSensitive ? maskiert : klein(maskiert);
     const lauf = new RegExp(WORD_RUN_RE.source, 'gu');
-    let frei = 0; // Treffer derselben Regel ueberlappen nicht
     let w;
     while ((w = lauf.exec(maskiert)) !== null) {
       const s = w.index;
-      if (s < frei) continue;
       const wurzel = idx.get(heu.slice(s, s + w[0].length));
       if (!wurzel) continue;
       const laengen = trieSuche(wurzel, heu, s);
-      for (let k = laengen.length - 1; k >= 0; k--) {
+      for (let k = laengen.length - 1; k >= 0; k--) { // je Start der laengste Treffer; Ueberlappung loest der Kern
         const e = s + laengen[k];
         if (wortZeichen(maskiert[e])) continue; // Wortgrenze danach
         if (maskiert.slice(s, e).indexOf('\u0000') !== -1) continue;
         out.push(spanVon(regel, text, s, e));
-        frei = e;
         break;
       }
     }
+  }
+
+  // Regeln, die nicht aus parse stammen, werden vor der Ausfuehrung erneut geprueft
+  function regelGueltig(r) {
+    if (r.type === 'regex') return checkPattern(r.pattern, r.flags).ok;
+    if (r.type === 'list') return Array.isArray(r.terms) && r.terms.every((x) => typeof x === 'string');
+    return false;
   }
 
   function toSpans(policy, text, profileId) {
@@ -357,12 +405,13 @@
     const out = [];
     if (!policy || !Array.isArray(policy.rules) || t === '') return out;
     const maskiert = placeholder.mask(t);
-    for (const r of policy.rules) {
-      if (!r || r.enabled === false) continue;
-      if (!Array.isArray(r.profiles) || !(r.profiles.includes('*') || r.profiles.includes(profileId))) continue;
+    policy.rules.forEach((r, idx) => {
+      if (!r || r.enabled === false) return;
+      if (!Array.isArray(r.profiles) || !(r.profiles.includes('*') || r.profiles.includes(profileId))) return;
+      if (!regelGueltig(r)) throw new Error(TEXT.regelUngueltig(idx + 1)); // nie ungeprueft ausfuehren, nie still ueberspringen
       if (r.type === 'regex') sucheRegex(r, maskiert, t, out);
-      else if (r.type === 'list') sucheListe(r, maskiert, t, out);
-    }
+      else sucheListe(r, maskiert, t, out);
+    });
     return out.sort((a, b) => a.start - b.start); // stabil: gleiche Starts behalten die Regelreihenfolge
   }
 
