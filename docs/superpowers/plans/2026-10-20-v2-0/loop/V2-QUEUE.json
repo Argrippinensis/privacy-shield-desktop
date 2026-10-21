@@ -789,14 +789,11 @@
    "accept": [
     "node --test tests/unit/officefmt.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1414",
-    "ts": 1792585076974
-   },
+   "commit": "7162ba095f6701e57a69d11f4676c2e30d45f528",
+   "lease": null,
    "notes": ""
   },
   {
