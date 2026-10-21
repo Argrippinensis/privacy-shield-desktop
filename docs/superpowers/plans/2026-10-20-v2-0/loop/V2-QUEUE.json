@@ -152,14 +152,11 @@
     "node -e \"require('./app/lib/detect.js')\"",
     "node tests/eval/diff-reference.mjs --node"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261020b",
-    "ts": 1792561313817
-   },
+   "commit": "07ffdf1ecb72358bb9e7ec885811348a11917fe3",
+   "lease": null,
    "notes": ""
   },
   {
