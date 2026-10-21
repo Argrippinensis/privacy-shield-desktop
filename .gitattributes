@@ -1,0 +1,2 @@
+# Referenzdateien muessen auf allen Systemen byte-gleich sein (Hashes im Differenztest)
+tests/golden/** text eol=lf
