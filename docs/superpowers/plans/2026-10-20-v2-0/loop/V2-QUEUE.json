@@ -301,15 +301,12 @@
     "xvfb-run -a node tests/eval/diff-reference.mjs",
     "xvfb-run -a npm run eval"
    ],
-   "status": "laeuft",
+   "status": "blockiert",
    "attempts": 2,
    "branch": "",
    "commit": "",
-   "lease": {
-    "owner": "orch-20261021-182735",
-    "ts": 1792601297711
-   },
-   "notes": "[Lease abgelaufen 2026-10-21T16:27:38.928Z]"
+   "lease": null,
+   "notes": "Pruefer nach einem Nachbesserungszyklus weiter Maengel (mittel): Namensketten ab ca. 125 Zeichen ohne Komma lassen die ersten Namen ungeschwaerzt (z. B. 20 Namen: 'Hans Peter {{NAME_1}}'), Rueckschritt gegenueber v2/main durch MAX_NAME_SPAN/weiter(); Stand auf v2/F5 (6312e01), Gate gruen, Leerraum und Zeittests behoben. Vorschlag: Test um Ketten 125-500 Zeichen (Leerzeichen, Bindestrich, mit Stichwort) erweitern, Ursache beheben"
   },
   {
    "id": "M1.m",
@@ -1059,7 +1056,7 @@
    "commit": "",
    "lease": {
     "owner": "orch-20261021-182735",
-    "ts": 1792601297900
+    "ts": 1792601358480
    },
    "notes": "[Lease abgelaufen 2026-10-21T16:27:38.928Z]"
   },
