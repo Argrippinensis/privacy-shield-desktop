@@ -36,6 +36,8 @@ jobs:
           key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
       - run: npm ci
       - run: npm run fetch-vendor
+      - name: Unit-Tests
+        run: npm run test:unit
       # Erkennungsqualitaet ist plattformunabhaengig und dauert lange: nur unter Linux messen
       - name: Tests (Linux, mit Erkennungsqualitaet)
         if: runner.os == 'Linux'
