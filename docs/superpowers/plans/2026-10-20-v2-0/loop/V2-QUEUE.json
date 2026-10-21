@@ -68,15 +68,12 @@
    ],
    "tests": [],
    "accept": [],
-   "status": "laeuft",
+   "status": "offen",
    "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": {
-    "owner": "orch-20261020",
-    "ts": 1792531020059
-   },
-   "notes": ""
+   "lease": null,
+   "notes": "[Lease abgelaufen 2026-10-21T00:27:51.903Z]"
   },
   {
    "id": "F2",
