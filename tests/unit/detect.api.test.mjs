@@ -42,8 +42,8 @@ test('createState liefert einen leeren, als JSON speicherbaren Zustand { store, 
 });
 
 test('detect liefert Spans mit start, end, pfx, col, id, prio, meth, val; val ist der Text von start bis end', () => {
-  const spans = D().detect(MAX, {});
-  assert.ok(spans.length >= 2, 'Name und E-Mail erwartet');
+  const spans = D().detect(MAX, { wordlists: true });
+  assert.ok(spans.length >= 2, 'Name (nur mit Wortlisten) und E-Mail erwartet');
   for (const s of spans) {
     assert.equal(Number.isInteger(s.start), true);
     assert.equal(Number.isInteger(s.end), true);
@@ -80,7 +80,7 @@ test('detect erkennt Treffer in Text mit geschuetzten Leerzeichen und gibt val a
 });
 
 test('anonymize liefert { text, state, spans } und ersetzt Treffer durch Platzhalter der Form {{PFX_n}}', () => {
-  const r = D().anonymize(MAX, {});
+  const r = D().anonymize(MAX, { wordlists: true });
   assert.deepEqual(Object.keys(r).sort(), ['spans', 'state', 'text']);
   assert.ok(Array.isArray(r.spans));
   assert.ok(!r.text.includes('Mustermann'));
@@ -91,7 +91,7 @@ test('anonymize liefert { text, state, spans } und ersetzt Treffer durch Platzha
 });
 
 test('state.store[token] hat die Felder v (Wert), t (Typ), c (Farbe), m (Methode)', () => {
-  const r = D().anonymize(MAX, {});
+  const r = D().anonymize(MAX, { wordlists: true });
   const entries = Object.entries(r.state.store);
   assert.ok(entries.length >= 2);
   for (const [token, e] of entries) {
@@ -174,14 +174,18 @@ test('Der Rueckwaertsindex ist nicht Teil von state: nur store und cnt, als JSON
   assert.equal(D().deanonymize(r.text, wieder), MAX);
 });
 
-test('opts.ents hat Vorrang vor profile: nur E-Mail aktiv, obwohl das Profil auch Namen einschliesst', () => {
-  const full = D().detect(MAX, { profile: 'standard' });
-  assert.ok(full.some((s) => s.id === 'name'), 'Vergleich: Standardprofil findet den Namen');
-  const nurMail = D().detect(MAX, { profile: 'standard', ents: ['email'] });
+test('opts.ents hat Vorrang vor profile: nur E-Mail aktiv, obwohl das Profil auch die IBAN einschliesst', () => {
+  const t = 'Konto DE89 3704 0044 0532 0130 00, Mail max@beispiel.de.';
+  const full = D().detect(t, { profile: 'standard' });
+  assert.ok(full.some((s) => s.id === 'iban'), 'Vergleich: Standardprofil findet die IBAN');
+  assert.ok(full.some((s) => s.id === 'email'));
+  const nurMail = D().detect(t, { profile: 'standard', ents: ['email'] });
   assert.ok(nurMail.length >= 1);
   assert.ok(nurMail.every((s) => s.id === 'email'));
-  const r = D().anonymize(MAX, { profile: 'standard', ents: ['email'] });
-  assert.ok(r.text.includes('Mustermann'));
+  const nurIban = D().detect(t, { profile: 'standard', ents: ['iban'] });
+  assert.ok(nurIban.length >= 1 && nurIban.every((s) => s.id === 'iban'));
+  const r = D().anonymize(t, { profile: 'standard', ents: ['email'] });
+  assert.ok(r.text.includes('DE89 3704 0044 0532 0130 00'));
   assert.ok(!r.text.includes('@beispiel.de'));
 });
 
@@ -191,7 +195,7 @@ test('Leere ents-Liste meldet nichts; unbekanntes Profil wird wie standard behan
   assert.doesNotThrow(() => D().detect(MAX, undefined));
 });
 
-test('Profil custom benoetigt ents; Profile finance und medical liefern andere Regelmengen als standard', () => {
+test('Profil strict findet mindestens so viele Arten von Treffern wie standard; die IBAN wird im Standardprofil erkannt', () => {
   const t = 'Patient Max Mustermann, IBAN DE89 3704 0044 0532 0130 00, Diagnose Diabetes mellitus.';
   const ids = (p) => new Set(D().detect(t, { profile: p }).map((s) => s.id));
   const std = ids('standard');
@@ -215,11 +219,12 @@ test('whitelist laesst nicht passende Treffer unberuehrt und ignoriert leere Ein
   assert.equal(spans.length, basis.length);
 });
 
-test('released gibt nur den exakten Wert mit gleichem Typ frei ("Berlin" gibt "Berliner Allee 5" nicht frei)', () => {
-  const t = 'Wohnhaft Berliner Allee 5, 10115 Berlin.';
+test('released gibt nur den exakten Wert mit gleichem Typ frei ("Berlin" gibt "10115 Berlin" nicht frei)', () => {
+  const t = 'Wohnhaft in der Berliner Allee 5, 10115 Berlin.';
   const basis = D().detect(t, {});
-  const addr = basis.find((s) => s.val.startsWith('Berliner Allee'));
-  assert.ok(addr, 'Adresse erwartet');
+  const addr = basis.find((s) => s.val.includes('10115'));
+  assert.ok(addr, 'Adresstreffer mit Ort erwartet');
+  assert.ok(addr.val.length > 'Berlin'.length);
   const mit = (released) => D().detect(t, { released }).some((s) => s.val === addr.val && s.pfx === addr.pfx);
   assert.equal(mit([{ pfx: addr.pfx, value: addr.val }]), false, 'exakt freigegeben');
   assert.equal(mit([{ pfx: addr.pfx, value: 'Berlin' }]), true, 'Teilwert gibt nicht frei');
@@ -290,14 +295,15 @@ test('Eingabe wird nicht veraendert: eingefrorene Optionen und Zustand fuehren z
 });
 
 test('detect ist wiederholbar: gleicher Aufruf zweimal liefert gleiche Spans, Aenderung am Ergebnis wirkt nicht zurueck (Kopien)', () => {
-  const a = D().detect(MAX, {});
+  const o = { wordlists: true };
+  const a = D().detect(MAX, o);
   a.length = 0;
-  const b = D().detect(MAX, {});
-  const c = D().detect(MAX, {});
+  const b = D().detect(MAX, o);
+  const c = D().detect(MAX, o);
   assert.ok(b.length >= 2);
   assert.deepEqual(c, b);
   b[0].pfx = 'GEAENDERT';
-  assert.notEqual(D().detect(MAX, {})[0].pfx, 'GEAENDERT');
+  assert.notEqual(D().detect(MAX, o)[0].pfx, 'GEAENDERT');
 });
 
 test('Leerer und platzhalterhaltiger Text: anonymize("") ist leer, bestehende Platzhalter bleiben erhalten', () => {
