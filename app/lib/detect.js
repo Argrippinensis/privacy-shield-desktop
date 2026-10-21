@@ -2173,11 +2173,8 @@
     return p.ents;
   }
 
-  // text -> Spans [{ start, end, pfx, col, id, prio, meth, val }], nach Position sortiert, ueberlappungsfrei
-  function detect(text, opts) {
-    const o = opts || {};
-    const input = typeof text === "string" ? text : String(text == null ? "" : text);
-    const det = normalizeForDetection(input);
+  // Kontext des Aufrufs setzen (gemeinsam fuer detect und maskHard); det = normalisierter Text
+  function setContext(o, det) {
     cvars = Array.isArray(o.cvars) ? o.cvars : [];
     whitelist = Array.isArray(o.whitelist) ? o.whitelist : [];
     activeEnts = new Set(activeIds(o));
@@ -2193,6 +2190,14 @@
         prio: typeof x.prio === "number" ? x.prio : 0,
         meth: x.meth !== undefined ? x.meth : "Eigene Regel",
       }));
+  }
+
+  // text -> Spans [{ start, end, pfx, col, id, prio, meth, val }], nach Position sortiert, ueberlappungsfrei
+  function detect(text, opts) {
+    const o = opts || {};
+    const input = typeof text === "string" ? text : String(text == null ? "" : text);
+    const det = normalizeForDetection(input);
+    setContext(o, det);
     aiCache = Array.isArray(o.aiSpans) ? { key: det, spans: o.aiSpans } : { key: null, spans: [] };
     try {
       let spans = collectEntities(det);
@@ -2244,5 +2249,40 @@
       : String(text);
   }
 
-  return { PROFILES, ENTS, detect, createState, anonymize, deanonymize, normalizeForDetection };
+  // Text mit maskierten Pass-1-Treffern (cvars, extraSpans, harte Regeln; Treffer durch \0 ersetzt), wie ihn die KI-Erkennung
+  // der Oberflaeche sieht. text ist bereits normalisiert (normalizeForDetection); opts wie bei detect (ents/profile, cvars, extraSpans).
+  function maskHard(text, opts) {
+    const o = opts || {};
+    const det = typeof text === "string" ? text : String(text == null ? "" : text);
+    setContext(o, det);
+    try {
+      return computePass1(det).maskedText;
+    } finally {
+      resetContext();
+    }
+  }
+
+  // Stoppwort der Erkennung (exakte Schreibweise wie in der Liste)
+  function isStopword(w) {
+    return SW.has(w);
+  }
+
+  // Platzhalter fuer einen Wert vergeben und in state eintragen (state wird in place fortgeschrieben, wie bei anonymize)
+  function token(state, val, pfx, col, meth) {
+    if (!state || !state.store || !state.cnt) throw new TypeError("state mit store und cnt erforderlich");
+    store = state.store;
+    cnt = state.cnt;
+    storeIdx = new Map();
+    storeIdxFor = null;
+    try {
+      return tok(String(val), pfx, col, meth);
+    } finally {
+      store = {};
+      cnt = {};
+      storeIdx = new Map();
+      storeIdxFor = null;
+    }
+  }
+
+  return { PROFILES, ENTS, detect, createState, anonymize, deanonymize, normalizeForDetection, maskHard, isStopword, token };
 });
