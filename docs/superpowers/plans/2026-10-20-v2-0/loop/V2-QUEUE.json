@@ -191,14 +191,11 @@
     "xvfb-run -a node tests/eval/diff-reference.mjs",
     "npm run build:linux && PS_PACKAGED_BIN=dist/linux-unpacked/privacy-shield-desktop xvfb-run -a npm test"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-0827",
-    "ts": 1792564073729
-   },
+   "commit": "95fd509460e9a468effd92fcf139470edb12400c",
+   "lease": null,
    "notes": ""
   },
   {
