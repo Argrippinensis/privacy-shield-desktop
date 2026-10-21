@@ -264,14 +264,11 @@
     "xvfb-run -a node --test --test-concurrency=1 tests/ipc-security.test.mjs",
     "xvfb-run -a npm test"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 2,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-run",
-    "ts": 1792578508975
-   },
+   "commit": "fff9813324bf25193daefefdca7c84d967df8266",
+   "lease": null,
    "notes": "[Lease abgelaufen 2026-10-21T10:28:06.992Z]"
   },
   {
