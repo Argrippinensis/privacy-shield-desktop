@@ -62,57 +62,59 @@
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [],
    "allowed": [
     "docs/superpowers/plans/2026-10-20-v2-0/**"
    ],
    "tests": [],
    "accept": [],
-   "status": "laeuft",
+   "status": "offen",
    "attempts": 2,
    "branch": "",
    "commit": "",
-   "lease": {
-    "owner": "orch-20261021-0227",
-    "ts": 1792542662453
-   },
-   "notes": "[Lease abgelaufen 2026-10-21T00:27:51.903Z]"
+   "lease": null,
+   "notes": "[Lease abgelaufen 2026-10-21T00:27:51.903Z] [Lease abgelaufen 2026-10-21T05:20:40.478Z]"
   },
   {
    "id": "F2",
-   "title": "Unit-Laeufer, Electron 44, Haertung",
+   "title": "Unit-Laeufer, Referenz von 1.8.0, Lader, Platzhaltermodul, Test-Hilfen",
    "doc": "V2-F-fundament.md#f2",
-   "tier": "bau",
-   "review": false,
+   "tier": "denk",
+   "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
     "P0"
    ],
    "allowed": [
     "package.json",
-    "package-lock.json",
-    ".github/workflows/*.yml",
+    ".github/workflows/ci.yml",
     "tests/helpers.mjs",
     "tests/unit/**",
+    "app/lib/placeholder.js",
     "tests/eval/dump-reference.mjs",
     "tests/eval/diff-reference.mjs",
     "tests/golden/reference-v1.8.json",
-    "tests/shell.test.mjs",
+    "tests/golden/reference-allow.json",
     "tests/hygiene.test.mjs",
-    "main.js",
-    "preload.js",
-    "app/index.html",
-    "THIRD_PARTY_NOTICES.md"
+    "tests/downloads.test.mjs"
    ],
    "tests": [
-    "tests/unit/**",
-    "tests/shell.test.mjs"
+    "tests/unit/smoke.test.mjs",
+    "tests/unit/loadlib.test.mjs",
+    "tests/unit/placeholder.test.mjs",
+    "tests/unit/lib-static.test.mjs",
+    "tests/unit/diff-reference.test.mjs",
+    "tests/downloads.test.mjs"
    ],
    "accept": [
     "npm run test:unit",
+    "xvfb-run -a node tests/eval/diff-reference.mjs",
+    "xvfb-run -a node tests/eval/diff-reference.mjs",
     "xvfb-run -a npm test"
    ],
    "status": "offen",
@@ -123,23 +125,33 @@
    "notes": ""
   },
   {
-   "id": "F1.spike",
-   "title": "Machbarkeitspruefung Kernauslagerung (Go/Nein)",
+   "id": "F1.a",
+   "title": "Erkennungskern als Modul (Node), HTML unberuehrt",
    "doc": "V2-F-fundament.md#f1",
-   "tier": "spike",
+   "tier": "denk",
    "review": true,
    "crypto": false,
-   "serial": true,
-   "parallel": false,
+   "serial": false,
+   "parallel": true,
    "kann": false,
+   "build": false,
    "deps": [
     "F2"
    ],
    "allowed": [
-    "docs/superpowers/plans/2026-10-20-v2-0/artifacts/f1-abhaengigkeiten.md"
+    "app/lib/detect.js",
+    "tests/unit/detect*.test.mjs",
+    "tests/eval/diff-reference.mjs"
    ],
-   "tests": [],
-   "accept": [],
+   "tests": [
+    "tests/unit/detect.differential.test.mjs",
+    "tests/unit/detect.api.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit",
+    "node -e \"require('./app/lib/detect.js')\"",
+    "node tests/eval/diff-reference.mjs --node"
+   ],
    "status": "offen",
    "attempts": 0,
    "branch": "",
@@ -148,8 +160,47 @@
    "notes": ""
   },
   {
-   "id": "F1",
-   "title": "Erkennungskern auslagern",
+   "id": "F2.e",
+   "title": "Electron 44, Fuses",
+   "doc": "V2-F-fundament.md#f2e",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": true,
+   "deps": [
+    "F2"
+   ],
+   "allowed": [
+    "package.json",
+    "package-lock.json",
+    ".github/workflows/*.yml",
+    "THIRD_PARTY_NOTICES.md",
+    "CHANGELOG.md",
+    "tests/helpers.mjs",
+    "tests/unit/**"
+   ],
+   "tests": [
+    "tests/unit/electron-config.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit",
+    "xvfb-run -a npm test",
+    "xvfb-run -a node tests/eval/diff-reference.mjs",
+    "npm run build:linux && PS_PACKAGED_BIN=dist/linux-unpacked/privacy-shield-desktop xvfb-run -a npm test"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "F1.b",
+   "title": "Erkennungskern in die HTML einbinden",
    "doc": "V2-F-fundament.md#f1",
    "tier": "denk",
    "review": true,
@@ -157,22 +208,128 @@
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": true,
    "deps": [
-    "F1.spike"
+    "F1.a"
    ],
    "allowed": [
-    "app/lib/detect.js",
     "app/privacy-shield.html",
-    "tests/unit/detect*.test.mjs",
-    "package.json"
+    "tests/unit/detect.wiring.test.mjs",
+    "docs/v2/web-tool-kern.md"
    ],
    "tests": [
-    "tests/unit/detect*.test.mjs"
+    "tests/unit/detect.wiring.test.mjs"
    ],
    "accept": [
     "npm run test:unit",
     "xvfb-run -a npm test",
+    "xvfb-run -a node tests/eval/diff-reference.mjs",
+    "xvfb-run -a npm run eval",
+    "npm run build:linux && PS_PACKAGED_BIN=dist/linux-unpacked/privacy-shield-desktop xvfb-run -a npm test"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "F2.h",
+   "title": "Haertung der Bruecke (Absender, Argumente, Ursprung, Berechtigungen)",
+   "doc": "V2-F-fundament.md#f2h",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "F2.e"
+   ],
+   "allowed": [
+    "main.js",
+    "preload.js",
+    "app/index.html",
+    "app/privacy-shield.html",
+    "tests/ipc-security.test.mjs",
+    "tests/helpers.mjs"
+   ],
+   "tests": [
+    "tests/ipc-security.test.mjs"
+   ],
+   "accept": [
+    "xvfb-run -a node --test --test-concurrency=1 tests/ipc-security.test.mjs",
+    "xvfb-run -a npm test"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "F5",
+   "title": "Kern-Leistung bei pathologischen Eingaben (lange Zeilen, Leerraumfolgen)",
+   "doc": "V2-F-fundament.md#f5",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "F1.b"
+   ],
+   "allowed": [
+    "app/lib/detect.js",
+    "app/privacy-shield.html",
+    "tests/unit/detect.pathological.test.mjs",
+    "tests/golden/reference-allow.json",
+    "docs/erkennung-entscheidungen.md"
+   ],
+   "tests": [
+    "tests/unit/detect.pathological.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit",
+    "node tests/eval/diff-reference.mjs --node",
+    "xvfb-run -a node tests/eval/diff-reference.mjs",
     "xvfb-run -a npm run eval"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "M1.m",
+   "title": "Manuelle Markierungen als Daten: Modul",
+   "doc": "V2-A-vertrauen.md#m1",
+   "tier": "bau",
+   "review": true,
+   "crypto": false,
+   "serial": false,
+   "parallel": true,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "F2"
+   ],
+   "allowed": [
+    "app/lib/marks.js",
+    "tests/unit/marks.test.mjs"
+   ],
+   "tests": [
+    "tests/unit/marks.test.mjs"
+   ],
+   "accept": [
+    "node --test tests/unit/marks.test.mjs"
    ],
    "status": "offen",
    "attempts": 0,
@@ -191,6 +348,7 @@
    "serial": false,
    "parallel": true,
    "kann": false,
+   "build": false,
    "deps": [
     "F2"
    ],
@@ -213,7 +371,7 @@
   },
   {
    "id": "A1.w",
-   "title": "Gegenpruefung: Oberflaeche",
+   "title": "Gegenpruefung: Oberflaeche, Annotieren als Daten",
    "doc": "V2-A-vertrauen.md#a1",
    "tier": "bau",
    "review": true,
@@ -221,8 +379,11 @@
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
-    "A1.m"
+    "A1.m",
+    "M1.m",
+    "F1.b"
    ],
    "allowed": [
     "app/privacy-shield.html",
@@ -252,6 +413,7 @@
    "serial": false,
    "parallel": true,
    "kann": false,
+   "build": false,
    "deps": [
     "F2"
    ],
@@ -282,6 +444,7 @@
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
     "A2.m",
     "A1.w"
@@ -314,6 +477,7 @@
    "serial": false,
    "parallel": true,
    "kann": false,
+   "build": false,
    "deps": [
     "F2"
    ],
@@ -344,6 +508,7 @@
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
     "A3.m",
     "A2.w"
@@ -367,33 +532,64 @@
    "notes": ""
   },
   {
-   "id": "A4",
-   "title": "Hygiene der Ausgaben",
+   "id": "A4.m",
+   "title": "Hygiene: Dateinamen (Modul)",
    "doc": "V2-A-vertrauen.md#a4",
    "tier": "bau",
    "review": false,
    "crypto": false,
-   "serial": true,
-   "parallel": false,
+   "serial": false,
+   "parallel": true,
    "kann": false,
+   "build": false,
    "deps": [
     "F2"
    ],
    "allowed": [
     "app/lib/hygiene.js",
+    "tests/unit/hygiene.test.mjs"
+   ],
+   "tests": [
+    "tests/unit/hygiene.test.mjs"
+   ],
+   "accept": [
+    "node --test tests/unit/hygiene.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "A4.w",
+   "title": "Hygiene: PDF-Metadaten, Download-URL, Schliessen-Rueckfrage",
+   "doc": "V2-A-vertrauen.md#a4",
+   "tier": "bau",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "A4.m",
+    "A3.w",
+    "F2.h"
+   ],
+   "allowed": [
     "app/privacy-shield.html",
     "main.js",
     "preload.js",
-    "tests/unit/hygiene.test.mjs",
-    "tests/hygiene2.test.mjs"
+    "tests/export-hygiene.test.mjs"
    ],
    "tests": [
-    "tests/unit/hygiene.test.mjs",
-    "tests/hygiene2.test.mjs"
+    "tests/export-hygiene.test.mjs"
    ],
    "accept": [
     "npm run test:unit",
-    "xvfb-run -a node --test --test-concurrency=1 tests/hygiene2.test.mjs"
+    "xvfb-run -a node --test --test-concurrency=1 tests/export-hygiene.test.mjs"
    ],
    "status": "offen",
    "attempts": 0,
@@ -404,16 +600,18 @@
   },
   {
    "id": "B1.fix",
-   "title": "Sofortfix: Meldung bei Mehrfachauswahl",
-   "doc": "V2-B-dokumente.md#b1",
+   "title": "Sofortfix Mehrfachauswahl: gemeinsamer Handler, ZIP-Namen ohne Originalnamen, Hinweis",
+   "doc": "V2-B-dokumente.md#b1fix",
    "tier": "bau",
    "review": false,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
-    "F2"
+    "F2",
+    "A4.m"
    ],
    "allowed": [
     "app/privacy-shield.html",
@@ -435,13 +633,14 @@
   {
    "id": "B1.m",
    "title": "Projekt: Modul",
-   "doc": "V2-B-dokumente.md#b1",
+   "doc": "V2-B-dokumente.md#b1m",
    "tier": "bau",
    "review": false,
    "crypto": false,
    "serial": false,
    "parallel": true,
    "kann": false,
+   "build": false,
    "deps": [
     "F2"
    ],
@@ -463,21 +662,55 @@
    "notes": ""
   },
   {
-   "id": "B1.w",
-   "title": "Projekt: Oberflaeche, ZIP",
-   "doc": "V2-B-dokumente.md#b1",
+   "id": "B1.w1",
+   "title": "Projekt: Dokumentenliste und Lauf",
+   "doc": "V2-B-dokumente.md#b1w1",
    "tier": "denk",
    "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
     "B1.m",
     "B1.fix",
+    "A1.w",
     "A2.w",
     "A3.w",
-    "A4"
+    "A4.w"
+   ],
+   "allowed": [
+    "app/privacy-shield.html",
+    "tests/project-list.test.mjs"
+   ],
+   "tests": [
+    "tests/project-list.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit",
+    "xvfb-run -a node --test --test-concurrency=1 tests/project-list.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "B1.w2",
+   "title": "Projekt: ZIP, Bericht, Zuordnung, Rundlauf",
+   "doc": "V2-B-dokumente.md#b1w2",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "B1.w1"
    ],
    "allowed": [
     "app/privacy-shield.html",
@@ -498,8 +731,8 @@
    "notes": ""
   },
   {
-   "id": "B2.m",
-   "title": "Formate: Modul",
+   "id": "B2.m1",
+   "title": "Formate: Text- und Pruefmodul (detect, guard, decodeText, HTML, EML, RTF)",
    "doc": "V2-B-dokumente.md#b2",
    "tier": "bau",
    "review": false,
@@ -507,6 +740,7 @@
    "serial": false,
    "parallel": true,
    "kann": false,
+   "build": false,
    "deps": [
     "F2"
    ],
@@ -528,8 +762,39 @@
    "notes": ""
   },
   {
+   "id": "B2.m2",
+   "title": "Formate: Office-Modul (XLSX, ODF, PPTX, DOCX-Zusatztexte)",
+   "doc": "V2-B-dokumente.md#b2",
+   "tier": "bau",
+   "review": false,
+   "crypto": false,
+   "serial": false,
+   "parallel": true,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "B2.m1"
+   ],
+   "allowed": [
+    "app/lib/officefmt.js",
+    "tests/unit/officefmt.test.mjs"
+   ],
+   "tests": [
+    "tests/unit/officefmt.test.mjs"
+   ],
+   "accept": [
+    "node --test tests/unit/officefmt.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
    "id": "B2.w",
-   "title": "Formate: Oberflaeche",
+   "title": "Formate: Verdrahtung",
    "doc": "V2-B-dokumente.md#b2",
    "tier": "bau",
    "review": true,
@@ -537,9 +802,10 @@
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
-    "B2.m",
-    "B1.w"
+    "B2.m2",
+    "B1.w1"
    ],
    "allowed": [
     "app/privacy-shield.html",
@@ -560,32 +826,197 @@
    "notes": ""
   },
   {
-   "id": "C1.1",
-   "title": "Korpusschleife Durchlauf 1",
-   "doc": "V2-C-erkennung.md#c1",
+   "id": "C1.0",
+   "title": "Korpusausbau: Vorlagen, Faelle, Modus fallback, Basis fuer die neue Menge",
+   "doc": "V2-C-erkennung.md#c10",
    "tier": "denk",
    "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
     "F2"
    ],
    "allowed": [
-    "tests/eval/**",
-    "tests/golden/**",
+    "tests/eval/generate.mjs",
+    "tests/eval/cases-v2.mjs",
+    "tests/eval/run-eval.mjs",
+    "tests/eval/baseline.json",
+    "tests/eval/baseline-v2.json",
+    "tests/eval/out/**",
+    "tests/eval-v2.test.mjs",
+    "docs/erkennung-entscheidungen.md"
+   ],
+   "tests": [
+    "tests/eval-v2.test.mjs"
+   ],
+   "accept": [
+    "xvfb-run -a npm test",
+    "xvfb-run -a node tests/eval/diff-reference.mjs",
+    "xvfb-run -a npm run eval -- --set v2"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "C1.r",
+   "title": "Realistische Formate Ende-zu-Ende (DOCX, PDF, OCR, TXT)",
+   "doc": "V2-C-erkennung.md#c1r",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "C1.0"
+   ],
+   "allowed": [
     "tests/realdocs.test.mjs",
-    "app/lib/detect.js",
-    "app/privacy-shield.html",
+    "tests/helpers.mjs",
     "docs/erkennung-entscheidungen.md"
    ],
    "tests": [
     "tests/realdocs.test.mjs"
    ],
    "accept": [
+    "xvfb-run -a node --test --test-concurrency=1 tests/realdocs.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "C1.1",
+   "title": "Korpusschleife Durchlauf 1",
+   "doc": "V2-C-erkennung.md#c11-bis-c13",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "C1.0",
+    "C1.r",
+    "F1.b",
+    "F5"
+   ],
+   "allowed": [
+    "app/lib/detect.js",
+    "app/privacy-shield.html",
+    "tests/realdocs.test.mjs",
+    "docs/erkennung-entscheidungen.md",
+    "tests/eval/cases.mjs",
+    "tests/eval/cases-gdpr.mjs",
+    "tests/eval/cases-v2.mjs",
+    "tests/eval/generate.mjs",
+    "tests/eval/run-eval.mjs",
+    "tests/eval/baseline.json",
+    "tests/eval/baseline-v2.json",
+    "tests/eval/out/**",
+    "tests/golden/baseline.json",
+    "tests/golden/reference-allow.json"
+   ],
+   "tests": [],
+   "accept": [
     "xvfb-run -a npm test",
-    "xvfb-run -a npm run eval"
+    "xvfb-run -a npm run eval",
+    "xvfb-run -a npm run eval -- --set v2",
+    "node tests/eval/diff-reference.mjs --node"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "C2.m",
+   "title": "Verknuepfung derselben Person: Modul",
+   "doc": "V2-C-erkennung.md#c2",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": false,
+   "parallel": true,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "F2"
+   ],
+   "allowed": [
+    "app/lib/coref.js",
+    "tests/unit/coref.test.mjs"
+   ],
+   "tests": [
+    "tests/unit/coref.test.mjs"
+   ],
+   "accept": [
+    "node --test tests/unit/coref.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "C2.w",
+   "title": "Verknuepfung derselben Person: Einbindung in den Kern und Harness",
+   "doc": "V2-C-erkennung.md#c2",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "C2.m",
+    "C1.1",
+    "F1.b"
+   ],
+   "allowed": [
+    "app/lib/detect.js",
+    "app/privacy-shield.html",
+    "tests/unit/detect.coref.test.mjs",
+    "tests/unit/placeholder-usage.test.mjs",
+    "CHANGELOG.md",
+    "docs/erkennung-entscheidungen.md",
+    "tests/eval/cases.mjs",
+    "tests/eval/cases-gdpr.mjs",
+    "tests/eval/cases-v2.mjs",
+    "tests/eval/generate.mjs",
+    "tests/eval/run-eval.mjs",
+    "tests/eval/baseline.json",
+    "tests/eval/baseline-v2.json",
+    "tests/eval/out/**",
+    "tests/golden/baseline.json",
+    "tests/golden/reference-allow.json"
+   ],
+   "tests": [
+    "tests/unit/detect.coref.test.mjs",
+    "tests/unit/placeholder-usage.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit",
+    "xvfb-run -a npm test",
+    "xvfb-run -a npm run eval",
+    "node tests/eval/diff-reference.mjs --node"
    ],
    "status": "offen",
    "attempts": 0,
@@ -596,14 +1027,15 @@
   },
   {
    "id": "C3.m",
-   "title": "Eigene Regeln: Modul",
+   "title": "Eigene Regeln: Modul (sichere Regex-Teilmenge)",
    "doc": "V2-C-erkennung.md#c3",
-   "tier": "bau",
-   "review": false,
-   "crypto": false,
+   "tier": "denk",
+   "review": true,
+   "crypto": true,
    "serial": false,
    "parallel": true,
    "kann": false,
+   "build": false,
    "deps": [
     "F2"
    ],
@@ -626,17 +1058,19 @@
   },
   {
    "id": "C3.w",
-   "title": "Eigene Regeln: Oberflaeche",
-   "doc": "V2-C-erkennung.md#c3",
+   "title": "Eigene Regeln: Oberflaeche und Kern",
+   "doc": "V2-C-erkennung.md#c3w",
    "tier": "bau",
    "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
     "C3.m",
-    "C1.1"
+    "C1.1",
+    "F1.b"
    ],
    "allowed": [
     "app/privacy-shield.html",
@@ -658,36 +1092,86 @@
    "notes": ""
   },
   {
-   "id": "C2",
-   "title": "Verknuepfung derselben Person",
-   "doc": "V2-C-erkennung.md#c2",
+   "id": "C1.2",
+   "title": "Korpusschleife Durchlauf 2",
+   "doc": "V2-C-erkennung.md#c11-bis-c13",
    "tier": "denk",
    "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
     "C1.1",
-    "F1"
+    "C2.w"
    ],
    "allowed": [
-    "app/lib/coref.js",
     "app/lib/detect.js",
     "app/privacy-shield.html",
-    "tests/unit/coref.test.mjs",
-    "tests/eval/**",
-    "tests/golden/**",
-    "tests/**/*.mjs",
-    "CHANGELOG.md"
+    "tests/realdocs.test.mjs",
+    "docs/erkennung-entscheidungen.md",
+    "tests/eval/cases.mjs",
+    "tests/eval/cases-gdpr.mjs",
+    "tests/eval/cases-v2.mjs",
+    "tests/eval/generate.mjs",
+    "tests/eval/run-eval.mjs",
+    "tests/eval/baseline.json",
+    "tests/eval/baseline-v2.json",
+    "tests/eval/out/**",
+    "tests/golden/baseline.json",
+    "tests/golden/reference-allow.json"
    ],
-   "tests": [
-    "tests/unit/coref.test.mjs"
-   ],
+   "tests": [],
    "accept": [
-    "npm run test:unit",
     "xvfb-run -a npm test",
-    "xvfb-run -a npm run eval"
+    "xvfb-run -a npm run eval",
+    "xvfb-run -a npm run eval -- --set v2",
+    "node tests/eval/diff-reference.mjs --node"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "C1.3",
+   "title": "Korpusschleife Durchlauf 3",
+   "doc": "V2-C-erkennung.md#c11-bis-c13",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "C1.2"
+   ],
+   "allowed": [
+    "app/lib/detect.js",
+    "app/privacy-shield.html",
+    "tests/realdocs.test.mjs",
+    "docs/erkennung-entscheidungen.md",
+    "tests/eval/cases.mjs",
+    "tests/eval/cases-gdpr.mjs",
+    "tests/eval/cases-v2.mjs",
+    "tests/eval/generate.mjs",
+    "tests/eval/run-eval.mjs",
+    "tests/eval/baseline.json",
+    "tests/eval/baseline-v2.json",
+    "tests/eval/out/**",
+    "tests/golden/baseline.json",
+    "tests/golden/reference-allow.json"
+   ],
+   "tests": [],
+   "accept": [
+    "xvfb-run -a npm test",
+    "xvfb-run -a npm run eval",
+    "xvfb-run -a npm run eval -- --set v2",
+    "node tests/eval/diff-reference.mjs --node"
    ],
    "status": "offen",
    "attempts": 0,
@@ -698,7 +1182,7 @@
   },
   {
    "id": "D1.m",
-   "title": "Pruefansicht: Module",
+   "title": "Pruefansicht: Module (review, history)",
    "doc": "V2-D-bedienung.md#d1",
    "tier": "bau",
    "review": true,
@@ -706,6 +1190,7 @@
    "serial": false,
    "parallel": true,
    "kann": false,
+   "build": false,
    "deps": [
     "F2"
    ],
@@ -731,21 +1216,24 @@
    "notes": ""
   },
   {
-   "id": "D1.w",
-   "title": "Pruefansicht: Oberflaeche",
-   "doc": "V2-D-bedienung.md#d1",
+   "id": "D1.w1",
+   "title": "Pruefansicht: Seitenleiste und Entscheidungen",
+   "doc": "V2-D-bedienung.md#d1w1",
    "tier": "denk",
    "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
     "D1.m",
-    "A1.w"
+    "A1.w",
+    "F1.b"
    ],
    "allowed": [
     "app/privacy-shield.html",
+    "app/lib/detect.js",
     "tests/review.test.mjs"
    ],
    "tests": [
@@ -754,6 +1242,38 @@
    "accept": [
     "npm run test:unit",
     "xvfb-run -a node --test --test-concurrency=1 tests/review.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "D1.w2",
+   "title": "Pruefansicht: Rueckgaengig, Tastatur, Filter, grosse Listen",
+   "doc": "V2-D-bedienung.md#d1w2",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "D1.w1"
+   ],
+   "allowed": [
+    "app/privacy-shield.html",
+    "tests/review-undo.test.mjs"
+   ],
+   "tests": [
+    "tests/review-undo.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit",
+    "xvfb-run -a node --test --test-concurrency=1 tests/review-undo.test.mjs"
    ],
    "status": "offen",
    "attempts": 0,
@@ -772,15 +1292,16 @@
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
-    "F2"
+    "F2.h"
    ],
    "allowed": [
-    "app/privacy-shield.html",
     "app/index.html",
     "main.js",
     "preload.js",
-    "tests/info.test.mjs"
+    "tests/info.test.mjs",
+    "tests/helpers.mjs"
    ],
    "tests": [
     "tests/info.test.mjs"
@@ -796,8 +1317,8 @@
    "notes": ""
   },
   {
-   "id": "D2",
-   "title": "Barrierefreiheit",
+   "id": "D2.1",
+   "title": "Barrierefreiheit: Struktur, Beschriftung, Tastatur, Ansagen",
    "doc": "V2-D-bedienung.md#d2",
    "tier": "denk",
    "review": true,
@@ -805,26 +1326,30 @@
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
-    "D1.w",
+    "D1.w2",
     "D3",
-    "A3.w"
+    "A3.w",
+    "B1.w2",
+    "C3.w",
+    "B2.w"
    ],
    "allowed": [
     "app/privacy-shield.html",
     "app/index.html",
     "app/css/**",
-    "tests/a11y.test.mjs",
     "package.json",
     "package-lock.json",
     "THIRD_PARTY_NOTICES.md",
-    "docs/a11y-backlog.md"
+    "tests/helpers.mjs",
+    "tests/a11y-struktur.test.mjs"
    ],
    "tests": [
-    "tests/a11y.test.mjs"
+    "tests/a11y-struktur.test.mjs"
    ],
    "accept": [
-    "xvfb-run -a node --test --test-concurrency=1 tests/a11y.test.mjs"
+    "xvfb-run -a node --test --test-concurrency=1 tests/a11y-struktur.test.mjs"
    ],
    "status": "offen",
    "attempts": 0,
@@ -834,19 +1359,93 @@
    "notes": ""
   },
   {
-   "id": "E1",
-   "title": "Kommandozeile",
-   "doc": "V2-E-betrieb.md#e1",
+   "id": "D2.2",
+   "title": "Barrierefreiheit: Kontrast, Bewegung, Zoom, Gesamtpruefung",
+   "doc": "V2-D-bedienung.md#d2",
    "tier": "denk",
    "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
+    "D2.1"
+   ],
+   "allowed": [
+    "app/privacy-shield.html",
+    "app/index.html",
+    "app/css/**",
+    "package.json",
+    "package-lock.json",
+    "THIRD_PARTY_NOTICES.md",
+    "tests/helpers.mjs",
+    "tests/a11y-struktur.test.mjs",
+    "tests/a11y.test.mjs",
+    "docs/a11y-backlog.md"
+   ],
+   "tests": [
+    "tests/a11y.test.mjs"
+   ],
+   "accept": [
+    "xvfb-run -a node --test --test-concurrency=1 tests/a11y.test.mjs",
+    "xvfb-run -a node --test --test-concurrency=1 tests/a11y-struktur.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "E1.m",
+   "title": "Kommandozeile: Argument-Modul",
+   "doc": "V2-E-betrieb.md#e1m",
+   "tier": "bau",
+   "review": false,
+   "crypto": false,
+   "serial": false,
+   "parallel": true,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "F2"
+   ],
+   "allowed": [
+    "app/lib/cliargs.js",
+    "tests/unit/cliargs.test.mjs"
+   ],
+   "tests": [
+    "tests/unit/cliargs.test.mjs"
+   ],
+   "accept": [
+    "node --test tests/unit/cliargs.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "E1.w",
+   "title": "Kommandozeilenmodus",
+   "doc": "V2-E-betrieb.md#e1w",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "E1.m",
     "A2.w",
     "A3.w",
-    "B1.w"
+    "B1.w2",
+    "F2.h"
    ],
    "allowed": [
     "main.js",
@@ -861,6 +1460,7 @@
     "tests/cli.test.mjs"
    ],
    "accept": [
+    "npm run test:unit",
     "xvfb-run -a node --test --test-concurrency=1 tests/cli.test.mjs"
    ],
    "status": "offen",
@@ -875,20 +1475,24 @@
    "title": "Oeffnen mit, Einzelinstanz",
    "doc": "V2-E-betrieb.md#e2",
    "tier": "bau",
-   "review": false,
+   "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
-    "B1.w"
+    "B1.w2",
+    "E1.m",
+    "F2.h"
    ],
    "allowed": [
     "main.js",
     "preload.js",
     "app/privacy-shield.html",
     "app/index.html",
-    "tests/open-with.test.mjs"
+    "tests/open-with.test.mjs",
+    "tests/helpers.mjs"
    ],
    "tests": [
     "tests/open-with.test.mjs"
@@ -904,8 +1508,8 @@
    "notes": ""
   },
   {
-   "id": "F3",
-   "title": "Bibliotheken aktualisieren",
+   "id": "F3.a",
+   "title": "Bibliotheken: mammoth, JSZip, jsPDF",
    "doc": "V2-F-fundament.md#f3",
    "tier": "denk",
    "review": true,
@@ -913,21 +1517,26 @@
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
-    "F1"
+    "F1.b",
+    "B2.m2"
    ],
    "allowed": [
     "scripts/vendor.lock.json",
     "scripts/fetch-vendor.mjs",
     "THIRD_PARTY_NOTICES.md",
+    "CHANGELOG.md",
     "app/privacy-shield.html",
+    "app/ner-worker.js",
     "app/lib/**",
     "tests/**"
    ],
    "tests": [],
    "accept": [
     "xvfb-run -a npm test",
-    "xvfb-run -a npm run eval"
+    "xvfb-run -a npm run eval",
+    "xvfb-run -a node tests/eval/diff-reference.mjs"
    ],
    "status": "offen",
    "attempts": 0,
@@ -937,30 +1546,148 @@
    "notes": ""
   },
   {
-   "id": "F4",
-   "title": "Stabilitaet: Eigenschafts-, Fuzz-, Installationstests",
-   "doc": "V2-F-fundament.md#f4",
+   "id": "F3.b",
+   "title": "Bibliotheken: Tesseract.js",
+   "doc": "V2-F-fundament.md#f3",
    "tier": "denk",
    "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
-    "F1",
-    "B2.m"
+    "F3.a"
    ],
    "allowed": [
-    "tests/**",
-    ".github/workflows/build.yml",
-    "package.json"
+    "scripts/vendor.lock.json",
+    "scripts/fetch-vendor.mjs",
+    "THIRD_PARTY_NOTICES.md",
+    "CHANGELOG.md",
+    "app/privacy-shield.html",
+    "app/ner-worker.js",
+    "app/lib/**",
+    "tests/**"
+   ],
+   "tests": [],
+   "accept": [
+    "xvfb-run -a npm test",
+    "xvfb-run -a npm run eval",
+    "xvfb-run -a node tests/eval/diff-reference.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "F3.c",
+   "title": "Bibliotheken: pdf.js (Entscheidung, sonst verschoben)",
+   "doc": "V2-F-fundament.md#f3",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "F3.b"
+   ],
+   "allowed": [
+    "scripts/vendor.lock.json",
+    "scripts/fetch-vendor.mjs",
+    "THIRD_PARTY_NOTICES.md",
+    "CHANGELOG.md",
+    "app/privacy-shield.html",
+    "app/ner-worker.js",
+    "app/lib/**",
+    "tests/**"
+   ],
+   "tests": [],
+   "accept": [
+    "xvfb-run -a npm test",
+    "xvfb-run -a npm run eval",
+    "xvfb-run -a node tests/eval/diff-reference.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "F3.d",
+   "title": "Bibliotheken: Transformers.js 4 (nur mit Messprotokoll, sonst verschoben)",
+   "doc": "V2-F-fundament.md#f3",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": true,
+   "deps": [
+    "F3.c"
+   ],
+   "allowed": [
+    "scripts/vendor.lock.json",
+    "scripts/fetch-vendor.mjs",
+    "THIRD_PARTY_NOTICES.md",
+    "CHANGELOG.md",
+    "app/privacy-shield.html",
+    "app/ner-worker.js",
+    "app/lib/**",
+    "tests/**"
+   ],
+   "tests": [],
+   "accept": [
+    "xvfb-run -a npm test",
+    "xvfb-run -a npm run eval",
+    "xvfb-run -a node tests/eval/diff-reference.mjs",
+    "npm run build:linux && PS_PACKAGED_BIN=dist/linux-unpacked/privacy-shield-desktop xvfb-run -a npm test"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "F4.a",
+   "title": "Stabilitaet: Eigenschafts- und Fuzz-Tests",
+   "doc": "V2-F-fundament.md#f4a",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "F1.b",
+    "F5",
+    "B2.m2"
+   ],
+   "allowed": [
+    "tests/unit/properties.test.mjs",
+    "tests/unit/fuzz.test.mjs",
+    "app/lib/**",
+    "app/privacy-shield.html",
+    "tests/golden/reference-allow.json",
+    "docs/erkennung-entscheidungen.md"
    ],
    "tests": [
     "tests/unit/properties.test.mjs",
     "tests/unit/fuzz.test.mjs"
    ],
    "accept": [
-    "npm run test:unit"
+    "npm run test:unit",
+    "node tests/eval/diff-reference.mjs --node"
    ],
    "status": "offen",
    "attempts": 0,
@@ -970,31 +1697,31 @@
    "notes": ""
   },
   {
-   "id": "C1.2",
-   "title": "Korpusschleife Durchlauf 2",
-   "doc": "V2-C-erkennung.md#c1",
+   "id": "F4.b",
+   "title": "Stabilitaet: Windows-Installationstest in der CI, Leistungsbudgets",
+   "doc": "V2-F-fundament.md#f4b",
    "tier": "denk",
    "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
-    "C1.1",
-    "C2"
+    "F2.e"
    ],
    "allowed": [
-    "tests/eval/**",
-    "tests/golden/**",
-    "tests/realdocs.test.mjs",
-    "app/lib/detect.js",
-    "app/privacy-shield.html",
-    "docs/erkennung-entscheidungen.md"
+    ".github/workflows/build.yml",
+    "tests/perf.test.mjs",
+    "tests/unit/ci-config.test.mjs",
+    "tests/installed.test.mjs"
    ],
-   "tests": [],
+   "tests": [
+    "tests/unit/ci-config.test.mjs"
+   ],
    "accept": [
-    "xvfb-run -a npm test",
-    "xvfb-run -a npm run eval"
+    "node --test tests/unit/ci-config.test.mjs",
+    "xvfb-run -a node --test --test-concurrency=1 tests/perf.test.mjs"
    ],
    "status": "offen",
    "attempts": 0,
@@ -1004,30 +1731,38 @@
    "notes": ""
   },
   {
-   "id": "C1.3",
-   "title": "Korpusschleife Durchlauf 3",
-   "doc": "V2-C-erkennung.md#c1",
+   "id": "G1.docs",
+   "title": "Dokumentation (README, Handbuch, Kommandozeile, Richtlinie, CHANGELOG)",
+   "doc": "V2-G-abschluss.md#3-dokumentation",
    "tier": "denk",
    "review": true,
    "crypto": false,
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": false,
    "deps": [
-    "C1.2"
+    "A4.w",
+    "B1.w2",
+    "B2.w",
+    "C1.3",
+    "C2.w",
+    "C3.w",
+    "D2.2",
+    "E1.w",
+    "E2",
+    "F3.d",
+    "F4.a",
+    "F4.b"
    ],
    "allowed": [
-    "tests/eval/**",
-    "tests/golden/**",
-    "tests/realdocs.test.mjs",
-    "app/lib/detect.js",
-    "app/privacy-shield.html",
-    "docs/erkennung-entscheidungen.md"
+    "docs/**",
+    "README.md",
+    "CHANGELOG.md"
    ],
    "tests": [],
    "accept": [
-    "xvfb-run -a npm test",
-    "xvfb-run -a npm run eval"
+    "xvfb-run -a npm test"
    ],
    "status": "offen",
    "attempts": 0,
@@ -1038,7 +1773,7 @@
   },
   {
    "id": "G1",
-   "title": "Abnahme, Dokumentation, Veroeffentlichung",
+   "title": "Abnahme, Veroeffentlichungsfrage",
    "doc": "V2-G-abschluss.md",
    "tier": "denk",
    "review": true,
@@ -1046,16 +1781,9 @@
    "serial": true,
    "parallel": false,
    "kann": false,
+   "build": true,
    "deps": [
-    "A4",
-    "B2.w",
-    "C1.3",
-    "C3.w",
-    "D2",
-    "E1",
-    "E2",
-    "F3",
-    "F4"
+    "G1.docs"
    ],
    "allowed": [
     "docs/**",
@@ -1066,7 +1794,9 @@
    ],
    "tests": [],
    "accept": [
-    "xvfb-run -a npm test"
+    "xvfb-run -a npm test",
+    "xvfb-run -a node tests/eval/diff-reference.mjs",
+    "npm run build:linux && PS_PACKAGED_BIN=dist/linux-unpacked/privacy-shield-desktop xvfb-run -a npm test"
    ],
    "status": "offen",
    "attempts": 0,
@@ -1085,6 +1815,7 @@
    "serial": true,
    "parallel": false,
    "kann": true,
+   "build": false,
    "deps": [
     "G1"
    ],
@@ -1108,6 +1839,7 @@
    "serial": true,
    "parallel": false,
    "kann": true,
+   "build": false,
    "deps": [
     "G1"
    ],
@@ -1131,6 +1863,7 @@
    "serial": true,
    "parallel": false,
    "kann": true,
+   "build": false,
    "deps": [
     "G1"
    ],
@@ -1154,6 +1887,7 @@
    "serial": true,
    "parallel": false,
    "kann": true,
+   "build": false,
    "deps": [
     "G1"
    ],
@@ -1177,6 +1911,7 @@
    "serial": true,
    "parallel": false,
    "kann": true,
+   "build": false,
    "deps": [
     "G1"
    ],
@@ -1200,6 +1935,7 @@
    "serial": true,
    "parallel": false,
    "kann": true,
+   "build": false,
    "deps": [
     "G1"
    ],
@@ -1223,6 +1959,7 @@
    "serial": true,
    "parallel": false,
    "kann": true,
+   "build": false,
    "deps": [
     "G1"
    ],
@@ -1246,8 +1983,9 @@
     "A1.w",
     "A2.w",
     "A3.w",
-    "A4",
-    "F1.spike"
+    "A4.w",
+    "F1.b",
+    "F2.h"
    ],
    "audit": true,
    "status": "offen",
@@ -1258,7 +1996,7 @@
    "version": "",
    "kind": "audit",
    "after": [
-    "B1.w",
+    "B1.w2",
     "B2.w",
     "C1.1",
     "C3.w"
@@ -1272,11 +2010,11 @@
    "version": "",
    "kind": "audit",
    "after": [
-    "D1.w",
+    "D1.w2",
     "D3",
-    "C2",
-    "D2",
-    "E1",
+    "C2.w",
+    "D2.2",
+    "E1.w",
     "E2"
    ],
    "audit": true,
