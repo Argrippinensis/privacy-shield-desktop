@@ -1050,14 +1050,11 @@
    "accept": [
     "node --test tests/unit/policy.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 3,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261022-run",
-    "ts": 1792621681750
-   },
+   "commit": "425aaca96c5670db0552f02c011629d9b7f1ea5d",
+   "lease": null,
    "notes": "[Lease abgelaufen 2026-10-21T16:27:38.928Z] [Lease abgelaufen 2026-10-21T22:27:48.891Z]"
   },
   {
