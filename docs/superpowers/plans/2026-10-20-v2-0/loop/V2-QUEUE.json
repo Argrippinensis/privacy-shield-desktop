@@ -1215,14 +1215,11 @@
     "node --test tests/unit/history.test.mjs",
     "node --test tests/unit/review.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1414",
-    "ts": 1792585387753
-   },
+   "commit": "2af94e5c8b14a3c1ea03fad62d943546c917cda7",
+   "lease": null,
    "notes": ""
   },
   {
