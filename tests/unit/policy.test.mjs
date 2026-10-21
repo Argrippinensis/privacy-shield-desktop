@@ -388,8 +388,8 @@ test('toSpans: mehrere Treffer einer Regel, nach start sortiert', () => {
 
 test('toSpans: Treffer verschiedener Regeln sind insgesamt nach start sortiert und duerfen sich ueberschneiden', () => {
   const p = parseOk([
-    regelRegex({ id: 'spaet', pattern: 'Falke \\d{3}', category: 'A' }),
-    regelRegex({ id: 'frueh', pattern: 'Projekt Falke', category: 'B' }),
+    regelRegex({ id: 'spaet', pattern: 'Falke \\d{3}', category: 'AA' }),
+    regelRegex({ id: 'frueh', pattern: 'Projekt Falke', category: 'BB' }),
   ]);
   const s = P.toSpans(p, 'Projekt Falke 123', 'standard');
   assert.equal(s.length, 2);
@@ -463,7 +463,7 @@ test('toSpans: Listenregel mit profiles ["strict"] greift nur im Profil strict',
 
 test('toSpans: Spans enthalten nie einen Platzhalterbereich ({{NAME_1}})', () => {
   const p = parseOk([
-    regelRegex({ id: 'alles', pattern: '[A-Z_]{1,10}\\d?', category: 'X' }),
+    regelRegex({ id: 'alles', pattern: '[A-Z_]{1,10}\\d?', category: 'XX' }),
     regelListe({ id: 'l', terms: ['NAME_1', 'NAME'], profiles: ['*'] }),
   ]);
   const text = 'Hallo {{NAME_1}} und NAME_2.';
@@ -528,7 +528,7 @@ function langerText(n, terme) {
     const w = i % 5 === 0 ? terme[(i * 37) % terme.length] : 'wort' + (i % 13);
     teile.push(w); len += w.length + 1; i++;
   }
-  return teile.join(' ').slice(0, n);
+  return teile.join(' ').padEnd(n, ' ').slice(0, n);
 }
 
 for (const anzahl of [1000, 5000]) {
