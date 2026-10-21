@@ -554,3 +554,128 @@ test('Laufzeit: Pruefung und Suche mit Tausenden gleichen Anfangswoertern bleibe
   P.toSpans(p, text, 'standard');
   assert.ok(Date.now() - t0 < 2000);
 });
+
+// ---- Nachbesserung nach Pruefung (C3.m): Umgehungsproben und Randfaelle ----
+// Hinweis: Ein Muster, das heute angenommen wird, wird hier nie gegen Text ausgefuehrt; geprueft wird nur die Ablehnung.
+
+test('checkPattern: lange Quantorzahl mit vielen Nullen in {m,n} wird abgelehnt', () => {
+  const r = P.checkPattern('(?:a|aa){1,0000000000000000000000000100}$', '');
+  assert.equal(r.ok, false, 'Obergrenze 100 ueber 64 darf nicht durch fuehrende Nullen verdeckt werden');
+});
+
+test('checkPattern: zwei lange Quantorzahlen {1,0000...99999999999} werden abgelehnt', () => {
+  const q = '{1,0000000000000000000099999999999}';
+  assert.equal(P.checkPattern('a' + q + 'a' + q + 'b', '').ok, false);
+});
+
+test('checkPattern: verdecktes {n,} mit fuehrenden Nullen wird als unbegrenzt abgelehnt', () => {
+  const r = P.checkPattern('a{0000000000000000000000000001,}b', '');
+  assert.equal(r.ok, false);
+});
+
+test('checkPattern: a{0,1} 33-mal hintereinander (2^33) wird abgelehnt', () => {
+  const r = P.checkPattern('a{0,1}'.repeat(33) + 'b', '');
+  assert.equal(r.ok, false);
+  assert.match(r.error, /Produkt/);
+});
+
+test('checkPattern: a{0,2} 9-mal hintereinander (3^9 ueber 1000) wird abgelehnt', () => {
+  const r = P.checkPattern('a{0,2}'.repeat(9) + 'b', '');
+  assert.equal(r.ok, false);
+  assert.match(r.error, /Produkt/);
+});
+
+test('checkPattern: a{0,3} 6-mal hintereinander (4^6 ueber 1000) wird abgelehnt', () => {
+  const r = P.checkPattern('a{0,3}'.repeat(6) + 'b', '');
+  assert.equal(r.ok, false);
+  assert.match(r.error, /Produkt/);
+});
+
+test('checkPattern: a{1,10}a{1,10}a{1,10}b (10*10*10 = 1000) bleibt zulaessig', () => {
+  assert.equal(P.checkPattern('a{1,10}a{1,10}a{1,10}b', '').ok, true);
+});
+
+test('checkPattern: a{2,11}a{2,11}a{2,11}b (10 Moeglichkeiten je Quantor, 1000) bleibt zulaessig', () => {
+  assert.equal(P.checkPattern('a{2,11}a{2,11}a{2,11}b', '').ok, true);
+});
+
+test('toSpans: Treffer derselben Listenregel duerfen sich ueberlappen', () => {
+  const p = parseOk([regelListe({ terms: ['Projekt Falke', 'Falke Eins'], profiles: ['*'] })]);
+  const s = P.toSpans(p, 'Projekt Falke Eins', 'standard');
+  assert.deepEqual(s.map(x => [x.start, x.end]), [[0, 13], [8, 18]]);
+});
+
+test('parse: Regeln und Begriffslisten der Richtlinie sind eingefroren', () => {
+  const r = P.parse(datei([regelListe()]));
+  assert.equal(r.ok, true);
+  assert.equal(Object.isFrozen(r.policy), true, 'Richtlinie');
+  assert.equal(Object.isFrozen(r.policy.rules), true, 'rules');
+  const regel = r.policy.rules[0];
+  assert.equal(Object.isFrozen(regel), true, 'Regel');
+  assert.equal(Object.isFrozen(regel.terms), true, 'terms');
+  assert.equal(Object.isFrozen(regel.profiles), true, 'profiles');
+});
+
+test('toSpans: Kleinschreibung ist zeichenweise, Sigma am Wortende trifft auch nach U+0130', () => {
+  const p = parseOk([regelListe({ terms: ['ΜΑΡΙΑΣ'], caseSensitive: false, profiles: ['*'] })]);
+  assert.equal(P.toSpans(p, 'ΜΑΡΙΑΣ', 'standard').length, 1);
+  assert.equal(P.toSpans(p, 'İ ΜΑΡΙΑΣ', 'standard').length, 1);
+});
+
+test('toSpans: unbekannter Regeltyp wirft einen Fehler statt still zu ueberspringen', () => {
+  const pol = { version: 1, name: 'x', rules: [{ id: 'a', label: 'A', type: 'glob', category: 'EIGEN', profiles: ['*'], enabled: true }] };
+  assert.throws(() => P.toSpans(pol, 'Text', 'standard'));
+});
+
+test('toSpans: Regex-Regel mit unsicherem Muster wirft, ohne das Muster zu nennen', () => {
+  const muster = '(geheimmuster+)+$';
+  const pol = { version: 1, name: 'x', rules: [{ id: 'a', label: 'A', type: 'regex', pattern: muster, flags: '', category: 'EIGEN', profiles: ['*'], enabled: true }] };
+  assert.throws(() => P.toSpans(pol, 'geheimmuster', 'standard'), (e) => {
+    assert.ok(!String(e && e.message).includes('geheimmuster'), 'Fehlertext darf das Muster nicht enthalten');
+    return true;
+  });
+});
+
+test('toSpans: Listenregel ohne terms wirft einen Fehler ohne Begriffsinhalt', () => {
+  const pol = { version: 1, name: 'x', rules: [{ id: 'a', label: 'A', type: 'list', caseSensitive: false, category: 'EIGEN', profiles: ['*'], enabled: true }] };
+  assert.throws(() => P.toSpans(pol, 'Text', 'standard'), (e) => e instanceof Error);
+});
+
+test('parse: Datei mit Mehrbyte-Zeichen ueber 1 MiB (Bytes) wird abgelehnt, auch wenn Zeichen darunter liegen', () => {
+  const gross = datei([regelRegex()]).replace('"rules"', '"zusatz":"' + 'ä'.repeat(600000) + '","rules"');
+  assert.ok(gross.length < 1024 * 1024 && Buffer.byteLength(gross) > 1024 * 1024);
+  const r = P.parse(gross);
+  assert.equal(r.ok, false);
+  assert.ok(r.errors.some(e => /MiB/.test(e)), r.errors.join('|'));
+});
+
+test('parse: genau 1.048.576 Byte werden nicht wegen der Groesse abgelehnt, ein Byte mehr schon', () => {
+  const kopf = datei([regelRegex()]).replace('"rules"', '"zusatz":"%","rules"');
+  const leer = Buffer.byteLength(kopf.replace('%', ''));
+  const fuell = (bytes) => 'ä'.repeat(Math.floor(bytes / 2)) + (bytes % 2 ? 'x' : '');
+  const bauen = (ziel) => kopf.replace('%', fuell(ziel - leer));
+  const genau = bauen(1048576);
+  assert.equal(Buffer.byteLength(genau), 1048576);
+  const r = P.parse(genau);
+  assert.ok(!(r.errors || []).some(e => /MiB/.test(e)), 'nicht wegen Groesse: ' + (r.errors || []).join('|'));
+  const drueber = bauen(1048577);
+  assert.equal(Buffer.byteLength(drueber), 1048577);
+  const r2 = P.parse(drueber);
+  assert.equal(r2.ok, false);
+  assert.ok(r2.errors.some(e => /MiB/.test(e)));
+});
+
+test('checkPattern: Ablehnungsgruende nennen das Kernwort (Unbegrenzte, Rueckverweis, Vorausschau)', () => {
+  const faelle = [
+    ['K-\\d+', /Unbegrenzte/],
+    ['\\w*x', /Unbegrenzte/],
+    ['(a)\\1', /Rückverweis/],
+    ['(?=x)y', /Vorausschau/],
+    ['(?<!x)y', /Rückschau|Vorausschau/],
+  ];
+  for (const [muster, kern] of faelle) {
+    const r = P.checkPattern(muster, '');
+    assert.equal(r.ok, false, muster);
+    assert.match(r.error, kern, muster);
+  }
+});
