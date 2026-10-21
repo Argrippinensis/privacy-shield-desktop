@@ -758,14 +758,11 @@
    "accept": [
     "node --test tests/unit/formats.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 2,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-run",
-    "ts": 1792578507677
-   },
+   "commit": "405380eb4669d4269a5f4021718892356ddfd595",
+   "lease": null,
    "notes": "[Lease abgelaufen 2026-10-21T10:28:06.992Z]"
   },
   {
