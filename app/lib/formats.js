@@ -109,7 +109,7 @@
   const NAMED = {
     amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
     auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß', euro: '€',
-    copy: '©', ndash: '–', mdash: '—', hellip: '…', bdquo: '„', ldquo: '“', rdquo: '”', laquo: '«', raquo: '»'
+    copy: '\u00a9', ndash: '–', mdash: '—', hellip: '…', bdquo: '„', ldquo: '“', rdquo: '”', laquo: '«', raquo: '»'
   };
 
   function validCp(cp) {
