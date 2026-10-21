@@ -334,14 +334,11 @@
    "accept": [
     "node --test tests/unit/marks.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261020b",
-    "ts": 1792561314008
-   },
+   "commit": "9f4f9c3732bc052deda8adea051ee28b482a06ae",
+   "lease": null,
    "notes": ""
   },
   {
