@@ -264,15 +264,12 @@
     "xvfb-run -a node --test --test-concurrency=1 tests/ipc-security.test.mjs",
     "xvfb-run -a npm test"
    ],
-   "status": "laeuft",
+   "status": "offen",
    "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1028",
-    "ts": 1792572310888
-   },
-   "notes": ""
+   "lease": null,
+   "notes": "[Lease abgelaufen 2026-10-21T10:28:06.992Z]"
   },
   {
    "id": "F5",
@@ -658,15 +655,12 @@
    "accept": [
     "node --test tests/unit/project.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "offen",
    "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1028",
-    "ts": 1792572312229
-   },
-   "notes": ""
+   "lease": null,
+   "notes": "[Lease abgelaufen 2026-10-21T10:28:06.992Z]"
   },
   {
    "id": "B1.w1",
@@ -761,15 +755,12 @@
    "accept": [
     "node --test tests/unit/formats.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "offen",
    "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1028",
-    "ts": 1792572313594
-   },
-   "notes": ""
+   "lease": null,
+   "notes": "[Lease abgelaufen 2026-10-21T10:28:06.992Z]"
   },
   {
    "id": "B2.m2",
