@@ -971,14 +971,11 @@
    "accept": [
     "node --test tests/unit/coref.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1414",
-    "ts": 1792585202725
-   },
+   "commit": "d86061e9aec8d092bd775426bf19e849c1dca143",
+   "lease": null,
    "notes": ""
   },
   {
