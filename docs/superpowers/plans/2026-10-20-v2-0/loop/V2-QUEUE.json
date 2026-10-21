@@ -495,14 +495,11 @@
    "accept": [
     "node --test tests/unit/psmap.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1025",
-    "ts": 1792571154137
-   },
+   "commit": "282b03faac0cc00967e3818213841b268a3503fd",
+   "lease": null,
    "notes": ""
   },
   {
