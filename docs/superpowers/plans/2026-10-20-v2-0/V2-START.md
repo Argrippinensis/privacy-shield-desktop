@@ -49,5 +49,5 @@ Du bist der Orchestrator fuer PrivacyShield 2.0 (Weiterarbeit). Hat der Nutzer u
 ## Kurzfassung der Modellfrage (für dich)
 
 * **Du wechselst nichts.** Eine Sitzung (Sonnet, mittel); die Unteragenten bekommen ihr Modell und ihren Denkaufwand vom Orchestrator.
-* **"Erste Hälfte xhigh, Rest low" geht, aber nach Aufgabenart statt nach Zeit:** Planhärtung (P0) und Machbarkeitsprüfung laufen mit **xhigh**, Kernarbeit (Kern auslagern, Erkennungsschleifen, Oberflächenentwurf, Abnahme) mit **high**, Bauarbeit mit fertigen Tests mit **low**, Phasenprüfungen mit **xhigh**. Die schwierigen Pakete liegen über das ganze Projekt verteilt; eine Zeitgrenze würde sie falsch einordnen.
+* **"Erste Hälfte xhigh, Rest low" geht, aber nach Aufgabenart statt nach Zeit:** Planhärtung (P0) läuft mit **xhigh**, Kernarbeit (Kern auslagern, Erkennungsschleifen, Oberflächenentwurf, Abnahme) mit **high**, Bauarbeit mit fertigen Tests mit **low**, Phasenprüfungen mit **xhigh**. Die schwierigen Pakete liegen über das ganze Projekt verteilt; eine Zeitgrenze würde sie falsch einordnen.
 * **Haiku wird im Standardprofil nicht benutzt.** Wer Verbrauch sparen will: `node loop/queue.mjs profile gemischt` (Bau-Pakete mit Haiku), jederzeit zurück mit `profile sonnet`.

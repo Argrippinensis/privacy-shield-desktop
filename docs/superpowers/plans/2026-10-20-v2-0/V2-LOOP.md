@@ -34,8 +34,8 @@ Fragen werden **gebündelt und knapp** gestellt: eine Zeile Frage, Empfehlung, S
 3. **Prüfer mit frischem Kontext** nur dort, wo Urteil nötig ist (Marke S, Kryptografie A3, Oberfläche D1/D2/D3). Mechanische Pakete (H) brauchen ihn nicht: spart Aufrufe.
 4. **Gesamtsuite und Ratsche** beim Merge auf `v2/main` (`xvfb-run -a npm test`, bei Erkennungsänderung `npm run eval`): Lecks nie schlechter, Fehlalarme 0, Leistungsbudgets.
 5. **Phasenprüfung** durch einen unabhängigen Prüfer (Sonnet, mittel) nach den Phasen Vertrauen, Bedienung und vor dem Release, mit Gegenauftrag "versuche das kaputt zu machen" (Gegenproben: Fuzzing, absichtlich beschädigte Eingaben, Rundlauf über das ganze Korpus). Befunde werden Pakete in der Liste.
-6. **CI auf drei Systemen** (Windows, macOS, Linux) bei jedem Pull-Request-Update; Windows-Installationstest (F4).
-7. **Ratschen werden nie gelockert:** `tests/eval/baseline.json`, Golden-Dateien und Leistungsbudgets darf nur ein Paket ändern, das sie in seiner Liste der erlaubten Dateien hat (C, F1, F3, F4); jede andere Änderung scheitert an der Geltungsbereichsprüfung des Prüfskripts. Bei diesen Paketen prüft der Prüfer den Diff der Basisdatei und verlangt einen Eintrag in `V2-ENTSCHEIDUNGEN.md`.
+6. **CI:** `ci.yml` prüft jeden Pull-Request-Update auf **Ubuntu und Windows** (Quellbaum, Unit-Tests und App-Tests); das **gebaute** Programm auf Ubuntu, Windows und macOS prüft `build.yml`, aber nur bei Tags und per `workflow_dispatch` (Probelauf `gh workflow run build.yml --ref v2/main` ohne Release, Frage F3 in `V2-FRAGEN.md`); Windows-Installationstest (F4.b).
+7. **Ratschen werden nie gelockert:** `tests/eval/baseline.json`, Golden-Dateien und Leistungsbudgets darf nur ein Paket ändern, das sie in seiner Liste der erlaubten Dateien hat (`baseline.json`/`baseline-v2.json`: C1.0 bis C1.3, C2.w; erklärte Abweichungen von der Referenz in `tests/golden/reference-allow.json`: F5, C1.1 bis C1.3, C2.w, F4.a; die Referenz `reference-v1.8.json` selbst ändert nach F2 kein Paket mehr); jede andere Änderung scheitert an der Geltungsbereichsprüfung des Prüfskripts. Bei diesen Paketen prüft der Prüfer den Diff der Basisdatei und verlangt einen Eintrag in `V2-ENTSCHEIDUNGEN.md`.
 
 ## 4. Dauerbetrieb und automatischer Neustart
 
@@ -46,7 +46,7 @@ Fragen werden **gebündelt und knapp** gestellt: eine Zeile Frage, Empfehlung, S
 2. **Automatisch (eingerichtet am 2026-10-20, Wunsch des Nutzers):** geplanter Auslöser `trig_01BFtBbS69N7ymWDXat91cb4` (alle 2 Stunden, Minute 27) startet eine frische Sitzung mit dem Weiter-Prompt. Hält eine Sitzung die Sperre (Herzschlag alle Schleifendurchläufe, Ablauf 30 min), beendet sich der neue Lauf sofort. Abschalten: `update_trigger enabled=false` oder Not-Aus `touch ~/.ps-STOP`.
 
 **Einführung in Stufen (Pflicht, damit nichts Ungeprüftes unbeaufsichtigt läuft):**
-1. *Probelauf von Hand:* Der Orchestrator führt Vorabprüfung, die Planhärtung P0 und das Paket F2 (Unit-Läufer, Electron 44) mit der ganzen Pipeline durch; der Nutzer liest den Bericht.
+1. *Probelauf von Hand:* Der Orchestrator führt Vorabprüfung, die Planhärtung P0 und das Paket F2 (Unit-Läufer, Referenz von 1.8.0, Lader; ohne Electron 44, das ist F2.e) mit der ganzen Pipeline durch; der Nutzer liest den Bericht.
 2. *Arbeitsbetrieb:* danach Sitzung für Sitzung bis zur Abnahme (ohne Release 2.0.0; das bleibt ein eigenes Gate).
 
 ## 5. Zeitliche Optimierung (ehrlich)
@@ -82,9 +82,9 @@ Fragen werden **gebündelt und knapp** gestellt: eine Zeile Frage, Empfehlung, S
 
 | Art (`tier`) | Pakete | Test-Autor | Implementierer | Prüfer |
 |---|---|---|---|---|
-| **spike** (Entscheiden, Planen) | P0 Planhärtung, F1.spike | high | **xhigh** | (Orchestrator liest das Ergebnis) |
-| **denk** (Urteil, Entwurf, Randfälle) | F1, C1 (3 Durchläufe), C2, B1.w, D1.w, D2, E1, F3, F4, G1 | medium | **high** | medium |
-| **bau** (Modul mit fertigen Tests, mechanische Verdrahtung) | alle übrigen (A1, A2, A3, A4, B1.m, B2, C3, D1.m, D3, E2 ...) | low | **low** | nur wenn `review: true` (alle `.w`, A3, D1.m, D3): medium, bei Kryptografie xhigh |
+| **spike** (Entscheiden, Planen) | P0 Planhärtung (F1.spike entfällt: in P0 gemessen) | high | **xhigh** | (Orchestrator liest das Ergebnis) |
+| **denk** (Urteil, Entwurf, Randfälle) | F2, F2.e, F2.h, F1.a, F1.b, F5, C1.0, C1.r, C1.1 bis C1.3, C2.m/.w, C3.m, B1.w1/.w2, D1.w1/.w2, D2.1/.2, E1.w, F3.a bis F3.d, F4.a/.b, G1.docs, G1 | medium | **high** | medium |
+| **bau** (Modul mit fertigen Tests, mechanische Verdrahtung) | alle übrigen (M1.m, A1 bis A4, B1.fix/.m, B2.m1/.m2/.w, C3.w, D1.m, D3, E1.m, E2 ...) | low | **low** | nur wenn `review: true` (alle `.w`/`.w1`/`.w2`, A3, C3.m, D1.m, D3, E2, M1.m): medium, bei Sicherheitsgrenzen (A3, C3.m) xhigh |
 | **Phasenprüfung** | an Meilensteinen | | | **xhigh** |
 
 Profile (Befehl `node loop/queue.mjs profile [name]`): **`sonnet`** (Standard, nur Sonnet) und **`gemischt`** (Bau-Implementierer mit Haiku, spart Verbrauch). Umstellen ändert nur diese Auflösung; Pakete, Tests und Prüfungen bleiben gleich. Empfehlung: `sonnet`, solange das Limit nicht der Engpass ist.
@@ -93,7 +93,7 @@ Hinweis: Zeitgesteuerte Sitzungen erben das Modell der erzeugenden Sitzung; der 
 
 ## 9. Planhärtung (Paket P0, einmalig, höchster Denkaufwand)
 
-Zweck: Bevor irgendetwas gebaut wird, prüft eine Instanz mit **xhigh** den ganzen Plan gegen den echten Code und behebt Lücken. Ein Fehler im Plan kostet später in jedem Paket.
+Zweck: Bevor irgendetwas gebaut wird, prüft eine Instanz mit **xhigh** den ganzen Plan gegen den echten Code und behebt Lücken. Ein Fehler im Plan kostet später in jedem Paket. (Ausgeführt am 2026-10-21; Ergebnis am Ende dieses Abschnitts.)
 
 Auftrag (Unteragent, Sonnet xhigh, frischer Kontext, arbeitet im Plan-Worktree auf `plan/v2-0`, erlaubte Dateien: nur `docs/superpowers/plans/2026-10-20-v2-0/**`):
 1. **Existenz:** Jede in den Paketdokumenten genannte Datei, Funktion, Zeile, Option und Kommandozeile gegen den echten Code in `v2/main` prüfen (`grep -n`, `node -e`). Abweichungen im Plan korrigieren.
@@ -102,3 +102,21 @@ Auftrag (Unteragent, Sonnet xhigh, frischer Kontext, arbeitet im Plan-Worktree a
 4. **Paketgröße:** Pakete, bei denen mehr als etwa 300 Zeilen Änderung oder mehr als 3 Dateien zu erwarten sind, teilen (Eintrag in `make-queue.py`, danach `python3 -I loop/make-queue.py > loop/V2-QUEUE.json`, `node loop/selftest.mjs` grün).
 5. **Abnahmebefehle** je Paket auf Lauffähigkeit prüfen (Trockenlauf des Befehls, soweit ohne die Implementierung möglich).
 6. Ergebnis: überarbeitete Dokumente und Liste, Bericht mit allen Änderungen (Datei, Grund). Keine Codeänderung außerhalb des Plans.
+
+### Ergebnis der Planhärtung P0 (2026-10-21)
+
+**Messungen (Rechner: Intel i7-2620M, 4 Kerne, Node 22.23.2, Electron 35.7.5 und 44.9.2, `xvfb-run -a`; Skripte und Prototyp: `artifacts/p0/`):**
+
+| Annahme | Ergebnis |
+|---|---|
+| (a) PBKDF2 600.000 Iterationen unter 2 s | **bestätigt.** Node: 343 bis 439 ms (Median 358 ms; 100.000: 63 ms; 5.000.000: 2,9 s). App Werkzeug-Frame 343 bis 371 ms, Hülle 342 bis 347 ms, Worker (blob) 342 bis 353 ms; Electron 35 und 44 gleich; Hauptschleife bleibt bedienbar (größter Zeitgeberabstand 10 ms). AES-GCM 5 MB: 11 ms verschlüsseln, 19 ms entschlüsseln. |
+| (b) `crypto.subtle` in `app://ps/` | **bestätigt:** `isSecureContext` und `crossOriginIsolated` sind `true`, `crypto.subtle` ist ein Objekt in Werkzeug-Frame und Hülle (Electron 35 und 44); `location.origin` ist `app://ps`. |
+| (c) JSZip aus `app/vendor` in Node ladbar | **bestätigt:** `require` in 11 ms (Version 3.10.1, `window` undefiniert). Größenfelder pro Eintrag ohne Entpacken in `_data.uncompressedSize/compressedSize` (Interna). 2.001 Einträge: Erzeugen plus Laden 238 ms; 65.000 Einträge laden 0,7 s (+114 MB); 65.535 Einträge kann JSZip selbst nicht mehr lesen. Echte ZIP-Bombe als Fixture zu teuer (210 MB: 4 s, 500 MB: 9 s), stattdessen gefälschtes Zentralverzeichnis (siehe `V2-B-dokumente.md`). mammoth lädt ebenfalls in Node (nur mit `{ arrayBuffer }`). |
+| (d) `electron-updater` ignoriert Pre-releases | **bestätigt im Quelltext (6.8.9):** `allowPrerelease` ist `false`, solange die installierte Version keine Vorabkomponente hat; dann ermittelt `getLatestTagName` den Tag über `…/releases/latest` (Accept `application/json`), und GitHub liefert dort nie Vorabversionen oder Entwürfe. `gh release edit --prerelease` als Rückfall ist wirksam. |
+| (e) `npm run test:unit` unter 5 s | **bestätigt für den Stand F2:** `node --test` mit einer Datei 0,13 bis 0,15 s, über `npm run` 0,30 s. Die ganze Unit-Suite wird später länger (F4.a/F5 bis 60 s je Datei): Regel in `V2-00-INDEX.md` angepasst. `xvfb-run -a npm test` auf 1.8.0: 33 von 33 grün in 3 min 5 s. |
+| (f) Windows-Verhalten der Kommandozeile | **mit Dokumentation abgeglichen, auf Windows nicht ausgeführt** (kein Windows-Rechner): GUI-Subsystem, Rückgabecode nur mit `start /wait` bzw. `Start-Process -Wait`, Ausgabe nur bei Umleitung; Electron-Dokumentation: `second-instance` nach `ready`, `argv` unzuverlässig (besser `additionalData`), unter Windows `process.argv` auswerten, `open-file` (macOS) vor `ready` registrieren. Absicherung durch den Windows-Job (F4.b) und die Checkliste des Nutzers. |
+| (g) `axe-core` per `addScriptTag` in der App | **bestätigt:** axe-core 4.14.0 (MPL-2.0, 652 KB) läuft unter der strengen CSP (Playwright schleust inline ein, `'unsafe-inline'` ist erlaubt), je Ansicht etwa 340 ms. Ist-Zustand 1.8.0 siehe `V2-D-bedienung.md` (Willkommen: 1 serious, 2 moderate; Arbeitsbereich leer: 1 serious mit 41 Knoten, 1 **critical** `label`; mit Ergebnis: 156 bis 157 Kontrastknoten). Alle in D2.1 genannten Regel-Kennungen existieren in 4.14.0. |
+
+**Weitere Messungen und Befunde (Auswahl; Einzelheiten in den Paketdokumenten):** Kern in Node = App für 212 von 212 Fällen in drei Modi (F1 Go); KI-Modus deterministisch (2 Starts, 212 Fälle, 0 Abweichungen, 13 bis 23 s); Ausfallmodus W1: 12 von 150 / 11 von 276 undicht (Harness misst bisher nur W0 mit 21/18); **pathologische Rechenzeit im Kern** (100.000 Buchstaben in einer Zeile 100 s, 5.000 Leerzeichen 347 s, 2.000 Zeilenwechsel `\r\n` 74 s) führt zum neuen Paket F5; **Annotieren verliert die Zuordnung** (Datenverlust, M1/A1.w); Mehrfachauswahl verarbeitet entgegen dem ersten Entwurf alle Dateien, aber ohne gemeinsame Zuordnung und mit Originalnamen im ZIP (B1.fix); `setPermissionRequestHandler(cb(false))` bricht "Kopieren" (F2.h); mammoth liest keine Kopf-/Fußzeilen/Fußnoten (B2.m2); Latin-1-Dateien und RTF-Umlaute werden nicht erkannt (B2.m1); nutzerdefinierte Regex lässt sich nicht per Zeitgrenze schützen (C3, sichere Teilmenge); `npm run build:linux` im Worktree-Ersatz: 4 min, braucht Git-Remote `origin` und echte Kopien von `app/vendor`/`app/models`.
+
+**Paketteilung:** von 37 auf 56 Pakete (siehe `loop/make-queue.py`, `V2-ENTSCHEIDUNGEN.md`); `F1.spike` entfallen, neu `M1.m`, `F5`, `C1.0`, `C1.r`, `F2.e`, `F2.h`, `F1.a/.b`, `A4.m/.w`, `B1.fix/.w1/.w2`, `B2.m1/.m2`, `C2.m/.w`, `C3.m/.w`, `D1.w1/.w2`, `D2.1/.2`, `E1.m/.w`, `F3.a-d`, `F4.a/.b`, `G1.docs`. Neue Fragen der Klasse B: F1 bis F5 in `V2-FRAGEN.md`.
