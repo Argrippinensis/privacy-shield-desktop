@@ -1429,14 +1429,11 @@
    "accept": [
     "node --test tests/unit/cliargs.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-182735",
-    "ts": 1792600151746
-   },
+   "commit": "a53f748",
+   "lease": null,
    "notes": ""
   },
   {
