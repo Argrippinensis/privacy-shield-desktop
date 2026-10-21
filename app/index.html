@@ -317,16 +317,19 @@
     }
 
     window.addEventListener('message', async (event) => {
+      // Nur Nachrichten des eigenen Werkzeug-Frames mit dem eigenen Ursprung
+      const toolFrame = document.getElementById('tool-frame');
+      if (event.origin !== 'app://ps' || !toolFrame || event.source !== toolFrame.contentWindow) return;
       if (event.data && event.data.type === 'electron-save-file') {
         if (window.electronAPI) {
           const result = await window.electronAPI.saveFile(event.data.payload);
-          if (event.source) event.source.postMessage({ type: 'electron-save-result', result }, '*');
+          if (event.source) event.source.postMessage({ type: 'electron-save-result', result }, 'app://ps');
         }
       }
       if (event.data && event.data.type === 'electron-open-file') {
         if (window.electronAPI) {
           const result = await window.electronAPI.openFile();
-          if (event.source) event.source.postMessage({ type: 'electron-open-result', result }, '*');
+          if (event.source) event.source.postMessage({ type: 'electron-open-result', result }, 'app://ps');
         }
       }
       if (event.data && event.data.type === 'check-for-updates') {
