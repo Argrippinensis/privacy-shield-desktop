@@ -115,7 +115,7 @@
             /(?<![0-9A-Fa-f:\-])((?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2})(?![0-9A-Fa-f:\-])/g,
             /(?<![\d\-])(\d{2}[ \-]?\d{6}[ \-]?\d{6}[ \-]?\d)(?![\d\-])/g,
             /\b([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\b/g,
-            /(?=[A-Za-z0-9])(?<=(?:Seriennummer|Serien-?Nr\.?|Gerät(?:e)?-?ID|Device-?ID|Geräte-?Nr\.?|IMEI|Chassis-?Nr\.?)[ \t:#]{0,40})([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/g,
+            /(?=[A-Za-z0-9])(?<=(?:Seriennummer|Serien-?Nr\.?|Gerät(?:e)?-?ID|Device-?ID|Geräte-?Nr\.?|IMEI|Chassis-?Nr\.?)[ \t:#]{0,1000})([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/g,
           ],
         },
         {
@@ -128,8 +128,8 @@
           rx: [
             /(?<![\w@.\/])(@[A-Za-z0-9_]{3,30})(?![\w@])/g,
             /(?<![\w@.\/-])((?:t\.me|wa\.me|linkedin\.com\/in|instagram\.com|facebook\.com|x\.com|twitter\.com|xing\.com\/profile|tiktok\.com\/@)\/[A-Za-z0-9_.\-\/]{2,60})/gi,
-            /(?=[A-Za-z0-9._\-@])(?<=(?:Benutzer(?:name)?|User(?:name)?|Login|Nutzername|Account|Kennung)[ \t]{0,40}[:=][ \t]{0,40})([A-Za-z0-9._\-@]{3,40})/g,
-            /(?=\S)(?<=(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer)[ \t]{0,40}[:=]?[ \t]{0,40})(\S{4,64})/gi,
+            /(?=[A-Za-z0-9._\-@])(?<=(?:Benutzer(?:name)?|User(?:name)?|Login|Nutzername|Account|Kennung)[ \t]{0,1000}[:=][ \t]{0,1000})([A-Za-z0-9._\-@]{3,40})/g,
+            /(?=\S)(?<=(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer)[ \t]{0,1000}[:=]?[ \t]{0,1000})(\S{4,64})/gi,
             /\b((?:sk|pk|rk|api|key|tok|secret|ghp|gho|xox[abp])[-_][A-Za-z0-9_\-]{12,64})\b/g,
             /\b(eyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,})\b/g,
             /\b([0-9a-fA-F]{32}|[0-9a-fA-F]{40}|[0-9a-fA-F]{64})\b/g,
@@ -156,12 +156,12 @@
           pfx: "KENNNR",
           rx: [
             /\b([A-Z]{6}\d{2}[A-EHLMPR-T]\d{2}[A-Z]\d{3}[A-Z])\b/g,
-            /(?=\d)(?<=PESEL[ \t:]{0,40})(\d{11})\b/gi,
+            /(?=\d)(?<=PESEL[ \t:]{0,1000})(\d{11})\b/gi,
             /\b(\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-HJ-NP-TV-Z])\b/g,
             /\b([A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z][ ]?\d{2}[ ]?\d{2}[ ]?\d{2}[ ]?[A-D])\b/g,
             /\b(756\.\d{4}\.\d{4}\.\d{2})\b/g,
             /\b([A-Z]{1,2}\d[A-Z\d]?[ ]?\d[A-Z]{2})\b/g,
-            /(?=[A-Z0-9])(?<=(?:NIE|DNI|NIF|BSN|Burgerservicenummer|AHV-?Nr\.?|Sozialversicherungsnummer)[ \t:]{0,40})([A-Z0-9][A-Z0-9.\- ]{6,16})/g,
+            /(?=[A-Z0-9])(?<=(?:NIE|DNI|NIF|BSN|Burgerservicenummer|AHV-?Nr\.?|Sozialversicherungsnummer)[ \t:]{0,1000})([A-Z0-9][A-Z0-9.\- ]{6,16})/g,
           ],
         },
         {
@@ -172,7 +172,7 @@
           on: true,
           pfx: "BIC",
           rx: [
-            /(?=[A-Z])(?<=\b(?:BIC|SWIFT(?:-?Code)?|Bankkennung|Bankidentifikationscode)\s{0,40}[:\-]?\s{0,40})([A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/g,
+            /(?=[A-Z])(?<=\b(?:BIC|SWIFT(?:-?Code)?|Bankkennung|Bankidentifikationscode)\s{0,1000}[:\-]?\s{0,1000})([A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/g,
             /\b([A-Z]{4}(?:AD|AE|AT|AU|BE|BG|BR|CA|CH|CY|CZ|DE|DK|EE|EG|ES|FI|FR|GB|GR|HR|HU|ID|IE|IL|IN|IS|IT|JP|KR|LI|LT|LU|LV|MT|MX|MY|NL|NO|NZ|PL|PT|RO|RS|RU|SA|SE|SG|SI|SK|TH|TR|TW|UA|US|ZA)[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/g,
           ],
         },
@@ -228,7 +228,7 @@
             /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)[ \t:]*[\d \t\/\-]{8,18})/gi,
             /((?:USt\.?-?Id(?:Nr\.?)?|Umsatzsteuer-?ID|VAT)[\s:]*[A-Z]{0,2}\d{7,12})/gi,
             /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?|Führerschein(?:nummer)?|FS-?Nr\.?|Aufenthaltstitel(?:-?Nr\.?)?)[ \t:]*[A-Z0-9]{6,14})/gi,
-            /(?=[A-Za-z0-9])(?<=(?:Kunden|Vertrags|Mitarbeiter|Personal|Matrikel|Versicherungs|Policen|Mandanten|Patienten|Fall|Antrags|Referenz|Bestell|Konto|Teilnehmer|Mitglieds|Lizenz|Buchungs|Sendungs|Ticket)-?(?:nummer|nr\.?|no\.?|id)[ \t:#]{0,40})([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/gi,
+            /(?=[A-Za-z0-9])(?<=(?:Kunden|Vertrags|Mitarbeiter|Personal|Matrikel|Versicherungs|Policen|Mandanten|Patienten|Fall|Antrags|Referenz|Bestell|Konto|Teilnehmer|Mitglieds|Lizenz|Buchungs|Sendungs|Ticket)-?(?:nummer|nr\.?|no\.?|id)[ \t:#]{0,1000})([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/gi,
             /(HR[AB]\s*(?:Nr\.?\s*)?\d{3,8})/g,
             /((?:Aktenzeichen|Az\.?)[\s:]+(?:\d{1,4}\s+[A-Z]{1,5}\s+)?[\w\/\.\-]{2,30})/g,
             /\b(\d{1,3}\s+[A-Z]{1,5}\s+\d{3,6}\/\d{2,4})\b/g,
@@ -267,13 +267,13 @@
           on: true,
           pfx: "ADRESSE",
           rx: [
-            /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=(?:Geburtsort|Wohnort|Standort|Einsatzort|Tatort)[ \t]{0,40}[:=][ \t]{0,40})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ.\- ]{2,40}?)(?=[,;\n]|$)/g,
+            /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=(?:Geburtsort|Wohnort|Standort|Einsatzort|Tatort)[ \t]{0,1000}[:=][ \t]{0,1000})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ.\- ]{2,40}?)(?=[,;\n]|$)/g,
             /(\b\d{1,4}[a-z]?,?[ \t]+(?:rue|avenue|boulevard|av\.|bd|impasse|chemin)[ \t]+(?:de[ \t]+(?:la[ \t]+)?|du[ \t]+|des[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30})/g,
             /(\b(?:via|viale|piazza|corso|vicolo)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
             /(\b(?:calle|avenida|paseo|plaza|c\/)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4})/g,
             /(\bul\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
             /(\b\d{1,4}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?[ \t]+(?:Street|Road|Lane|Avenue|Drive|Way|Close|Square|Gardens)\b)/g,
-            /(\b\d{2}-\d{3}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}|(?<=,[ \t]{0,40})\d{5}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?=[ \t]*(?:\.|$)))/g,
+            /(\b\d{2}-\d{3}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}|(?=\d)(?<=,[ \t]{0,1000})\d{5}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?=[ \t]*(?:\.|$)))/g,
             /(?<![A-ZÄÖÜ][A-Za-zäöüß\.\-]{0,100})([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*(?:[A-Z]{1,2}-)?\d{4,5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
             /(?<![a-zA-ZüäöÜÄÖ][a-züäöß \-]{0,100})([A-ZÜÄÖ][a-züäöß \-]+(?:stra(?:ß|ss)e|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
             /(\b\d{5}[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,28})\b/g,
@@ -288,9 +288,9 @@
           on: true,
           pfx: "KFZ",
           rx: [
-            /(?=[A-ZÄÖÜ])(?<=(?:Kennzeichen|Kfz-Kennzeichen|Fahrzeug|Pkw|PKW|Lkw|LKW)[ \t:]{0,40})([A-ZÄÖÜ]{1,3}[ \t\-]{1,2}[A-Z]{1,2}[ \t\-]?\d{1,4}[EH]?)\b/g,
+            /(?=[A-ZÄÖÜ])(?<=(?:Kennzeichen|Kfz-Kennzeichen|Fahrzeug|Pkw|PKW|Lkw|LKW)[ \t:]{0,1000})([A-ZÄÖÜ]{1,3}[ \t\-]{1,2}[A-Z]{1,2}[ \t\-]?\d{1,4}[EH]?)\b/g,
             /\b((?!DIN|ISO|ENV|SAE|TÜV|ICD|ITU|RFC|BGB|SGB|StGB|ZPO|HGB|AEO|EN)[A-ZÄÖÜ]{1,3}-[A-Z]{1,2}[ \t]?\d{1,4}[EH]?)\b/g,
-            /(?=[A-HJ-NPR-Z0-9])(?<=(?:Fahrgestellnummer|FIN|VIN)[ \t:\.]{0,40})([A-HJ-NPR-Z0-9]{17})\b/g,
+            /(?=[A-HJ-NPR-Z0-9])(?<=(?:Fahrgestellnummer|FIN|VIN)[ \t:\.]{0,1000})([A-HJ-NPR-Z0-9]{17})\b/g,
             /\b([A-HJ-NPR-Z][A-HJ-NPR-Z0-9]{10}\d{6})\b/g,
           ],
         },
@@ -312,8 +312,8 @@
             /(?<=[^\n\s][ \t])((?:[A-HJ-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
             /(?:^|\n)[ \t]*((?:[J-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
             /(?<![A-Za-z0-9_À-ɏ])([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?[ \t]+[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
-            /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=\b(?:Vorname|Nachname|Familienname|Geburtsname|Mädchenname|Rufname|Künstlername|Name|Namen|Unterzeichner|Antragsteller(?:in)?|Patient(?:in)?|Versicherte[rn]?)[ \t]{0,40}[:=][ \t]{0,40})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})?)/g,
-            /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=\b(?:geboren|geb\.)[ \t]{1,40})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![\w.])/g,
+            /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=\b(?:Vorname|Nachname|Familienname|Geburtsname|Mädchenname|Rufname|Künstlername|Name|Namen|Unterzeichner|Antragsteller(?:in)?|Patient(?:in)?|Versicherte[rn]?)[ \t]{0,1000}[:=][ \t]{0,1000})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})?)/g,
+            /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=\b(?:geboren|geb\.)[ \t]{1,1000})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![\w.])/g,
             /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2}))/g,
             /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
           ],
@@ -347,7 +347,7 @@
           on: false,
           pfx: "IP",
           rx: [
-            /(?<![\d.])(?<!(?:Version|Ver\.|Build|Release|Rev\.?|v|V)[ \t]{0,40})((?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?!\d|\.\d)/g,
+            /(?=\d)(?<![\d.])(?<!(?:Version|Ver\.|Build|Release|Rev\.?|v|V)[ \t]{0,1000})((?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?!\d|\.\d)/g,
             /(?<![\w:])((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:(?:[0-9a-fA-F]{1,4})?|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})(?![\w:])/g,
             /(https?:\/\/[^\s<>"{}|\\^`\[\]\)\(,;]{4,}[^\s<>"{}|\\^`\[\]\)\(,;.:!?])/g,
             /(?<![\w@.\/-])(www\.[a-z0-9\-]+(?:\.[a-z0-9\-]+)+(?:\/[^\s<>"{}|\\^`\[\]\)\(,;]*[^\s<>"{}|\\^`\[\]\)\(,;.:!?])?)/gi,
@@ -1282,12 +1282,24 @@
           .trim()
           .split(/\s+/)
           .every((p, i) => {
-            if (/^[A-ZÄÖÜ]\.$/.test(p)) return true; // Initiale
-            const c = p.replace(/[^A-Za-züäöüÄÖÜß]/g, "");
-            if (c.length < 2 || /^\d+$/.test(c)) return false;
-            if (i === 0 && (SW.has(p) || SW.has(c))) return false;
-            return true;
+            // Ergebnis je Wort zwischenspeichern (lange Spannen wiederholen dieselben Woerter)
+            const key = (i === 0 ? "0" : "1") + p;
+            let ok = wordOkCache.get(key);
+            if (ok === undefined) {
+              ok = wordOk(p, i);
+              if (wordOkCache.size > 20000) wordOkCache.clear();
+              wordOkCache.set(key, ok);
+            }
+            return ok;
           });
+      }
+      const wordOkCache = new Map();
+      function wordOk(p, i) {
+        if (/^[A-ZÄÖÜ]\.$/.test(p)) return true; // Initiale
+        const c = p.replace(/[^A-Za-züäöüÄÖÜß]/g, "");
+        if (c.length < 2 || /^\d+$/.test(c)) return false;
+        if (i === 0 && (SW.has(p) || SW.has(c))) return false;
+        return true;
       }
       const PROFILES = [
         {
@@ -2053,8 +2065,35 @@
         return accepted;
       }
       // Obergrenze (Zeichen) fuer Namensspannen beim Verlaengern; schuetzt vor quadratischem Aufwand bei Endlosfolgen grossgeschriebener Woerter.
-      const MAX_NAME_SPAN = 200;
+      const MAX_NAME_SPAN = 120;
       function postProcessSpans(text, cands) {
+        // Ueberlange Namensketten: der Rest ab der Abbruchstelle wird als eigener Treffer weitergefuehrt (je Anfang nur einmal),
+        // damit kein Teil der Kette ungeschwaerzt bleibt.
+        const nameStarts = new Set();
+        for (const c of cands) if (c.pfx === "NAME") nameStarts.add(c.start);
+        const rxWort = /^[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)(?![\wäöüß])/;
+        const rxVon = /^[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/;
+        const rxBind = /^-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}/;
+        // Treffer je Position zwischenspeichern: viele Treffer laufen ueber dieselben Woerter (sonst Aufwand Treffer mal Spannenlaenge).
+        const vorMemo = (rx) => {
+          const memo = new Map();
+          return (pos) => {
+            let r = memo.get(pos);
+            if (r === undefined) {
+              r = text.slice(pos).match(rx);
+              memo.set(pos, r);
+            }
+            return r;
+          };
+        };
+        const vorWort = vorMemo(rxWort);
+        const vorVon = vorMemo(rxVon);
+        const vorBind = vorMemo(rxBind);
+        const weiter = (s, pos, len, richtung) => {
+          if (nameStarts.has(pos)) return;
+          nameStarts.add(pos);
+          cands.push(Object.assign({}, s, { start: pos, end: pos + len, fort: richtung !== "rueck", rueck: richtung === "rueck" }));
+        };
         const ADDR_LEAD = /^(?:Sitz|Anschrift|Adresse|Geschäftssitz|Wohnsitz|Lieferadresse|Rechnungsadresse)[ \t]+/;
         for (const s of cands) {
           let m = null;
@@ -2072,10 +2111,13 @@
             s.start += m2[0].length;
           }
           while (
-            (m2 = text.slice(s.end).match(/^[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)(?![\wäöüß])/)) &&
-            s.end - s.start + m2[0].length <= MAX_NAME_SPAN &&
+            (m2 = vorWort(s.end)) &&
             !SW.has(m2[1])
           ) {
+            if (s.end - s.start + m2[0].length > MAX_NAME_SPAN) {
+              weiter(s, s.end + m2[0].length - m2[1].length, m2[1].length);
+              break;
+            }
             s.end += m2[0].length;
           }
         }
@@ -2083,19 +2125,35 @@
           if (s.pfx !== "NAME") continue;
           let mp;
           while (
-            (mp = text.slice(s.end).match(/^[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/)) &&
-            s.end - s.start + mp[0].length <= MAX_NAME_SPAN &&
+            (mp = vorVon(s.end)) &&
             !SW.has(mp[1])
-          )
+          ) {
+            if (s.end - s.start + mp[0].length > MAX_NAME_SPAN) {
+              weiter(s, s.end + mp[0].length - mp[1].length, mp[1].length);
+              break;
+            }
             s.end += mp[0].length;
+          }
           const ml = text.slice(Math.max(0, s.start - 60), s.start).match(/([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+$/);
           if (ml && !SW.has(ml[1])) s.start -= ml[0].length;
         }
         for (const s of cands) {
           if (s.pfx !== "NAME") continue;
           let mh;
-          while ((mh = text.slice(s.end).match(/^-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}/)) && s.end - s.start + mh[0].length <= MAX_NAME_SPAN) s.end += mh[0].length;
-          while ((mh = text.slice(Math.max(0, s.start - 40), s.start).match(/[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}-$/)) && s.end - s.start + mh[0].length <= MAX_NAME_SPAN) s.start -= mh[0].length;
+          while (!s.rueck && (mh = vorBind(s.end))) {
+            if (s.end - s.start + mh[0].length > MAX_NAME_SPAN) {
+              weiter(s, s.end + 1, mh[0].length - 1);
+              break;
+            }
+            s.end += mh[0].length;
+          }
+          while (!s.fort && (mh = text.slice(Math.max(0, s.start - 40), s.start).match(/[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}-$/))) {
+            if (s.end - s.start + mh[0].length > MAX_NAME_SPAN) {
+              weiter(s, s.start - mh[0].length, mh[0].length - 1, "rueck");
+              break;
+            }
+            s.start -= mh[0].length;
+          }
         }
         const valid = cands.filter(function (s) {
           const val = text.slice(s.start, s.end);
