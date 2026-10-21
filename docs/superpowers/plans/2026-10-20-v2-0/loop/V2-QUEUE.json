@@ -215,7 +215,8 @@
    "allowed": [
     "app/privacy-shield.html",
     "tests/unit/detect.wiring.test.mjs",
-    "docs/v2/web-tool-kern.md"
+    "docs/v2/web-tool-kern.md",
+    "app/lib/detect.js"
    ],
    "tests": [
     "tests/unit/detect.wiring.test.mjs"
