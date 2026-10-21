@@ -6,7 +6,7 @@ import { test, suite } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { ROOT } from './_load.mjs';
+import { ROOT, loadLib } from './_load.mjs';
 
 const GRENZE_MS = 2000;     // Spezifikation
 const ABBRUCH_MS = 12000;   // Kind wird beendet (Fehler ist Minuten, nicht Sekunden)
@@ -75,7 +75,8 @@ function zufall(seed, laenge) {
   return s;
 }
 
-suite('F5: pathologische Eingaben', { concurrency: 3 }, () => {
+// Sequenziell: gemessen wird im Kind nur der detect-Aufruf, aber parallele Kinder verfaelschen die Zeit unter Last.
+suite('F5: pathologische Eingaben', { concurrency: 1 }, () => {
   const faelle = [
     ['100.000 mal A', () => 'A'.repeat(100000)],
     ['100.000 mal a', () => 'a'.repeat(100000)],
@@ -97,6 +98,53 @@ suite('F5: pathologische Eingaben', { concurrency: 3 }, () => {
   for (const seed of [20261021, 20261022, 20261023]) {
     test(`Zufallsfolge (Seed ${seed}, 100.000 Zeichen aus "aA1 .,:-\\n\\t@"): unter ${GRENZE_MS} ms, Rueckweg gleich, wohlgeformt`, { timeout: ABBRUCH_MS + 5000 }, () => pruefe(zufall(seed, 100000)));
   }
+});
+
+// Spaltenabstaende aus PDF/Formularen sind realistisch: Der Wert hinter einem Stichwort muss unabhaengig von der
+// Breite des Leerraums ersetzt werden (Verhalten wie bei einem Leerzeichen), sonst bleibt ein Leck.
+suite('F5: Leerraum zwischen Stichwort und Wert', () => {
+  const D = loadLib('detect');
+  const stichworte = [
+    ['Name', 'Name:', 'Mustermann', 'ein Name-Wert hinter breitem Spaltenabstand ist genauso personenbezogen wie hinter einem Leerzeichen'],
+    ['Passwort', 'Passwort:', 'Geheim1234!', 'ein Passwort hinter breitem Spaltenabstand darf nie im Klartext bleiben'],
+    ['Benutzername', 'Benutzername:', 'mmuster84', 'ein Benutzername hinter breitem Spaltenabstand identifiziert die Person weiterhin'],
+    ['Kundennummer', 'Kundennummer:', 'KD-4711-0815', 'eine Kundennummer hinter breitem Spaltenabstand bleibt eine Kennung'],
+    ['Seriennummer', 'Seriennummer:', 'A7B3C9', 'ein nur ueber das Stichwort erkennbarer Seriennummer-Wert darf bei breitem Spaltenabstand nicht durchrutschen'],
+  ];
+  for (const [bez, kw, wert, grund] of stichworte) {
+    const vorher = (sep) => D.anonymize(kw + sep + wert, { wordlists: true }).text;
+    test(`${bez}: Referenz mit 1 Leerzeichen wird ersetzt`, () => {
+      assert.ok(!vorher(' ').includes(wert), 'Beispielwert muss mit 1 Leerzeichen erkannt werden');
+    });
+    for (const [label, sep] of [['41 Leerzeichen', ' '.repeat(41)], ['120 Leerzeichen', ' '.repeat(120)]]) {
+      test(`${bez}: ${label} zwischen Stichwort und Wert, Wert ersetzt (${grund})`, () => {
+        const r = D.anonymize(kw + sep + wert, { wordlists: true });
+        assert.ok(!r.text.includes(wert), `Wert im Klartext geblieben: ${JSON.stringify(r.text)}`);
+        assert.equal(D.deanonymize(r.text, r.state), kw + sep + wert);
+      });
+    }
+  }
+  test('Name: 41 Tabulatoren zwischen Stichwort und Wert, Wert ersetzt (Tabellenexport trennt Spalten mit Tabs, gleiche Schutzwirkung wie bei Leerzeichen)', () => {
+    const r = D.anonymize('Name:' + '\t'.repeat(41) + 'Mustermann', { wordlists: true });
+    assert.ok(!r.text.includes('Mustermann'), `Wert im Klartext geblieben: ${JSON.stringify(r.text)}`);
+  });
+});
+
+// Namensketten ueber 200 Zeichen: Die Zahl der Platzhalter darf von der Kette mit einem Platzhalter abweichen
+// (die Erkennung begrenzt die Kettenlaenge zum Schutz vor Laufzeitexplosion, mehrere Platzhalter sind ein
+// bewusst hingenommener Unterschied). Kein Teil der Kette darf dabei aber im Klartext stehen bleiben, sonst ist es ein Teilleck.
+test('Namenskette ueber 200 Zeichen: kein Namensteil bleibt ungeschwaerzt, Platzhalterzahl darf abweichen', () => {
+  const D = loadLib('detect');
+  const namen = ['Meier', 'Schulze', 'Kowalski', 'Nowak', 'Wagner', 'Becker', 'Hoffmann', 'Schaefer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf', 'Neumann', 'Schwarz', 'Zimmermann', 'Braun', 'Krueger', 'Hofmann', 'Hartmann', 'Lange', 'Schmitt', 'Werner', 'Krause', 'Meier'];
+  const rest = ['Michalski', 'Adamczyk', 'Dudek', 'Zajac', 'Wieczorek'];
+  const kette = namen.concat(rest).join('-');
+  assert.ok(kette.length > 200);
+  const text = 'Name: ' + kette;
+  const r = D.anonymize(text, { wordlists: true });
+  const uebrig = namen.concat(rest).filter((n) => r.text.includes(n));
+  assert.deepEqual(uebrig, [], `Teilleck, im Klartext geblieben: ${uebrig.join(', ')} in ${JSON.stringify(r.text)}`);
+  assert.ok(/\{\{NAME_\d+\}\}/.test(r.text), 'mindestens ein Namens-Platzhalter erwartet');
+  assert.equal(D.deanonymize(r.text, r.state), text);
 });
 
 test('Korpus unveraendert: diff-reference.mjs --node meldet 0 Abweichungen (alle 212 Faelle)', { timeout: 120000 }, () => {
