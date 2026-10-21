@@ -365,14 +365,11 @@
    "accept": [
     "node --test tests/unit/leakcheck.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-0827",
-    "ts": 1792564070917
-   },
+   "commit": "ab0ac60212f957f3f6d42aeec6ca7cd4bf5aa355",
+   "lease": null,
    "notes": ""
   },
   {
