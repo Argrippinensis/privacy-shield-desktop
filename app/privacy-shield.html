@@ -3409,7 +3409,7 @@
       if (localStorage.getItem("privacyShield_onboarding_done") === "true") startApp();
       function checkForUpdate() {
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: "check-for-updates" }, "*");
+          window.parent.postMessage({ type: "check-for-updates" }, "app://ps");
         } else {
           alert(
             "Update-Prüfung ist nur in der Desktop-App möglich. Besuchen Sie arcangeli.eu für die neueste Version.",

@@ -3,7 +3,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   saveFile: (options) => ipcRenderer.invoke('save-file', options),
   openFile: () => ipcRenderer.invoke('open-file'),
-  saveMetadata: (data) => ipcRenderer.invoke('save-metadata', { data }),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   dismissUpdate: (version) => ipcRenderer.invoke('dismiss-update', version),
   startDownload: () => ipcRenderer.invoke('start-download'),
