@@ -14,8 +14,9 @@ export const MAC = process.platform === 'darwin';               // unsigniert: m
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const electronPath = require('electron');
 
-export async function launchApp({ offline = false, env = {}, appDir = ROOT, extraArgs = [], files = {} } = {}) {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-test-'));
+export async function launchApp({ offline = false, env = {}, appDir = ROOT, extraArgs = [], files = {}, userDataDir } = {}) {
+  // userDataDir: vorgegebener Ordner (bleibt beim close() erhalten); sonst neuer Temp-Ordner (wird geloescht)
+  const userData = userDataDir || fs.mkdtempSync(path.join(os.tmpdir(), 'ps-test-'));
   for (const [name, content] of Object.entries(files)) fs.writeFileSync(path.join(userData, name), content);
   // PS_PACKAGED_BIN=<Pfad zur gepackten Anwendung>: Tests gegen das fertige Paket statt gegen den Quellbaum.
   const packaged = process.env.PS_PACKAGED_BIN;
@@ -41,7 +42,7 @@ export async function launchApp({ offline = false, env = {}, appDir = ROOT, extr
     app, win, errors, requests, userData,
     async close() {
       await app.close().catch(() => {});
-      fs.rmSync(userData, { recursive: true, force: true });
+      if (!userDataDir) fs.rmSync(userData, { recursive: true, force: true });
     },
   };
 }
@@ -58,6 +59,38 @@ export async function toolFrame(win, timeout = 15000) {
     await win.waitForTimeout(100);
   }
   throw new Error('Tool-Frame nicht gefunden; Frames: ' + JSON.stringify(win.frames().map((fr) => fr.url())));
+}
+
+// Downloads des Werkzeugs abfangen, ohne einen echten Download auszuloesen (Blob-Anker mit download-Attribut).
+export function captureDownloads(frame) {
+  return frame.evaluate(() => {
+    window.__dls = [];
+    const blobs = new Map();
+    const create = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = (b) => { const u = create(b); blobs.set(u, b); return u; };
+    HTMLAnchorElement.prototype.click = function () {
+      if (this.hasAttribute('download')) window.__dls.push({ name: this.getAttribute('download'), blob: blobs.get(this.href) });
+    };
+  });
+}
+
+// -> [{ name, type, size, base64 }] in der Reihenfolge der Klicks
+export function getDownloads(frame) {
+  return frame.evaluate(async () => {
+    const out = [];
+    for (const d of window.__dls || []) {
+      const bytes = new Uint8Array(await d.blob.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      out.push({ name: d.name, type: d.blob.type, size: bytes.length, base64: btoa(bin) });
+    }
+    return out;
+  });
+}
+
+// Dateien wie ueber die Dateiauswahl des Werkzeugs laden: [{ name, mimeType, buffer }]
+export function setFiles(frame, files) {
+  return frame.setInputFiles('#FI', files);
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
