@@ -65,7 +65,8 @@ test('TYPE_ORDER entspricht der Spezifikation', () => {
 });
 
 test('examples: hoechstens 3, die ersten drei Vorkommen', () => {
-  const text = 'eins Xy zwei Xy drei Xy vier Xy fuenf Xy';
+  const gap = ' ' + '.'.repeat(25) + ' ';
+  const text = 'eins Xy' + gap + 'zwei Xy' + gap + 'drei Xy' + gap + 'vier Xy' + gap + 'fuenf Xy';
   const r = R.build(spansOf(text, [['Xy', 'NAME']]), text, opts());
   assert.equal(r[0].count, 5);
   assert.equal(r[0].examples.length, 3);
@@ -74,8 +75,9 @@ test('examples: hoechstens 3, die ersten drei Vorkommen', () => {
 });
 
 test('examples: hoechstens 60 Zeichen, gekuerzt auf 59 plus Ellipse', () => {
-  const text = 'a'.repeat(50) + ' Xy ' + 'b'.repeat(50);
-  const r = R.build(spansOf(text, [['Xy', 'NAME']]), text, opts());
+  const name = 'Xy'.repeat(15);
+  const text = 'a'.repeat(50) + ' ' + name + ' ' + 'b'.repeat(50);
+  const r = R.build(spansOf(text, [[name, 'NAME']]), text, opts());
   const e = r[0].examples[0];
   assert.ok(e.length <= 60);
   assert.equal(e.length, 60);
