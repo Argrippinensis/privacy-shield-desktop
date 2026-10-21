@@ -561,14 +561,11 @@
    "accept": [
     "node --test tests/unit/hygiene.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261021-1025",
-    "ts": 1792571154225
-   },
+   "commit": "c7ae0ae03d5b1aa08f9982f8b54b0b6cd101810c",
+   "lease": null,
    "notes": ""
   },
   {
