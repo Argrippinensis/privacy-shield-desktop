@@ -69,14 +69,11 @@
    ],
    "tests": [],
    "accept": [],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 3,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261020",
-    "ts": 1792560371859
-   },
+   "commit": "ba535ac",
+   "lease": null,
    "notes": "[Lease abgelaufen 2026-10-21T00:27:51.903Z] [Lease abgelaufen 2026-10-21T05:20:40.478Z]"
   },
   {
