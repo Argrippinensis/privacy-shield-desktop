@@ -1833,6 +1833,39 @@
         }
         return false;
       }
+      // Alle Treffer eines Musters wie bei einer exec-Schleife. Muster mit fuehrendem Lookbehind (Verankerung am
+      // Tokenanfang, schuetzt vor quadratischem Aufwand) suchen nach jedem Treffer im Restteil (slice ist O(1)):
+      // Der Lookbehind sieht dort die schon verbrauchten Zeichen nicht, ein Treffer darf also wie ohne Verankerung
+      // gleich hinter dem vorigen beginnen (verklebte Werte wie "a@x.de-b@y.de").
+      // Nur die in F5 eingefuehrten Verankerungen (E-Mail, Strasse mit Hausnummer und PLZ); andere Lookbehinds (Telefon u. a.) bleiben unberuehrt.
+      const ANKER_LB = [
+        "(?<![a-zA-Z0-9._%+\\-])",
+        "(?<![A-ZÄÖÜ][A-Za-zäöüß\\.\\-]{0,100})",
+        "(?<![a-zA-ZüäöÜÄÖ][a-züäöß \\-]{0,100})",
+      ];
+      function matchesOf(srcRx, text) {
+        const flags = srcRx.flags.includes("g") ? srcRx.flags : srcRx.flags + "g";
+        const rx = new RegExp(srcRx.source, flags);
+        const out = [];
+        if (!ANKER_LB.some((a) => srcRx.source.startsWith(a))) {
+          let m;
+          while ((m = rx.exec(text)) !== null) {
+            if (m.index === rx.lastIndex) rx.lastIndex++;
+            out.push(m);
+          }
+          return out;
+        }
+        let pos = 0;
+        while (pos <= text.length) {
+          rx.lastIndex = 0;
+          const m = rx.exec(pos ? text.slice(pos) : text);
+          if (!m) break;
+          m.index += pos;
+          out.push(m);
+          pos = m.index + m[0].length + (m[0].length === 0 ? 1 : 0);
+        }
+        return out;
+      }
       let lastP1 = { text: null, sig: null, res: null };
       function computePass1(text) {
         const sig = ENTS.map((e) => (activeEnts.has(e.id) ? 1 : 0)).join("") + "|" + cvars.map((c) => c.n + "\u0001" + c.p).join("\u0002") + "|" + JSON.stringify(extraSpans);
@@ -1868,10 +1901,7 @@
         for (const e of ENTS) {
           if (!activeEnts.has(e.id) || !HARD_ENT_IDS.has(e.id)) continue;
           for (const srcRx of e.rx) {
-            const rx = new RegExp(srcRx.source, srcRx.flags.includes("g") ? srcRx.flags : srcRx.flags + "g");
-            let m;
-            while ((m = rx.exec(text)) !== null) {
-              if (m.index === rx.lastIndex) rx.lastIndex++;
+            for (const m of matchesOf(srcRx, text)) {
               let gval = null;
               for (let gi = 1; gi < m.length; gi++)
                 if (m[gi] !== undefined) {
@@ -1912,10 +1942,7 @@
         for (const e of ENTS) {
           if (!activeEnts.has(e.id) || !SOFT_ENT_IDS.has(e.id)) continue;
           for (const srcRx of e.rx) {
-            const rx = new RegExp(srcRx.source, srcRx.flags.includes("g") ? srcRx.flags : srcRx.flags + "g");
-            let m;
-            while ((m = rx.exec(maskedText)) !== null) {
-              if (m.index === rx.lastIndex) rx.lastIndex++;
+            for (const m of matchesOf(srcRx, maskedText)) {
               let gval = null;
               for (let gi = 1; gi < m.length; gi++)
                 if (m[gi] !== undefined) {
@@ -2090,9 +2117,9 @@
         const vorVon = vorMemo(rxVon);
         const vorBind = vorMemo(rxBind);
         const weiter = (s, pos, len, richtung) => {
+          s.kette = true;
           if (nameStarts.has(pos)) return;
           nameStarts.add(pos);
-          s.kette = true;
           cands.push(Object.assign({}, s, { start: pos, end: pos + len, fort: richtung !== "rueck", rueck: richtung === "rueck" }));
         };
         const ADDR_LEAD = /^(?:Sitz|Anschrift|Adresse|Geschäftssitz|Wohnsitz|Lieferadresse|Rechnungsadresse)[ \t]+/;
