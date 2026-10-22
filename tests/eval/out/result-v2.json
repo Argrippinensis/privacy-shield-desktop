@@ -859,12 +859,12 @@
     },
     {
      "key": "v2n03",
-     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.",
+     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.\nAnders als geplant fällt die Sitzung aus. Knapp 30 Personen kamen zur Feier.",
      "tokens": 0
     },
     {
      "key": "v2n04",
-     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.",
+     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.\nEhrlich gesagt ist das Wetter schön. Der Kluge gibt nach. Schenk den Wein ein!",
      "tokens": 0
     },
     {
@@ -879,7 +879,7 @@
     },
     {
      "key": "v2n07",
-     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.",
+     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.\nBusse und Bahnen fahren im Takt. Funk und Fernsehen berichten ausführlich.",
      "tokens": 0
     },
     {
@@ -894,7 +894,7 @@
     },
     {
      "key": "v2n10",
-     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.",
+     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.\nEin Heller ist keine Münze mehr. Lenz und Sommer wechseln sich ab.",
      "tokens": 0
     },
     {
@@ -914,7 +914,7 @@
     },
     {
      "key": "v2n14",
-     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.",
+     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.\nIm August ist es heiß. Der Druck wird in Pascal gemessen.",
      "tokens": 0
     },
     {
@@ -924,22 +924,22 @@
     },
     {
      "key": "v2n16",
-     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.",
+     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.\nZander und Hecht sind Fische. Der Vogt und der Knecht arbeiteten auf dem Hof.",
      "tokens": 0
     },
     {
      "key": "v2n17",
-     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.",
+     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.\nDer Krämer verkauft Kleinwaren. Die Lampe an der Decke brennt.",
      "tokens": 0
     },
     {
      "key": "v2n18",
-     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.",
+     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.\nDer Binder am Hals sitzt schief. Der Bergmann fährt in den Schacht ein.",
      "tokens": 0
     },
     {
      "key": "v2n19",
-     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.",
+     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.\nDer Bader schneidet Haare. Mit dem Schlegel schlägt man die Trommel.",
      "tokens": 0
     },
     {
@@ -954,7 +954,7 @@
     },
     {
      "key": "v2n22",
-     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.",
+     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.\nAm Kai liegt ein Schiff. Der Teddy liegt im Bett. Wolle und Garn sind teuer.",
      "tokens": 0
     },
     {
@@ -964,7 +964,7 @@
     },
     {
      "key": "v2n24",
-     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.",
+     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.\nIm Korb liegt ein Appel. Pape und Wolff sind seltene Schreibweisen. Kühn ging der Fiedler voran.",
      "tokens": 0
     },
     {
@@ -979,7 +979,7 @@
     },
     {
      "key": "v2n27",
-     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.",
+     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.\nDie Iris blüht im Mai. Ein Falk jagt über dem Feld. Die Mona wurde restauriert.",
      "tokens": 0
     },
     {
@@ -2488,12 +2488,12 @@
     },
     {
      "key": "v2n03",
-     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.",
+     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.\nAnders als geplant fällt die Sitzung aus. Knapp 30 Personen kamen zur Feier.",
      "tokens": 0
     },
     {
      "key": "v2n04",
-     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.",
+     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.\nEhrlich gesagt ist das Wetter schön. Der Kluge gibt nach. Schenk den Wein ein!",
      "tokens": 0
     },
     {
@@ -2508,7 +2508,7 @@
     },
     {
      "key": "v2n07",
-     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.",
+     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.\nBusse und Bahnen fahren im Takt. Funk und Fernsehen berichten ausführlich.",
      "tokens": 0
     },
     {
@@ -2523,7 +2523,7 @@
     },
     {
      "key": "v2n10",
-     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.",
+     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.\nEin Heller ist keine Münze mehr. Lenz und Sommer wechseln sich ab.",
      "tokens": 0
     },
     {
@@ -2543,7 +2543,7 @@
     },
     {
      "key": "v2n14",
-     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.",
+     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.\nIm August ist es heiß. Der Druck wird in Pascal gemessen.",
      "tokens": 0
     },
     {
@@ -2553,22 +2553,22 @@
     },
     {
      "key": "v2n16",
-     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.",
+     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.\nZander und Hecht sind Fische. Der Vogt und der Knecht arbeiteten auf dem Hof.",
      "tokens": 0
     },
     {
      "key": "v2n17",
-     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.",
+     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.\nDer Krämer verkauft Kleinwaren. Die Lampe an der Decke brennt.",
      "tokens": 0
     },
     {
      "key": "v2n18",
-     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.",
+     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.\nDer Binder am Hals sitzt schief. Der Bergmann fährt in den Schacht ein.",
      "tokens": 0
     },
     {
      "key": "v2n19",
-     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.",
+     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.\nDer Bader schneidet Haare. Mit dem Schlegel schlägt man die Trommel.",
      "tokens": 0
     },
     {
@@ -2583,7 +2583,7 @@
     },
     {
      "key": "v2n22",
-     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.",
+     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.\nAm Kai liegt ein Schiff. Der Teddy liegt im Bett. Wolle und Garn sind teuer.",
      "tokens": 0
     },
     {
@@ -2593,7 +2593,7 @@
     },
     {
      "key": "v2n24",
-     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.",
+     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.\nIm Korb liegt ein Appel. Pape und Wolff sind seltene Schreibweisen. Kühn ging der Fiedler voran.",
      "tokens": 0
     },
     {
@@ -2608,7 +2608,7 @@
     },
     {
      "key": "v2n27",
-     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.",
+     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.\nDie Iris blüht im Mai. Ein Falk jagt über dem Feld. Die Mona wurde restauriert.",
      "tokens": 0
     },
     {
@@ -4111,12 +4111,12 @@
     },
     {
      "key": "v2n03",
-     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.",
+     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.\nAnders als geplant fällt die Sitzung aus. Knapp 30 Personen kamen zur Feier.",
      "tokens": 0
     },
     {
      "key": "v2n04",
-     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.",
+     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.\nEhrlich gesagt ist das Wetter schön. Der Kluge gibt nach. Schenk den Wein ein!",
      "tokens": 0
     },
     {
@@ -4131,7 +4131,7 @@
     },
     {
      "key": "v2n07",
-     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.",
+     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.\nBusse und Bahnen fahren im Takt. Funk und Fernsehen berichten ausführlich.",
      "tokens": 0
     },
     {
@@ -4146,7 +4146,7 @@
     },
     {
      "key": "v2n10",
-     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.",
+     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.\nEin Heller ist keine Münze mehr. Lenz und Sommer wechseln sich ab.",
      "tokens": 0
     },
     {
@@ -4166,7 +4166,7 @@
     },
     {
      "key": "v2n14",
-     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.",
+     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.\nIm August ist es heiß. Der Druck wird in Pascal gemessen.",
      "tokens": 0
     },
     {
@@ -4176,22 +4176,22 @@
     },
     {
      "key": "v2n16",
-     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.",
+     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.\nZander und Hecht sind Fische. Der Vogt und der Knecht arbeiteten auf dem Hof.",
      "tokens": 0
     },
     {
      "key": "v2n17",
-     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.",
+     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.\nDer Krämer verkauft Kleinwaren. Die Lampe an der Decke brennt.",
      "tokens": 0
     },
     {
      "key": "v2n18",
-     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.",
+     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.\nDer Binder am Hals sitzt schief. Der Bergmann fährt in den Schacht ein.",
      "tokens": 0
     },
     {
      "key": "v2n19",
-     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.",
+     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.\nDer Bader schneidet Haare. Mit dem Schlegel schlägt man die Trommel.",
      "tokens": 0
     },
     {
@@ -4206,7 +4206,7 @@
     },
     {
      "key": "v2n22",
-     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.",
+     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.\nAm Kai liegt ein Schiff. Der Teddy liegt im Bett. Wolle und Garn sind teuer.",
      "tokens": 0
     },
     {
@@ -4216,7 +4216,7 @@
     },
     {
      "key": "v2n24",
-     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.",
+     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.\nIm Korb liegt ein Appel. Pape und Wolff sind seltene Schreibweisen. Kühn ging der Fiedler voran.",
      "tokens": 0
     },
     {
@@ -4231,7 +4231,7 @@
     },
     {
      "key": "v2n27",
-     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.",
+     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.\nDie Iris blüht im Mai. Ein Falk jagt über dem Feld. Die Mona wurde restauriert.",
      "tokens": 0
     },
     {
