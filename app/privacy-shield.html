@@ -3074,6 +3074,10 @@
         a.href = URL.createObjectURL(new Blob([c], { type: type }));
         a.download = name;
         a.click();
+        // URL nach Frist freigeben (Tests: window.__PS_REVOKE_MS)
+        const url = a.href;
+        const REVOKE_MS = typeof window.__PS_REVOKE_MS === "number" ? window.__PS_REVOKE_MS : 10000;
+        setTimeout(() => URL.revokeObjectURL(url), REVOKE_MS);
       }
       function clearAll() {
         if (!confirm("Alles zurücksetzen?")) return;
@@ -3556,6 +3560,8 @@
         try {
           const jsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
           const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+          // Keine Metadaten aus dem Original uebernehmen
+          doc.setProperties({ title: "Anonymisiertes Dokument", subject: "", author: "", keywords: "", creator: "PrivacyShield" });
           const margin = 20;
           const pageW = doc.internal.pageSize.getWidth();
           const usableW = pageW - margin * 2;
