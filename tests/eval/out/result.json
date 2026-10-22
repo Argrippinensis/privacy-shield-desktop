@@ -2679,7 +2679,7 @@
    },
    "NAME": {
     "total": 66,
-    "leaked": 1
+    "leaked": 0
    },
    "ADR": {
     "total": 30,
@@ -2731,7 +2731,7 @@
    }
   },
   "synthTotal": 276,
-  "synthLeaked": 1,
+  "synthLeaked": 0,
   "raw": {
    "cases": [
     {
@@ -3648,8 +3648,8 @@
     },
     {
      "key": "syn12",
-     "out": "Schadensmeldung an Tan{{KONTO_1}} {{ORG_1}}\n\nHalter: Çağlar von der Obermaier\nAnschrift: {{ORT_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
-     "tokens": 7
+     "out": "Schadensmeldung an Tan{{KONTO_1}} {{ORG_1}}\n\nHalter: {{NAME_1}}\nAnschrift: {{ORT_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\nAuszahlung auf {{IBAN_1}} oder Karte {{KARTE_1}}.",
+     "tokens": 8
     },
     {
      "key": "syn13",

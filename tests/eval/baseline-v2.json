@@ -14,7 +14,7 @@
       "V2-SECRET": 6,
       "NEG": 20
     },
-    "synthLeaked": 66,
+    "synthLeaked": 61,
     "synthTotal": 860
   },
   "fallback": {
@@ -32,12 +32,12 @@
       "V2-SECRET": 6,
       "NEG": 20
     },
-    "synthLeaked": 5,
+    "synthLeaked": 0,
     "synthTotal": 860
   },
   "ki": {
     "cases": {
-      "V2-IDENT": 2,
+      "V2-IDENT": 1,
       "V2-KONTAKT": 4,
       "V2-GERAET": 1,
       "V2-STANDORT": 2,
@@ -50,7 +50,7 @@
       "V2-SECRET": 6,
       "NEG": 20
     },
-    "synthLeaked": 24,
+    "synthLeaked": 7,
     "synthTotal": 860
   }
 }

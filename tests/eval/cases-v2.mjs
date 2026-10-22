@@ -83,6 +83,9 @@ export const CASES_V2 = [
   ['v2a48', 'V2-NUMMER', 'Patienten-ID 00918273 im Klinikinformationssystem', ['00918273']],
   ['v2a49', 'V2-NUMMER', 'Kontonummer 0532013000, BLZ 37040044', ['0532013000']],
   ['v2a50', 'V2-NUMMER', 'IBAN CH93 0076 2011 6238 5295 7 (Zürcher Kantonalbank)', ['0076 2011', '6238 5295']],
+  // Kennzahl mit Verb zwischen Stichwort und Wert (C1.1 Gruppe D)
+  ['v2a129', 'V2-NUMMER', 'Meine Steuer-ID lautet 58804570822, die Kundennummer ist KD-77881.', ['58804570822', 'KD-77881']],
+  ['v2a130', 'V2-NUMMER', 'Die Vertragsnummer lautet VN-2024/009981; Steuer-ID ist 37 709 699 732.', ['VN-2024/009981', '37 709 699 732']],
   // ---- PERSON: Geburt, Alter, Gehalt, Familie, Staatsangehoerigkeit
   ['v2a51', 'V2-PERSON', 'Geboren am 17.09.1963 in Göttingen, wohnhaft seit 1990 in Kassel.', ['17.09.1963', 'Göttingen']],
   ['v2a52', 'V2-PERSON', 'Herr Albers (58 Jahre) ist seit 1998 im Unternehmen.', ['Albers']],

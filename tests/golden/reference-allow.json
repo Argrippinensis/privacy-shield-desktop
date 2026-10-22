@@ -138,5 +138,10 @@
   "mode": "ki",
   "key": "ga05",
   "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext"
+ },
+ {
+  "mode": "ki",
+  "key": "syn12",
+  "reason": "C1.1 Gruppe E: Mit KI-Treffern ergaenzen die Wortlisten Personennamen mit bekanntem Vornamen, die das Modell uebersehen hat und die keinen anderen Treffer beruehren; vorher blieb der Name im Klartext"
  }
 ]

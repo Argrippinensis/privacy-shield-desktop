@@ -225,10 +225,10 @@
           on: true,
           pfx: "KENNNR",
           rx: [
-            /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)[ \t:]*[\d \t\/\-]{8,18})/gi,
+            /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)(?:[ \t]+(?:lautet|ist|war))?[ \t:]*[\d \t\/\-]{8,18})/gi,
             /((?:USt\.?-?Id(?:Nr\.?)?|Umsatzsteuer-?ID|VAT)[\s:]*[A-Z]{0,2}\d{7,12})/gi,
             /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?|Führerschein(?:nummer)?|FS-?Nr\.?|Aufenthaltstitel(?:-?Nr\.?)?)[ \t:]*[A-Z0-9]{6,14})/gi,
-            /(?=[A-Za-z0-9])(?<=(?:Kunden|Vertrags|Mitarbeiter|Personal|Matrikel|Versicherungs|Policen|Mandanten|Patienten|Fall|Antrags|Referenz|Bestell|Konto|Teilnehmer|Mitglieds|Lizenz|Buchungs|Sendungs|Ticket)-?(?:nummer|nr\.?|no\.?|id)[ \t:#]{0,1000})([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/gi,
+            /(?=[A-Za-z0-9])(?!(?:lautet|ist|war|sind)\b)(?<=(?:Kunden|Vertrags|Mitarbeiter|Personal|Matrikel|Versicherungs|Policen|Mandanten|Patienten|Fall|Antrags|Referenz|Bestell|Konto|Teilnehmer|Mitglieds|Lizenz|Buchungs|Sendungs|Ticket)-?(?:nummer|nr\.?|no\.?|id)(?:[ \t]{1,1000}(?:lautet|ist|war))?[ \t:#]{0,1000})([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/gi,
             /(HR[AB]\s*(?:Nr\.?\s*)?\d{3,8})/g,
             /((?:Aktenzeichen|Az\.?)[\s:]+(?:\d{1,4}\s+[A-Z]{1,5}\s+)?[\w\/\.\-]{2,30})/g,
             /\b(\d{1,3}\s+[A-Z]{1,5}\s+\d{3,6}\/\d{2,4})\b/g,
@@ -2049,23 +2049,46 @@
               meth: "KI (NER-Modell)",
             });
           }
-        } else if (wordlistsOn && activeEnts.size > 0) {
+        }
+        if (wordlistsOn && activeEnts.size > 0) {
           try {
             const aiMap = {
               PER: { pfx: "NAME", col: "#f59e0b" },
               ORG: { pfx: "ORG", col: "#8b5cf6" },
               LOC: { pfx: "ORT", col: "#3b82f6" },
             };
+            // Mit KI-Treffern ergaenzen die Wortlisten nur Luecken des Modells: Personennamen mit bekanntem Vornamen, die keinen
+            // anderen Treffer beruehren. Organisationen und Orte kommen vom Modell (sonst Ueber-Maskierung durch Stichwoerter wie
+            // Bank, Hotel), Nachnamen allein auch nicht (Link, Koch, Klein sind auch Alltagswoerter).
+            const aiOn = aiCache.key === text;
+            let belegt = null, maxEnd = null;
+            if (aiOn) {
+              belegt = p1.concat(pass2).sort((a, b) => a.start - b.start);
+              maxEnd = [];
+              belegt.forEach((x, i) => (maxEnd[i] = i ? Math.max(maxEnd[i - 1], x.end) : x.end));
+            }
+            const beruehrt = (a, b) => {
+              let lo = 0, hi = belegt.length;
+              while (lo < hi) {
+                const mid = (lo + hi) >> 1;
+                if (belegt[mid].start < b) lo = mid + 1;
+                else hi = mid;
+              }
+              return lo > 0 && maxEnd[lo - 1] > a;
+            };
+            const neu = [];
             detectLocalEntities(maskedText).forEach(function (ent) {
               const t = aiMap[ent.entity_group];
               if (!t) return;
+              if (aiOn && ent.entity_group !== "PER") return;
               const val = (ent.word || "").trim();
               if (!val || val.length < 3 || val.includes("\0")) return;
               if (maskedText.slice(ent.start, ent.start + val.length) !== val) return;
               if (ent.entity_group === "LOC" && ent.score < 0.85) return;
               if (ent.entity_group === "ORG" && ORG_LEGAL_ONLY.test(val)) return;
               if (SW.has(val)) return;
-              pass2.push({
+              if (aiOn && (!val.split(/[\s-]/).some((w) => LOCAL_NAMES.has(w)) || beruehrt(ent.start, ent.start + val.length))) return;
+              neu.push({
                 start: ent.start,
                 end: ent.start + val.length,
                 pfx: t.pfx,
@@ -2075,6 +2098,7 @@
                 meth: "KI-Erkennung (Wortlisten)",
               });
             });
+            for (const x of neu) pass2.push(x);
           } catch (err) {
             console.error("Lokale KI-Erkennung (nicht fatal):", err);
           }

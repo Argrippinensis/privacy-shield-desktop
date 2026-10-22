@@ -20,13 +20,13 @@ Modi: wortlisten (nur Regeln), fallback (Regeln plus Wortlisten, Modell startet 
 ## Offene Luecken (je Modus, je Fall-Id, synthetisch je Dokument und Wert)
 
 <!-- BACKLOG-START -->
-Stand der Messung: C1.1 nach Gruppen C2 und C3
+Stand der Messung: C1.1 nach Gruppen D und E (Endstand Durchlauf 1)
 
 | Modus | Luecken Handfaelle (von 125) | Fehlalarme (NEG von 60) | Synthetik undicht (von 860) |
 |---|---|---|---|
-| wortlisten | 44 | 20 | 66 |
-| fallback | 31 | 20 | 5 |
-| ki | 26 | 20 | 24 |
+| wortlisten | 44 | 20 | 61 |
+| fallback | 31 | 20 | 0 |
+| ki | 25 | 20 | 7 |
 
 ### Modus wortlisten
 
@@ -42,7 +42,7 @@ Stand der Messung: C1.1 nach Gruppen C2 und C3
 * V2-PERSON: v2a51 v2a54 v2a57
 * V2-SECRET: v2a101 v2a103 v2a104 v2a105 v2a109 v2a110
 * V2-STANDORT: v2a35 v2a39 v2a111 v2a113 v2a114 v2a115
-* Synthetik je Typ (undicht/gesamt): NAME 61/191, TAXID 5/14
+* Synthetik je Typ (undicht/gesamt): NAME 61/191
 * Synthetische Lecks einzeln (Vorlage, Dokument-Nr, Typ, noch lesbares Fragment; nur die zusaetzlich zu fallback):
   * zeugnis #0 NAME: Matthias
   * gespraechsprotokoll #2 NAME: Ömer
@@ -119,13 +119,8 @@ Stand der Messung: C1.1 nach Gruppen C2 und C3
 * V2-PERSON: v2a51 v2a57
 * V2-SECRET: v2a101 v2a103 v2a104 v2a105 v2a109 v2a110
 * V2-STANDORT: v2a35 v2a39 v2a111
-* Synthetik je Typ (undicht/gesamt): TAXID 5/14
+* Synthetik je Typ (undicht/gesamt): 
 * Synthetische Lecks einzeln (Vorlage, Dokument-Nr, Typ, noch lesbares Fragment):
-  * kuendigung_lang #12 TAXID: 570822
-  * kuendigung_lang #26 TAXID: 739933
-  * kuendigung_lang #40 TAXID: 99 732
-  * kuendigung_lang #54 TAXID: 569466
-  * kuendigung_lang #68 TAXID: 31 433
 
 ### Modus ki
 
@@ -135,36 +130,19 @@ Stand der Messung: C1.1 nach Gruppen C2 und C3
 * V2-AUSLAND: v2a92 v2a94 v2a96 v2a99
 * V2-FORM: v2a83 v2a84 v2a86
 * V2-GERAET: v2a30
-* V2-IDENT: v2a117 v2a120
+* V2-IDENT: v2a117
 * V2-KONTAKT: v2a12 v2a15 v2a19 v2a20
 * V2-NUMMER: v2a45
 * V2-SECRET: v2a101 v2a103 v2a104 v2a105 v2a109 v2a110
 * V2-STANDORT: v2a35 v2a39
-* Synthetik je Typ (undicht/gesamt): NAME 19/191, TAXID 5/14
+* Synthetik je Typ (undicht/gesamt): NAME 7/191
 * Synthetische Lecks einzeln (Vorlage, Dokument-Nr, Typ, noch lesbares Fragment):
-  * gespraechsprotokoll #2 NAME: Ömer
-  * kuendigung_lang #12 TAXID: 570822
-  * schadensmeldung_lang #13 NAME: Lukas | Zimmermann
   * chatverlauf #19 NAME: Birgit
   * chatverlauf #19 NAME: Zoë
-  * rechnung_positionen #21 NAME: Lena
-  * kuendigung_lang #26 TAXID: 739933
-  * gespraechsprotokoll #30 NAME: Çağlar
   * chatverlauf #33 NAME: Fatima
-  * rechnung_positionen #35 NAME: Çağlar | Schäfer
-  * kuendigung_lang #40 NAME: Çağlar | Richter
-  * kuendigung_lang #40 TAXID: 99 732
-  * schadensmeldung_lang #41 NAME: Ömer | Yıldız
   * zeugnis #42 NAME: Obermaier
   * zeugnis #42 NAME: Karl-Heinz | Obermaier
   * mietvertrag #43 NAME: Çağlar | Schulz
-  * chatverlauf #47 NAME: Petra
-  * chatverlauf #47 NAME: Petra
-  * kuendigung_lang #54 TAXID: 569466
-  * chatverlauf #61 NAME: Ömer
-  * kuendigung_lang #68 TAXID: 31 433
-  * gespraechsprotokoll #72 NAME: Çağlar
-  * gespraechsprotokoll #86 NAME: Anna
   * chatverlauf #89 NAME: Birgit
 
 <!-- BACKLOG-END -->
@@ -250,6 +228,28 @@ Restliche Namenslecks im Ausfallmodus der Synthetik: keine; offen sind in den ne
 | fallback | 10, danach 8 | 33, danach 31 (inkl. 7 neue Faelle v2a122-128, alle gruen) | 20 / 0 | 0 von 276 | 5 von 860 |
 | ki | 4, danach 2 | 28, danach 26 | 20 / 0 | 1 von 276 | 24 von 860 |
 | wortlisten (Diagnose) | 21, danach 19 | 46, danach 44 | 20 / 0 | 18 | 66 |
+
+### Gruppe D: Kennzahl mit Verb zwischen Stichwort und Wert
+
+**Synthetik kuendigung_lang #12, #26, #40, #54, #68 ("meine Steuer-ID lautet 58804570822"), neue Faelle v2a129, v2a130: Regel (alle Modi).** In "Steuer-ID lautet 123..." und "Kundennummer ist X" stand zwischen Stichwort und Wert ein Verb; die Regeln `kennnr` verlangten Leerraum oder Doppelpunkt. Bei der Kunden-/Vertragsnummer wurde sogar das Verb als Wert maskiert ("Kundennummer {{KENNNR_1}} 4711-0815": die Nummer blieb stehen). Entscheidung: Regel; optional `lautet|ist|war` zwischen Stichwort und Wert (bei Steuer-ID und Co. sowie im Lookbehind der Kunden-/Vertragsnummer) und ein Lookahead, der das Verb selbst nie als Wert gelten laesst. Referenz: keine Abweichung auf dem Korpus.
+
+### Gruppe E: Wortlisten ergaenzen das Modell um Personennamen (Erweiterung von Backlog 0)
+
+**Befund:** Im Realdokument-Test lag der Modus fallback nach Gruppe C1 bei 0 von 97 undichten Werten (TXT und DOCX), mit Modell aber bei 3 von 97, und in der Synthetik mit Modell bei 24 von 860 gegen 5 im Modus fallback: das Modell verpasst Namen, die das Woerterbuch kennt (Chat-Sprecher "Birgit:", Ansprache "Oemer, kannst du", "Karl-Heinz de Obermaier"). Mit eingeschaltetem Modell war der Schutz damit schlechter als ohne.
+
+**Entscheidung: Regel (Erweiterung der Spezifikation 'Wortlisten, wenn keine KI-Treffer vorliegen').** Mit KI-Treffern laufen die Wortlisten weiter, liefern aber nur Luecken des Modells: (a) nur Personennamen, deren Name einen bekannten Vornamen enthaelt (`LOCAL_NAMES`; reine Nachnamen wie Link, Koch, Klein gelten nicht, sie sind auch Alltagswoerter), (b) nur, wenn der Treffer keinen anderen Treffer beruehrt (Binaersuche ueber die sortierten Treffer; keine Umdeutung von ORG zu NAME, kein Abschneiden von Modell-Treffern), (c) keine Organisationen und Orte aus Stichwoertern (Bank, Hotel, Stadt). Eine erste Fassung ohne (a) bis (c) erzeugte 20 zusaetzliche Abweichungen in der Referenz (u. a. "der Link" als Name, ORG als NAME umbenannt) und wurde verworfen. Die Referenz weicht nun in genau einer Stelle ab (ki/syn12, in `reference-allow.json`: zuvor lag "Çağlar von der Obermaier" im Klartext).
+
+**Grenze:** Beruehrt ein Wortlistentreffer einen Modelltreffer teilweise (chatverlauf #19, #33, #89: "Birgit:"; zeugnis #42; mietvertrag #43), bleibt das Fragment stehen. Diese sieben Werte sind das Backlog fuer C1.2 (Ueberlappungsregel: Wortlistentreffer, der einen reinen Namens-Modelltreffer verlaengert, soll ihn ersetzen).
+
+**Golden-Stand:** Abschnitt `wordlist` neu gesetzt (Folge aus Gruppe C1: "Hamburg", "Berlin" werden maskiert, "Hans Fischer fuer die Mustermann GmbH" gilt als NAME statt ORG; kein Klartext mehr), Abschnitt `model` unveraendert.
+
+**Messung Gruppen D und E (vorher = nach C2/C3, nachher):**
+
+| Modus | Handfaelle alt | Handfaelle neu | Negativfaelle neu / alt | Synthetik 42 | Synthetik 98 |
+|---|---|---|---|---|---|
+| fallback | 8 | 31 (inkl. 2 neue Faelle v2a129/130, gruen) | 20 / 0 | 0 von 276 | 5, danach 0 von 860 |
+| ki | 2 | 26, danach 25 | 20 / 0 | 1, danach 0 von 276 | 24, danach 7 von 860 |
+| wortlisten (Diagnose) | 19 | 44 | 20 / 0 | 18 | 66, danach 61 |
 
 
 ---
