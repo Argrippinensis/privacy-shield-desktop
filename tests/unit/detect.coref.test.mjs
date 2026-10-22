@@ -112,3 +112,78 @@ test('Dokument ohne Namen: keine Endungs-Platzhalter, Rundlauf exakt', () => {
   assert.ok(!/\{\{[A-Z]+_\d+\.[A-Z]+\}\}/.test(r.text));
   assert.equal(r.back, t);
 });
+
+// ---- Weitergabe von state von Lauf zu Lauf (Projektmodus, mehrere Dateien) ----
+// Ein mehrdeutiger Nachname/Initial (personKey null) darf nicht ueber den Rueckwaertsindex Wert-zu-Token auf einen
+// frueheren Endungs-Platzhalter gelegt werden, der eine bestimmte andere Person meint.
+function runs(texts) {
+  const state = D().createState();
+  return texts.map((t) => {
+    const r = D().anonymize(t, { ...OPT, state });
+    return { in: t, text: r.text, back: D().deanonymize(r.text, state) };
+  });
+}
+const ENDUNG = /\{\{NAME_\d+\.[A-Z]+\}\}/;
+
+test('Zwei Laeufe: mehrdeutiger Nachname im zweiten Lauf (zwei Mueller) erhaelt keinen Endungs-Platzhalter des ersten Laufs', () => {
+  const [a, b] = runs(['Hans Müller wohnt hier. Herr Müller kam.', 'Hans Müller wohnt hier. Peter Müller wohnt hier. Herr Müller kam.']);
+  assert.match(a.text, /Herr \{\{NAME_1\.NACHNAME\}\}/, 'Lauf 1 verknuepft eindeutig');
+  assert.ok(!ENDUNG.test(b.text), b.text);
+  assert.equal(a.back, a.in);
+  assert.equal(b.back, b.in);
+});
+
+test('Zwei Laeufe: zwei Schmidt im zweiten Lauf, Herr Schmidt bleibt ohne Endung statt auf die Person aus Lauf 1 zu zeigen', () => {
+  const [a, b] = runs(['Hans Schmidt kam. Herr Schmidt ging.', 'Heike Schmidt kam. Hans Schmidt kam. Herr Schmidt ging.']);
+  assert.match(a.text, /Herr \{\{NAME_1\.NACHNAME\}\}/);
+  assert.ok(!ENDUNG.test(b.text), b.text);
+  assert.equal(a.back, a.in);
+  assert.equal(b.back, b.in);
+});
+
+test('Zwei Laeufe: Rueckweg ueber beide Laeufe mit gemeinsamem state ist exakt, auch bei mehrdeutigem Span', () => {
+  const state = D().createState();
+  const t1 = 'Hans Müller wohnt hier. Herr Müller kam.';
+  const t2 = 'Hans Müller wohnt hier. Peter Müller wohnt hier. Herr Müller kam.';
+  const r1 = D().anonymize(t1, { ...OPT, state });
+  const r2 = D().anonymize(t2, { ...OPT, state });
+  assert.equal(D().deanonymize(r1.text, state), t1);
+  assert.equal(D().deanonymize(r2.text, state), t2);
+});
+
+test('Gegenprobe: dieselbe, nun eindeutige Person kehrt im Folgelauf mit stabiler Nummer wieder', () => {
+  const [a, b] = runs(['Hans Müller wohnt hier. Herr Müller kam.', 'Hans Müller kam wieder. Herr Müller ging.']);
+  assert.equal(a.text, '{{NAME_1}} wohnt hier. Herr {{NAME_1.NACHNAME}} kam.');
+  assert.equal(b.text, '{{NAME_1}} kam wieder. Herr {{NAME_1.NACHNAME}} ging.');
+  assert.equal(a.back, a.in);
+  assert.equal(b.back, b.in);
+});
+
+test('Gegenprobe: im Folgelauf neu hinzukommende Person erhaelt eine neue Nummer, die alte Person behaelt ihre', () => {
+  const [, b] = runs(['Hans Müller wohnt hier. Herr Müller kam.', 'Hans Müller und Anna Weber. Frau Weber sprach.']);
+  assert.match(b.text, /^\{\{NAME_1\}\} und \{\{NAME_2\}\}\. Frau \{\{NAME_2\.NACHNAME\}\} sprach\.$/);
+  assert.equal(b.back, b.in);
+});
+
+test('Drei Laeufe: eindeutig, dann mehrdeutig, dann wieder eindeutig; keine Fehlverknuepfung, Nummern stabil, Rueckweg exakt', () => {
+  const [a, b, c] = runs([
+    'Hans Müller wohnt hier. Herr Müller kam.',
+    'Hans Müller wohnt hier. Peter Müller wohnt hier. Herr Müller kam.',
+    'Hans Müller kam wieder. Herr Müller ging.',
+  ]);
+  assert.match(a.text, /^\{\{NAME_1\}\} wohnt hier\. Herr \{\{NAME_1\.NACHNAME\}\} kam\.$/);
+  assert.ok(!ENDUNG.test(b.text), b.text);
+  assert.match(c.text, /^\{\{NAME_1\}\} kam wieder\. Herr \{\{NAME_1\.NACHNAME\}\} ging\.$/);
+  for (const r of [a, b, c]) assert.equal(r.back, r.in);
+});
+
+test('Drei Laeufe: mehrdeutige Initiale im dritten Lauf erhaelt kein .KURZ der Person aus dem ersten Lauf', () => {
+  const [a, , c] = runs([
+    'Hans Müller wohnt hier. H. Müller kam.',
+    'Anna Weber kam.',
+    'Hans Müller und Heike Müller. H. Müller schwieg.',
+  ]);
+  assert.match(a.text, /\{\{NAME_1\.KURZ\}\}/);
+  assert.ok(!/\{\{NAME_\d+\.KURZ\}\}/.test(c.text), c.text);
+  for (const r of runs(['Hans Müller wohnt hier. H. Müller kam.', 'Anna Weber kam.', 'Hans Müller und Heike Müller. H. Müller schwieg.'])) assert.equal(r.back, r.in);
+});
