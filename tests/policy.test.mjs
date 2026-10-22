@@ -105,20 +105,12 @@ test('Eigene Variablen: unzulaessiges Muster wird mit derselben Meldung abgelehn
   try {
     const f = await toolFrame(a.win);
     const before = await f.evaluate(() => cvars.length);
-    const res = await f.evaluate(() => {
-      const inputs = [...document.querySelectorAll('#CVL ~ * input, input')].filter((i) => /Muster|pattern/i.test(i.placeholder || i.id || ''));
-      return inputs.length;
-    });
-    assert.ok(res >= 2, 'Eingabefelder der Eigenen Variablen nicht gefunden');
-    await f.evaluate(() => {
-      const ins = [...document.querySelectorAll('input')].filter((i) => /Muster|pattern/i.test(i.placeholder || i.id || ''));
-      const name = ins.find((i) => !/Muster|pattern/i.test(i.placeholder)) || ins[0];
-      const pat = ins.find((i) => /Muster|pattern/i.test(i.placeholder || '')) || ins[1];
-      name.value = 'Test'; pat.value = '(a+)+$'; addCV();
-    });
+    await f.fill('#VN', 'Test', { timeout: 1500 });
+    await f.fill('#VP', '(a+)+$', { timeout: 1500 });
+    await f.evaluate(() => addCV());
     assert.equal(await f.evaluate(() => cvars.length), before, 'unzulaessiges Muster wurde aufgenommen');
-    const toast = await f.evaluate(() => document.body.innerText);
-    assert.ok(/Unbegrenzte Wiederholungen/.test(toast), 'Meldung von checkPattern fehlt');
+    const seite = await f.evaluate(() => document.body.innerText);
+    assert.ok(/Unbegrenzte Wiederholungen/.test(seite), 'Meldung von checkPattern fehlt');
   } finally { await a.close(); }
 });
 
@@ -191,5 +183,61 @@ test('Kern: PSDetect.detect nimmt extraSpans mit Vorrang prio 0 auf', async () =
       return spans.filter((x) => x.start === s).map((x) => ({ pfx: x.pfx, prio: x.prio, meth: x.meth }));
     });
     assert.deepEqual(r, [{ pfx: 'EIGEN', prio: 0, meth: 'Eigene Regel' }]);
+  } finally { await a.close(); }
+});
+
+test('Tastatur: sichtbarer Knopf #policy-import-btn ist fokussierbar und loest per Enter und Leertaste den Dateidialog aus', async () => {
+  const a = await launchApp({ offline: true });
+  try {
+    const f = await toolFrame(a.win);
+    const info = await f.evaluate(() => {
+      const b = document.getElementById('policy-import-btn');
+      if (!b) return null;
+      const r = b.getBoundingClientRect();
+      b.focus();
+      return { tag: b.tagName, sichtbar: r.width > 0 && r.height > 0, fokus: document.activeElement === b };
+    });
+    assert.ok(info, '#policy-import-btn fehlt');
+    assert.equal(info.tag, 'BUTTON');
+    assert.ok(info.sichtbar && info.fokus, JSON.stringify(info));
+    for (const taste of ['Enter', ' ']) {
+      await f.focus('#policy-import-btn', { timeout: 1500 });
+      const [chooser] = await Promise.all([a.win.waitForEvent('filechooser', { timeout: 3000 }), a.win.keyboard.press(taste)]);
+      assert.ok(chooser, 'kein Dateidialog nach Taste ' + JSON.stringify(taste));
+    }
+  } finally { await a.close(); }
+});
+
+const KAPUTT = JSON.stringify({ version: 1, name: 'x', rules: [{ id: 'boese', label: 'Boese', type: 'regex', pattern: '(a+)+$', flags: '', category: 'EIGEN', profiles: ['*'] }] });
+
+test('Fail-closed: gespeicherte Regel mit unzulaessigem Muster bricht das Anonymisieren ab, #policy-error nennt die Regel ohne Muster', async () => {
+  const a = await launchApp({ offline: true });
+  try {
+    let f = await toolFrame(a.win);
+    await f.evaluate((v) => localStorage.setItem('ps_policy_v1', v), KAPUTT);
+    await a.win.reload({ waitUntil: 'load' });
+    f = await toolFrame(a.win);
+    const r = await f.evaluate(async (t) => {
+      document.getElementById('IT').value = t;
+      aiCache = { key: null, spans: [] };
+      try { await anon(); } catch (e) { /* Abbruch ist erlaubt */ }
+      return { out: document.getElementById('AT').value, err: document.getElementById('policy-error').textContent, role: document.getElementById('policy-error').getAttribute('role') };
+    }, 'Kunde a@b.de und aaaa');
+    assert.equal(r.out, '', 'Ergebnisfeld muss leer bleiben: ' + r.out);
+    assert.ok(r.err.trim().length > 0, '#policy-error leer');
+    assert.equal(r.role, 'alert');
+    assert.ok(r.err.includes('boese'), 'Regel-Id fehlt: ' + r.err);
+    assert.equal(r.err.includes('(a+)+$'), false, 'Muster in der Meldung');
+  } finally { await a.close(); }
+});
+
+test('Fail-closed: kaputtes JSON in ps_policy_v1 meldet sich beim Start in #policy-error', async () => {
+  const a = await launchApp({ offline: true });
+  try {
+    let f = await toolFrame(a.win);
+    await f.evaluate(() => localStorage.setItem('ps_policy_v1', '{kaputt'));
+    await a.win.reload({ waitUntil: 'load' });
+    f = await toolFrame(a.win);
+    await f.waitForFunction(() => document.getElementById('policy-error').textContent.trim().length > 0, null, { timeout: 1500 });
   } finally { await a.close(); }
 });
