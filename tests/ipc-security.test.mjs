@@ -222,7 +222,8 @@ test('Berechtigungspruefung erlaubt nur clipboard-sanitized-write', async () => 
 });
 
 test('getUserMedia wird mit NotAllowedError abgelehnt', async () => {
-  const a = await launchApp({ offline: true });
+  // Gefaelschtes Geraet: ohne Kamera (CI-Rechner) meldet Chromium sonst NotFoundError vor der Berechtigungspruefung.
+  const a = await launchApp({ offline: true, extraArgs: ['--use-fake-device-for-media-stream'] });
   try {
     const f = await toolFrame(a.win);
     const name = await f.evaluate(async () => {
