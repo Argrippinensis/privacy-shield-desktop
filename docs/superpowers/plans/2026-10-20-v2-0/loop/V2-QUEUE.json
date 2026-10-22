@@ -930,7 +930,8 @@
     "tests/eval/baseline-v2.json",
     "tests/eval/out/**",
     "tests/golden/baseline.json",
-    "tests/golden/reference-allow.json"
+    "tests/golden/reference-allow.json",
+    "tests/unit/detect.differential.test.mjs"
    ],
    "tests": [],
    "accept": [
@@ -1012,7 +1013,8 @@
     "tests/eval/baseline-v2.json",
     "tests/eval/out/**",
     "tests/golden/baseline.json",
-    "tests/golden/reference-allow.json"
+    "tests/golden/reference-allow.json",
+    "tests/unit/detect.differential.test.mjs"
    ],
    "tests": [
     "tests/unit/detect.coref.test.mjs",
@@ -1126,7 +1128,8 @@
     "tests/eval/baseline-v2.json",
     "tests/eval/out/**",
     "tests/golden/baseline.json",
-    "tests/golden/reference-allow.json"
+    "tests/golden/reference-allow.json",
+    "tests/unit/detect.differential.test.mjs"
    ],
    "tests": [],
    "accept": [
@@ -1170,7 +1173,8 @@
     "tests/eval/baseline-v2.json",
     "tests/eval/out/**",
     "tests/golden/baseline.json",
-    "tests/golden/reference-allow.json"
+    "tests/golden/reference-allow.json",
+    "tests/unit/detect.differential.test.mjs"
    ],
    "tests": [],
    "accept": [

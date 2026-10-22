@@ -33,7 +33,7 @@ HTML = 'app/privacy-shield.html'
 IDX = 'app/index.html'
 EVAL_FILES = ['tests/eval/cases.mjs', 'tests/eval/cases-gdpr.mjs', 'tests/eval/cases-v2.mjs', 'tests/eval/generate.mjs', 'tests/eval/run-eval.mjs',
               'tests/eval/baseline.json', 'tests/eval/baseline-v2.json', 'tests/eval/out/**']
-GOLDEN = ['tests/golden/baseline.json', 'tests/golden/reference-allow.json']   # die Referenz von 1.8.0 (reference-v1.8.json) bleibt nach F2 unveraenderlich
+GOLDEN = ['tests/golden/baseline.json', 'tests/golden/reference-allow.json', 'tests/unit/detect.differential.test.mjs']   # die Referenz von 1.8.0 (reference-v1.8.json) bleibt nach F2 unveraenderlich; der Differenztest wertet reference-allow.json aus (D32)
 
 # ---- Planhaertung --------------------------------------------------------------------------------------------------------------
 add('P0', 'Planhaertung: Spezifikationen gegen den echten Code pruefen und nachbessern', 'V2-LOOP.md#planhaertung', 'S', [],
