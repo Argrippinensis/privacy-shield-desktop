@@ -525,14 +525,11 @@
     "npm run test:unit",
     "xvfb-run -a node --test --test-concurrency=1 tests/psmap.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261022-1",
-    "ts": 1792629300309
-   },
+   "commit": "b2633e2088865910b3ee2198e2307ea85b56a8b0",
+   "lease": null,
    "notes": ""
   },
   {
