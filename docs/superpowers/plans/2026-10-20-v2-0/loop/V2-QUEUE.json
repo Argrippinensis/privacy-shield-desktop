@@ -592,14 +592,11 @@
     "npm run test:unit",
     "xvfb-run -a node --test --test-concurrency=1 tests/export-hygiene.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261022-1",
-    "ts": 1792633053447
-   },
+   "commit": "99c884b4e4aadfa0f71dcef26f98ee56f560423f",
+   "lease": null,
    "notes": ""
   },
   {
