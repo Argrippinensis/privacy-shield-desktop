@@ -301,12 +301,12 @@
     "xvfb-run -a node tests/eval/diff-reference.mjs",
     "xvfb-run -a npm run eval"
    ],
-   "status": "blockiert",
-   "attempts": 2,
+   "status": "offen",
+   "attempts": 0,
    "branch": "",
    "commit": "",
    "lease": null,
-   "notes": "Pruefer nach einem Nachbesserungszyklus weiter Maengel (mittel): Namensketten ab ca. 125 Zeichen ohne Komma lassen die ersten Namen ungeschwaerzt (z. B. 20 Namen: 'Hans Peter {{NAME_1}}'), Rueckschritt gegenueber v2/main durch MAX_NAME_SPAN/weiter(); Stand auf v2/F5 (6312e01), Gate gruen, Leerraum und Zeittests behoben. Vorschlag: Test um Ketten 125-500 Zeichen (Leerzeichen, Bindestrich, mit Stichwort) erweitern, Ursache beheben"
+   "notes": ""
   },
   {
    "id": "M1.m",
