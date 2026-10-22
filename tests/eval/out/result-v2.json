@@ -30,19 +30,22 @@
     ]
    },
    "V2-STANDORT": {
-    "total": 10,
-    "leaked": 2,
+    "total": 15,
+    "leaked": 6,
     "ids": [
      "v2a35",
-     "v2a39"
+     "v2a39",
+     "v2a111",
+     "v2a113",
+     "v2a114",
+     "v2a115"
     ]
    },
    "V2-NUMMER": {
     "total": 10,
-    "leaked": 2,
+    "leaked": 1,
     "ids": [
-     "v2a45",
-     "v2a47"
+     "v2a45"
     ]
    },
    "V2-PERSON": {
@@ -56,16 +59,19 @@
    },
    "V2-ART9": {
     "total": 12,
-    "leaked": 2,
+    "leaked": 3,
     "ids": [
      "v2a66",
-     "v2a67"
+     "v2a67",
+     "v2a69"
     ]
    },
    "V2-ART10": {
     "total": 8,
-    "leaked": 0,
-    "ids": []
+    "leaked": 1,
+    "ids": [
+     "v2a78"
+    ]
    },
    "V2-FORM": {
     "total": 10,
@@ -105,7 +111,7 @@
    },
    "NEG": {
     "total": 60,
-    "leaked": 21,
+    "leaked": 20,
     "ids": [
      "v2n01",
      "v2n02",
@@ -115,7 +121,6 @@
      "v2n21",
      "v2n23",
      "v2n25",
-     "v2n26",
      "v2n29",
      "v2n30",
      "v2n32",
@@ -388,6 +393,31 @@
      "key": "v2a40",
      "out": "Parkplatz Nr. 7, {{NAME_1}}",
      "tokens": 1
+    },
+    {
+     "key": "v2a111",
+     "out": "Das Werk in Freiburg und das Lager in Dortmund werden zusammengelegt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a112",
+     "out": "Die Rheinbrücke bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a113",
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht Nürnberg um 9:15 Uhr.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a114",
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in München und Hamburg.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a115",
+     "out": "Der Roman spielt 1923 in Leipzig und handelt von einer Druckerfamilie.",
+     "tokens": 0
     },
     {
      "key": "v2a41",
@@ -666,8 +696,8 @@
     },
     {
      "key": "v2a96",
-     "out": "Mr. {{NAME_1}}, SSN {{TEL_1}}, 4 Elm Court, Austin, TX 78701.",
-     "tokens": 2
+     "out": "Mr. {{NAME_1}}, SSN 561-48-3927, 4 Elm Court, Austin, TX 78701.",
+     "tokens": 1
     },
     {
      "key": "v2a97",
@@ -766,7 +796,7 @@
     },
     {
      "key": "v2n06",
-     "out": "Das Werk in Freiburg und das Lager in Dortmund werden zusammengelegt.",
+     "out": "Das Werk im Süden und das Lager im Westen werden zusammengelegt.",
      "tokens": 0
     },
     {
@@ -866,8 +896,8 @@
     },
     {
      "key": "v2n26",
-     "out": "Die Rheinbrücke bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
-     "tokens": 1
+     "out": "Die Brücke über den Fluss ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 0
     },
     {
      "key": "v2n27",
@@ -951,12 +981,12 @@
     },
     {
      "key": "v2n43",
-     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht Nürnberg um 9:15 Uhr.",
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht den Endbahnhof um 9:15 Uhr.",
      "tokens": 0
     },
     {
      "key": "v2n44",
-     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in München und Hamburg.",
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in Großstädten mit knappem Wohnraum.",
      "tokens": 0
     },
     {
@@ -1011,7 +1041,7 @@
     },
     {
      "key": "v2n55",
-     "out": "Der Roman spielt 1923 in Leipzig und handelt von einer Druckerfamilie.",
+     "out": "Der Roman spielt 1923 in einer Großstadt und handelt von einer Druckerfamilie.",
      "tokens": 0
     },
     {
@@ -1565,19 +1595,21 @@
     ]
    },
    "V2-STANDORT": {
-    "total": 10,
-    "leaked": 2,
+    "total": 15,
+    "leaked": 5,
     "ids": [
      "v2a35",
-     "v2a39"
+     "v2a39",
+     "v2a111",
+     "v2a114",
+     "v2a115"
     ]
    },
    "V2-NUMMER": {
     "total": 10,
-    "leaked": 2,
+    "leaked": 1,
     "ids": [
-     "v2a45",
-     "v2a47"
+     "v2a45"
     ]
    },
    "V2-PERSON": {
@@ -1591,16 +1623,19 @@
    },
    "V2-ART9": {
     "total": 12,
-    "leaked": 2,
+    "leaked": 3,
     "ids": [
      "v2a66",
-     "v2a67"
+     "v2a67",
+     "v2a69"
     ]
    },
    "V2-ART10": {
     "total": 8,
-    "leaked": 0,
-    "ids": []
+    "leaked": 1,
+    "ids": [
+     "v2a78"
+    ]
    },
    "V2-FORM": {
     "total": 10,
@@ -1640,7 +1675,7 @@
    },
    "NEG": {
     "total": 60,
-    "leaked": 23,
+    "leaked": 20,
     "ids": [
      "v2n01",
      "v2n02",
@@ -1650,15 +1685,12 @@
      "v2n21",
      "v2n23",
      "v2n25",
-     "v2n26",
      "v2n29",
      "v2n30",
      "v2n32",
      "v2n34",
      "v2n35",
      "v2n37",
-     "v2n43",
-     "v2n44",
      "v2n48",
      "v2n50",
      "v2n51",
@@ -1925,6 +1957,31 @@
      "key": "v2a40",
      "out": "Parkplatz Nr. 7, {{ORT_1}}",
      "tokens": 1
+    },
+    {
+     "key": "v2a111",
+     "out": "Das Werk in Freiburg und das Lager in Dortmund werden zusammengelegt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a112",
+     "out": "Die Rheinbrücke bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a113",
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht {{ORT_1}} um 9:15 Uhr.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a114",
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in München und {{ORT_1}}.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a115",
+     "out": "Der Roman spielt 1923 in Leipzig und handelt von einer Druckerfamilie.",
+     "tokens": 0
     },
     {
      "key": "v2a41",
@@ -2203,8 +2260,8 @@
     },
     {
      "key": "v2a96",
-     "out": "Mr. {{NAME_1}}, SSN {{TEL_1}}, 4 Elm Court, Austin, TX 78701.",
-     "tokens": 2
+     "out": "Mr. {{NAME_1}}, SSN 561-48-3927, 4 Elm Court, Austin, TX 78701.",
+     "tokens": 1
     },
     {
      "key": "v2a97",
@@ -2303,7 +2360,7 @@
     },
     {
      "key": "v2n06",
-     "out": "Das Werk in Freiburg und das Lager in Dortmund werden zusammengelegt.",
+     "out": "Das Werk im Süden und das Lager im Westen werden zusammengelegt.",
      "tokens": 0
     },
     {
@@ -2403,8 +2460,8 @@
     },
     {
      "key": "v2n26",
-     "out": "Die Rheinbrücke bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
-     "tokens": 1
+     "out": "Die Brücke über den Fluss ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 0
     },
     {
      "key": "v2n27",
@@ -2488,13 +2545,13 @@
     },
     {
      "key": "v2n43",
-     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht {{ORT_1}} um 9:15 Uhr.",
-     "tokens": 1
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht den Endbahnhof um 9:15 Uhr.",
+     "tokens": 0
     },
     {
      "key": "v2n44",
-     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in München und {{ORT_1}}.",
-     "tokens": 1
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in Großstädten mit knappem Wohnraum.",
+     "tokens": 0
     },
     {
      "key": "v2n45",
@@ -2548,7 +2605,7 @@
     },
     {
      "key": "v2n55",
-     "out": "Der Roman spielt 1923 in Leipzig und handelt von einer Druckerfamilie.",
+     "out": "Der Roman spielt 1923 in einer Großstadt und handelt von einer Druckerfamilie.",
      "tokens": 0
     },
     {
@@ -3099,7 +3156,7 @@
     ]
    },
    "V2-STANDORT": {
-    "total": 10,
+    "total": 15,
     "leaked": 2,
     "ids": [
      "v2a35",
@@ -3108,10 +3165,9 @@
    },
    "V2-NUMMER": {
     "total": 10,
-    "leaked": 2,
+    "leaked": 1,
     "ids": [
-     "v2a45",
-     "v2a47"
+     "v2a45"
     ]
    },
    "V2-PERSON": {
@@ -3121,15 +3177,18 @@
    },
    "V2-ART9": {
     "total": 12,
-    "leaked": 1,
+    "leaked": 2,
     "ids": [
-     "v2a67"
+     "v2a67",
+     "v2a69"
     ]
    },
    "V2-ART10": {
     "total": 8,
-    "leaked": 0,
-    "ids": []
+    "leaked": 1,
+    "ids": [
+     "v2a78"
+    ]
    },
    "V2-FORM": {
     "total": 10,
@@ -3143,10 +3202,11 @@
    },
    "V2-AUSLAND": {
     "total": 10,
-    "leaked": 3,
+    "leaked": 4,
     "ids": [
      "v2a92",
      "v2a94",
+     "v2a96",
      "v2a99"
     ]
    },
@@ -3164,32 +3224,27 @@
    },
    "NEG": {
     "total": 60,
-    "leaked": 25,
+    "leaked": 20,
     "ids": [
      "v2n01",
      "v2n02",
-     "v2n06",
      "v2n13",
      "v2n15",
      "v2n20",
      "v2n21",
      "v2n23",
      "v2n25",
-     "v2n26",
      "v2n29",
      "v2n30",
      "v2n32",
      "v2n34",
      "v2n35",
      "v2n37",
-     "v2n43",
-     "v2n44",
      "v2n48",
      "v2n50",
      "v2n51",
      "v2n52",
      "v2n53",
-     "v2n55",
      "v2n56"
     ]
    }
@@ -3451,6 +3506,31 @@
      "key": "v2a40",
      "out": "{{ORT_2}}. 7, {{ORT_1}}",
      "tokens": 2
+    },
+    {
+     "key": "v2a111",
+     "out": "Das Werk in {{ORT_2}} und das Lager in {{ORT_1}} werden zusammengelegt.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a112",
+     "out": "Die {{ORT_1}} bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a113",
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht {{ORT_1}} um 9:15 Uhr.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a114",
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in {{ORT_2}} und {{ORT_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a115",
+     "out": "Der Roman spielt 1923 in {{ORT_1}} und handelt von einer Druckerfamilie.",
+     "tokens": 1
     },
     {
      "key": "v2a41",
@@ -3729,8 +3809,8 @@
     },
     {
      "key": "v2a96",
-     "out": "Mr. {{NAME_1}}, SSN {{TEL_1}}, 4 {{ORT_2}}, {{ORT_1}}, TX 78701.",
-     "tokens": 4
+     "out": "Mr. {{NAME_1}}, SSN 561-48-3927, 4 {{ORT_2}}, {{ORT_1}}, TX 78701.",
+     "tokens": 3
     },
     {
      "key": "v2a97",
@@ -3829,8 +3909,8 @@
     },
     {
      "key": "v2n06",
-     "out": "Das Werk in {{ORT_2}} und das Lager in {{ORT_1}} werden zusammengelegt.",
-     "tokens": 2
+     "out": "Das Werk im Süden und das Lager im Westen werden zusammengelegt.",
+     "tokens": 0
     },
     {
      "key": "v2n07",
@@ -3929,8 +4009,8 @@
     },
     {
      "key": "v2n26",
-     "out": "Die {{ORT_1}} bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
-     "tokens": 2
+     "out": "Die Brücke über den Fluss ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 0
     },
     {
      "key": "v2n27",
@@ -4014,13 +4094,13 @@
     },
     {
      "key": "v2n43",
-     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht {{ORT_1}} um 9:15 Uhr.",
-     "tokens": 1
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht den Endbahnhof um 9:15 Uhr.",
+     "tokens": 0
     },
     {
      "key": "v2n44",
-     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in {{ORT_2}} und {{ORT_1}}.",
-     "tokens": 2
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in Großstädten mit knappem Wohnraum.",
+     "tokens": 0
     },
     {
      "key": "v2n45",
@@ -4074,8 +4154,8 @@
     },
     {
      "key": "v2n55",
-     "out": "Der Roman spielt 1923 in {{ORT_1}} und handelt von einer Druckerfamilie.",
-     "tokens": 1
+     "out": "Der Roman spielt 1923 in einer Großstadt und handelt von einer Druckerfamilie.",
+     "tokens": 0
     },
     {
      "key": "v2n56",
