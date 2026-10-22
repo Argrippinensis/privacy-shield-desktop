@@ -860,14 +860,11 @@
     "xvfb-run -a node tests/eval/diff-reference.mjs",
     "xvfb-run -a npm run eval -- --set v2"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 2,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261022-0957",
-    "ts": 1792662725372
-   },
+   "commit": "dd5abf0abfa00f7fdfe582b3b03e9672307a08ea",
+   "lease": null,
    "notes": "[Lease abgelaufen 2026-10-22T09:52:00.023Z]"
   },
   {
