@@ -3,13 +3,18 @@
   "mode": "wortlisten",
   "cases": {
    "V2-IDENT": {
-    "total": 10,
-    "leaked": 4,
+    "total": 16,
+    "leaked": 9,
     "ids": [
      "v2a03",
      "v2a06",
      "v2a07",
-     "v2a08"
+     "v2a08",
+     "v2a116",
+     "v2a117",
+     "v2a118",
+     "v2a119",
+     "v2a120"
     ]
    },
    "V2-KONTAKT": {
@@ -151,7 +156,7 @@
    },
    "NAME": {
     "total": 191,
-    "leaked": 63
+    "leaked": 61
    },
    "DATUM": {
     "total": 63,
@@ -191,7 +196,7 @@
    }
   },
   "synthTotal": 860,
-  "synthLeaked": 68,
+  "synthLeaked": 66,
   "raw": {
    "cases": [
     {
@@ -242,6 +247,36 @@
     {
      "key": "v2a10",
      "out": "Geschäftsführer ist {{NAME_2}}, Prokurist {{NAME_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a116",
+     "out": "{{NAME_1}} war beteiligt. Wir danken Anna für die Zusammenarbeit, und Anna bleibt erreichbar.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a117",
+     "out": "[09:12] Birgit: Hast du die Daten?\n[09:13] Zoë: Ja, die liegen vor.\n[09:14] Birgit: Danke.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a118",
+     "out": "Rechnungsempfänger: Dieter de Bärtschi, {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a119",
+     "out": "Vertragspartnerin ist Nadine van Al-Farsi, Mieterin der Wohnung.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a120",
+     "out": "TN1: Mache ich. Ömer, kannst du das Protokoll übernehmen?",
+     "tokens": 0
+    },
+    {
+     "key": "v2a121",
+     "out": "{{NAME_2}} und {{NAME_1}} unterschrieben gemeinsam.",
      "tokens": 2
     },
     {
@@ -1273,7 +1308,7 @@
     },
     {
      "key": "syn40",
-     "out": "Çağlar de Richter\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 37 709 699 732.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Richter\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "out": "Çağlar de Richter\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 37 709 699 732.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
      "tokens": 8
     },
     {
@@ -1543,12 +1578,12 @@
     },
     {
      "key": "syn94",
-     "out": "{{NAME_3}}\n{{TEL_1}}\n\nArbeitsunfähigkeitsbescheinigung\n\nPatient: {{NAME_2}} von der Richter, {{DATUM_3}}\nAnschrift: {{ADRESSE_1}}\n\nDie Arbeitsunfähigkeit besteht seit dem {{DATUM_2}} voraussichtlich bis zum {{DATUM_1}}.\n\n{{NAME_1}}",
+     "out": "{{NAME_3}}\n{{TEL_1}}\n\nArbeitsunfähigkeitsbescheinigung\n\nPatient: {{NAME_2}}, {{DATUM_3}}\nAnschrift: {{ADRESSE_1}}\n\nDie Arbeitsunfähigkeit besteht seit dem {{DATUM_2}} voraussichtlich bis zum {{DATUM_1}}.\n\n{{NAME_1}}",
      "tokens": 8
     },
     {
      "key": "syn95",
-     "out": "{{NAME_6}}\n\nArztbrief\n\nPatient: {{NAME_5}} von der Richter, geboren am {{DATUM_1}}\nAnschrift: {{NAME_4}}\n\nSehr geehrter Herr {{NAME_3}},\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre {{NAME_2}} ist nicht erforderlich. Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+     "out": "{{NAME_6}}\n\nArztbrief\n\nPatient: {{NAME_5}}, geboren am {{DATUM_1}}\nAnschrift: {{NAME_4}}\n\nSehr geehrter Herr {{NAME_3}},\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre {{NAME_2}} ist nicht erforderlich. Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
      "tokens": 8
     },
     {
@@ -1568,12 +1603,9 @@
   "mode": "fallback",
   "cases": {
    "V2-IDENT": {
-    "total": 10,
-    "leaked": 4,
+    "total": 16,
+    "leaked": 1,
     "ids": [
-     "v2a03",
-     "v2a06",
-     "v2a07",
      "v2a08"
     ]
    },
@@ -1596,13 +1628,11 @@
    },
    "V2-STANDORT": {
     "total": 15,
-    "leaked": 5,
+    "leaked": 3,
     "ids": [
      "v2a35",
      "v2a39",
-     "v2a111",
-     "v2a114",
-     "v2a115"
+     "v2a111"
     ]
    },
    "V2-NUMMER": {
@@ -1614,18 +1644,16 @@
    },
    "V2-PERSON": {
     "total": 10,
-    "leaked": 3,
+    "leaked": 2,
     "ids": [
      "v2a51",
-     "v2a54",
      "v2a57"
     ]
    },
    "V2-ART9": {
     "total": 12,
-    "leaked": 3,
+    "leaked": 2,
     "ids": [
-     "v2a66",
      "v2a67",
      "v2a69"
     ]
@@ -1715,7 +1743,7 @@
    },
    "NAME": {
     "total": 191,
-    "leaked": 41
+    "leaked": 0
    },
    "DATUM": {
     "total": 63,
@@ -1755,7 +1783,7 @@
    }
   },
   "synthTotal": 860,
-  "synthLeaked": 46,
+  "synthLeaked": 5,
   "raw": {
    "cases": [
     {
@@ -1770,8 +1798,8 @@
     },
     {
      "key": "v2a03",
-     "out": "Anwesend: {{NAME_2}}, Ulf Teschner, {{NAME_1}}.",
-     "tokens": 2
+     "out": "Anwesend: {{NAME_3}}, {{NAME_2}}, {{NAME_1}}.",
+     "tokens": 3
     },
     {
      "key": "v2a04",
@@ -1785,13 +1813,13 @@
     },
     {
      "key": "v2a06",
-     "out": "Danke für den Hinweis, Valentina. Ich melde mich bei Frau {{NAME_1}}.",
-     "tokens": 1
+     "out": "Danke für den Hinweis, {{NAME_2}}. Ich melde mich bei Frau {{NAME_1}}.",
+     "tokens": 2
     },
     {
      "key": "v2a07",
-     "out": "Beschuldigter: {{NAME_1}}, genannt \"Wojtek\".",
-     "tokens": 1
+     "out": "Beschuldigter: {{NAME_2}}, genannt \"{{NAME_1}}\".",
+     "tokens": 2
     },
     {
      "key": "v2a08",
@@ -1806,6 +1834,36 @@
     {
      "key": "v2a10",
      "out": "Geschäftsführer ist {{NAME_2}}, Prokurist {{NAME_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a116",
+     "out": "{{NAME_2}} war beteiligt. Wir danken {{NAME_1}} für die Zusammenarbeit, und {{NAME_1}} bleibt erreichbar.",
+     "tokens": 3
+    },
+    {
+     "key": "v2a117",
+     "out": "[09:12] {{NAME_1}}: Hast du die Daten?\n[09:13] {{NAME_2}}: Ja, die liegen vor.\n[09:14] {{NAME_1}}: Danke.",
+     "tokens": 3
+    },
+    {
+     "key": "v2a118",
+     "out": "Rechnungsempfänger: {{NAME_1}}, {{ADRESSE_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a119",
+     "out": "Vertragspartnerin ist {{NAME_1}}, Mieterin der Wohnung.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a120",
+     "out": "TN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?",
+     "tokens": 1
+    },
+    {
+     "key": "v2a121",
+     "out": "{{NAME_2}} und {{NAME_1}} unterschrieben gemeinsam.",
      "tokens": 2
     },
     {
@@ -1960,8 +2018,8 @@
     },
     {
      "key": "v2a111",
-     "out": "Das Werk in Freiburg und das Lager in Dortmund werden zusammengelegt.",
-     "tokens": 0
+     "out": "Das Werk in {{ORT_1}} und das Lager in Dortmund werden zusammengelegt.",
+     "tokens": 1
     },
     {
      "key": "v2a112",
@@ -1975,13 +2033,13 @@
     },
     {
      "key": "v2a114",
-     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in München und {{ORT_1}}.",
-     "tokens": 1
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in {{ORT_2}} und {{ORT_1}}.",
+     "tokens": 2
     },
     {
      "key": "v2a115",
-     "out": "Der Roman spielt 1923 in Leipzig und handelt von einer Druckerfamilie.",
-     "tokens": 0
+     "out": "Der Roman spielt 1923 in {{ORT_1}} und handelt von einer Druckerfamilie.",
+     "tokens": 1
     },
     {
      "key": "v2a41",
@@ -2050,8 +2108,8 @@
     },
     {
      "key": "v2a54",
-     "out": "Unterhaltspflichtig für zwei Kinder: Jonathan ({{DATUM_2}}) und Helene ({{DATUM_1}}).",
-     "tokens": 2
+     "out": "Unterhaltspflichtig für zwei Kinder: {{NAME_2}} ({{DATUM_2}}) und {{NAME_1}} ({{DATUM_1}}).",
+     "tokens": 4
     },
     {
      "key": "v2a55",
@@ -2110,8 +2168,8 @@
     },
     {
      "key": "v2a66",
-     "out": "Er outete sich im Team als {{SENSIBEL_1}} und lebt mit seinem Partner Kai zusammen.",
-     "tokens": 1
+     "out": "Er outete sich im Team als {{SENSIBEL_1}} und lebt mit seinem Partner {{NAME_1}} zusammen.",
+     "tokens": 2
     },
     {
      "key": "v2a67",
@@ -2647,8 +2705,8 @@
     },
     {
      "key": "syn2",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_2}} (TN1), {{NAME_1}} (TN2), Moderation (MOD)\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Ömer, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 7
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 8
     },
     {
      "key": "syn3",
@@ -2662,8 +2720,8 @@
     },
     {
      "key": "syn5",
-     "out": "[09:12] {{NAME_4}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Thomas: Danke. Wohin soll die Post gehen?\n[09:15] Lena: {{ADRESSE_1}}.\n[09:15] Lena: Oder schreib mir an {{EMAIL_1}}\n[09:16] Thomas: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Thomas: Gruß, {{NAME_1}}",
-     "tokens": 8
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn6",
@@ -2672,8 +2730,8 @@
     },
     {
      "key": "syn7",
-     "out": "{{NAME_1}}\n\nRechnung 124699\nRechnungsempfänger: Dieter de Bärtschi, {{ADRESSE_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  9{{BETRAG_3}}\n2     Material                  6{{BETRAG_2}}\n3     Anfahrt                   7{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
-     "tokens": 7
+     "out": "{{NAME_2}}\n\nRechnung 124699\nRechnungsempfänger: {{NAME_1}}, {{ADRESSE_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  9{{BETRAG_3}}\n2     Material                  6{{BETRAG_2}}\n3     Anfahrt                   7{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
+     "tokens": 8
     },
     {
      "key": "syn8",
@@ -2707,18 +2765,18 @@
     },
     {
      "key": "syn14",
-     "out": "Arbeitszeugnis\n\n{{NAME_5}} e.V.\n{{ADRESSE_1}}\n\n{{NAME_4}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_3}} tätig.\n\nZu den Aufgaben gehörten die Betreuung unserer Kunden und die Planung und {{NAME_2}}. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt 6{{BETRAG_1}} im Monat.\n\nWir danken Anna für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 10
+     "out": "Arbeitszeugnis\n\n{{NAME_6}} e.V.\n{{ADRESSE_1}}\n\n{{NAME_5}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_4}} tätig.\n\nZu den Aufgaben gehörten die Betreuung unserer Kunden und die Planung und {{NAME_3}}. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt 6{{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 11
     },
     {
      "key": "syn15",
-     "out": "Mietvertrag\n\nzwischen Birgit von der Al-Farsi, {{ADRESSE_1}} (Vermieter)\nund {{NAME_2}} (Mieter)\n\n§ 1 Mietsache\nVermietet wird die Wohnung im 5. {{ORT_1}} im Breisgau.\n\n§ 2 Miete\nDie monatliche Kaltmiete beträgt 5{{BETRAG_2}}. Die Kaution beträgt 9{{BETRAG_1}}. Zahlungen erfolgen auf das Konto {{IBAN_1}}.\n\n§ 3 Erreichbarkeit\nDer Vermieter ist unter {{TEL_1}} erreichbar.\n\n________________  ________________\nBirgit von der Al-{{NAME_1}}",
-     "tokens": 8
+     "out": "Mietvertrag\n\nzwischen {{NAME_3}}, {{ADRESSE_1}} (Vermieter)\nund {{NAME_2}} (Mieter)\n\n§ 1 Mietsache\nVermietet wird die Wohnung im 5. {{ORT_1}} im Breisgau.\n\n§ 2 Miete\nDie monatliche Kaltmiete beträgt 5{{BETRAG_2}}. Die Kaution beträgt 9{{BETRAG_1}}. Zahlungen erfolgen auf das Konto {{IBAN_1}}.\n\n§ 3 Erreichbarkeit\nDer Vermieter ist unter {{TEL_1}} erreichbar.\n\n________________  ________________\n{{NAME_1}}",
+     "tokens": 9
     },
     {
      "key": "syn16",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_1}} e.V.\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Katharina, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 6
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_4}} (TN1), {{NAME_3}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_2}} e.V.\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn17",
@@ -2732,8 +2790,8 @@
     },
     {
      "key": "syn19",
-     "out": "[09:12] Birgit: Hast du die Daten für die Überweisung?\n[09:13] Zoë: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_1}}.\n[09:14] Birgit: Danke. Wohin soll die Post gehen?\n[09:15] Zoë: {{ADRESSE_1}}.\n[09:15] Zoë: Oder schreib mir an {{EMAIL_1}}\n[09:16] Birgit: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Birgit: Gruß, Birgit von der Lüdenscheidt",
-     "tokens": 5
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn20",
@@ -2762,7 +2820,7 @@
     },
     {
      "key": "syn25",
-     "out": "{{NAME_5}} (haftungsbeschränkt)\n\nArztbrief\n\nPatient: {{NAME_4}}, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrter Herr {{NAME_3}} van Al-Farsi,\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre Aufnahme im {{NAME_2}} Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+     "out": "{{NAME_5}} (haftungsbeschränkt)\n\nArztbrief\n\nPatient: {{NAME_4}}, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrter Herr Kollege {{NAME_3}},\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre Aufnahme im {{NAME_2}} Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
      "tokens": 8
     },
     {
@@ -2777,8 +2835,8 @@
     },
     {
      "key": "syn28",
-     "out": "Arbeitszeugnis\n\n{{NAME_3}}\n{{ADRESSE_1}}\n\nNadine van Al-Farsi, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als Projektleiter tätig.\n\nZu den Aufgaben gehörten die laufende Buchhaltung und die Planung und {{NAME_2}}. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt 4{{BETRAG_1}} im Monat.\n\nWir danken Nadine für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 8
+     "out": "Arbeitszeugnis\n\n{{NAME_5}}\n{{ADRESSE_1}}\n\n{{NAME_4}}, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als Projektleiter tätig.\n\nZu den Aufgaben gehörten die laufende Buchhaltung und die Planung und {{NAME_3}}. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt 4{{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 10
     },
     {
      "key": "syn29",
@@ -2787,13 +2845,13 @@
     },
     {
      "key": "syn30",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Çağlar, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 6
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_4}} (TN1), {{NAME_3}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_2}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn31",
-     "out": "Von: {{NAME_3}} <{{EMAIL_1}}>\nAn: Fatima von der Bärtschi <{{EMAIL_2}}>\nBetreff: AW: AW: Lieferung\n\n{{NAME_6}},\ndanke, das passt so.\n\nGruß\n{{NAME_3}}\n{{NAME_5}}\n{{TEL_1}}{{NAME_4}}-----\nVon: Fatima von der Bärtschi <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: AW: Lieferung\n\n{{NAME_2}},\nich schlage Dienstag vor. Lieferadresse {{ADRESSE_1}}.\n\n{{NAME_1}}",
-     "tokens": 14
+     "out": "Von: {{NAME_3}} <{{EMAIL_1}}>\nAn: {{NAME_4}} <{{EMAIL_2}}>\nBetreff: AW: AW: Lieferung\n\n{{NAME_7}},\ndanke, das passt so.\n\nGruß\n{{NAME_3}}\n{{NAME_6}}\n{{TEL_1}}{{NAME_5}}-----\nVon: {{NAME_4}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: AW: Lieferung\n\n{{NAME_2}},\nich schlage Dienstag vor. Lieferadresse {{ADRESSE_1}}.\n\n{{NAME_1}}",
+     "tokens": 16
     },
     {
      "key": "syn32",
@@ -2802,8 +2860,8 @@
     },
     {
      "key": "syn33",
-     "out": "[09:12] Søren: Hast du die Daten für die Überweisung?\n[09:13] Fatima: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Søren: Danke. Wohin soll die Post gehen?\n[09:15] Fatima: {{ADRESSE_1}}.\n[09:15] Fatima: Oder schreib mir an {{EMAIL_1}}\n[09:16] Søren: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Søren: Gruß, {{NAME_1}}",
-     "tokens": 6
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn34",
@@ -2837,18 +2895,18 @@
     },
     {
      "key": "syn40",
-     "out": "Çağlar de Richter\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 37 709 699 732.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Richter\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 8
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 37 709 699 732.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 9
     },
     {
      "key": "syn41",
-     "out": "Schadensmeldung an {{NAME_2}} e.V.\n\nVersicherungsnehmer: Ömer von der Yıldız\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\n\nUnfallhergang\nAm {{DATUM_1}} kam es auf einer Landstraße zu einem Zusammenstoß. Es entstand nur Sachschaden.\n\nZeugen\nZeuge war {{NAME_1}}, erreichbar unter {{TEL_1}}.\n\nAuszahlung\nBitte zahlen Sie auf {{IBAN_1}} oder auf die Karte {{KARTE_1}}.\n\nAnlagen: Fotos, Kostenvoranschlag, Unfallbericht",
-     "tokens": 9
+     "out": "Schadensmeldung an {{NAME_3}} e.V.\n\nVersicherungsnehmer: {{NAME_2}}\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\n\nUnfallhergang\nAm {{DATUM_1}} kam es auf einer Landstraße zu einem Zusammenstoß. Es entstand nur Sachschaden.\n\nZeugen\nZeuge war {{NAME_1}}, erreichbar unter {{TEL_1}}.\n\nAuszahlung\nBitte zahlen Sie auf {{IBAN_1}} oder auf die Karte {{KARTE_1}}.\n\nAnlagen: Fotos, Kostenvoranschlag, Unfallbericht",
+     "tokens": 10
     },
     {
      "key": "syn42",
-     "out": "Arbeitszeugnis\n\n{{ORG_1}}\n{{ADRESSE_1}} Breisgau\n\n{{NAME_3}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_2}} tätig.\n\nZu den Aufgaben gehörten die Bearbeitung eingehender Anfragen und die laufende Buchhaltung. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt 5{{BETRAG_1}} im Monat.\n\nWir danken Lena für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 9
+     "out": "Arbeitszeugnis\n\n{{ORG_1}}\n{{ADRESSE_1}} Breisgau\n\n{{NAME_4}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_3}} tätig.\n\nZu den Aufgaben gehörten die Bearbeitung eingehender Anfragen und die laufende Buchhaltung. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt 5{{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 10
     },
     {
      "key": "syn43",
@@ -2857,8 +2915,8 @@
     },
     {
      "key": "syn44",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Dieter, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 6
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_4}} (TN1), {{NAME_3}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_2}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn45",
@@ -2872,8 +2930,8 @@
     },
     {
      "key": "syn47",
-     "out": "[09:12] {{NAME_3}}: Hast du die Daten für die Überweisung?\n[09:13] Petra: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Petra: Danke. Wohin soll die Post gehen?\n[09:15] Petra: {{ADRESSE_1}}.\n[09:15] Petra: Oder schreib mir an {{EMAIL_1}}\n[09:16] Petra: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Petra: Gruß, {{NAME_1}}",
-     "tokens": 7
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_2}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_3}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_2}}: {{ADRESSE_1}}.\n[09:15] {{NAME_2}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn48",
@@ -2917,23 +2975,23 @@
     },
     {
      "key": "syn56",
-     "out": "Arbeitszeugnis\n\n{{NAME_4}} e.V.\n{{ADRESSE_1}}\n\n{{NAME_3}}, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_2}} tätig.\n\nZu den Aufgaben gehörten die Entwicklung interner Werkzeuge und die Entwicklung interner Werkzeuge. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt {{BETRAG_1}} im Monat.\n\nWir danken Sabine für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 9
+     "out": "Arbeitszeugnis\n\n{{NAME_5}} e.V.\n{{ADRESSE_1}}\n\n{{NAME_4}}, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_3}} tätig.\n\nZu den Aufgaben gehörten die Entwicklung interner Werkzeuge und die Entwicklung interner Werkzeuge. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt {{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 10
     },
     {
      "key": "syn57",
-     "out": "Mietvertrag\n\nzwischen {{NAME_2}}, {{ADRESSE_1}} (Vermieter)\nund Dieter von der Bärtschi (Mieter)\n\n§ 1 Mietsache\nVermietet wird die Wohnung im 3. {{ORT_1}}.\n\n§ 2 Miete\nDie monatliche Kaltmiete beträgt 8{{BETRAG_2}}. Die Kaution beträgt 6{{BETRAG_1}}. Zahlungen erfolgen auf das Konto {{IBAN_1}}.\n\n§ 3 Erreichbarkeit\nDer Vermieter ist unter {{TEL_1}} erreichbar.\n\n________________  ________________\n{{NAME_1}}",
-     "tokens": 8
+     "out": "Mietvertrag\n\nzwischen {{NAME_3}}, {{ADRESSE_1}} (Vermieter)\nund {{NAME_2}} (Mieter)\n\n§ 1 Mietsache\nVermietet wird die Wohnung im 3. {{ORT_1}}.\n\n§ 2 Miete\nDie monatliche Kaltmiete beträgt 8{{BETRAG_2}}. Die Kaution beträgt 6{{BETRAG_1}}. Zahlungen erfolgen auf das Konto {{IBAN_1}}.\n\n§ 3 Erreichbarkeit\nDer Vermieter ist unter {{TEL_1}} erreichbar.\n\n________________  ________________\n{{NAME_1}}",
+     "tokens": 9
     },
     {
      "key": "syn58",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: Nadine de Aigner-Lechner (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Ralf, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 5
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_4}} (TN1), {{NAME_3}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_2}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn59",
-     "out": "Von: {{NAME_7}} <{{EMAIL_1}}>\nAn: {{NAME_6}} <{{EMAIL_2}}>\nBetreff: AW: AW: Lieferung\n\n{{NAME_5}},\ndanke, das passt so.\n\nGruß\nMarlene de Wagner\n{{NAME_4}}\n{{TEL_1}}{{NAME_3}}-----\nVon: Anna von der Hoffmann <{{EMAIL_2}}>\nAn: Marlene de Wagner <{{EMAIL_1}}>\nBetreff: AW: Lieferung\n\n{{NAME_2}},\nich schlage Dienstag vor. Lieferadresse {{ADRESSE_1}}.\n\n{{NAME_1}}",
-     "tokens": 13
+     "out": "Von: {{NAME_3}} <{{EMAIL_1}}>\nAn: {{NAME_4}} <{{EMAIL_2}}>\nBetreff: AW: AW: Lieferung\n\n{{NAME_7}},\ndanke, das passt so.\n\nGruß\n{{NAME_3}}\n{{NAME_6}}\n{{TEL_1}}{{NAME_5}}-----\nVon: {{NAME_4}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: AW: Lieferung\n\n{{NAME_2}},\nich schlage Dienstag vor. Lieferadresse {{ADRESSE_1}}.\n\n{{NAME_1}}",
+     "tokens": 16
     },
     {
      "key": "syn60",
@@ -2942,8 +3000,8 @@
     },
     {
      "key": "syn61",
-     "out": "[09:12] Florian: Hast du die Daten für die Überweisung?\n[09:13] Ömer: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Florian: Danke. Wohin soll die Post gehen?\n[09:15] Ömer: {{ADRESSE_1}}.\n[09:15] Ömer: Oder schreib mir an {{EMAIL_1}}\n[09:16] Florian: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Florian: Gruß, {{NAME_1}}",
-     "tokens": 6
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn62",
@@ -2987,8 +3045,8 @@
     },
     {
      "key": "syn70",
-     "out": "Arbeitszeugnis\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\n{{NAME_3}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_2}} tätig.\n\nZu den Aufgaben gehörten die Bearbeitung eingehender Anfragen und die Koordination der Auslieferung. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt 8{{BETRAG_1}} im Monat.\n\nWir danken Tobias für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 9
+     "out": "Arbeitszeugnis\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\n{{NAME_4}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_3}} tätig.\n\nZu den Aufgaben gehörten die Bearbeitung eingehender Anfragen und die Koordination der Auslieferung. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt 8{{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 10
     },
     {
      "key": "syn71",
@@ -2997,8 +3055,8 @@
     },
     {
      "key": "syn72",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_2}} (TN1), {{NAME_1}} (TN2), Moderation (MOD)\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Çağlar, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 7
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 8
     },
     {
      "key": "syn73",
@@ -3012,8 +3070,8 @@
     },
     {
      "key": "syn75",
-     "out": "[09:12] Dieter: Hast du die Daten für die Überweisung?\n[09:13] Marlene: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Dieter: Danke. Wohin soll die Post gehen?\n[09:15] Marlene: {{ADRESSE_1}}.\n[09:15] Marlene: Oder schreib mir an {{EMAIL_1}}\n[09:16] Dieter: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Dieter: Gruß, {{NAME_1}}",
-     "tokens": 6
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn76",
@@ -3057,8 +3115,8 @@
     },
     {
      "key": "syn84",
-     "out": "Arbeitszeugnis\n\n{{NAME_5}}\n{{ADRESSE_1}}\n\n{{NAME_4}}, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_3}} tätig.\n\nZu den Aufgaben gehörten die Betreuung unserer Kunden und die Planung und {{NAME_2}}. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt {{BETRAG_1}} im Monat.\n\nWir danken Thomas für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 10
+     "out": "Arbeitszeugnis\n\n{{NAME_6}}\n{{ADRESSE_1}}\n\n{{NAME_5}}, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_4}} tätig.\n\nZu den Aufgaben gehörten die Betreuung unserer Kunden und die Planung und {{NAME_3}}. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt {{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 11
     },
     {
      "key": "syn85",
@@ -3067,8 +3125,8 @@
     },
     {
      "key": "syn86",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_2}} (TN1), {{NAME_1}} (TN2), Moderation (MOD)\nOrganisation: {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Anna, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 6
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn87",
@@ -3082,8 +3140,8 @@
     },
     {
      "key": "syn89",
-     "out": "[09:12] Nadine: Hast du die Daten für die Überweisung?\n[09:13] Birgit: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_1}}.\n[09:14] Nadine: Danke. Wohin soll die Post gehen?\n[09:15] Birgit: {{ADRESSE_1}}.\n[09:15] Birgit: Oder schreib mir an {{EMAIL_1}}\n[09:16] Nadine: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Nadine: Gruß, Nadine Al-Farsi",
-     "tokens": 5
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn90",
@@ -3092,8 +3150,8 @@
     },
     {
      "key": "syn91",
-     "out": "{{ORG_1}}\n\nRechnung 494619\nRechnungsempfänger: Zoë de Kowalski, {{ADRESSE_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  3{{BETRAG_3}}\n2     Material                  7{{BETRAG_2}}\n3     Anfahrt                   5{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
-     "tokens": 7
+     "out": "{{ORG_1}}\n\nRechnung 494619\nRechnungsempfänger: {{NAME_1}}, {{ADRESSE_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  3{{BETRAG_3}}\n2     Material                  7{{BETRAG_2}}\n3     Anfahrt                   5{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
+     "tokens": 8
     },
     {
      "key": "syn92",
@@ -3107,12 +3165,12 @@
     },
     {
      "key": "syn94",
-     "out": "{{NAME_3}}\n{{TEL_1}}\n\nArbeitsunfähigkeitsbescheinigung\n\nPatient: {{NAME_2}} von der Richter, {{DATUM_3}}\nAnschrift: {{ADRESSE_1}}\n\nDie Arbeitsunfähigkeit besteht seit dem {{DATUM_2}} voraussichtlich bis zum {{DATUM_1}}.\n\n{{NAME_1}}",
+     "out": "{{NAME_3}}\n{{TEL_1}}\n\nArbeitsunfähigkeitsbescheinigung\n\nPatient: {{NAME_2}}, {{DATUM_3}}\nAnschrift: {{ADRESSE_1}}\n\nDie Arbeitsunfähigkeit besteht seit dem {{DATUM_2}} voraussichtlich bis zum {{DATUM_1}}.\n\n{{NAME_1}}",
      "tokens": 8
     },
     {
      "key": "syn95",
-     "out": "{{ORG_1}}\n\nArztbrief\n\nPatient: {{NAME_4}} von der Richter, geboren am {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrter Herr {{NAME_3}},\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre {{NAME_2}} ist nicht erforderlich. Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+     "out": "{{ORG_2}}\n\nArztbrief\n\nPatient: {{NAME_3}}, geboren am {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrter Herr {{NAME_2}},\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre {{ORG_1}} ist nicht erforderlich. Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
      "tokens": 8
     },
     {
@@ -3132,10 +3190,12 @@
   "mode": "ki",
   "cases": {
    "V2-IDENT": {
-    "total": 10,
-    "leaked": 1,
+    "total": 16,
+    "leaked": 3,
     "ids": [
-     "v2a08"
+     "v2a08",
+     "v2a117",
+     "v2a120"
     ]
    },
    "V2-KONTAKT": {
@@ -3355,6 +3415,36 @@
     {
      "key": "v2a10",
      "out": "Geschäftsführer ist {{NAME_2}}, Prokurist {{NAME_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a116",
+     "out": "{{NAME_2}} war beteiligt. Wir danken {{NAME_1}} für die Zusammenarbeit, und {{NAME_1}} bleibt erreichbar.",
+     "tokens": 3
+    },
+    {
+     "key": "v2a117",
+     "out": "[09:12] Birgit: Hast du die Daten?\n[09:13] Zoë: Ja, die liegen vor.\n[09:14] Birgit: Danke.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a118",
+     "out": "Rechnungsempfänger: {{NAME_1}}, {{ORT_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a119",
+     "out": "Vertragspartnerin ist {{NAME_1}}, Mieterin der Wohnung.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a120",
+     "out": "TN1: Mache ich. Ömer, kannst du das Protokoll übernehmen?",
+     "tokens": 0
+    },
+    {
+     "key": "v2a121",
+     "out": "{{NAME_2}} und {{NAME_1}} unterschrieben gemeinsam.",
      "tokens": 2
     },
     {
@@ -4386,7 +4476,7 @@
     },
     {
      "key": "syn40",
-     "out": "Çağlar de Richter\n{{ADRESSE_1}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 37 709 699 732.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Richter\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "out": "Çağlar de Richter\n{{ADRESSE_1}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 37 709 699 732.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
      "tokens": 8
     },
     {

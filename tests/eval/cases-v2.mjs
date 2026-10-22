@@ -17,6 +17,13 @@ export const CASES_V2 = [
   ['v2a08', 'V2-IDENT', 'Kontoinhaber: SCHMIEDEBERG, Ottilie (Mädchenname Rautenstrauch)', ['SCHMIEDEBERG', 'Ottilie', 'Rautenstrauch']],
   ['v2a09', 'V2-IDENT', 'Eingeladen sind Prof. Dr.-Ing. Heribert Stackelberg und seine Frau Ingeborg.', ['Heribert', 'Stackelberg', 'Ingeborg']],
   ['v2a10', 'V2-IDENT', 'Geschäftsführer ist Jan-Philipp Brüggemann-Oertel, Prokurist Nils Ahlbrecht.', ['Jan-Philipp', 'Brüggemann', 'Oertel', 'Nils', 'Ahlbrecht']],
+  // Namen im Ausfallmodus (C1.1 Gruppe C): Wiederholungen, Chat-Sprecher, Namenszusaetze, Namen mit Sonderzeichen
+  ['v2a116', 'V2-IDENT', 'Anna Schäfer war beteiligt. Wir danken Anna für die Zusammenarbeit, und Anna bleibt erreichbar.', ['Anna', 'Schäfer']],
+  ['v2a117', 'V2-IDENT', '[09:12] Birgit: Hast du die Daten?\n[09:13] Zoë: Ja, die liegen vor.\n[09:14] Birgit: Danke.', ['Birgit', 'Zoë']],
+  ['v2a118', 'V2-IDENT', 'Rechnungsempfänger: Dieter de Bärtschi, Hauptstr. 3, 10115 Berlin', ['Dieter', 'Bärtschi']],
+  ['v2a119', 'V2-IDENT', 'Vertragspartnerin ist Nadine van Al-Farsi, Mieterin der Wohnung.', ['Nadine', 'Farsi']],
+  ['v2a120', 'V2-IDENT', 'TN1: Mache ich. Ömer, kannst du das Protokoll übernehmen?', ['Ömer']],
+  ['v2a121', 'V2-IDENT', 'Çağlar Richter und Søren Kierkegaard unterschrieben gemeinsam.', ['Çağlar', 'Richter', 'Søren', 'Kierkegaard']],
   // ---- KONTAKT: E-Mail, Telefon, Handles, Adressen
   ['v2a11', 'V2-KONTAKT', 'Antworten bitte an h.waldmann@sailer-consult.de oder an die Zentrale.', ['h.waldmann@sailer-consult.de']],
   ['v2a12', 'V2-KONTAKT', 'Mobil: +49 160 9348172, Büro: 0711 / 55 20 61-14', ['9348172', '55 20 61']],

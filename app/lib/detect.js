@@ -1445,6 +1445,33 @@
         "Mia",
         "Hannah",
         "Lea",
+        // ab C1.1: breiteres Vornamen-Woerterbuch (Ausfallmodus), Schreibweisen mit Sonderzeichen
+        "Achim", "Adrian", "Agnieszka", "Ahmet", "Aisha", "Albert", "Alfred", "Ali", "Alina", "Amelie", "Amira", "Ana", "Andre", "Andrea",
+        "Andrzej", "Angela", "Angelika", "Anita", "Anton", "Antje", "Antonio", "Armin", "Arnold", "Arthur", "Astrid", "August", "Axel",
+        "Aylin", "Ayse", "Barbara", "Bastian", "Beata", "Beate", "Benedikt", "Benjamin", "Bernhard", "Bettina", "Birgit", "Birte", "Boris",
+        "Burak", "Carla", "Carlos", "Carmen", "Carolin", "Caroline", "Carsten", "Cem", "Charlotte", "Chiara", "Christiane", "Christina",
+        "Christine", "Christof", "Clemens", "Constantin", "Cornelia", "Çağlar", "Dagmar", "Daniela", "Dennis", "Diana", "Dieter",
+        "Dietmar", "Dmitri", "Dominik", "Doris", "Dorota", "Dorothea", "Eberhard", "Eckhard", "Edgar", "Edith", "Eduard", "Egon", "Elena",
+        "Elfriede", "Elif", "Elke", "Ellen", "Emil", "Emilia", "Emily", "Emine", "Emre", "Erich", "Erik", "Erika", "Evelyn", "Ewa",
+        "Fabian", "Falk", "Fatima", "Fatma", "Ferdinand", "Florian", "Francesca", "Francesco", "Franziska", "Frederik", "Frieda", "Fritz",
+        "Georg", "Gerald", "Gerd", "Gerda", "Gerhard", "Gerrit", "Giovanni", "Giulia", "Giuseppe", "Gertrud", "Gudrun", "Günter",
+        "Günther", "Gustav", "Hamza", "Hanna", "Hannelore", "Harald", "Hasan", "Hatice", "Heiko", "Heidi", "Heinrich", "Helene", "Helmut",
+        "Henning", "Henrik", "Henrike", "Hildegard", "Holger", "Horst", "Hubert", "Hüseyin", "Ibrahim", "Igor", "Ilona", "Ilse", "Ines",
+        "Ingo", "Irene", "Iris", "Irina", "Irmgard", "Isabel", "Isabella", "Jakob", "Jakub", "Jan", "Jana", "Janina", "Jannik", "Jasmin",
+        "Jennifer", "Joanna", "Johanna", "Jonathan", "José", "Jose", "Juan", "Julian", "Justus", "Jutta", "Kai", "Katarzyna", "Kathrin",
+        "Katja", "Kerstin", "Kevin", "Khalid", "Klara", "Konrad", "Krzysztof", "Kristian", "Kristina", "Larissa", "Layla", "Lennart",
+        "Leo", "Leonie", "Leyla", "Lilli", "Linda", "Linus", "Lothar", "Louisa", "Ludwig", "Luisa", "Lucia", "Łukasz", "Łucja",
+        "Magdalena", "Maike", "Malte", "Małgorzata", "Marc", "Marcel", "Marco", "Marcus", "Marek", "Margarete", "Margit", "Mariam",
+        "Marianne", "Marie", "Marlene", "Marta", "Mathias", "Matteo", "Maximilian", "Mehmet", "Meike", "Melanie", "Melissa", "Merve",
+        "Michaela", "Miguel", "Mihail", "Mirko", "Mohammed", "Muhammad", "Mona", "Moritz", "Murat", "Mustafa", "Nadine", "Natalia",
+        "Natalie", "Nicole", "Nico", "Nikolaus", "Nils", "Nora", "Norbert", "Nour", "Oksana", "Olaf", "Olena", "Olga", "Omar", "Osman",
+        "Otto", "Ömer", "Pamela", "Pascal", "Paula", "Pauline", "Pavel", "Pawel", "Pedro", "Piotr", "Rainer", "Ralf", "Ralph", "Rebecca",
+        "Regina", "Reinhard", "Richard", "Rita", "Roland", "Romy", "Ronald", "Rosemarie", "Rudolf", "Ruth", "Sabrina", "Samir", "Saskia",
+        "Sara", "Sebastian", "Selin", "Sergej", "Sibylle", "Siegfried", "Sigrid", "Simone", "Sofia", "Sonja", "Sophia", "Stephanie",
+        "Svenja", "Sven", "Svetlana", "Søren", "Tanja", "Tarek", "Tatjana", "Theodor", "Theresa", "Thilo", "Tina", "Tobias", "Tomasz",
+        "Torsten", "Udo", "Ulf", "Ulrich", "Ulrike", "Ursula", "Valentin", "Valentina", "Valentyna", "Vanessa", "Vera", "Verena", "Viktor",
+        "Viktoria", "Vladimir", "Volker", "Waldemar", "Waltraud", "Wiebke", "Wilfried", "Willi", "Winfried", "Wojciech", "Wojtek",
+        "Yannick", "Yasemin", "Yusuf", "Yvonne", "Zeynep", "Zoë",
       ]);
       const LOCAL_SURNAMES = new Set([
         "Müller",
@@ -1575,6 +1602,22 @@
         "Costa",
         "Mancini",
         "Esposito",
+        // ab C1.1: breiteres Nachnamen-Woerterbuch (Ausfallmodus)
+        "Aigner", "Albers", "Altmann", "Anders", "Andersen", "Appel", "Arslan", "Aslan", "Aydın", "Bachmann", "Bader", "Bartels", "Baur",
+        "Beier", "Bergmann", "Bernard", "Beyer", "Binder", "Blum", "Brandt", "Brinkmann", "Brunner", "Busse", "Conrad", "Çelik", "Davies",
+        "Demir", "Dietz", "Doğan", "Döring", "Dubois", "Dupont", "Dvořák", "Ebert", "Eckert", "Ehrlich", "Engelhardt", "Evans", "Farsi",
+        "Fernández", "Ferreira", "Fiedler", "Franz", "Friedrichs", "Funk", "Garcia", "García", "Gerlach", "Giese", "Gonzalez", "Haas",
+        "Haase", "Hansen", "Hartung", "Heinrich", "Heller", "Henke", "Hess", "Hildebrandt", "Hinz", "Hofer", "Horváth", "Ivanov", "Jacobs",
+        "Jahn", "Jansen", "Jensen", "Johansson", "Johnson", "Jones", "Kamiński", "Kaya", "Kessler", "Kierkegaard", "Kılıç", "Kirchner",
+        "Kluge", "Knapp", "Kolb", "Konrad", "Kovács", "Kowalczyk", "Kowalski", "Kozłowski", "Kramer", "Krämer", "Kraus", "Kroll", "Kühn",
+        "Kunz", "Lachmann", "Lampe", "Larsen", "Laurent", "Lefèvre", "Lenz", "Lewandowski", "Lindner", "López", "Lüdenscheidt", "Lutz",
+        "Martínez", "Mayer", "Mayr", "Mazur", "Mertens", "Michel", "Moreau", "Moser", "Mustermann", "Nagy", "Naumann", "Nielsen", "Nowak",
+        "Novák", "Novotný", "Obermaier", "Ott", "Özdemir", "Öztürk", "Pape", "Pereira", "Petersen", "Petrov", "Pfeiffer", "Pohl", "Polat",
+        "Popov", "Rodríguez", "Reichert", "Reimann", "Reinhardt", "Sánchez", "Santos", "Scheffler", "Schenk", "Schlegel", "Schlüter",
+        "Schumacher", "Schütz", "Silva", "Smirnov", "Smith", "Sokolov", "Steiner", "Stoll", "Svensson", "Svoboda", "Szabó", "Szymański",
+        "Şahin", "Taylor", "Thiel", "Thompson", "Tietz", "Ulrich", "Vogt", "Walter", "Wegner", "Weidner", "Wendt", "Wenzel", "Westphal",
+        "Williams", "Wilson", "Wiśniewska", "Wiśniewski", "Wittmann", "Wójcik", "Wolff", "Woźniak", "Yilmaz", "Yıldız", "Zander", "Zeller",
+        "Zieliński", "Šimek",
       ]);
       const LOCAL_ORG_KEYWORDS = [
         /\b(GmbH|AG|e\.V\.|KG|OHG|UG|SE|Inc\.|Corp\.|LLC|Ltd\.|PLC|GmbH & Co\. KG|GmbH & Co\.)/gi,
@@ -1589,13 +1632,11 @@
       ];
       function detectLocalEntities(text) {
         var results = [];
-        var seen = new Set();
-        var nameRx = /\b([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[\- \t][A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)\b/g;
+        var nameRx = /(?<![A-Za-z0-9_À-ɏ])([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[\- \t][A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)(?![A-Za-z0-9_À-ɏ])/g;
         var match;
         while ((match = nameRx.exec(text)) !== null) {
           var name = match[0].trim();
-          if (name.length < 2 || seen.has(name)) continue;
-          seen.add(name);
+          if (name.length < 2) continue;
           var parts = name.split(/[\s-]/);
           var isName =
             parts.some(function (p) {
@@ -1619,8 +1660,7 @@
           rx.lastIndex = 0;
           while ((match = rx.exec(text)) !== null) {
             var org = (match[1] || match[2] || match[0]).trim();
-            if (org.length < 3 || seen.has("org:" + org)) continue;
-            seen.add("org:" + org);
+            if (org.length < 3) continue;
             results.push({
               entity_group: "ORG",
               score: 0.75,
@@ -1635,8 +1675,7 @@
           rx2.lastIndex = 0;
           while ((match = rx2.exec(text)) !== null) {
             var loc = (match[2] || match[1] || match[0]).trim();
-            if (loc.length < 3 || seen.has("loc:" + loc)) continue;
-            seen.add("loc:" + loc);
+            if (loc.length < 3) continue;
             var cityRx =
               /\b(München|Berlin|Hamburg|Köln|Frankfurt|Stuttgart|Düsseldorf|Leipzig|Dresden|Hannover|Nürnberg|Bremen|Bonn|Münster|Karlsruhe|Mannheim|Augsburg|Wiesbaden|Freiburg|Aachen|Regensburg|Kiel|Erfurt|Mainz|Koblenz|Trier|Ulm|Heidelberg|Potsdam|Darmstadt|Bamberg|Passau|Bremen|Lübeck|Rostock|Chemnitz|Magdeburg|Saarbrücken|Würzburg|Ingolstadt)\b/i;
             var score = loc.match(cityRx) ? 0.9 : 0.6;
@@ -2155,7 +2194,7 @@
           let mp;
           while (
             (mp = vorVon(s.end)) &&
-            !SW.has(mp[1])
+            !(SW.has(mp[1]) && !LOCAL_SURNAMES.has(mp[1]))
           ) {
             if (s.end - s.start + mp[0].length > MAX_NAME_SPAN) {
               weiter(s, s.end + mp[0].length - mp[1].length, mp[1].length);

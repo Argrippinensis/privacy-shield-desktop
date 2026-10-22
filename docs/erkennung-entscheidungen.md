@@ -20,13 +20,13 @@ Modi: wortlisten (nur Regeln), fallback (Regeln plus Wortlisten, Modell startet 
 ## Offene Luecken (je Modus, je Fall-Id, synthetisch je Dokument und Wert)
 
 <!-- BACKLOG-START -->
-Stand der Messung: C1.1 nach Gruppe A (Aufraeumen D29)
+Stand der Messung: C1.1 nach Gruppe C1 (Namen im Ausfallmodus)
 
 | Modus | Luecken Handfaelle (von 125) | Fehlalarme (NEG von 60) | Synthetik undicht (von 860) |
 |---|---|---|---|
-| wortlisten | 41 | 20 | 68 |
-| fallback | 40 | 20 | 46 |
-| ki | 26 | 20 | 24 |
+| wortlisten | 46 | 20 | 66 |
+| fallback | 33 | 20 | 5 |
+| ki | 28 | 20 | 24 |
 
 ### Modus wortlisten
 
@@ -36,108 +36,97 @@ Stand der Messung: C1.1 nach Gruppe A (Aufraeumen D29)
 * V2-AUSLAND: v2a92 v2a94 v2a95 v2a96 v2a97 v2a99
 * V2-FORM: v2a81 v2a83 v2a84 v2a85 v2a86 v2a87
 * V2-GERAET: v2a30
-* V2-IDENT: v2a03 v2a06 v2a07 v2a08
+* V2-IDENT: v2a03 v2a06 v2a07 v2a08 v2a116 v2a117 v2a118 v2a119 v2a120
 * V2-KONTAKT: v2a12 v2a15 v2a19 v2a20
 * V2-NUMMER: v2a45
 * V2-PERSON: v2a51 v2a54 v2a57
 * V2-SECRET: v2a101 v2a103 v2a104 v2a105 v2a109 v2a110
 * V2-STANDORT: v2a35 v2a39 v2a111 v2a113 v2a114 v2a115
-* Synthetik je Typ (undicht/gesamt): NAME 63/191, TAXID 5/14
+* Synthetik je Typ (undicht/gesamt): NAME 61/191, TAXID 5/14
 * Synthetische Lecks einzeln (Vorlage, Dokument-Nr, Typ, noch lesbares Fragment; nur die zusaetzlich zu fallback):
   * zeugnis #0 NAME: Matthias
+  * gespraechsprotokoll #2 NAME: Ömer
   * csvexport #4 NAME: Ralf | Zimmermann
+  * chatverlauf #5 NAME: Thomas
+  * chatverlauf #5 NAME: Lena
+  * rechnung_positionen #7 NAME: Dieter | Bärtschi
   * schadensmeldung_lang #13 NAME: Lukas | Zimmermann
   * zeugnis #14 NAME: Anna | Schäfer
+  * mietvertrag #15 NAME: Birgit | Farsi | Al-Farsi
   * gespraechsprotokoll #16 NAME: Katharina | Obermaier
+  * chatverlauf #19 NAME: Birgit | Lüdenscheidt
   * chatverlauf #19 NAME: Zoë | Schulz
   * rechnung_positionen #21 NAME: Lena | Yıldız
+  * arztbrief_lang #25 NAME: Farsi | Al-Farsi
+  * zeugnis #28 NAME: Nadine | Farsi | Al-Farsi
+  * zeugnis #28 NAME: Farsi | Al-Farsi
   * mietvertrag #29 NAME: Anna | Wagner
+  * gespraechsprotokoll #30 NAME: Çağlar
+  * emailverlauf #31 NAME: Fatima | Bärtschi
   * csvexport #32 NAME: Karl-Heinz | Kowalski
   * csvexport #32 NAME: Jürgen | Neumann
   * csvexport #32 NAME: José | Krüger
+  * chatverlauf #33 NAME: Søren
+  * chatverlauf #33 NAME: Fatima
   * rechnung_positionen #35 NAME: Çağlar | Schäfer
+  * kuendigung_lang #40 NAME: Çağlar | Richter
+  * schadensmeldung_lang #41 NAME: Ömer | Yıldız
   * zeugnis #42 NAME: Lena | Obermaier
   * zeugnis #42 NAME: Karl-Heinz | Obermaier
   * mietvertrag #43 NAME: Çağlar | Schulz
+  * gespraechsprotokoll #44 NAME: Dieter
   * csvexport #46 NAME: Birgit | Weber | Schmidt-Weber
   * csvexport #46 NAME: Petra | Lechner | Aigner-Lechner
+  * chatverlauf #47 NAME: Petra
+  * chatverlauf #47 NAME: Petra
   * rechnung_positionen #49 NAME: Anna | Wagner
   * schadensmeldung_lang #55 NAME: Matthias | Hoffmann
   * zeugnis #56 NAME: Sabine | Kowalski
+  * mietvertrag #57 NAME: Dieter | Bärtschi
+  * gespraechsprotokoll #58 NAME: Nadine | Lechner | Aigner-Lechner
   * gespraechsprotokoll #58 NAME: Ralf | Bauer
+  * emailverlauf #59 NAME: Marlene | Wagner
+  * emailverlauf #59 NAME: Anna | Hoffmann
   * csvexport #60 NAME: Thomas | Zimmermann
   * csvexport #60 NAME: Mohammed | Schulz
+  * chatverlauf #61 NAME: Florian
+  * chatverlauf #61 NAME: Ömer
   * schadensmeldung_lang #69 NAME: Katharina | Voigt
   * schadensmeldung_lang #69 NAME: Thomas | Lechner | Aigner-Lechner
+  * zeugnis #70 NAME: Tobias
   * gespraechsprotokoll #72 NAME: Çağlar | Becker
+  * chatverlauf #75 NAME: Dieter
+  * chatverlauf #75 NAME: Marlene
   * arztbrief_lang #81 NAME: Krüger
   * arztbrief_lang #81 NAME: Oliver | Krüger
   * zeugnis #84 NAME: Thomas | Dvořák
   * gespraechsprotokoll #86 NAME: Anna | Yilmaz
   * csvexport #88 NAME: Ralf | Hartmann
+  * chatverlauf #89 NAME: Nadine | Farsi
+  * chatverlauf #89 NAME: Birgit
+  * rechnung_positionen #91 NAME: Zoë | Kowalski
 
 ### Modus fallback
 
 * Fehlalarme (NEG): v2n01 v2n02 v2n13 v2n15 v2n20 v2n21 v2n23 v2n25 v2n29 v2n30 v2n32 v2n34 v2n35 v2n37 v2n48 v2n50 v2n51 v2n52 v2n53 v2n56
 * V2-ART10: v2a78
-* V2-ART9: v2a66 v2a67 v2a69
+* V2-ART9: v2a67 v2a69
 * V2-AUSLAND: v2a92 v2a94 v2a95 v2a96 v2a97 v2a99
 * V2-FORM: v2a81 v2a83 v2a84 v2a85 v2a86 v2a87
 * V2-GERAET: v2a30
-* V2-IDENT: v2a03 v2a06 v2a07 v2a08
+* V2-IDENT: v2a08
 * V2-KONTAKT: v2a12 v2a15 v2a19 v2a20
 * V2-NUMMER: v2a45
-* V2-PERSON: v2a51 v2a54 v2a57
+* V2-PERSON: v2a51 v2a57
 * V2-SECRET: v2a101 v2a103 v2a104 v2a105 v2a109 v2a110
-* V2-STANDORT: v2a35 v2a39 v2a111 v2a114 v2a115
-* Synthetik je Typ (undicht/gesamt): NAME 41/191, TAXID 5/14
+* V2-STANDORT: v2a35 v2a39 v2a111
+* Synthetik je Typ (undicht/gesamt): TAXID 5/14
 * Synthetische Lecks einzeln (Vorlage, Dokument-Nr, Typ, noch lesbares Fragment):
-  * gespraechsprotokoll #2 NAME: Ömer
-  * chatverlauf #5 NAME: Thomas
-  * chatverlauf #5 NAME: Lena
-  * rechnung_positionen #7 NAME: Dieter | Bärtschi
   * kuendigung_lang #12 TAXID: 570822
-  * zeugnis #14 NAME: Anna
-  * mietvertrag #15 NAME: Birgit | Farsi | Al-Farsi
-  * gespraechsprotokoll #16 NAME: Katharina
-  * chatverlauf #19 NAME: Birgit | Lüdenscheidt
-  * chatverlauf #19 NAME: Zoë
-  * arztbrief_lang #25 NAME: Farsi | Al-Farsi
   * kuendigung_lang #26 TAXID: 739933
-  * zeugnis #28 NAME: Nadine | Farsi | Al-Farsi
-  * zeugnis #28 NAME: Farsi | Al-Farsi
-  * gespraechsprotokoll #30 NAME: Çağlar
-  * emailverlauf #31 NAME: Fatima | Bärtschi
-  * chatverlauf #33 NAME: Søren
-  * chatverlauf #33 NAME: Fatima
-  * kuendigung_lang #40 NAME: Çağlar | Richter
   * kuendigung_lang #40 TAXID: 99 732
-  * schadensmeldung_lang #41 NAME: Ömer | Yıldız
-  * zeugnis #42 NAME: Lena
-  * gespraechsprotokoll #44 NAME: Dieter
-  * chatverlauf #47 NAME: Petra
-  * chatverlauf #47 NAME: Petra
   * kuendigung_lang #54 TAXID: 569466
-  * zeugnis #56 NAME: Sabine
-  * mietvertrag #57 NAME: Dieter | Bärtschi
-  * gespraechsprotokoll #58 NAME: Nadine | Lechner | Aigner-Lechner
-  * gespraechsprotokoll #58 NAME: Ralf
-  * emailverlauf #59 NAME: Marlene | Wagner
-  * emailverlauf #59 NAME: Anna | Hoffmann
-  * chatverlauf #61 NAME: Florian
-  * chatverlauf #61 NAME: Ömer
   * kuendigung_lang #68 TAXID: 31 433
-  * zeugnis #70 NAME: Tobias
-  * gespraechsprotokoll #72 NAME: Çağlar
-  * chatverlauf #75 NAME: Dieter
-  * chatverlauf #75 NAME: Marlene
-  * zeugnis #84 NAME: Thomas
-  * gespraechsprotokoll #86 NAME: Anna
-  * chatverlauf #89 NAME: Nadine | Farsi
-  * chatverlauf #89 NAME: Birgit
-  * rechnung_positionen #91 NAME: Zoë | Kowalski
-  * krankmeldung #94 NAME: Richter
-  * arztbrief_lang #95 NAME: Richter
 
 ### Modus ki
 
@@ -147,7 +136,7 @@ Stand der Messung: C1.1 nach Gruppe A (Aufraeumen D29)
 * V2-AUSLAND: v2a92 v2a94 v2a96 v2a99
 * V2-FORM: v2a83 v2a84 v2a85 v2a86
 * V2-GERAET: v2a30
-* V2-IDENT: v2a08
+* V2-IDENT: v2a08 v2a117 v2a120
 * V2-KONTAKT: v2a12 v2a15 v2a19 v2a20
 * V2-NUMMER: v2a45
 * V2-SECRET: v2a101 v2a103 v2a104 v2a105 v2a109 v2a110
@@ -214,6 +203,32 @@ Bei leerer `ents`-Liste liefern die Wortlisten nichts (`activeEnts.size > 0`): "
 **Golden-Stand (`tests/golden/baseline.json`, Abschnitt `wordlist`):** neu gesetzt, weil der Test "Wortlisten-Erkennung entspricht dem Golden-Stand" und "Ausgeschaltet: kein Modell, Ergebnis der Standard-Erkennung" jetzt W1 vergleichen (KI aus). Diff gelesen: (1) "Hamburg" wird als ORT maskiert (vorher Klartext); (2) die Adresse "Werner-von-Siemens-Strasse 1, 80333 Muenchen" wird als NAME statt ADRESSE maskiert (Wortliste "Werner" greift, die Spanne ist dieselbe; nur die Platzhalterart wechselt, nichts bleibt lesbar); (3) "Hans Fischer fuer die Mustermann GmbH" hat die Methode "KI-Erkennung (Wortlisten)" statt "Regex (Pass 2)". Der Abschnitt `model` ist unveraendert.
 
 **Messung Gruppe B (Harness, vorher/nachher):** unveraendert in allen Modi (die Harness-Modi setzen den Wert ausdruecklich); der Gewinn liegt im Produkt: "KI aus" verhaelt sich wie `fallback` (Handfaelle alt 12 statt 21, Synthetik 11 statt 18 von 276; neue Handfaelle 40 statt 41, Synthetik 46 statt 68 von 860). Fehlalarme: keine neuen.
+
+### Gruppe C1: Namen im Ausfallmodus (Backlog 1)
+
+Ausgangslage (Modus fallback, nach Gruppe B): Handfaelle alt 12, neu 40; Synthetik alt 11 von 276, neu 46 von 860 (davon NAME 11 und 41). Die Auswertung der einzelnen Lecks (Abschnitt "Offene Luecken") ergab drei Ursachen.
+
+**Ursache 1, Fall-Ids v2a116 (rot angelegt) und die Mehrfachnennungen in den Synthetik-Dokumenten (zeugnis, chatverlauf, gespraechsprotokoll u. a.): Fehler im Code, behoben.** `detectLocalEntities` (Wortlisten) merkte sich jeden gefundenen Namen, jede Organisation und jeden Ort in einer Menge `seen` und ueberging jedes weitere Vorkommen derselben Schreibweise. Folge: in "Anna Schaefer ... Wir danken Anna ... Anna bleibt erreichbar" wurde nur das erste einzelne "Anna" maskiert, jedes weitere blieb im Klartext (jeder Sprecher im Chat, jede Anrede ab dem zweiten Vorkommen). Die Menge war ueberfluessig (Treffer mit gleichem Ort werden spaeter ohnehin vereinigt). Entscheidung: Regel/Code; `seen` entfernt, jedes Vorkommen ist ein Treffer. Grund: gemessener Hauptverursacher der Namenslecks im Ausfallmodus.
+
+**Ursache 2, Fall-Ids v2a117 (Chat-Sprecher Zoe), v2a120 (Ansprache Oemer) und Synthetik (Namen mit Ae/Oe/Ue/Sonderbuchstaben am Rand): Fehler im Code, behoben.** `nameRx` begrenzte Namen mit `\b`; in JavaScript kennt `\b` nur ASCII-Buchstaben, deshalb wurde "Zoë" nur als "Zo" gelesen (kein Treffer im Woerterbuch) und Namen mit Sonderbuchstaben am Anfang (Ömer, Çağlar, Łucja) gar nicht gefunden. Entscheidung: Regel; `\b` ersetzt durch Lookarounds `(?<![A-Za-z0-9_À-ɏ])` und `(?![A-Za-z0-9_À-ɏ])` (wie in den uebrigen Namensregeln).
+
+**Ursache 3, Fall-Ids v2a118, v2a119, v2a121 (neu, rot) und n12 (Mohammed Al-Farsi), ge04, Synthetik (Namen mit Zusatz: "Dieter de Baertschi", "Nadine van Al-Farsi", "Ilse von der Simek"): Woerterbuch.** Das Woerterbuch der Wortlisten (94 Vornamen, 128 Nachnamen) kannte viele gaengige Namen nicht. Entscheidung: Woerterbuch erweitert um rund 450 Vornamen und rund 230 Nachnamen (deutschsprachige, tuerkische, polnische, arabische, slawische, romanische und nordische Namen, auch mit Sonderbuchstaben); keine Substantive, die gleichzeitig Nachnamen sind (Keller, Maurer, Schreiner u. a.), damit keine Fehlalarme entstehen. **Grenze der Messung:** Die Synthetik zieht ihre Namen aus je 30 Vor- und Nachnamen; die Verbesserung dort ist deshalb eine obere Schaetzung, die tatsaechliche Abdeckung echter Texte haengt von der Namenslistengroesse ab. Messbar gegen Fehlalarme ist sie durch die 80 Negativfaelle (keine neuen).
+
+**Syn 40, 94, 95 und v1 schaden#40 ("Tobias de Richter", "Anna von der Richter"): Regel.** "Richter" steht als Berufsbezeichnung in der Stoppwortliste und wurde deshalb nach einem Namenszusatz nicht mehr an den Namen gehaengt. Entscheidung: Ist das Wort ein bekannter Nachname (`LOCAL_SURNAMES`), blockiert die Stoppwortliste die Verlaengerung nach Namenszusatz nicht mehr. Wirkung auch ohne Wortlisten und mit KI-Spans (syn28, in `reference-allow.json`).
+
+**Bekannte Nebenwirkung (bewusst offen, kein Leck):** "Braun zur Abgabe aller Erklaerungen" wird als ein Name mitmaskiert, weil "zur" als Namenszusatz gilt (Verhalten der Verlaengerungsregel, durch die jetzt gefundenen Treffer haeufiger sichtbar: syn13, syn27). Ueberzaehlige Maskierung, nichts bleibt lesbar; Behebung moeglich ueber eine Einschraenkung von "zu/zur/vom" als Zusatz (C1.2).
+
+**Referenz (Differenztest `--node`):** 22 erklaerte Abweichungen in `tests/golden/reference-allow.json` (w1: n12, n23, d03, ga09, ga22, ga24, ge04, syn0, syn4, syn11, syn12, syn13, syn27, syn29, syn30, syn34, syn40, syn41, golden-sample; w0, w1, ki: syn28). Pruefung je Eintrag mit altem und neuem Kern: ausschliesslich zusaetzliche oder verlaengerte Maskierung (neue Orts-/Namenstreffer, Zusatzteile von Namen), keine Stelle verliert eine Maskierung.
+
+**Messung Gruppe C1 (vorher, nachher, Harness):**
+
+| Modus | Handfaelle alt | Handfaelle neu | Negativfaelle (neu / alt) | Synthetik 42 Dok. | Synthetik 98 Dok. |
+|---|---|---|---|---|---|
+| fallback | 12, danach 10 | 40, danach 33 (inkl. 6 neue Faelle v2a116-121, davon 5 anfangs rot) | 20 / 0 (unveraendert) | 11, danach 0 von 276 | 46, danach 5 von 860 |
+| ki | 4, unveraendert | 26, danach 28 (die zwei neuen Faelle v2a117, v2a120 sind in ki rot) | 20 / 0 (unveraendert) | 1 von 276, unveraendert | 24 von 860, unveraendert |
+| wortlisten (Diagnose) | 21, unveraendert | 41, danach 46 (neue Faelle ohne Wortlisten rot) | 20 / 0 | 18, unveraendert | 68, danach 66 von 860 |
+
+Restliche Namenslecks im Ausfallmodus der Synthetik: keine; offen sind in den neuen Dokumenten nur fuenf Steuer-ID-Werte mit Verb ("Steuer-ID lautet ...") und in ki die Namen, die das Modell nicht findet (siehe Backlog).
 
 
 ---

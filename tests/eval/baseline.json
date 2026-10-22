@@ -31,7 +31,7 @@
   },
   "fallback": {
     "cases": {
-      "NAME": 1,
+      "NAME": 0,
       "ORG": 2,
       "ADR": 0,
       "ORT": 1,
@@ -46,7 +46,7 @@
       "G-GERAET": 0,
       "G-STANDORT": 0,
       "G-NUMMER": 0,
-      "G-GEBURT": 2,
+      "G-GEBURT": 1,
       "G-GEHALT": 0,
       "G-FAMILIE": 0,
       "G-NATION": 1,
@@ -56,7 +56,7 @@
       "G-AUSLAND": 1,
       "G-SECRET": 0
     },
-    "synthLeaked": 11,
+    "synthLeaked": 0,
     "synthTotal": 276
   },
   "ki": {

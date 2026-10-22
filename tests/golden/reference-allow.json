@@ -1,1 +1,112 @@
-[]
+[
+ {
+  "mode": "w1",
+  "key": "n12",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "n23",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "d03",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "ga09",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "ga22",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "ga24",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "ge04",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn0",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn4",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn11",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn12",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn13",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn27",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn29",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn30",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn34",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn40",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "syn41",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w1",
+  "key": "golden-sample",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+ },
+ {
+  "mode": "w0",
+  "key": "syn28",
+  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext"
+ },
+ {
+  "mode": "w1",
+  "key": "syn28",
+  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext"
+ },
+ {
+  "mode": "ki",
+  "key": "syn28",
+  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext"
+ }
+]
