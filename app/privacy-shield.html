@@ -2005,12 +2005,12 @@
         <h2 id="PWTITLE" style="font-size: 15px; font-weight: 700; color: #1a3a5c; margin: 0 0 6px">Passwort</h2>
         <p id="PWINFO" style="font-size: 12px; color: #666; margin: 0 0 14px">Ohne dieses Passwort kann die Zuordnung nicht wiederhergestellt werden.</p>
         <label for="PWD1" style="display: block; font-size: 11px; font-weight: 600; color: #333; margin-bottom: 3px">Passwort</label>
-        <input id="PWD1" type="password" autocomplete="off" oninput="psPwStrength()" style="width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 9px; font-size: 13px" />
+        <input id="PWD1" type="password" autocomplete="current-password" aria-describedby="PWINFO PWSTR" oninput="psPwStrength()" style="width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 9px; font-size: 13px" />
         <div id="PWROW2" style="margin-top: 10px">
           <label for="PWD2" style="display: block; font-size: 11px; font-weight: 600; color: #333; margin-bottom: 3px">Passwort wiederholen</label>
-          <input id="PWD2" type="password" autocomplete="off" style="width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 9px; font-size: 13px" />
+          <input id="PWD2" type="password" autocomplete="new-password" aria-describedby="PWINFO" style="width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 9px; font-size: 13px" />
         </div>
-        <p id="PWSTR" style="font-size: 11px; color: #666; margin: 8px 0 0; min-height: 15px"></p>
+        <p id="PWSTR" aria-live="polite" style="font-size: 11px; color: #666; margin: 8px 0 0; min-height: 15px"></p>
         <p id="PWERR" role="alert" style="font-size: 12px; color: #b91c1c; margin: 8px 0 0; min-height: 16px"></p>
         <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px">
           <button id="PWCANCEL" type="button" class="btn btn-ghost" onclick="psPwClose()">Abbrechen</button>
@@ -2860,9 +2860,9 @@
                   '</td><td class="value-cell">' +
                   esc(d.v) +
                   '</td><td><span class="pill" style="background:' +
-                  d.c +
+                  esc(String(d.c)) +
                   "18;color:" +
-                  d.c +
+                  esc(String(d.c)) +
                   ";border:1px solid " +
                   d.c +
                   '44">' +
@@ -2881,12 +2881,34 @@
       function psMapUnsaved() {
         return Object.keys(store).length > 0 && !mapSaved;
       }
-      let psPwMode = null, psPwBytes = null, psPwBusy = false, psPwOpener = null;
+      let psPwMode = null, psPwBytes = null, psPwBusy = false, psPwOpener = null, psPwTok = 0;
+      // Eintraege bereinigen: nur {{...}}-Schluessel, Farbe als #rrggbb, Texte begrenzt
+      function psSanitize(st) {
+        if (!st || typeof st !== "object" || Array.isArray(st) || (st.v !== undefined && st.v !== 1) || !st.store || typeof st.store !== "object" || Array.isArray(st.store)) throw { code: "CORRUPT" };
+        const ns = Object.create(null), nc = {};
+        const keys = Object.keys(st.store);
+        if (keys.length > 200000) throw { code: "CORRUPT" };
+        for (const k of keys) {
+          const e = st.store[k];
+          if (!/^\{\{[^{}]{1,100}\}\}$/.test(k) || /^\{\{(__proto__|constructor|prototype)\}\}$/i.test(k)) throw { code: "CORRUPT" };
+          if (!e || typeof e !== "object" || typeof e.v !== "string" || typeof e.t !== "string" || typeof e.m !== "string") throw { code: "CORRUPT" };
+          if (e.v.length > 1000000 || e.t.length > 50 || e.m.length > 100) throw { code: "CORRUPT" };
+          ns[k] = { v: e.v, t: e.t, c: typeof e.c === "string" && /^#[0-9a-f]{6}$/i.test(e.c) ? e.c : "#8b5cf6", m: e.m };
+        }
+        const c = st.cnt;
+        if (c !== undefined && (!c || typeof c !== "object" || Array.isArray(c))) throw { code: "CORRUPT" };
+        for (const k of Object.keys(c || {})) {
+          if (k === "__proto__" || !Number.isFinite(c[k]) || c[k] < 0) throw { code: "CORRUPT" };
+          nc[k] = c[k];
+        }
+        return { store: Object.assign({}, ns), cnt: nc };
+      }
       function psPwOpen(mode) {
         psPwMode = mode;
         const save = mode === "save";
         document.getElementById("PWTITLE").textContent = save ? "Zuordnung mit Passwort schützen" : "Zuordnung entschlüsseln";
         document.getElementById("PWINFO").style.display = save ? "" : "none";
+        document.getElementById("PWD1").autocomplete = save ? "new-password" : "current-password";
         document.getElementById("PWROW2").style.display = save ? "" : "none";
         ["PWD1", "PWD2"].forEach((id) => (document.getElementById(id).value = ""));
         document.getElementById("PWERR").textContent = "";
@@ -2898,6 +2920,9 @@
       function psPwClose() {
         ["PWD1", "PWD2"].forEach((id) => (document.getElementById(id).value = ""));
         document.getElementById("PWDLG").style.display = "none";
+        psPwTok++;
+        psPwBusy = false;
+        document.getElementById("PWOK").disabled = false;
         psPwMode = null;
         psPwBytes = null;
         if (psPwOpener && psPwOpener.focus) psPwOpener.focus();
@@ -2929,6 +2954,9 @@
       }
       function psMapLoad(file) {
         const r = new FileReader();
+        r.onerror = function () {
+          toast("Die Datei konnte nicht gelesen werden.", "e");
+        };
         r.onload = function () {
           psPwOpen("load");
           psPwBytes = new Uint8Array(r.result);
@@ -2950,6 +2978,7 @@
         const pw = document.getElementById("PWD1").value;
         err.textContent = "";
         psPwBusy = true;
+        const tok = psPwTok;
         const okb = document.getElementById("PWOK");
         okb.disabled = true;
         try {
@@ -2963,19 +2992,31 @@
             const docs = [];
             if (fn.trim() || it) {
               const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(it));
+              if (tok !== psPwTok) return;
               docs.push({ index: 1, name: fn.trim(), chars: it.length, sha256: [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("") });
             }
             const bytes = await PSLib.psmap.encrypt({ v: 1, created: new Date().toISOString(), state: { store: store, cnt: cnt }, docs: docs }, pw);
+            if (tok !== psPwTok) return;
             dl("zuordnung.psmap", bytes, "application/octet-stream");
             mapSaved = true;
             psPwClose();
             toast("Zuordnung verschlüsselt gespeichert", "s");
           } else {
             const p = await PSLib.psmap.decrypt(psPwBytes, pw);
-            if (!p || !p.state || typeof p.state.store !== "object" || !p.state.store) throw { code: "CORRUPT" };
-            store = p.state.store;
-            cnt = p.state.cnt && typeof p.state.cnt === "object" ? p.state.cnt : {};
-            renderMap();
+            if (tok !== psPwTok) return;
+            if (!p || typeof p !== "object" || p.v !== 1) throw { code: "CORRUPT" };
+            const clean = psSanitize(p.state);
+            const oldS = store, oldC = cnt;
+            try {
+              store = clean.store;
+              cnt = clean.cnt;
+              renderMap();
+            } catch (e2) {
+              store = oldS;
+              cnt = oldC;
+              renderMap();
+              throw { code: "CORRUPT" };
+            }
             mapSaved = true;
             psPwClose();
             toast(Object.keys(store).length + " Einträge geladen", "s");
@@ -2984,8 +3025,10 @@
           err.textContent = psPwMsg(e);
           if (e && e.code !== "WEAK_PASSWORD") document.getElementById("PWD1").select();
         } finally {
-          psPwBusy = false;
-          okb.disabled = false;
+          if (tok === psPwTok) {
+            psPwBusy = false;
+            okb.disabled = false;
+          }
           if (!psPwMode) document.getElementById("PWD1").value = "";
         }
       }
@@ -3434,7 +3477,11 @@
           input.value = "";
           return;
         }
+        const wasSaved = !psMapUnsaved();
         const reader = new FileReader();
+        reader.onerror = function () {
+          toast("Die Datei konnte nicht gelesen werden.", "e");
+        };
         reader.onload = function (e) {
           const lines = e.target.result.split(/\r?\n/).filter((l) => l.trim());
           let imported = 0;
@@ -3491,7 +3538,7 @@
           });
           renderMap();
           input.value = "";
-          mapSaved = true;
+          if (wasSaved && imported > 0) mapSaved = true;
           toast(imported + " Einträge importiert (unverschlüsselte CSV)", "s");
         };
         reader.readAsText(file, "UTF-8");
