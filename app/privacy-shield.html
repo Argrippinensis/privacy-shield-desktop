@@ -2312,7 +2312,7 @@
           for (const [li, f] of list.entries()) {
             const pre = "Datei " + (li + 1) + ": ";
             let text;
-            try { text = await readTextOf(f); } catch (err) { msgs.push(pre + "konnte nicht gelesen werden"); continue; }
+            try { text = await readTextOf(f); } catch (err) { msgs.push(pre + (err && err.fixed ? err.message : "konnte nicht gelesen werden")); continue; }
             if (!text.trim()) { msgs.push(pre + "kein Text gefunden"); continue; }
             try {
               prjSize.set(PSLib.project.add(prj, { name: f.name, text: text }), f.size);
@@ -2599,11 +2599,12 @@
         const F = PSLib.formats, O = PSLib.officefmt;
         const bytes = new Uint8Array(await file.arrayBuffer());
         const kind = F.detect(file.name, bytes.slice(0, 512));
-        if (kind === "pdf") return exPDF(file);
+        const fix = (m) => Object.assign(new Error(m), { fixed: true });
         if (kind === "doc" || kind === "xls" || kind === "ppt")
-          throw new Error("Dateien im alten ." + kind + "-Format werden nicht unterstützt. Bitte in Word/Excel/PowerPoint als .docx/.xlsx/.pptx speichern.");
-        if (kind === "unknown") throw new Error("Dateityp nicht erkannt oder Datei beschädigt.");
+          throw fix("Dateien im alten ." + kind + "-Format werden nicht unterstützt. Bitte in Word/Excel/PowerPoint als .docx/.xlsx/.pptx speichern.");
+        if (kind === "unknown") throw fix("Dateityp nicht erkannt oder Datei beschädigt.");
         try {
+          if (kind === "pdf") return await exPDF(file);
           if (["docx", "xlsx", "pptx", "odt", "ods", "odp"].includes(kind)) {
             F.guard(zipDirOf(bytes)); // vor dem Entpacken: gefaelschte Groessen im Zentralverzeichnis abfangen
             const zip = await JSZip.loadAsync(bytes);
@@ -2623,11 +2624,12 @@
           if (kind === "rtf") return F.extractRtf(txt).text;
           return txt;
         } catch (err) {
+          if (err && err.fixed) throw err;
           if (err instanceof F.PSFormatError) {
             const m = { TOO_BIG: "Archiv zu groß", TOO_MANY: "Archiv hat zu viele Einträge", RATIO: "Archiv ist verdächtig stark komprimiert" };
-            throw new Error(m[err.code] || "Dateityp nicht erkannt oder Datei beschädigt.");
+            throw fix(m[err.code] || "Dateityp nicht erkannt oder Datei beschädigt.");
           }
-          throw err;
+          throw fix("Dateityp nicht erkannt oder Datei beschädigt."); // nie err.message roh
         }
       }
       async function loadF(file) {
