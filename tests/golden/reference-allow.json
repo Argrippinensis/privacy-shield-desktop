@@ -108,5 +108,35 @@
   "mode": "ki",
   "key": "syn28",
   "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext"
+ },
+ {
+  "mode": "w0",
+  "key": "ga03",
+  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext"
+ },
+ {
+  "mode": "w1",
+  "key": "ga03",
+  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext"
+ },
+ {
+  "mode": "ki",
+  "key": "ga03",
+  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext"
+ },
+ {
+  "mode": "w0",
+  "key": "ga05",
+  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext"
+ },
+ {
+  "mode": "w1",
+  "key": "ga05",
+  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext"
+ },
+ {
+  "mode": "ki",
+  "key": "ga05",
+  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext"
  }
 ]

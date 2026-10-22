@@ -316,6 +316,8 @@
             /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=\b(?:geboren|geb\.)[ \t]{1,1000})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![\w.])/g,
             /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2}))/g,
             /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
+            /(?<=(?:^|\n|[:;])[ \t]{0,5})([A-ZÄÖÜ][A-ZÄÖÜß]{2,}(?:-[A-ZÄÖÜ][A-ZÄÖÜß]{2,})?,[ \t]+(?:[A-ZÄÖÜ][A-ZÄÖÜß]{2,}|[A-ZÄÖÜ][a-zäöüß]{2,})(?:-[A-ZÄÖÜ][A-Za-zäöüß]{2,})?)(?=[ \t]*(?:[;,(<\n]|$))/g,
+            /(?:(?<=,[ \t]{0,3})genannt|alias|a\.k\.a\.|auch bekannt als|Spitznamen?|Rufname|Künstlername|(?:nennen|nennt|rufen|ruft) (?:ihn|sie)(?: nur)?)[ \t:]{0,3}["„»“'‚‹]([A-ZÄÖÜ][A-Za-zäöüßÄÖÜ\-]{2,}(?:[ \t]+[A-ZÄÖÜ][A-Za-zäöüßÄÖÜ\-]{2,})?)["“«”'‘›]/g,
           ],
         },
         {
@@ -1269,7 +1271,7 @@
       // GROSSGESCHRIEBENE Personennamen ("HANS MEIER"): nur wenn Vor- oder Nachname in den Wortlisten steht,
       // damit Ueberschriften ("KAUFVERTRAG ZWISCHEN") nicht als Name gelten.
       function isCapsPersonName(val) {
-        const words = val.trim().split(/[ \t]+/);
+        const words = val.trim().split(/[ \t]+/).map((w) => w.replace(/,$/, ""));
         if (words.length < 2 || words.length > 3) return false;
         if (!words.every((w) => /^[A-ZÄÖÜ][A-ZÄÖÜ\-]+$/.test(w))) return false;
         const tc = (w) => w.charAt(0) + w.slice(1).toLowerCase();
@@ -1278,6 +1280,12 @@
       function okName(s) {
         const tt = s.trim();
         if (tt === tt.toUpperCase() && /[A-ZÄÖÜ]{2}/.test(tt)) return isCapsPersonName(tt);
+        // GROSSGESCHRIEBENER Nachname mit Komma ("SCHMIEDEBERG, Ottilie"): beide Teile duerfen kein Stoppwort sein
+        const kom = /^([A-ZÄÖÜ][A-ZÄÖÜß\-]+),[ \t]+(\S+)$/.exec(tt);
+        if (kom) {
+          const tc = (w) => w.charAt(0) + w.slice(1).toLowerCase();
+          if (SW.has(tc(kom[1])) || SW.has(kom[2]) || SW.has(tc(kom[2]))) return false;
+        }
         return s
           .trim()
           .split(/\s+/)
@@ -1472,6 +1480,11 @@
         "Torsten", "Udo", "Ulf", "Ulrich", "Ulrike", "Ursula", "Valentin", "Valentina", "Valentyna", "Vanessa", "Vera", "Verena", "Viktor",
         "Viktoria", "Vladimir", "Volker", "Waldemar", "Waltraud", "Wiebke", "Wilfried", "Willi", "Winfried", "Wojciech", "Wojtek",
         "Yannick", "Yasemin", "Yusuf", "Yvonne", "Zeynep", "Zoë",
+        // Kurzformen und Spitznamen
+        "Andi", "Basti", "Benni", "Biggi", "Chris", "Chrissi", "Conny", "Dani", "Danny", "Ede", "Evi", "Fabi", "Flo", "Flori", "Gabi",
+        "Gaby", "Hannes", "Hanni", "Heiner", "Hotte", "Jenny", "Jessi", "Jule", "Kalle", "Kathi", "Kati", "Katrin", "Lissi", "Lotti",
+        "Micha", "Michi", "Mike", "Mimi", "Mischa", "Moni", "Nici", "Nicki", "Resi", "Rike", "Rudi", "Sandy", "Silvi", "Sissi", "Steffi",
+        "Susi", "Teddy", "Timo", "Toni", "Tommy", "Uli", "Uschi", "Wolle",
       ]);
       const LOCAL_SURNAMES = new Set([
         "Müller",

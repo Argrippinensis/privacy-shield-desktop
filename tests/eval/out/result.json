@@ -65,13 +65,11 @@
    },
    "G-NAME": {
     "total": 9,
-    "leaked": 7,
+    "leaked": 5,
     "ids": [
      "ga01",
      "ga02",
-     "ga03",
      "ga04",
-     "ga05",
      "ga06",
      "ga07"
     ]
@@ -757,8 +755,8 @@
     },
     {
      "key": "ga03",
-     "out": "MÜLLER, HANS\nGeschäftsführer der {{ORG_1}}",
-     "tokens": 1
+     "out": "{{NAME_1}}\nGeschäftsführer der {{ORG_1}}",
+     "tokens": 2
     },
     {
      "key": "ga04",
@@ -767,8 +765,8 @@
     },
     {
      "key": "ga05",
-     "out": "Alle nennen ihn nur \"Hotte\", eigentlich {{NAME_1}} aus Dortmund.",
-     "tokens": 1
+     "out": "Alle nennen ihn nur \"{{NAME_2}}\", eigentlich {{NAME_1}} aus Dortmund.",
+     "tokens": 2
     },
     {
      "key": "ga06",
@@ -1340,11 +1338,9 @@
    },
    "G-NAME": {
     "total": 9,
-    "leaked": 3,
+    "leaked": 1,
     "ids": [
-     "ga03",
-     "ga04",
-     "ga05"
+     "ga04"
     ]
    },
    "G-KONTAKT": {
@@ -2025,8 +2021,8 @@
     },
     {
      "key": "ga03",
-     "out": "MÜLLER, HANS\nGeschäftsführer der {{ORG_1}}",
-     "tokens": 1
+     "out": "{{NAME_1}}\nGeschäftsführer der {{ORG_1}}",
+     "tokens": 2
     },
     {
      "key": "ga04",
@@ -2035,8 +2031,8 @@
     },
     {
      "key": "ga05",
-     "out": "Alle nennen ihn nur \"Hotte\", eigentlich {{NAME_1}} aus Dortmund.",
-     "tokens": 1
+     "out": "Alle nennen ihn nur \"{{NAME_2}}\", eigentlich {{NAME_1}} aus Dortmund.",
+     "tokens": 2
     },
     {
      "key": "ga06",
@@ -2603,11 +2599,8 @@
    },
    "G-NAME": {
     "total": 9,
-    "leaked": 2,
-    "ids": [
-     "ga03",
-     "ga05"
-    ]
+    "leaked": 0,
+    "ids": []
    },
    "G-KONTAKT": {
     "total": 5,
@@ -3283,8 +3276,8 @@
     },
     {
      "key": "ga03",
-     "out": "MÜLLER, HANS\nGeschäftsführer der {{ORG_1}}",
-     "tokens": 1
+     "out": "{{NAME_1}}\nGeschäftsführer der {{ORG_1}}",
+     "tokens": 2
     },
     {
      "key": "ga04",
@@ -3293,8 +3286,8 @@
     },
     {
      "key": "ga05",
-     "out": "Alle nennen ihn nur \"Hotte\", eigentlich {{NAME_1}} aus {{ORT_1}}.",
-     "tokens": 2
+     "out": "Alle nennen ihn nur \"{{NAME_2}}\", eigentlich {{NAME_1}} aus {{ORT_1}}.",
+     "tokens": 3
     },
     {
      "key": "ga06",

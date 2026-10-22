@@ -24,6 +24,15 @@ export const CASES_V2 = [
   ['v2a119', 'V2-IDENT', 'Vertragspartnerin ist Nadine van Al-Farsi, Mieterin der Wohnung.', ['Nadine', 'Farsi']],
   ['v2a120', 'V2-IDENT', 'TN1: Mache ich. Ömer, kannst du das Protokoll übernehmen?', ['Ömer']],
   ['v2a121', 'V2-IDENT', 'Çağlar Richter und Søren Kierkegaard unterschrieben gemeinsam.', ['Çağlar', 'Richter', 'Søren', 'Kierkegaard']],
+  // GROSSGESCHRIEBENER Nachname mit Komma (C1.1 Gruppe C2)
+  ['v2a122', 'V2-IDENT', 'Absender: BRANDSTETTER, Mechthild\nBetreff: Anfrage zur Rechnung', ['BRANDSTETTER', 'Mechthild']],
+  ['v2a123', 'V2-IDENT', 'Patient: HOFMANN-WEISS, KLARA (geb. 1971), Station 4', ['HOFMANN', 'WEISS', 'KLARA']],
+  ['v2a124', 'V2-IDENT', 'Gläubiger\nPOHLMANN, Torsten\nSchuldner: KRAUSE, Ines', ['POHLMANN', 'Torsten', 'KRAUSE', 'Ines']],
+  // Spitznamen und Kurzformen (C1.1 Gruppe C3)
+  ['v2a125', 'V2-IDENT', 'Alle rufen ihn nur "Basti", gemeldet ist er als Sebastian Kuhlmann.', ['Basti', 'Sebastian', 'Kuhlmann']],
+  ['v2a126', 'V2-IDENT', 'Steffi und Andi holen die Kinder ab; Kathi bleibt zu Hause. Flo meldet sich später.', ['Steffi', 'Andi', 'Kathi', 'Flo']],
+  ['v2a127', 'V2-IDENT', 'Die Zeugin, alias „Mimi“, wurde gestern befragt; im Verein heißt sie „Kleine Moni“.', ['Mimi', 'Moni']],
+  ['v2a128', 'V2-IDENT', 'Annas Mutter und Herrn Schulzes Anwalt waren bei Peters Besprechung anwesend.', ['Anna', 'Schulze', 'Peter']],
   // ---- KONTAKT: E-Mail, Telefon, Handles, Adressen
   ['v2a11', 'V2-KONTAKT', 'Antworten bitte an h.waldmann@sailer-consult.de oder an die Zentrale.', ['h.waldmann@sailer-consult.de']],
   ['v2a12', 'V2-KONTAKT', 'Mobil: +49 160 9348172, Büro: 0711 / 55 20 61-14', ['9348172', '55 20 61']],
@@ -152,8 +161,8 @@ export const CASES_V2 = [
   ['v2n08', 'NEG', 'for (let i = 0; i < items.length; i++) { total += items[i].price; }', []],
   ['v2n09', 'NEG', 'SELECT COUNT(*) FROM bestellungen WHERE status = \'offen\';', []],
   ['v2n10', 'NEG', 'Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.', []],
-  ['v2n11', 'NEG', 'Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.', []],
-  ['v2n12', 'NEG', 'Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.', []],
+  ['v2n11', 'NEG', 'Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.\nVermerk: WICHTIG, Fristablauf beachten.', []],
+  ['v2n12', 'NEG', 'Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.\nWICHTIG, Dieses Schreiben ist fristgebunden.\nACHTUNG, Frist läuft ab.\nDSGVO, Art. 5', []],
   ['v2n13', 'NEG', 'Das Hotel Alpenblick in Garmisch bietet 80 Zimmer und einen Wellnessbereich.', []],
   ['v2n14', 'NEG', 'Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.', []],
   ['v2n15', 'NEG', 'Rechnungsnummer 2024-000781, Positionen: 12 Stück Kabelbinder, 4 Stück Handschuhe.', []],

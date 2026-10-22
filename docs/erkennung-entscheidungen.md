@@ -20,13 +20,13 @@ Modi: wortlisten (nur Regeln), fallback (Regeln plus Wortlisten, Modell startet 
 ## Offene Luecken (je Modus, je Fall-Id, synthetisch je Dokument und Wert)
 
 <!-- BACKLOG-START -->
-Stand der Messung: C1.1 nach Gruppe C1 (Namen im Ausfallmodus)
+Stand der Messung: C1.1 nach Gruppen C2 und C3
 
 | Modus | Luecken Handfaelle (von 125) | Fehlalarme (NEG von 60) | Synthetik undicht (von 860) |
 |---|---|---|---|
-| wortlisten | 46 | 20 | 66 |
-| fallback | 33 | 20 | 5 |
-| ki | 28 | 20 | 24 |
+| wortlisten | 44 | 20 | 66 |
+| fallback | 31 | 20 | 5 |
+| ki | 26 | 20 | 24 |
 
 ### Modus wortlisten
 
@@ -34,9 +34,9 @@ Stand der Messung: C1.1 nach Gruppe C1 (Namen im Ausfallmodus)
 * V2-ART10: v2a78
 * V2-ART9: v2a66 v2a67 v2a69
 * V2-AUSLAND: v2a92 v2a94 v2a95 v2a96 v2a97 v2a99
-* V2-FORM: v2a81 v2a83 v2a84 v2a85 v2a86 v2a87
+* V2-FORM: v2a81 v2a83 v2a84 v2a86 v2a87
 * V2-GERAET: v2a30
-* V2-IDENT: v2a03 v2a06 v2a07 v2a08 v2a116 v2a117 v2a118 v2a119 v2a120
+* V2-IDENT: v2a03 v2a06 v2a116 v2a117 v2a118 v2a119 v2a120 v2a126
 * V2-KONTAKT: v2a12 v2a15 v2a19 v2a20
 * V2-NUMMER: v2a45
 * V2-PERSON: v2a51 v2a54 v2a57
@@ -112,9 +112,8 @@ Stand der Messung: C1.1 nach Gruppe C1 (Namen im Ausfallmodus)
 * V2-ART10: v2a78
 * V2-ART9: v2a67 v2a69
 * V2-AUSLAND: v2a92 v2a94 v2a95 v2a96 v2a97 v2a99
-* V2-FORM: v2a81 v2a83 v2a84 v2a85 v2a86 v2a87
+* V2-FORM: v2a81 v2a83 v2a84 v2a86 v2a87
 * V2-GERAET: v2a30
-* V2-IDENT: v2a08
 * V2-KONTAKT: v2a12 v2a15 v2a19 v2a20
 * V2-NUMMER: v2a45
 * V2-PERSON: v2a51 v2a57
@@ -134,9 +133,9 @@ Stand der Messung: C1.1 nach Gruppe C1 (Namen im Ausfallmodus)
 * V2-ART10: v2a78
 * V2-ART9: v2a67 v2a69
 * V2-AUSLAND: v2a92 v2a94 v2a96 v2a99
-* V2-FORM: v2a83 v2a84 v2a85 v2a86
+* V2-FORM: v2a83 v2a84 v2a86
 * V2-GERAET: v2a30
-* V2-IDENT: v2a08 v2a117 v2a120
+* V2-IDENT: v2a117 v2a120
 * V2-KONTAKT: v2a12 v2a15 v2a19 v2a20
 * V2-NUMMER: v2a45
 * V2-SECRET: v2a101 v2a103 v2a104 v2a105 v2a109 v2a110
@@ -229,6 +228,28 @@ Ausgangslage (Modus fallback, nach Gruppe B): Handfaelle alt 12, neu 40; Synthet
 | wortlisten (Diagnose) | 21, unveraendert | 41, danach 46 (neue Faelle ohne Wortlisten rot) | 20 / 0 | 18, unveraendert | 68, danach 66 von 860 |
 
 Restliche Namenslecks im Ausfallmodus der Synthetik: keine; offen sind in den neuen Dokumenten nur fuenf Steuer-ID-Werte mit Verb ("Steuer-ID lautet ...") und in ki die Namen, die das Modell nicht findet (siehe Backlog).
+
+### Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (Backlog 2)
+
+**ga03 (MUELLER, HANS), v2a08 (SCHMIEDEBERG, Ottilie), v2a85 (ZIEGLER, UWE), neue Faelle v2a122 bis v2a124: Regel.** Keine Regel las die Form "NACHNAME, Vorname" mit grossgeschriebenem Nachnamen; die Wortlisten scheitern an der Gross-/Kleinschreibung, die Namenspaarregel am Komma. Neue Regel in der Gruppe `name`: ein Wort aus Grossbuchstaben (mindestens drei, auch mit Bindestrich), Komma, ein weiteres Wort (Grossbuchstaben oder Grossbuchstabe plus Kleinbuchstaben), und zwar nur am Zeilenanfang oder nach Doppelpunkt/Semikolon und nur, wenn danach ein Trenner (Semikolon, Komma, Klammer, `<`, Zeilenende, Textende) folgt. Die Pruefung `okName` weist die Form zurueck, wenn eines der beiden Woerter ein Stoppwort ist (WICHTIG, Dieses), und die rein grossgeschriebene Form verlangt weiterhin einen Treffer im Namenswoerterbuch (`isCapsPersonName` kennt jetzt das Komma). Fehlalarm-Schutz: `v2n11` und `v2n12` enthalten jetzt Zeilen wie "WICHTIG, Dieses Schreiben ...", "ACHTUNG, Frist laeuft ab.", "DSGVO, Art. 5" und "Vermerk: WICHTIG, Fristablauf beachten." (alle ohne Platzhalter; die Fassung mit abschliessendem Punkt als Trenner erzeugte "DSGVO, Art" als Fehlalarm und wurde verworfen). Grund: die Form tritt in Formularen und Registerauszuegen haeufig auf. **Restrisiko:** Zwei unbekannte Woerter der Form "UEBERSCHRIFT, Unterbegriff" am Zeilenende werden als Name maskiert (Ueber-Maskierung, kein Leck); Ueberschriftzeilen schliesst `isHeadingSpan` weitgehend aus.
+
+### Gruppe C3: Spitznamen, Kurzformen, Genitiv (Backlog 3)
+
+**ga05 ("Hotte"), neue Faelle v2a125, v2a127: Regel.** Spitznamen stehen in Anfuehrungszeichen hinter Stichwoertern. Neue Regel in der Gruppe `name`: ein Spitzname (ein bis zwei Woerter, grossgeschrieben) in Anfuehrungszeichen nach "nennen/nennt/rufen/ruft ihn/sie (nur)", "alias", "a.k.a.", "auch bekannt als", "Spitzname", "Rufname", "Kuenstlername" und nach ", genannt" (das Komma davor ist Pflicht, damit "genannt" in Vertragsdefinitionen wie `"Mieter" genannt` nicht greift). Der Treffer gilt nur, wenn das Wort kein Stoppwort ist (`okName`).
+
+**v2a126 (Steffi, Andi, Kathi, Flo): Woerterbuch.** Gaengige Kurzformen und Spitznamen (Basti, Steffi, Andi, Kathi, Flo, Hannes, Micha, Uschi u. a., rund 60) sind im Vornamenwoerterbuch ergaenzt.
+
+**v2a128 (Genitiv "Annas", "Schulzes", "Peters") und n14: bereits abgedeckt, nur als Schutzfall.** Die Genitivformen werden durch die Verlaengerungs- und Namenspaarregeln erfasst; kein Code. Der Fall v2a128 sichert das gegen Rueckschritt ab.
+
+**Referenz (Differenztest):** ga03 und ga05 in w0, w1 und ki in `tests/golden/reference-allow.json` (jeweils nur zusaetzliche Maskierung).
+
+**Messung Gruppen C2 und C3 (vorher = nach C1, nachher):**
+
+| Modus | Handfaelle alt | Handfaelle neu | Negativfaelle neu / alt | Synthetik 42 | Synthetik 98 |
+|---|---|---|---|---|---|
+| fallback | 10, danach 8 | 33, danach 31 (inkl. 7 neue Faelle v2a122-128, alle gruen) | 20 / 0 | 0 von 276 | 5 von 860 |
+| ki | 4, danach 2 | 28, danach 26 | 20 / 0 | 1 von 276 | 24 von 860 |
+| wortlisten (Diagnose) | 21, danach 19 | 46, danach 44 | 20 / 0 | 18 | 66 |
 
 
 ---

@@ -3,18 +3,17 @@
   "mode": "wortlisten",
   "cases": {
    "V2-IDENT": {
-    "total": 16,
-    "leaked": 9,
+    "total": 23,
+    "leaked": 8,
     "ids": [
      "v2a03",
      "v2a06",
-     "v2a07",
-     "v2a08",
      "v2a116",
      "v2a117",
      "v2a118",
      "v2a119",
-     "v2a120"
+     "v2a120",
+     "v2a126"
     ]
    },
    "V2-KONTAKT": {
@@ -80,12 +79,11 @@
    },
    "V2-FORM": {
     "total": 10,
-    "leaked": 6,
+    "leaked": 5,
     "ids": [
      "v2a81",
      "v2a83",
      "v2a84",
-     "v2a85",
      "v2a86",
      "v2a87"
     ]
@@ -231,13 +229,13 @@
     },
     {
      "key": "v2a07",
-     "out": "Beschuldigter: {{NAME_1}}, genannt \"Wojtek\".",
-     "tokens": 1
+     "out": "Beschuldigter: {{NAME_2}}, genannt \"{{NAME_1}}\".",
+     "tokens": 2
     },
     {
      "key": "v2a08",
-     "out": "Kontoinhaber: SCHMIEDEBERG, Ottilie ({{NAME_1}})",
-     "tokens": 1
+     "out": "Kontoinhaber: {{NAME_2}} ({{NAME_1}})",
+     "tokens": 2
     },
     {
      "key": "v2a09",
@@ -278,6 +276,41 @@
      "key": "v2a121",
      "out": "{{NAME_2}} und {{NAME_1}} unterschrieben gemeinsam.",
      "tokens": 2
+    },
+    {
+     "key": "v2a122",
+     "out": "Absender: {{NAME_1}}\nBetreff: Anfrage zur Rechnung",
+     "tokens": 1
+    },
+    {
+     "key": "v2a123",
+     "out": "Patient: {{NAME_1}} (geb. 1971), Station 4",
+     "tokens": 1
+    },
+    {
+     "key": "v2a124",
+     "out": "Gläubiger\n{{NAME_2}}\nSchuldner: {{NAME_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a125",
+     "out": "Alle rufen ihn nur \"{{NAME_2}}\", gemeldet ist er als {{NAME_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a126",
+     "out": "Steffi und Andi holen die Kinder ab; Kathi bleibt zu Hause. Flo meldet sich später.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a127",
+     "out": "Die Zeugin, alias „{{NAME_2}}“, wurde gestern befragt; im Verein heißt sie „Kleine {{NAME_1}}“.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a128",
+     "out": "{{NAME_3}} und {{NAME_2}} waren bei {{NAME_1}} anwesend.",
+     "tokens": 3
     },
     {
      "key": "v2a11",
@@ -676,8 +709,8 @@
     },
     {
      "key": "v2a85",
-     "out": "NAME: ZIEGLER, UWE; {{DATUM_1}}; ORT: JENA",
-     "tokens": 1
+     "out": "NAME: {{NAME_1}}; {{DATUM_1}}; ORT: JENA",
+     "tokens": 2
     },
     {
      "key": "v2a86",
@@ -856,12 +889,12 @@
     },
     {
      "key": "v2n11",
-     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.",
+     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.\nVermerk: WICHTIG, Fristablauf beachten.",
      "tokens": 0
     },
     {
      "key": "v2n12",
-     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.",
+     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.\nWICHTIG, Dieses Schreiben ist fristgebunden.\nACHTUNG, Frist läuft ab.\nDSGVO, Art. 5",
      "tokens": 0
     },
     {
@@ -1603,11 +1636,9 @@
   "mode": "fallback",
   "cases": {
    "V2-IDENT": {
-    "total": 16,
-    "leaked": 1,
-    "ids": [
-     "v2a08"
-    ]
+    "total": 23,
+    "leaked": 0,
+    "ids": []
    },
    "V2-KONTAKT": {
     "total": 10,
@@ -1667,12 +1698,11 @@
    },
    "V2-FORM": {
     "total": 10,
-    "leaked": 6,
+    "leaked": 5,
     "ids": [
      "v2a81",
      "v2a83",
      "v2a84",
-     "v2a85",
      "v2a86",
      "v2a87"
     ]
@@ -1823,8 +1853,8 @@
     },
     {
      "key": "v2a08",
-     "out": "Kontoinhaber: SCHMIEDEBERG, Ottilie ({{NAME_1}})",
-     "tokens": 1
+     "out": "Kontoinhaber: {{NAME_2}} ({{NAME_1}})",
+     "tokens": 2
     },
     {
      "key": "v2a09",
@@ -1865,6 +1895,41 @@
      "key": "v2a121",
      "out": "{{NAME_2}} und {{NAME_1}} unterschrieben gemeinsam.",
      "tokens": 2
+    },
+    {
+     "key": "v2a122",
+     "out": "Absender: {{NAME_1}}\nBetreff: Anfrage zur Rechnung",
+     "tokens": 1
+    },
+    {
+     "key": "v2a123",
+     "out": "Patient: {{NAME_1}} (geb. 1971), Station 4",
+     "tokens": 1
+    },
+    {
+     "key": "v2a124",
+     "out": "Gläubiger\n{{NAME_2}}\nSchuldner: {{NAME_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a125",
+     "out": "Alle rufen ihn nur \"{{NAME_2}}\", gemeldet ist er als {{NAME_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a126",
+     "out": "{{NAME_4}} und {{NAME_3}} holen die Kinder ab; {{NAME_2}} bleibt zu Hause. {{NAME_1}} meldet sich später.",
+     "tokens": 4
+    },
+    {
+     "key": "v2a127",
+     "out": "Die Zeugin, alias „{{NAME_2}}“, wurde gestern befragt; im Verein heißt sie „Kleine {{NAME_1}}“.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a128",
+     "out": "{{NAME_3}} und {{NAME_2}} waren bei {{NAME_1}} anwesend.",
+     "tokens": 3
     },
     {
      "key": "v2a11",
@@ -2263,8 +2328,8 @@
     },
     {
      "key": "v2a85",
-     "out": "NAME: ZIEGLER, UWE; {{DATUM_1}}; ORT: JENA",
-     "tokens": 1
+     "out": "NAME: {{NAME_1}}; {{DATUM_1}}; ORT: JENA",
+     "tokens": 2
     },
     {
      "key": "v2a86",
@@ -2443,12 +2508,12 @@
     },
     {
      "key": "v2n11",
-     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.",
+     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.\nVermerk: WICHTIG, Fristablauf beachten.",
      "tokens": 0
     },
     {
      "key": "v2n12",
-     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.",
+     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.\nWICHTIG, Dieses Schreiben ist fristgebunden.\nACHTUNG, Frist läuft ab.\nDSGVO, Art. 5",
      "tokens": 0
     },
     {
@@ -3190,10 +3255,9 @@
   "mode": "ki",
   "cases": {
    "V2-IDENT": {
-    "total": 16,
-    "leaked": 3,
+    "total": 23,
+    "leaked": 2,
     "ids": [
-     "v2a08",
      "v2a117",
      "v2a120"
     ]
@@ -3252,11 +3316,10 @@
    },
    "V2-FORM": {
     "total": 10,
-    "leaked": 4,
+    "leaked": 3,
     "ids": [
      "v2a83",
      "v2a84",
-     "v2a85",
      "v2a86"
     ]
    },
@@ -3404,7 +3467,7 @@
     },
     {
      "key": "v2a08",
-     "out": "Kontoinhaber: SCHMIEDEBERG, {{NAME_2}} ({{NAME_1}})",
+     "out": "Kontoinhaber: {{NAME_2}} ({{NAME_1}})",
      "tokens": 2
     },
     {
@@ -3446,6 +3509,41 @@
      "key": "v2a121",
      "out": "{{NAME_2}} und {{NAME_1}} unterschrieben gemeinsam.",
      "tokens": 2
+    },
+    {
+     "key": "v2a122",
+     "out": "Absender: {{NAME_1}}\nBetreff: Anfrage zur Rechnung",
+     "tokens": 1
+    },
+    {
+     "key": "v2a123",
+     "out": "Patient: {{NAME_1}} (geb. 1971), Station 4",
+     "tokens": 1
+    },
+    {
+     "key": "v2a124",
+     "out": "Gläubiger\n{{NAME_2}}: {{NAME_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a125",
+     "out": "Alle rufen ihn nur \"{{NAME_2}}\", gemeldet ist er als {{NAME_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a126",
+     "out": "{{NAME_4}} und {{NAME_3}} holen die Kinder ab; {{NAME_2}} bleibt zu Hause. {{NAME_1}} meldet sich später.",
+     "tokens": 4
+    },
+    {
+     "key": "v2a127",
+     "out": "Die Zeugin, alias „{{NAME_2}}“, wurde gestern befragt; im Verein heißt sie „Kleine {{NAME_1}}“.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a128",
+     "out": "{{NAME_3}} und {{NAME_2}} waren bei {{NAME_1}} anwesend.",
+     "tokens": 3
     },
     {
      "key": "v2a11",
@@ -3844,8 +3942,8 @@
     },
     {
      "key": "v2a85",
-     "out": "NAME: ZIEGLER, UWE; {{DATUM_1}}; ORT: JENA",
-     "tokens": 1
+     "out": "NAME: {{NAME_1}}; {{DATUM_1}}; ORT: JENA",
+     "tokens": 2
     },
     {
      "key": "v2a86",
@@ -4024,12 +4122,12 @@
     },
     {
      "key": "v2n11",
-     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.",
+     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.\nVermerk: WICHTIG, Fristablauf beachten.",
      "tokens": 0
     },
     {
      "key": "v2n12",
-     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.",
+     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.\nWICHTIG, Dieses Schreiben ist fristgebunden.\nACHTUNG, Frist läuft ab.\nDSGVO, Art. 5",
      "tokens": 0
     },
     {
