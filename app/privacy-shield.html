@@ -2018,7 +2018,7 @@
         </div>
       </form>
     </div>
-    <script src="lib/psmap.js"></script>
+    <script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
       const PROFILES = PSDetect.PROFILES;
@@ -2044,21 +2044,22 @@
           pg.appendChild(c);
         });
         applyProfile(PROFILES[0]);
-        document.getElementById("FI").addEventListener("change", async function (e) {
-          const files = Array.from(e.target.files);
+        // Gemeinsamer Handler fuer Dateiauswahl (#FI) und Drop (#DZ)
+        async function handleFiles(files) {
           if (!files.length) return;
           if (files.length === 1) {
             await loadF(files[0]);
             return;
           }
+          toast("Mehrere Dateien werden einzeln verarbeitet. Eine Zuordnung zum Zurückübersetzen bleibt nur für die zuletzt verarbeitete Datei erhalten.", "e");
           const results = [];
           for (let idx = 0; idx < files.length; idx++) {
-            toast("Datei " + (idx + 1) + "/" + files.length + ": " + files[idx].name, "s");
             try {
               await loadF(files[idx]);
               await anon();
+              // Neutraler Eintragsname, kein Originalname
               results.push({
-                name: files[idx].name.replace(/\.[^.]+$/, "") + "_anonymisiert.txt",
+                name: PSLib.hygiene.safeName(files[idx].name, results.length + 1, {}),
                 content: document.getElementById("AT").value,
               });
             } catch (err) {
@@ -2081,7 +2082,8 @@
             }, 5e3);
             toast(results.length + " Dateien als ZIP exportiert", "s");
           }
-        });
+        }
+        document.getElementById("FI").addEventListener("change", (e) => handleFiles(Array.from(e.target.files)));
         const dz = document.getElementById("DZ");
         dz.addEventListener("dragover", (e) => {
           e.preventDefault();
@@ -2091,7 +2093,7 @@
         dz.addEventListener("drop", async (e) => {
           e.preventDefault();
           dz.classList.remove("drag");
-          if (e.dataTransfer.files[0]) await loadF(e.dataTransfer.files[0]);
+          await handleFiles(Array.from(e.dataTransfer.files));
         });
         document.getElementById("FC").onclick = () => {
           document.getElementById("FT").classList.remove("on");
