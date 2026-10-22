@@ -2078,7 +2078,7 @@
         <p id="PRJASKD" style="font-size: 12px; color: #666; margin: 0 0 14px">Das ZIP enthält dann nur die anonymisierten Texte und den Bericht. Antworten einer KI lassen sich später nicht mit den Originalwerten zusammenführen.</p>
         <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap">
           <button type="button" class="btn btn-ghost" onclick="prjAskClose()">Abbrechen</button>
-          <button type="button" class="btn btn-ghost" onclick="prjAskClose(); prjZip()">Passwort eingeben</button>
+          <button type="button" id="PRJASKPW" class="btn btn-ghost" onclick="prjAskClose(); prjZip()">Passwort eingeben</button>
           <button type="button" class="btn btn-primary" onclick="prjAskClose(); prjZip(true)">Ohne Zuordnung fortfahren</button>
         </div>
       </div>
@@ -2394,11 +2394,8 @@
       function prjDel(id) {
         if (prjBusy || prjZipBusy || !prj) return;
         const i = prj.docs.findIndex((d) => d.id === id);
-        const ran = prjRes.size > 0;
         PSLib.project.remove(prj, id);
         prjRes.delete(id); prjSize.delete(id);
-        // Zuordnung nur aus den verbleibenden Ergebnissen: nichts vom entfernten Dokument bleibt zurück
-        if (ran) { store = prjScope(); renderMap(); }
         if (prjSel === id) prjSel = null;
         if (!prj.docs.length) { hidePrj(); return; }
         prjRender();
@@ -2481,15 +2478,17 @@
           if (prjSel !== null && prjRes.has(prjSel)) prjShow(prjSel);
         }
       }
-      // Zuordnung nur für Platzhalter, die in den aktuellen fertigen Ergebnissen vorkommen (D32)
+      // Zuordnung nur für Platzhalter, die in den aktuellen fertigen Ergebnissen vorkommen (D32); store und cnt bleiben unverändert
       function prjScope() {
-        const keys = new Set(), out = {};
+        const keys = new Set(), out = {}, oc = {};
         for (const d of prj.docs) {
           const r = prjRes.get(d.id);
           if (r && d.status === "fertig") (r.text.match(/\{\{[^{}]+\}\}/g) || []).forEach((k) => keys.add(k));
         }
         keys.forEach((k) => { if (Object.hasOwn(store, k)) out[k] = store[k]; });
-        return out;
+        const types = new Set(Object.values(out).map((d) => d.t));
+        Object.keys(cnt).forEach((t) => { if (types.has(t)) oc[t] = cnt[t]; });
+        return { store: out, cnt: oc };
       }
       async function shaHex(s) {
         const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
@@ -2523,7 +2522,7 @@
       });
       function prjAsk() {
         document.getElementById("PRJASK").style.display = "flex";
-        document.getElementById("PRJASK").querySelector("button:last-child").focus();
+        document.getElementById("PRJASKPW").focus();
       }
       async function prjZip(noMap) {
         if (prjBusy || prjZipBusy || !prj) return;
@@ -2572,10 +2571,11 @@
           }
           const out = await z.generateAsync({ type: "uint8array", compression: "DEFLATE" });
           dl("anonymisiert.zip", out, "application/zip");
-          if (mapBytes) mapSaved = true;
+          // mapSaved nur, wenn die Datei den ganzen store enthält
+          if (mapBytes && Object.keys(prjScope().store).length === Object.keys(store).length) mapSaved = true;
           toast(items.length + (items.length === 1 ? " Dokument" : " Dokumente") + " als ZIP gespeichert", "s");
         } catch (err) {
-          toast("ZIP nicht möglich: " + (err && err.message ? err.message : "Fehler"), "e");
+          toast("ZIP konnte nicht erstellt werden", "e");
         } finally {
           prjZipBusy = false;
           prjRender();
@@ -3352,7 +3352,7 @@
               if (tok !== psPwTok) return;
               docs.push({ index: 1, name: fn.trim(), chars: it.length, sha256: [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("") });
             }
-            const bytes = await PSLib.psmap.encrypt({ v: 1, created: new Date().toISOString(), state: { store: zipMode ? prjScope() : store, cnt: cnt }, docs: docs }, pw);
+            const bytes = await PSLib.psmap.encrypt({ v: 1, created: new Date().toISOString(), state: zipMode ? prjScope() : { store: store, cnt: cnt }, docs: docs }, pw);
             if (tok !== psPwTok) return;
             if (zipMode) { const cb = psPwZipCb; psPwZipCb = null; psPwDocs = null; psPwClose(); cb(bytes); return; }
             dl("zuordnung.psmap", bytes, "application/octet-stream");
