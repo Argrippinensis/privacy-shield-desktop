@@ -3,6 +3,11 @@
 Format: ein Abschnitt je Version, Überschrift `## [x.y.z] - JJJJ-MM-TT`. Der Release-Workflow übernimmt den Abschnitt
 der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.Y.Z").
 
+## [Unreleased] (2.0.0)
+
+### Änderungen
+- Platzhalterformat: Nennt ein Text dieselbe Person mehrfach (Hans Müller, Herr Müller, Hans), bekommen alle Formen dieselbe Nummer mit Endung ({{NAME_1}}, {{NAME_1.NACHNAME}}, {{NAME_1.VORNAME}}, {{NAME_1.KURZ}}), nur wenn eindeutig; die Rückübersetzung bleibt exakt.
+
 ## [1.8.0] - 2026-10-20
 
 ### Erkennung

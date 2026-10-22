@@ -2,9 +2,9 @@
 // Die Bloecke Daten/Regeln/Profile, Wortlisten-Erkennung, Kern und Platzhaltervergabe sind aus app/privacy-shield.html (1.8.0)
 // kopiert; Funktionskoerper unveraendert. Parametrisiert wird nur ueber opts (siehe detect/anonymize unten).
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else { root.PSLib = root.PSLib || {}; root.PSLib.detect = root.PSDetect = factory(); }
-})(typeof self !== 'undefined' ? self : this, function () {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./coref.js'), require('./placeholder.js'));
+  else { root.PSLib = root.PSLib || {}; root.PSLib.detect = root.PSDetect = factory(root.PSLib.coref, root.PSLib.placeholder); }
+})(typeof self !== 'undefined' ? self : this, function (COREF, PH) {
   'use strict';
   // Kontext des laufenden (synchronen) Aufrufs; wird in detect()/anonymize() gesetzt und danach geleert
   let store = {},
@@ -2436,6 +2436,55 @@
     }
   }
 
+  // Verknuepfte Personen (C2.w): nur Personen mit mindestens zwei verschiedenen Formen (VOLL, NACHNAME, VORNAME, KURZ) im Text.
+  // Ihre Nummern werden vor der uebrigen Vergabe von hinten nach vorne bestimmt und meiden Platzhalter, die schon im Text
+  // oder im store stehen; alle anderen Spans laufen unveraendert durch tok() (D24: personKey null = keine Verknuepfung).
+  function linkState(input, linked) {
+    const used = new Set();
+    PH.find(input).forEach((h) => { const m = /^\{\{NAME_(\d+)[.}]/.exec(h.token); if (m) used.add(m[1]); });
+    const forms = new Map();
+    linked.forEach((s) => {
+      if (!s.personKey || !s.form) return;
+      if (!forms.has(s.personKey)) forms.set(s.personKey, new Set());
+      forms.get(s.personKey).add(s.form);
+    });
+    const link = { nums: new Map(), used: used };
+    const idx = storeIndex();
+    for (let i = linked.length - 1; i >= 0; i--) {
+      const sp = linked[i];
+      if (!sp.personKey || !sp.form || forms.get(sp.personKey).size < 2 || link.nums.has(sp.personKey)) continue;
+      let n;
+      // schon bekannte volle Form (state aus fruehrem Aufruf): deren Nummer weiterverwenden
+      for (const o of linked) {
+        if (o.personKey !== sp.personKey || o.form !== "VOLL") continue;
+        const m = /^\{\{NAME_(\d+)\}\}$/.exec(idx.get(o.val) || "");
+        if (m) { n = Number(m[1]); break; }
+      }
+      if (n === undefined) {
+        do { cnt.NAME = (cnt.NAME || 0) + 1; n = cnt.NAME; } while (numTaken(link, n));
+      }
+      link.nums.set(sp.personKey, n);
+    }
+    return link;
+  }
+  function numTaken(link, n) {
+    if (link.used.has(String(n))) return true;
+    const a = "{{NAME_" + n + "}}", b = "{{NAME_" + n + ".";
+    return Object.keys(store).some((k) => k === a || k.startsWith(b));
+  }
+  // Platzhalter einer verknuepften Person; null = Span laeuft wie bisher durch tok()
+  function linkedTok(link, sp) {
+    const val = sp.val;
+    const n = sp.personKey ? link.nums.get(sp.personKey) : undefined;
+    if (n === undefined || !sp.form || val.length < 2 || val.replace(/\{\{[^}]*\}\}/g, "").trim() !== val) return null;
+    const key = "{{NAME_" + n + (sp.form === "VOLL" ? "" : "." + sp.form) + "}}";
+    if (store[key]) return store[key].v === val ? key : null;
+    store[key] = { v: val, t: sp.pfx, c: sp.col, m: sp.meth };
+    const idx = storeIndex();
+    if (!idx.has(val)) idx.set(val, key);
+    return key;
+  }
+
   // Wie anonCore ohne Oberflaeche: Treffer von hinten nach vorne durch Platzhalter ersetzen; state wird in place fortgeschrieben
   function anonymize(text, opts) {
     const o = opts || {};
@@ -2451,9 +2500,12 @@
     try {
       const parts = [];
       let tail = input.length;
+      const linked = COREF.link(spans, input);
+      const link = linkState(input, linked);
       for (let i = spans.length - 1; i >= 0; i--) {
         const s = spans[i];
-        parts.push(input.slice(s.end, tail), tok(s.val, s.pfx, s.col, s.meth));
+        const t = linkedTok(link, linked[i]);
+        parts.push(input.slice(s.end, tail), t !== null ? t : tok(s.val, s.pfx, s.col, s.meth));
         tail = s.start;
       }
       parts.push(input.slice(0, tail));
