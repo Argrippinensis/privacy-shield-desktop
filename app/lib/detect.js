@@ -2092,6 +2092,7 @@
         const weiter = (s, pos, len, richtung) => {
           if (nameStarts.has(pos)) return;
           nameStarts.add(pos);
+          s.kette = true;
           cands.push(Object.assign({}, s, { start: pos, end: pos + len, fort: richtung !== "rueck", rueck: richtung === "rueck" }));
         };
         const ADDR_LEAD = /^(?:Sitz|Anschrift|Adresse|Geschäftssitz|Wohnsitz|Lieferadresse|Rechnungsadresse)[ \t]+/;
@@ -2188,6 +2189,13 @@
         const mergedSpans = [];
         for (const s of valid) {
           const last = mergedSpans[mergedSpans.length - 1];
+          // Gekappte Namensketten ueberlappen sich (jedes Stueck endet an der Kette Ende): zur Vereinigung zusammenfuehren,
+          // sonst gewinnt in resolveSpanOverlaps nur das laengste Stueck und der Anfang der Kette bliebe im Klartext.
+          if (last && last.pfx === "NAME" && s.pfx === "NAME" && (last.kette || s.kette) && s.start < last.end) {
+            last.end = Math.max(last.end, s.end);
+            last.kette = true;
+            continue;
+          }
           if (
             last &&
             last.pfx === s.pfx &&
@@ -2206,6 +2214,7 @@
             id: s.id,
             prio: s.prio,
             meth: s.meth,
+            kette: s.kette,
           });
         }
         const final = resolveSpanOverlaps(mergedSpans);
