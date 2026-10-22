@@ -18,7 +18,9 @@ let buf = '';
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', (c) => { buf += c; });
 process.stdin.on('end', () => {
-  const text = JSON.parse(buf);
+  const eingabe = JSON.parse(buf);
+  const text = typeof eingabe === 'string' ? eingabe : eingabe.text;
+  const namen = typeof eingabe === 'string' ? [] : eingabe.namen;
   const out = { ok: false };
   try {
     const D = require(${JSON.stringify(DETECT)});
@@ -27,6 +29,8 @@ process.stdin.on('end', () => {
     out.ms = performance.now() - t0;
     out.roundtrip = D.deanonymize(r.text, r.state) === text;
     out.wellFormed = r.text.isWellFormed();
+    out.uebrig = namen.filter((w) => new RegExp('(?<![\\p{L}])' + w + '(?![\\p{L}])', 'u').test(r.text));
+    out.anonym = r.text;
     out.ok = true;
   } catch (e) { out.error = String(e && e.message || e); }
   process.stdout.write(JSON.stringify(out));
@@ -50,13 +54,14 @@ function laufe(text) {
   });
 }
 
-async function pruefe(text) {
-  const r = await laufe(text);
+async function pruefe(text, namen) {
+  const r = await laufe(namen ? { text, namen } : text);
   assert.ok(!r.killed, `Abbruch nach ${ABBRUCH_MS} ms: Erkennung rechnet viel zu lange`);
   assert.ok(r.ok, 'Ausnahme: ' + r.error);
   assert.ok(r.ms < GRENZE_MS, `${Math.round(r.ms)} ms, Grenze ${GRENZE_MS} ms`);
   assert.equal(r.roundtrip, true, 'deanonymize(anonymize(x).text, state) muss x ergeben');
   assert.equal(r.wellFormed, true, 'Ausgabe muss wohlgeformt sein (isWellFormed)');
+  if (namen) assert.deepEqual(r.uebrig, [], `Leck, Namen im Klartext geblieben: ${r.uebrig.join(', ')} in ${JSON.stringify(r.anonym)}`);
 }
 
 function mulberry32(a) {
@@ -145,6 +150,39 @@ test('Namenskette ueber 200 Zeichen: kein Namensteil bleibt ungeschwaerzt, Platz
   assert.deepEqual(uebrig, [], `Teilleck, im Klartext geblieben: ${uebrig.join(', ')} in ${JSON.stringify(r.text)}`);
   assert.ok(/\{\{NAME_\d+\}\}/.test(r.text), 'mindestens ein Namens-Platzhalter erwartet');
   assert.equal(D.deanonymize(r.text, r.state), text);
+});
+
+// Regressionsschutz gegen die Kettenbegrenzung (MAX_NAME_SPAN): Namensketten ab etwa 125 Zeichen ohne Komma wurden
+// mit v2/main (ohne F5) vollstaendig als NAME erkannt; jeder einzelne Name muss weiterhin ersetzt werden.
+// Die Fälle sind per Skript gegen v2/main ausgewaehlt: dort blieb in jedem von ihnen kein Name im Klartext.
+const VORNAMEN = ['Hans', 'Peter', 'Anna', 'Maria', 'Thomas', 'Michael', 'Sabine', 'Klaus', 'Petra', 'Jürgen', 'Monika', 'Stefan', 'Andrea', 'Frank', 'Claudia', 'Wolfgang', 'Birgit', 'Uwe', 'Heike', 'Dieter'];
+const NACHNAMEN = ['Meier', 'Schulze', 'Müller', 'Wagner', 'Becker', 'Hoffmann', 'Schäfer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf', 'Neumann', 'Schwarz', 'Zimmermann', 'Braun', 'Hartmann', 'Lange', 'Schmitt', 'Werner'];
+function namenListe(n, va, vo, nm, no) {
+  const l = [];
+  for (let i = 0; i < n; i++) l.push(VORNAMEN[(i * va + vo) % 20] + ' ' + NACHNAMEN[(i * nm + no) % 20]);
+  return l;
+}
+suite('F5: Namensketten ohne Leck (kein Rueckschritt gegenueber v2/main)', { concurrency: 1 }, () => {
+  const faelle = [];
+  // mit Bindestrich getrennt: v2/main schwaerzte alle Namen (Kette ab 20 Namen / 275 Zeichen betroffen)
+  for (const n of [5, 10, 20, 40, 80]) {
+    for (const kw of ['', 'Teilnehmer: ', 'Unterzeichner: ']) {
+      for (const o of [0, 3]) {
+        faelle.push([`${n} Namen mit Bindestrich getrennt${kw ? ', Stichwort "' + kw.trim() + '"' : ''} (Variante ${o ? 'B' : 'A'})`, kw, '-', namenListe(n, 1, o, 7, o)]);
+      }
+    }
+  }
+  // mit Leerzeichen getrennt: nur Eingaben, die v2/main komplett schwaerzte (Kette ab 10 Namen / 135 Zeichen)
+  for (const kw of ['', 'Teilnehmer: ', 'Unterzeichner: ']) {
+    for (const b of [8, 14]) {
+      faelle.push([`10 Namen mit Leerzeichen getrennt${kw ? ', Stichwort "' + kw.trim() + '"' : ''} (Variante ${b === 8 ? 'A' : 'B'})`, kw, ' ', namenListe(10, 2, b, 3, b + 2)]);
+    }
+  }
+  for (const [name, kw, sep, liste] of faelle) {
+    const text = kw + liste.join(sep);
+    const namen = [...new Set(liste.flatMap((x) => x.split(' ')))];
+    test(`Namenskette ${name}, ${text.length} Zeichen: kein Name im Klartext, Rueckweg gleich, unter ${GRENZE_MS} ms`, { timeout: ABBRUCH_MS + 5000 }, () => pruefe(text, namen));
+  }
 });
 
 test('Korpus unveraendert: diff-reference.mjs --node meldet 0 Abweichungen (alle 212 Faelle)', { timeout: 120000 }, () => {
