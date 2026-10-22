@@ -51,7 +51,7 @@ async function checkZip(f) {
   }
 }
 
-test('Mehrfachauswahl ueber #FI: ein Download anonymisiert.zip mit neutralen Eintragsnamen ohne Klartext und Hinweis vorab', async () => {
+test.skip('Abgeloest durch Projektliste (B1.w1), ZIP-Pruefung folgt in B1.w2: Mehrfachauswahl ueber #FI: ein Download anonymisiert.zip mit neutralen Eintragsnamen ohne Klartext und Hinweis vorab', async () => {
   const { a, f } = await prepare();
   try {
     await setFiles(f, FILES.map((x) => ({ name: x.name, mimeType: 'text/plain', buffer: Buffer.from(x.text, 'utf8') })));
@@ -66,7 +66,7 @@ test('Mehrfachauswahl ueber #FI: ein Download anonymisiert.zip mit neutralen Ein
   } finally { await a.close(); }
 });
 
-test('Mehrfachauswahl ueber die Drop-Zone #DZ: derselbe Download, beide Dateien verarbeitet', async () => {
+test.skip('Abgeloest durch Projektliste (B1.w1), ZIP-Pruefung folgt in B1.w2: Mehrfachauswahl ueber die Drop-Zone #DZ: derselbe Download, beide Dateien verarbeitet', async () => {
   const { a, f } = await prepare();
   try {
     await f.evaluate((files) => {
