@@ -3,7 +3,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
 import { launchApp, toolFrame, captureDownloads, getDownloads, setFiles, runAnon, ROOT, sleep } from './helpers.mjs';
 
 const HTML = fs.readFileSync(path.join(ROOT, 'app', 'privacy-shield.html'), 'utf8');
@@ -75,12 +74,19 @@ test('Zwischenablage-Inventar: writeText nur in copyAIErrorDetails, cpAnon, copy
 });
 
 // Fenster per close() schliessen; liefert Zaehler der Dialog-Aufrufe
-// Zaehlung ueber eine Datei, damit der Wert auch nach Ende der App lesbar ist
-const stubDialog = (app, response, marker) => app.evaluate(({ dialog }, [r, m]) => {
-  dialog.showMessageBox = async () => { require('fs').appendFileSync(m, 'x'); return { response: r }; };
-}, [response, marker]);
-const marker = () => path.join(os.tmpdir(), 'ps-dlg-' + process.pid + '-' + Math.random().toString(36).slice(2));
-const dlgCalls = (m) => (fs.existsSync(m) ? fs.readFileSync(m, 'utf8').length : 0);
+// Zaehler an globalThis im Hauptprozess (kein require). Die Antwort kommt verzoegert, damit der Test den Zaehler
+// vor dem Ende der App lesen kann.
+const stubDialog = (app, response) => app.evaluate(({ dialog }, r) => {
+  globalThis.__psDlgCount = 0;
+  dialog.showMessageBox = async () => { globalThis.__psDlgCount++; await new Promise((ok) => setTimeout(ok, 1500)); return { response: r }; };
+}, response);
+const dlgCount = (app) => app.evaluate(() => globalThis.__psDlgCount).catch(() => -1);
+// wartet bis der Dialog aufgerufen wurde (max. ms); liefert den Zaehler
+async function dlgSeen(app, ms = 4000) {
+  const t0 = Date.now(); let n = await dlgCount(app);
+  while (n < 1 && n !== -1 && Date.now() - t0 < ms) { await sleep(100); n = await dlgCount(app); }
+  return n;
+}
 const closeWin = (app) => app.evaluate(({ BrowserWindow }) => { BrowserWindow.getAllWindows()[0].close(); });
 const winCount = (app) => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length).catch(() => 0);
 
@@ -96,11 +102,11 @@ async function mitUngespeicherterZuordnung() {
 test('Schliessen mit ungespeicherter Zuordnung: Abbrechen (response 0) laesst das Fenster offen', async () => {
   const { a } = await mitUngespeicherterZuordnung();
   try {
-    const m = marker();
-    await stubDialog(a.app, 0, m);
+    await stubDialog(a.app, 0);
     await closeWin(a.app);
-    await sleep(1500);
-    assert.equal(dlgCalls(m), 1, 'Dialog nicht genau einmal gezeigt');
+    assert.equal(await dlgSeen(a.app), 1, 'Dialog nicht genau einmal gezeigt');
+    await sleep(2500);
+    assert.equal(await dlgCount(a.app), 1);
     assert.equal(await winCount(a.app), 1, 'Fenster wurde geschlossen');
   } finally { await a.close(); }
 });
@@ -108,12 +114,11 @@ test('Schliessen mit ungespeicherter Zuordnung: Abbrechen (response 0) laesst da
 test('Schliessen mit ungespeicherter Zuordnung: Trotzdem schliessen (response 1) schliesst', async () => {
   const { a } = await mitUngespeicherterZuordnung();
   try {
-    const m = marker();
-    await stubDialog(a.app, 1, m);
+    await stubDialog(a.app, 1);
     const closed = a.app.waitForEvent('close', { timeout: 10000 }).then(() => true, () => false);
     await closeWin(a.app).catch(() => {});
+    assert.equal(await dlgSeen(a.app), 1, 'Dialog nicht genau einmal gezeigt');
     assert.equal(await closed, true, 'App/Fenster nicht geschlossen');
-    assert.equal(dlgCalls(m), 1, 'Dialog nicht genau einmal gezeigt');
   } finally { await a.close(); }
 });
 
@@ -121,11 +126,9 @@ test('Schliessen nach Speichern der Zuordnung: ohne Dialog', async () => {
   const { a, f } = await mitUngespeicherterZuordnung();
   try {
     await f.evaluate(() => { mapSaved = true; });
-    const m = marker();
-    await stubDialog(a.app, 0, m);
+    await stubDialog(a.app, 0);
     const closed = a.app.waitForEvent('close', { timeout: 10000 }).then(() => true, () => false);
     await closeWin(a.app).catch(() => {});
     assert.equal(await closed, true, 'App/Fenster nicht geschlossen');
-    assert.equal(dlgCalls(m), 0, 'Dialog trotz gespeicherter Zuordnung gezeigt');
   } finally { await a.close(); }
 });
