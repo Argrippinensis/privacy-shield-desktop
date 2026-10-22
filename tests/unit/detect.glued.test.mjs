@@ -40,3 +40,24 @@ for (const [datei, werte] of [['case_11_53', ['Hauptstraße', '10115']], ['case_
     pruefe(fs.readFileSync(pfad, 'utf8'), werte);
   });
 }
+
+// Grossbuchstaben-Umlaute (Ä, Ö, Ü) direkt vor einer Adresse: Namen und Orte, die v2/main schwaerzt, duerfen nicht
+// im Klartext bleiben (mit wordlists: false, Werte token-weise gegen v2/main bestaetigt). Bei Faellen, in denen
+// v2/main selbst Teile stehen laesst, steht in der Liste nur, was v2/main vollstaendig schwaerzt.
+for (const [text, werte] of [
+  ['Dr.Özdemir Hauptstraße 5, 12345 Berlin', ['Özdemir']],
+  ['ÖZDEMIR MÜLLER-Bahnhofstr. 98, 96473 Bad Homburg', ['Homburg']],
+  ['Max-Schmidt-Özdemir-Müller.Hauptstraße 26, 38408 Bad Homburg', ['Homburg']],
+  ['Herr MÜLLER Hauptstraße 5, 12345 Berlin', ['MÜLLER']],
+  ['MÜLLER ANNA Lindenallee 52, 23141 Köln', ['MÜLLER']],
+  ['Dr. ÖTKER-ÜNAL Schillerstr. 7, 70173 Stuttgart', ['ÖTKER-ÜNAL']],
+  ['ÜBELHÖR Eichenallee 9, 20095 Hamburg', ['ÜBELHÖR']],
+  ['Herr ÖZTÜRK Birkenweg 8, 04109 Leipzig', ['ÖZTÜRK']],
+]) {
+  test(`Grossbuchstaben-Umlaut vor Adresse: ${JSON.stringify(text)}, ${werte.join(', ')} nicht im Klartext`, () => {
+    const r = D.anonymize(text, { wordlists: false });
+    const uebrig = werte.filter((w) => r.text.includes(w));
+    assert.deepEqual(uebrig, [], `Klartext geblieben: ${uebrig.join(', ')} in ${JSON.stringify(r.text)}`);
+    assert.equal(D.deanonymize(r.text, r.state), text);
+  });
+}
