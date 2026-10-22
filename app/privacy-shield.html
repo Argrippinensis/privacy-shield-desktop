@@ -533,6 +533,30 @@
       .file-tag.on {
         display: flex;
       }
+      /* Projektliste (mehrere Dokumente) */
+      .prj-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; margin-bottom: 12px; }
+      .prj-row { display: flex; align-items: stretch; gap: 4px; }
+      .prj-item { flex: 1; min-width: 0; display: grid; grid-template-columns: 24px 1fr; column-gap: 8px; align-items: center; text-align: left; font: inherit; padding: 7px 9px; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+      .prj-item:hover { background: #f0f4f8; }
+      .prj-item.sel { background: #e8f0fe; border-color: #1a3a5c; }
+      .prj-num { grid-row: 1 / span 2; width: 22px; height: 22px; border-radius: 50%; background: #1a3a5c; color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+      .prj-name { font-size: 12px; font-weight: 500; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .prj-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; min-width: 0; }
+      .prj-st { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+      .prj-st.wartet { color: #666; }
+      .prj-st.laeuft { color: #1a3a5c; }
+      .prj-st.fertig { color: #047857; }
+      .prj-st.rest { color: #92400e; }
+      .prj-st.fehler { color: #b91c1c; }
+      .prj-st.laeuft svg { animation: prjspin 1s linear infinite; }
+      @keyframes prjspin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .prj-st.laeuft svg { animation: none; } }
+      .prj-del { flex: 0 0 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid transparent; border-radius: 8px; color: #999; cursor: pointer; transition: color 0.15s, background 0.15s; }
+      .prj-del:hover:not(:disabled) { color: #b91c1c; background: #fff0ee; }
+      .prj-del:disabled { opacity: 0.4; cursor: default; }
+      .prj-item:focus-visible, .prj-del:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
+      .prj-track { height: 4px; background: #e5e5e5; border-radius: 2px; overflow: hidden; margin-top: 5px; }
+      .prj-fill { height: 100%; width: 0; background: #1a3a5c; transition: width 0.2s; }
       .progress-bar {
         height: 3px;
         background: #e5e5e5;
@@ -1261,6 +1285,24 @@
                   </button>
                 </div>
                 <div class="progress-bar" id="FP"><div class="progress-fill" id="FPB"></div></div>
+              </div>
+            </div>
+            <div class="tool-panel" id="PRJPANEL" style="display: none">
+              <div class="tool-panel-header">
+                <span style="font-size: 12px; font-weight: 600">Dokumente</span>
+                <span style="font-size: 11px; color: #999" id="PRJCOUNT"></span>
+              </div>
+              <div class="tool-panel-body">
+                <div class="prj-list" id="PRJLIST" role="list" aria-label="Dokumente im Projekt"></div>
+                <div id="PRJPROG" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" style="font-size: 11px; color: #666">
+                  <span id="PRJPROGT">0 von 0</span>
+                  <div class="prj-track"><div class="prj-fill" id="PRJFILL"></div></div>
+                </div>
+                <div id="PRJSUM" role="status" aria-live="polite" style="font-size: 12px; color: #111; margin-top: 8px; min-height: 16px"></div>
+                <div style="display: flex; gap: 8px; margin-top: 10px">
+                  <button type="button" id="PRJRUN" class="btn-accent" style="flex: 1; font-size: 12px; padding: 9px 12px" onclick="prjRun()">Alle anonymisieren</button>
+                  <button type="button" id="PRJCANCEL" class="btn btn-ghost" style="font-size: 12px" onclick="prjCancel()" disabled>Abbrechen</button>
+                </div>
               </div>
             </div>
             <div style="text-align: center; padding: 4px 0 2px">
@@ -2018,7 +2060,7 @@
         </div>
       </form>
     </div>
-    <script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script>
+    <script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
       const PROFILES = PSDetect.PROFILES;
@@ -2047,41 +2089,15 @@
         // Gemeinsamer Handler fuer Dateiauswahl (#FI) und Drop (#DZ)
         async function handleFiles(files) {
           if (!files.length) return;
-          if (files.length === 1) {
-            await loadF(files[0]);
+          if (prjBusy) return toast("Ein Lauf ist noch aktiv", "e");
+          const ok = prjCheckFiles(files);
+          if (!ok.length) return;
+          if (ok.length === 1 && files.length === 1 && !(prj && prj.docs.length)) {
+            hidePrj();
+            await loadF(ok[0]);
             return;
           }
-          toast("Mehrere Dateien werden einzeln verarbeitet. Eine Zuordnung zum Zurückübersetzen bleibt nur für die zuletzt verarbeitete Datei erhalten.", "e");
-          const results = [];
-          for (let idx = 0; idx < files.length; idx++) {
-            try {
-              await loadF(files[idx]);
-              await anon();
-              // Neutraler Eintragsname, kein Originalname
-              results.push({
-                name: PSLib.hygiene.safeName(files[idx].name, results.length + 1, {}),
-                content: document.getElementById("AT").value,
-              });
-            } catch (err) {
-              toast("Fehler bei " + files[idx].name + ": " + err.message, "e");
-            }
-          }
-          if (results.length > 1 && typeof JSZip !== "undefined") {
-            const zip = new JSZip();
-            results.forEach(function (r) {
-              zip.file(r.name, r.content);
-            });
-            const blob = await zip.generateAsync({ type: "blob" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "anonymisiert.zip";
-            a.click();
-            setTimeout(function () {
-              URL.revokeObjectURL(url);
-            }, 5e3);
-            toast(results.length + " Dateien als ZIP exportiert", "s");
-          }
+          await prjAddFiles(ok, files.length > 1);
         }
         document.getElementById("FI").addEventListener("change", (e) => handleFiles(Array.from(e.target.files)));
         const dz = document.getElementById("DZ");
@@ -2236,8 +2252,210 @@
           l.appendChild(d);
         });
       }
-      async function loadF(file) {
+      // Projektliste: mehrere Dokumente mit gemeinsamen Platzhaltern (PSLib.project)
+      const PRJ_EXT = ["txt", "pdf", "docx", "csv", "md", "json", "rtf"];
+      const PRJ_ICON = {
+        wartet: '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 4.8V8l2.2 1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+        laeuft: '<path d="M8 2a6 6 0 1 0 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+        fertig: '<path d="M3 8.5l3.2 3.2L13 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+        fehler: '<path d="M8 2l6.5 11.5h-13z M8 6.5v3 M8 11.6v.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+      };
+      let prj = null, prjBusy = false, prjAc = null, prjSel = null, prjAborted = false;
+      const prjRes = new Map(), prjSize = new Map();
+      function prjCheckFiles(files) {
+        const multi = files.length > 1, ok = [], msgs = [], bad = [];
+        let oldDoc = false;
+        for (const f of files) {
+          const e = f.name.includes(".") ? f.name.split(".").pop().toLowerCase() : "";
+          const pre = multi ? f.name + ": " : "";
+          if (e === "doc") oldDoc = true;
+          else if (!PRJ_EXT.includes(e)) { if (!bad.includes(e)) bad.push(e); }
+          else if (f.size === 0) msgs.push(pre + "Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.");
+          else if (f.size > 30 * 1024 * 1024) msgs.push(pre + "Datei zu groß (max 30 MB)");
+          else ok.push(f);
+        }
+        if (bad.length) msgs.unshift("Dateityp nicht unterstützt: " + bad.map((e) => (e ? "." + e : "(ohne Endung)")).join(", "));
+        if (oldDoc) msgs.unshift("Dateien im alten .doc-Format werden nicht unterstützt. Bitte in Word als .docx speichern.");
+        if (msgs.length) toast(msgs.join(" "), "e");
+        return ok;
+      }
+      async function prjAddFiles(list) {
+        if (!prj) prj = PSLib.project.create();
+        const msgs = [];
+        prjBusy = true;
+        document.getElementById("PRJPANEL").style.display = "block";
+        prjRender();
+        try {
+          for (const f of list) {
+            let text;
+            try { text = await readTextOf(f); } catch (err) { msgs.push(f.name + ": " + err.message); continue; }
+            if (!text.trim()) { msgs.push(f.name + ": kein Text gefunden"); continue; }
+            try {
+              prjSize.set(PSLib.project.add(prj, { name: f.name, text: text }), f.size);
+            } catch (err) {
+              msgs.push(err && err.code === "LIMIT" ? "Grenze erreicht: höchstens " + prj.limits.docs + " Dokumente und " + Math.round(prj.limits.totalChars / 1048576) + " MB Text je Projekt." : f.name + ": nicht aufgenommen");
+              if (err && err.code === "LIMIT") break;
+            }
+            prjRender();
+          }
+        } finally { prjBusy = false; }
+        if (!prj.docs.length) hidePrj(); else prjRender();
+        if (msgs.length) toast(msgs.join(" "), "e");
+      }
+      function hidePrj() {
+        prj = null; prjSel = null;
+        prjRes.clear(); prjSize.clear();
+        document.getElementById("PRJPANEL").style.display = "none";
+      }
+      function prjRender() {
+        if (!prj) return;
+        const list = document.getElementById("PRJLIST");
+        const act = document.activeElement;
+        const keep = act && list.contains(act) ? { c: act.classList.contains("prj-del") ? "prj-del" : "prj-item", id: act.dataset.id } : null;
+        const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+        const items = PSLib.project.index(prj);
+        list.textContent = "";
+        let done = 0;
+        for (const it of items) {
+          if (it.status === "fertig" || it.status === "fehler") done++;
+          const res = prjRes.get(it.id);
+          const leak = it.status === "fertig" && res ? res.leak : 0;
+          const cls = it.status === "fertig" && leak !== 0 ? (leak === null ? "fehler" : "rest") : it.status;
+          const lbl = { wartet: "wartet", laeuft: "läuft", fertig: "fertig", fehler: "Fehler" }[it.status] + (it.status !== "fertig" || leak === 0 ? "" : leak === null ? ", Gegenprüfung nicht möglich" : leak === 1 ? ", 1 möglicher Rest" : ", " + leak + " mögliche Reste");
+          const row = mk("div", "prj-row");
+          row.setAttribute("role", "listitem");
+          const b = mk("button", "prj-item" + (it.id === prjSel ? " sel" : ""));
+          b.type = "button";
+          b.dataset.id = it.id;
+          if (it.id === prjSel) b.setAttribute("aria-current", "true");
+          b.onclick = () => prjShow(it.id);
+          const st = mk("span", "prj-st " + cls);
+          st.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">' + PRJ_ICON[cls === "rest" ? "fehler" : cls] + "</svg>";
+          st.appendChild(mk("span", "", lbl));
+          const meta = mk("span", "prj-meta");
+          meta.append(mk("span", "", fmtSz(prjSize.get(it.id) || 0)), st);
+          b.append(mk("span", "prj-num", String(it.index)), mk("span", "prj-name", it.name), meta);
+          const del = mk("button", "prj-del");
+          del.type = "button";
+          del.dataset.id = it.id;
+          del.disabled = prjBusy;
+          del.setAttribute("aria-label", "Dokument " + it.index + " entfernen");
+          del.title = "Entfernen";
+          del.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>';
+          del.onclick = () => prjDel(it.id);
+          row.append(b, del);
+          list.appendChild(row);
+        }
+        if (keep) { const n = list.querySelector("." + keep.c + '[data-id="' + keep.id + '"]'); if (n) n.focus(); }
+        const total = items.length, pg = document.getElementById("PRJPROG");
+        document.getElementById("PRJCOUNT").textContent = total + (total === 1 ? " Dokument" : " Dokumente");
+        pg.setAttribute("aria-valuemax", total);
+        pg.setAttribute("aria-valuenow", done);
+        document.getElementById("PRJPROGT").textContent = done + " von " + total;
+        document.getElementById("PRJFILL").style.width = (total ? (done / total) * 100 : 0) + "%";
+        let sum = "";
+        if (prjBusy) sum = "Läuft ...";
+        else if (total && done === total) {
+          const rest = items.filter((x) => { const r = prjRes.get(x.id); return x.status === "fertig" && r && r.leak !== 0; }).length;
+          const err = items.filter((x) => x.status === "fehler").length;
+          sum = total + (total === 1 ? " Dokument" : " Dokumente") + ", " + rest + " mit möglichen Resten" + (err ? ", " + err + " mit Fehler" : "");
+        } else if (done) sum = done + " von " + total + " Dokumenten fertig" + (prjAborted ? ", abgebrochen" : "");
+        document.getElementById("PRJSUM").textContent = sum;
+        document.getElementById("PRJRUN").disabled = prjBusy || !total;
+        document.getElementById("PRJCANCEL").disabled = !prjBusy || !prjAc;
+      }
+      function prjDel(id) {
+        if (prjBusy || !prj) return;
+        const i = prj.docs.findIndex((d) => d.id === id);
+        PSLib.project.remove(prj, id);
+        prjRes.delete(id); prjSize.delete(id);
+        if (prjSel === id) prjSel = null;
+        if (!prj.docs.length) { hidePrj(); return; }
+        prjRender();
+        const nx = prj.docs[Math.min(i, prj.docs.length - 1)];
+        const n = document.querySelector('#PRJLIST .prj-item[data-id="' + nx.id + '"]');
+        if (n) n.focus();
+      }
+      function prjShow(id) {
+        const d = prj && prj.docs.find((x) => x.id === id);
+        if (!d) return;
+        prjSel = id;
+        const res = prjRes.get(id);
+        document.getElementById("IT").value = d.text;
+        document.getElementById("AT").value = res ? res.text : "";
+        updIC();
+        scheduleHighlight();
+        document.getElementById("resultArea").style.display = res ? "flex" : "none";
+        if (res) {
+          document.getElementById("REANON").style.display = "none";
+          runLeakCheck();
+          updTokenCount();
+        }
+        setStep(res ? 2 : 1);
+        prjRender();
+      }
+      function prjCancel() { if (prjAc) prjAc.abort(); }
+      async function prjRun() {
+        if (prjBusy || !prj || !prj.docs.length) return;
+        if (anonBusy) return toast("Analyse läuft bereits...", "s");
+        prjBusy = anonBusy = true;
+        mapSaved = false;
+        prjAborted = false;
+        prjAc = new AbortController();
+        prjRes.clear();
+        const btn = document.getElementById("ANONBTN");
+        if (btn) btn.disabled = true;
+        const order = prj.docs.slice();
+        let k = 0;
+        prjRender();
+        try {
+          await ensureAIReady();
+          const out = await PSLib.project.run(prj, {
+            signal: prjAc.signal,
+            profile: curProf,
+            onProgress: () => prjRender(),
+            anonymize: async (text, o) => {
+              const d = order[k++];
+              prjRender();
+              const det = PSDetect.normalizeForDetection(text);
+              if (nerPipeline && aiCache.key !== det) await ensureAISpans(det);
+              const r = PSDetect.anonymize(text, {
+                ents: activeEntIds(),
+                cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+                whitelist: whitelist,
+                wordlists: localAIMode,
+                aiSpans: aiCache.key === det ? aiCache.spans : null,
+                state: o.state,
+              });
+              let leak = null;
+              try { const lr = leakScan(r.text); leak = lr.error ? null : lr.count; } catch (e) {}
+              prjRes.set(d.id, { text: r.text, leak: leak });
+              return r;
+            },
+          });
+          prjAborted = out.aborted;
+          if (out.state) { store = out.state.store; cnt = out.state.cnt; renderMap(); }
+        } catch (err) {
+          toast("Fehler: " + err.message, "e");
+        } finally {
+          prj.docs.forEach((d) => { if (d.status === "laeuft") d.status = "wartet"; });
+          prjBusy = anonBusy = false;
+          prjAc = null;
+          if (btn) btn.disabled = false;
+          scheduleAIIdleUnload();
+          const pe = document.getElementById("aiRunProgress");
+          if (pe) pe.textContent = "";
+          prjRender();
+          if (prjSel !== null && prjRes.has(prjSel)) prjShow(prjSel);
+        }
+      }
+      async function readTextOf(file) {
         const ext = file.name.split(".").pop().toLowerCase();
+        if (ext === "pdf") return exPDF(file);
+        if (ext === "docx" || ext === "doc") return exDOCX(file);
+        return file.text();
+      }
+      async function loadF(file) {
         if (file.size === 0) {
           toast("Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.", "e");
           return;
@@ -2251,10 +2469,7 @@
         document.getElementById("FT").classList.add("on");
         setP(10);
         try {
-          let txt = "";
-          if (ext === "pdf") txt = await exPDF(file);
-          else if (ext === "docx" || ext === "doc") txt = await exDOCX(file);
-          else txt = await file.text();
+          const txt = await readTextOf(file);
           setP(100);
           document.getElementById("IT").value = txt;
           updIC();
@@ -2727,8 +2942,12 @@
         });
       }
       // Gegenpruefung: Erkennung ein zweites Mal ueber das Ergebnis (alle Typen, ohne Freigaben)
-      function runLeakCheck() { const at = document.getElementById("AT").value, mk = PSLib.marks.toCvars(manualMarks);
-        const r = PSLib.leakcheck.scan(at, { detect: (t) => PSDetect.detect(t, { ents: ENTS.map((e) => e.id), cvars: cvars.concat(mk), whitelist: [], wordlists: localAIMode, aiSpans: null }), whitelist: whitelist });
+      function leakScan(at) {
+        const mk = PSLib.marks.toCvars(manualMarks);
+        return PSLib.leakcheck.scan(at, { detect: (t) => PSDetect.detect(t, { ents: ENTS.map((e) => e.id), cvars: cvars.concat(mk), whitelist: [], wordlists: localAIMode, aiSpans: null }), whitelist: whitelist });
+      }
+      function runLeakCheck() { const at = document.getElementById("AT").value;
+        const r = leakScan(at);
         r.findings = r.findings.filter((f) => !lcIgnored.has(f.type + "\u0000" + at.slice(f.start, f.end))); r.count = r.findings.length; r.clean = r.count === 0 && !r.error; lcLast = { at: at, res: r }; renderLeakCheck(); return r;
       }
       function renderLeakCheck() {
