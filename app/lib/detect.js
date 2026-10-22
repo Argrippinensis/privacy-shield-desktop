@@ -2357,7 +2357,7 @@
       function storeIndex() {
         if (storeIdxFor !== store) {
           storeIdx = new Map();
-          for (const [t, d] of Object.entries(store)) if (!storeIdx.has(d.v)) storeIdx.set(d.v, t);
+          for (const [t, d] of Object.entries(store)) if (!storeIdx.has(d.v) && !t.includes(".")) storeIdx.set(d.v, t); // Platzhalter mit Endung meinen eine bestimmte Person, nie ueber den Wert wiederverwenden
           storeIdxFor = store;
         }
         return storeIdx;
@@ -2480,8 +2480,6 @@
     const key = "{{NAME_" + n + (sp.form === "VOLL" ? "" : "." + sp.form) + "}}";
     if (store[key]) return store[key].v === val ? key : null;
     store[key] = { v: val, t: sp.pfx, c: sp.col, m: sp.meth };
-    const idx = storeIndex();
-    if (!idx.has(val)) idx.set(val, key);
     return key;
   }
 
