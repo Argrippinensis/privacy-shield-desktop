@@ -225,10 +225,10 @@
           on: true,
           pfx: "KENNNR",
           rx: [
-            /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)[ \t:]*[\d \t\/\-]{8,18})/gi,
+            /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)(?:[ \t]+(?:lautet|ist|war))?[ \t:]*[\d \t\/\-]{8,18})/gi,
             /((?:USt\.?-?Id(?:Nr\.?)?|Umsatzsteuer-?ID|VAT)[\s:]*[A-Z]{0,2}\d{7,12})/gi,
             /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?|Führerschein(?:nummer)?|FS-?Nr\.?|Aufenthaltstitel(?:-?Nr\.?)?)[ \t:]*[A-Z0-9]{6,14})/gi,
-            /(?=[A-Za-z0-9])(?<=(?:Kunden|Vertrags|Mitarbeiter|Personal|Matrikel|Versicherungs|Policen|Mandanten|Patienten|Fall|Antrags|Referenz|Bestell|Konto|Teilnehmer|Mitglieds|Lizenz|Buchungs|Sendungs|Ticket)-?(?:nummer|nr\.?|no\.?|id)[ \t:#]{0,1000})([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/gi,
+            /(?=[A-Za-z0-9])(?!(?:lautet|ist|war|sind)\b)(?<=(?:Kunden|Vertrags|Mitarbeiter|Personal|Matrikel|Versicherungs|Policen|Mandanten|Patienten|Fall|Antrags|Referenz|Bestell|Konto|Teilnehmer|Mitglieds|Lizenz|Buchungs|Sendungs|Ticket)-?(?:nummer|nr\.?|no\.?|id)(?:[ \t]{1,1000}(?:lautet|ist|war))?[ \t:#]{0,1000})([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/gi,
             /(HR[AB]\s*(?:Nr\.?\s*)?\d{3,8})/g,
             /((?:Aktenzeichen|Az\.?)[\s:]+(?:\d{1,4}\s+[A-Z]{1,5}\s+)?[\w\/\.\-]{2,30})/g,
             /\b(\d{1,3}\s+[A-Z]{1,5}\s+\d{3,6}\/\d{2,4})\b/g,
@@ -316,6 +316,8 @@
             /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=\b(?:geboren|geb\.)[ \t]{1,1000})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![\w.])/g,
             /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2}))/g,
             /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
+            /(?<=(?:^|\n|[:;])[ \t]{0,5})([A-ZÄÖÜ][A-ZÄÖÜß]{2,}(?:-[A-ZÄÖÜ][A-ZÄÖÜß]{2,})?,[ \t]+(?:[A-ZÄÖÜ][A-ZÄÖÜß]{2,}|[A-ZÄÖÜ][a-zäöüß]{2,})(?:-[A-ZÄÖÜ][A-Za-zäöüß]{2,})?)(?=[ \t]*(?:[;,(<\n]|$))/g,
+            /(?:(?<=,[ \t]{0,3})genannt|alias|a\.k\.a\.|auch bekannt als|Spitznamen?|Rufname|Künstlername|(?:nennen|nennt|rufen|ruft) (?:ihn|sie)(?: nur)?)[ \t:]{0,3}["„»“'‚‹]([A-ZÄÖÜ][A-Za-zäöüßÄÖÜ\-]{2,}(?:[ \t]+[A-ZÄÖÜ][A-Za-zäöüßÄÖÜ\-]{2,})?)["“«”'‘›]/g,
           ],
         },
         {
@@ -1269,7 +1271,7 @@
       // GROSSGESCHRIEBENE Personennamen ("HANS MEIER"): nur wenn Vor- oder Nachname in den Wortlisten steht,
       // damit Ueberschriften ("KAUFVERTRAG ZWISCHEN") nicht als Name gelten.
       function isCapsPersonName(val) {
-        const words = val.trim().split(/[ \t]+/);
+        const words = val.trim().split(/[ \t]+/).map((w) => w.replace(/,$/, ""));
         if (words.length < 2 || words.length > 3) return false;
         if (!words.every((w) => /^[A-ZÄÖÜ][A-ZÄÖÜ\-]+$/.test(w))) return false;
         const tc = (w) => w.charAt(0) + w.slice(1).toLowerCase();
@@ -1278,6 +1280,12 @@
       function okName(s) {
         const tt = s.trim();
         if (tt === tt.toUpperCase() && /[A-ZÄÖÜ]{2}/.test(tt)) return isCapsPersonName(tt);
+        // GROSSGESCHRIEBENER Nachname mit Komma ("SCHMIEDEBERG, Ottilie"): beide Teile duerfen kein Stoppwort sein
+        const kom = /^([A-ZÄÖÜ][A-ZÄÖÜß\-]+),[ \t]+(\S+)$/.exec(tt);
+        if (kom) {
+          const tc = (w) => w.charAt(0) + w.slice(1).toLowerCase();
+          if (SW.has(tc(kom[1])) || SW.has(kom[2]) || SW.has(tc(kom[2]))) return false;
+        }
         return s
           .trim()
           .split(/\s+/)
@@ -1348,7 +1356,8 @@
           note: "",
         },
       ];
-      let localAIMode = false;
+      // Wortlisten-Erkennung (Namen, Organisationen, Orte) ist der Normalfall ohne KI-Treffer; nur wordlists: false schaltet sie ab (Diagnose, Referenz w0)
+      let wordlistsOn = true;
       const LOCAL_NAMES = new Set([
         "Alexander",
         "Andreas",
@@ -1444,7 +1453,42 @@
         "Mia",
         "Hannah",
         "Lea",
-      ]);
+        // ab C1.1: breiteres Vornamen-Woerterbuch (Ausfallmodus), Schreibweisen mit Sonderzeichen
+        "Achim", "Adrian", "Agnieszka", "Ahmet", "Aisha", "Albert", "Alfred", "Ali", "Alina", "Amelie", "Amira", "Ana", "Andre", "Andrea",
+        "Andrzej", "Angela", "Angelika", "Anita", "Anton", "Antje", "Antonio", "Armin", "Arnold", "Arthur", "Astrid", "Axel",
+        "Aylin", "Ayse", "Barbara", "Bastian", "Beata", "Beate", "Benedikt", "Benjamin", "Bernhard", "Bettina", "Birgit", "Birte", "Boris",
+        "Burak", "Carla", "Carlos", "Carmen", "Carolin", "Caroline", "Carsten", "Cem", "Charlotte", "Chiara", "Christiane", "Christina",
+        "Christine", "Christof", "Clemens", "Constantin", "Cornelia", "Çağlar", "Dagmar", "Daniela", "Dennis", "Diana", "Dieter",
+        "Dietmar", "Dmitri", "Dominik", "Doris", "Dorota", "Dorothea", "Eberhard", "Eckhard", "Edgar", "Edith", "Eduard", "Egon", "Elena",
+        "Elfriede", "Elif", "Elke", "Ellen", "Emil", "Emilia", "Emily", "Emine", "Emre", "Erich", "Erik", "Erika", "Evelyn", "Ewa",
+        "Fabian", "Fatima", "Fatma", "Ferdinand", "Florian", "Francesca", "Francesco", "Franziska", "Frederik", "Frieda", "Fritz",
+        "Georg", "Gerald", "Gerd", "Gerda", "Gerhard", "Gerrit", "Giovanni", "Giulia", "Giuseppe", "Gertrud", "Gudrun", "Günter",
+        "Günther", "Gustav", "Hamza", "Hanna", "Hannelore", "Harald", "Hasan", "Hatice", "Heiko", "Heidi", "Heinrich", "Helene", "Helmut",
+        "Henning", "Henrik", "Henrike", "Hildegard", "Holger", "Horst", "Hubert", "Hüseyin", "Ibrahim", "Igor", "Ilona", "Ilse", "Ines",
+        "Ingo", "Irene", "Irina", "Irmgard", "Isabel", "Isabella", "Jakob", "Jakub", "Jan", "Jana", "Janina", "Jannik", "Jasmin",
+        "Jennifer", "Joanna", "Johanna", "Jonathan", "José", "Jose", "Juan", "Julian", "Justus", "Jutta", "Katarzyna", "Kathrin",
+        "Katja", "Kerstin", "Kevin", "Khalid", "Klara", "Konrad", "Krzysztof", "Kristian", "Kristina", "Larissa", "Layla", "Lennart",
+        "Leo", "Leonie", "Leyla", "Lilli", "Linda", "Linus", "Lothar", "Louisa", "Ludwig", "Luisa", "Lucia", "Łukasz", "Łucja",
+        "Magdalena", "Maike", "Malte", "Małgorzata", "Marc", "Marcel", "Marco", "Marcus", "Marek", "Margarete", "Margit", "Mariam",
+        "Marianne", "Marie", "Marlene", "Marta", "Mathias", "Matteo", "Maximilian", "Mehmet", "Meike", "Melanie", "Melissa", "Merve",
+        "Michaela", "Miguel", "Mihail", "Mirko", "Mohammed", "Muhammad", "Moritz", "Murat", "Mustafa", "Nadine", "Natalia",
+        "Natalie", "Nicole", "Nico", "Nikolaus", "Nils", "Nora", "Norbert", "Nour", "Oksana", "Olaf", "Olena", "Olga", "Omar", "Osman",
+        "Otto", "Ömer", "Pamela", "Paula", "Pauline", "Pavel", "Pawel", "Pedro", "Piotr", "Rainer", "Ralf", "Ralph", "Rebecca",
+        "Regina", "Reinhard", "Richard", "Rita", "Roland", "Romy", "Ronald", "Rosemarie", "Rudolf", "Ruth", "Sabrina", "Samir", "Saskia",
+        "Sara", "Sebastian", "Selin", "Sergej", "Sibylle", "Siegfried", "Sigrid", "Simone", "Sofia", "Sonja", "Sophia", "Stephanie",
+        "Svenja", "Sven", "Svetlana", "Søren", "Tanja", "Tarek", "Tatjana", "Theodor", "Theresa", "Thilo", "Tina", "Tobias", "Tomasz",
+        "Torsten", "Udo", "Ulf", "Ulrich", "Ulrike", "Ursula", "Valentin", "Valentina", "Valentyna", "Vanessa", "Vera", "Verena", "Viktor",
+        "Viktoria", "Vladimir", "Volker", "Waldemar", "Waltraud", "Wiebke", "Wilfried", "Willi", "Winfried", "Wojciech", "Wojtek",
+        "Yannick", "Yasemin", "Yusuf", "Yvonne", "Zeynep", "Zoë",
+        // Mehrdeutige Vornamen (auch Alltagswoerter): nur ohne Artikel davor, siehe WEAK_NAMES
+        "Kai", "Iris", "Falk", "Mona", "Teddy",
+        // Kurzformen und Spitznamen
+        "Andi", "Basti", "Benni", "Biggi", "Chris", "Chrissi", "Conny", "Dani", "Danny", "Ede", "Evi", "Fabi", "Flo", "Flori", "Gabi",
+        "Gaby", "Hannes", "Hanni", "Heiner", "Hotte", "Jenny", "Jessi", "Jule", "Kalle", "Kathi", "Kati", "Katrin", "Lissi", "Lotti",
+        "Micha", "Michi", "Mike", "Mimi", "Mischa", "Moni", "Nici", "Nicki", "Resi", "Rike", "Rudi", "Sandy", "Silvi", "Sissi", "Steffi",
+        "Susi", "Timo", "Toni", "Tommy", "Uli", "Uschi",       ]);
+      // Vornamen, die auch Alltagswoerter sind (Kai, Iris, Falk, Mona, Teddy): gelten nur ohne Artikel/Praeposition mit Artikel davor und ohne Bindestrich danach
+      const WEAK_NAMES = new Set(["Kai", "Iris", "Falk", "Mona", "Teddy"]);
       const LOCAL_SURNAMES = new Set([
         "Müller",
         "Schmidt",
@@ -1574,6 +1618,21 @@
         "Costa",
         "Mancini",
         "Esposito",
+        // ab C1.1: breiteres Nachnamen-Woerterbuch (Ausfallmodus)
+        "Aigner", "Albers", "Altmann", "Andersen", "Arslan", "Aslan", "Aydın", "Bachmann", "Bartels", "Baur",
+        "Beier", "Bernard", "Beyer", "Blum", "Brandt", "Brinkmann", "Brunner", "Conrad", "Çelik", "Davies",
+        "Demir", "Dietz", "Doğan", "Döring", "Dubois", "Dupont", "Dvořák", "Ebert", "Eckert", "Engelhardt", "Evans", "Farsi",
+        "Fernández", "Ferreira", "Franz", "Friedrichs", "Garcia", "García", "Gerlach", "Giese", "Gonzalez", "Haas",
+        "Haase", "Hansen", "Hartung", "Heinrich", "Henke", "Hess", "Hildebrandt", "Hinz", "Hofer", "Horváth", "Ivanov", "Jacobs",
+        "Jahn", "Jansen", "Jensen", "Johansson", "Johnson", "Jones", "Kamiński", "Kaya", "Kessler", "Kierkegaard", "Kılıç", "Kirchner",
+        "Kolb", "Konrad", "Kovács", "Kowalczyk", "Kowalski", "Kozłowski", "Kramer", "Kroll",         "Kunz", "Lachmann", "Larsen", "Laurent", "Lefèvre", "Lewandowski", "Lindner", "López", "Lüdenscheidt", "Lutz",
+        "Martínez", "Mayer", "Mayr", "Mazur", "Mertens", "Michel", "Moreau", "Moser", "Mustermann", "Nagy", "Naumann", "Nielsen", "Nowak",
+        "Novák", "Novotný", "Obermaier", "Ott", "Özdemir", "Öztürk", "Pereira", "Petersen", "Petrov", "Pfeiffer", "Pohl", "Polat",
+        "Popov", "Rodríguez", "Reichert", "Reimann", "Reinhardt", "Sánchez", "Santos", "Scheffler", "Schlüter",
+        "Schumacher", "Schütz", "Silva", "Smirnov", "Smith", "Sokolov", "Steiner", "Stoll", "Svensson", "Svoboda", "Szabó", "Szymański",
+        "Şahin", "Taylor", "Thiel", "Thompson", "Tietz", "Ulrich", "Walter", "Wegner", "Weidner", "Wendt", "Wenzel", "Westphal",
+        "Williams", "Wilson", "Wiśniewska", "Wiśniewski", "Wittmann", "Wójcik", "Woźniak", "Yilmaz", "Yıldız", "Zeller",
+        "Zieliński", "Šimek",
       ]);
       const LOCAL_ORG_KEYWORDS = [
         /\b(GmbH|AG|e\.V\.|KG|OHG|UG|SE|Inc\.|Corp\.|LLC|Ltd\.|PLC|GmbH & Co\. KG|GmbH & Co\.)/gi,
@@ -1588,13 +1647,11 @@
       ];
       function detectLocalEntities(text) {
         var results = [];
-        var seen = new Set();
-        var nameRx = /\b([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[\- \t][A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)\b/g;
+        var nameRx = /(?<![A-Za-z0-9_À-ɏ])([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[\- \t][A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)(?![A-Za-z0-9_À-ɏ])/g;
         var match;
         while ((match = nameRx.exec(text)) !== null) {
           var name = match[0].trim();
-          if (name.length < 2 || seen.has(name)) continue;
-          seen.add(name);
+          if (name.length < 2) continue;
           var parts = name.split(/[\s-]/);
           var isName =
             parts.some(function (p) {
@@ -1618,8 +1675,7 @@
           rx.lastIndex = 0;
           while ((match = rx.exec(text)) !== null) {
             var org = (match[1] || match[2] || match[0]).trim();
-            if (org.length < 3 || seen.has("org:" + org)) continue;
-            seen.add("org:" + org);
+            if (org.length < 3) continue;
             results.push({
               entity_group: "ORG",
               score: 0.75,
@@ -1634,8 +1690,7 @@
           rx2.lastIndex = 0;
           while ((match = rx2.exec(text)) !== null) {
             var loc = (match[2] || match[1] || match[0]).trim();
-            if (loc.length < 3 || seen.has("loc:" + loc)) continue;
-            seen.add("loc:" + loc);
+            if (loc.length < 3) continue;
             var cityRx =
               /\b(München|Berlin|Hamburg|Köln|Frankfurt|Stuttgart|Düsseldorf|Leipzig|Dresden|Hannover|Nürnberg|Bremen|Bonn|Münster|Karlsruhe|Mannheim|Augsburg|Wiesbaden|Freiburg|Aachen|Regensburg|Kiel|Erfurt|Mainz|Koblenz|Trier|Ulm|Heidelberg|Potsdam|Darmstadt|Bamberg|Passau|Bremen|Lübeck|Rostock|Chemnitz|Magdeburg|Saarbrücken|Würzburg|Ingolstadt)\b/i;
             var score = loc.match(cityRx) ? 0.9 : 0.6;
@@ -1996,23 +2051,59 @@
               meth: "KI (NER-Modell)",
             });
           }
-        } else if (localAIMode) {
+        }
+        if (wordlistsOn && activeEnts.size > 0) {
           try {
             const aiMap = {
               PER: { pfx: "NAME", col: "#f59e0b" },
               ORG: { pfx: "ORG", col: "#8b5cf6" },
               LOC: { pfx: "ORT", col: "#3b82f6" },
             };
+            // Mit KI-Treffern ergaenzen die Wortlisten nur Luecken des Modells: Personennamen mit bekanntem Vornamen, die keinen
+            // anderen Treffer beruehren. Organisationen und Orte kommen vom Modell (sonst Ueber-Maskierung durch Stichwoerter wie
+            // Bank, Hotel), Nachnamen allein auch nicht (Link, Koch, Klein sind auch Alltagswoerter).
+            const aiOn = aiCache.key === text;
+            let belegt = null, maxEnd = null;
+            if (aiOn) {
+              belegt = p1.concat(pass2).sort((a, b) => a.start - b.start);
+              maxEnd = [];
+              belegt.forEach((x, i) => (maxEnd[i] = i ? Math.max(maxEnd[i - 1], x.end) : x.end));
+            }
+            const beruehrt = (a, b) => {
+              let lo = 0, hi = belegt.length;
+              while (lo < hi) {
+                const mid = (lo + hi) >> 1;
+                if (belegt[mid].start < b) lo = mid + 1;
+                else hi = mid;
+              }
+              return lo > 0 && maxEnd[lo - 1] > a;
+            };
+            const neu = [];
+            const ART = "(?:der|die|das|den|dem|des|ein|eine|einem|einen|einer|eines|mein|meine|meinen|dein|deine|unser|unsere|sein|seine|ihr|ihre|kein|keine|am|im|zum|zur|vom|beim)";
+            const ART_ANF = new RegExp("^" + ART + "[ \\t]+", "i");
+            const ART_START = new RegExp("^" + ART + "[ \\t]", "i");
+            const ART_VOR = new RegExp("(?:^|[\\s(])" + ART + "[ \\t]+$", "i");
             detectLocalEntities(maskedText).forEach(function (ent) {
               const t = aiMap[ent.entity_group];
               if (!t) return;
+              if (aiOn && ent.entity_group !== "PER") return;
               const val = (ent.word || "").trim();
               if (!val || val.length < 3 || val.includes("\0")) return;
               if (maskedText.slice(ent.start, ent.start + val.length) !== val) return;
               if (ent.entity_group === "LOC" && ent.score < 0.85) return;
               if (ent.entity_group === "ORG" && ORG_LEGAL_ONLY.test(val)) return;
               if (SW.has(val)) return;
-              pass2.push({
+              if (aiOn && (!val.split(/[\s-]/).some((w) => LOCAL_NAMES.has(w)) || beruehrt(ent.start, ent.start + val.length))) return;
+              // Einzelner Vorname direkt hinter Artikel oder Praeposition mit Artikel ist meist ein Alltagswort ("die Iris", "ein Falk");
+              // auch wenn der Artikel am Satzanfang als Teil des Treffers gelesen wurde ("Ein Anton")
+              {
+                // schwache Vornamen (Kai, Iris, ...): nicht hinter Artikel ("Am Kai"), nicht als Erstglied eines Kompositums ("Iris-Blende")
+                const kern = val.replace(ART_ANF, "");
+                const teile = kern.split("-");
+                if ((WEAK_NAMES.has(kern) && (kern !== val || ART_VOR.test(maskedText.slice(Math.max(0, ent.start - 12), ent.start)))) || (teile.length > 1 && WEAK_NAMES.has(teile[0]) && !LOCAL_NAMES.has(teile[1]))) return;
+              }
+              if (aiOn && (ART_START.test(val) || (!/[\s-]/.test(val) && ART_VOR.test(maskedText.slice(Math.max(0, ent.start - 12), ent.start))))) return;
+              neu.push({
                 start: ent.start,
                 end: ent.start + val.length,
                 pfx: t.pfx,
@@ -2022,6 +2113,7 @@
                 meth: "KI-Erkennung (Wortlisten)",
               });
             });
+            for (const x of neu) pass2.push(x);
           } catch (err) {
             console.error("Lokale KI-Erkennung (nicht fatal):", err);
           }
@@ -2154,7 +2246,7 @@
           let mp;
           while (
             (mp = vorVon(s.end)) &&
-            !SW.has(mp[1])
+            !(SW.has(mp[1]) && !LOCAL_SURNAMES.has(mp[1]))
           ) {
             if (s.end - s.start + mp[0].length > MAX_NAME_SPAN) {
               weiter(s, s.end + mp[0].length - mp[1].length, mp[1].length);
@@ -2297,7 +2389,7 @@
     extraSpans = [];
     activeEnts = new Set();
     aiCache = { key: null, spans: [] };
-    localAIMode = false;
+    wordlistsOn = true;
   }
 
   // Aktive Regeln: opts.ents hat Vorrang; sonst die Regeln des Profils (unbekanntes Profil: standard)
@@ -2312,7 +2404,7 @@
     cvars = Array.isArray(o.cvars) ? o.cvars : [];
     whitelist = Array.isArray(o.whitelist) ? o.whitelist : [];
     activeEnts = new Set(activeIds(o));
-    localAIMode = !!o.wordlists;
+    wordlistsOn = o.wordlists !== false;
     extraSpans = (Array.isArray(o.extraSpans) ? o.extraSpans : [])
       .filter((x) => x && Number.isInteger(x.start) && Number.isInteger(x.end) && x.start >= 0 && x.end > x.start && x.end <= det.length)
       .map((x) => ({

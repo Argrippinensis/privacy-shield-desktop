@@ -15,10 +15,10 @@ const MAX_LEAK_OCR = 0.06;    // OCR: Zeichenverwechslung ist kein Erkennungsfeh
 const OCR_MIN_FRAG = 5;       // bei OCR zaehlen nur Fragmente ab 5 Zeichen
 // Ratsche: heute gemessener Stand (Anzahl undichter Werte), darf nicht steigen. Ziel C1.3 sind die Schwellen oben.
 const RATCHET = {
-  TXT: { ki: 3, fb: 8 },
-  DOCX: { ki: 3, fb: 8 },
-  'PDF-Text': { ki: 4, fb: 9 },
-  OCR: { ki: 5, fb: 6 },
+  TXT: { ki: 2, fb: 0 },
+  DOCX: { ki: 2, fb: 0 },
+  'PDF-Text': { ki: 3, fb: 1 },
+  OCR: { ki: 5, fb: 4 },
 };
 const MIN_EXTRACTED = 0.9;    // Vorbedingung: mindestens so viele Werte muessen den Import ueberstehen
 

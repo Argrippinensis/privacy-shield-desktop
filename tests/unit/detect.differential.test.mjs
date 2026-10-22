@@ -12,6 +12,10 @@ const reference = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests', 'golden', 
 const inputs = await buildInputs();
 const byKey = new Map(inputs.map((i) => [i.key, i]));
 const itemsOf = (mode) => reference.items.filter((it) => it.mode === mode);
+// Erklaerte Abweichungen (tests/golden/reference-allow.json, je Eintrag mit Begruendung im Entscheidungsprotokoll), gleiche Regel wie tests/eval/diff-reference.mjs
+const ALLOW_FILE = path.join(ROOT, 'tests', 'golden', 'reference-allow.json');
+const allow = fs.existsSync(ALLOW_FILE) ? JSON.parse(fs.readFileSync(ALLOW_FILE, 'utf8')) : [];
+const isAllowed = (mode, key) => allow.some((a) => (a.mode === '*' || a.mode === mode) && (a.key === '*' || a.key === key) && typeof a.reason === 'string' && a.reason.length > 0);
 
 // Optionen je Modus (Spezifikation F1, Schritt 1)
 function optsFor(item) {
@@ -33,7 +37,7 @@ function runMode(mode) {
     if (sha256(r.text) !== item.outSha256) a.push('text');
     if (sha256(JSON.stringify(r.state.store)) !== item.storeSha256) a.push('zuordnung');
     if (Object.keys(r.state.store).length !== item.entities) a.push('anzahl');
-    if (a.length) abweichungen.push(`${mode}/${item.key}: ${a.join('+')} abweichend`);
+    if (a.length && !isAllowed(mode, item.key)) abweichungen.push(`${mode}/${item.key}: ${a.join('+')} abweichend`);
   }
   return abweichungen;
 }

@@ -3,13 +3,17 @@
   "mode": "wortlisten",
   "cases": {
    "V2-IDENT": {
-    "total": 10,
-    "leaked": 4,
+    "total": 23,
+    "leaked": 8,
     "ids": [
      "v2a03",
      "v2a06",
-     "v2a07",
-     "v2a08"
+     "v2a116",
+     "v2a117",
+     "v2a118",
+     "v2a119",
+     "v2a120",
+     "v2a126"
     ]
    },
    "V2-KONTAKT": {
@@ -30,19 +34,22 @@
     ]
    },
    "V2-STANDORT": {
-    "total": 10,
-    "leaked": 2,
+    "total": 15,
+    "leaked": 6,
     "ids": [
      "v2a35",
-     "v2a39"
+     "v2a39",
+     "v2a111",
+     "v2a113",
+     "v2a114",
+     "v2a115"
     ]
    },
    "V2-NUMMER": {
-    "total": 10,
-    "leaked": 2,
+    "total": 12,
+    "leaked": 1,
     "ids": [
-     "v2a45",
-     "v2a47"
+     "v2a45"
     ]
    },
    "V2-PERSON": {
@@ -56,25 +63,27 @@
    },
    "V2-ART9": {
     "total": 12,
-    "leaked": 2,
+    "leaked": 3,
     "ids": [
      "v2a66",
-     "v2a67"
+     "v2a67",
+     "v2a69"
     ]
    },
    "V2-ART10": {
     "total": 8,
-    "leaked": 0,
-    "ids": []
+    "leaked": 1,
+    "ids": [
+     "v2a78"
+    ]
    },
    "V2-FORM": {
     "total": 10,
-    "leaked": 6,
+    "leaked": 5,
     "ids": [
      "v2a81",
      "v2a83",
      "v2a84",
-     "v2a85",
      "v2a86",
      "v2a87"
     ]
@@ -105,7 +114,7 @@
    },
    "NEG": {
     "total": 60,
-    "leaked": 21,
+    "leaked": 20,
     "ids": [
      "v2n01",
      "v2n02",
@@ -115,7 +124,6 @@
      "v2n21",
      "v2n23",
      "v2n25",
-     "v2n26",
      "v2n29",
      "v2n30",
      "v2n32",
@@ -146,7 +154,7 @@
    },
    "NAME": {
     "total": 191,
-    "leaked": 63
+    "leaked": 61
    },
    "DATUM": {
     "total": 63,
@@ -178,7 +186,7 @@
    },
    "TAXID": {
     "total": 14,
-    "leaked": 5
+    "leaked": 0
    },
    "CARD": {
     "total": 7,
@@ -186,7 +194,7 @@
    }
   },
   "synthTotal": 860,
-  "synthLeaked": 68,
+  "synthLeaked": 61,
   "raw": {
    "cases": [
     {
@@ -221,13 +229,13 @@
     },
     {
      "key": "v2a07",
-     "out": "Beschuldigter: {{NAME_1}}, genannt \"Wojtek\".",
-     "tokens": 1
+     "out": "Beschuldigter: {{NAME_2}}, genannt \"{{NAME_1}}\".",
+     "tokens": 2
     },
     {
      "key": "v2a08",
-     "out": "Kontoinhaber: SCHMIEDEBERG, Ottilie ({{NAME_1}})",
-     "tokens": 1
+     "out": "Kontoinhaber: {{NAME_2}} ({{NAME_1}})",
+     "tokens": 2
     },
     {
      "key": "v2a09",
@@ -238,6 +246,71 @@
      "key": "v2a10",
      "out": "Geschäftsführer ist {{NAME_2}}, Prokurist {{NAME_1}}.",
      "tokens": 2
+    },
+    {
+     "key": "v2a116",
+     "out": "{{NAME_1}} war beteiligt. Wir danken Anna für die Zusammenarbeit, und Anna bleibt erreichbar.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a117",
+     "out": "[09:12] Birgit: Hast du die Daten?\n[09:13] Zoë: Ja, die liegen vor.\n[09:14] Birgit: Danke.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a118",
+     "out": "Rechnungsempfänger: Dieter de Bärtschi, {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a119",
+     "out": "Vertragspartnerin ist Nadine van Al-Farsi, Mieterin der Wohnung.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a120",
+     "out": "TN1: Mache ich. Ömer, kannst du das Protokoll übernehmen?",
+     "tokens": 0
+    },
+    {
+     "key": "v2a121",
+     "out": "{{NAME_2}} und {{NAME_1}} unterschrieben gemeinsam.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a122",
+     "out": "Absender: {{NAME_1}}\nBetreff: Anfrage zur Rechnung",
+     "tokens": 1
+    },
+    {
+     "key": "v2a123",
+     "out": "Patient: {{NAME_1}} (geb. 1971), Station 4",
+     "tokens": 1
+    },
+    {
+     "key": "v2a124",
+     "out": "Gläubiger\n{{NAME_2}}\nSchuldner: {{NAME_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a125",
+     "out": "Alle rufen ihn nur \"{{NAME_2}}\", gemeldet ist er als {{NAME_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a126",
+     "out": "Steffi und Andi holen die Kinder ab; Kathi bleibt zu Hause. Flo meldet sich später.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a127",
+     "out": "Die Zeugin, alias „{{NAME_2}}“, wurde gestern befragt; im Verein heißt sie „Kleine {{NAME_1}}“.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a128",
+     "out": "{{NAME_3}} und {{NAME_2}} waren bei {{NAME_1}} anwesend.",
+     "tokens": 3
     },
     {
      "key": "v2a11",
@@ -390,6 +463,31 @@
      "tokens": 1
     },
     {
+     "key": "v2a111",
+     "out": "Das Werk in Freiburg und das Lager in Dortmund werden zusammengelegt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a112",
+     "out": "Die Rheinbrücke bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a113",
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht Nürnberg um 9:15 Uhr.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a114",
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in München und Hamburg.",
+     "tokens": 0
+    },
+    {
+     "key": "v2a115",
+     "out": "Der Roman spielt 1923 in Leipzig und handelt von einer Druckerfamilie.",
+     "tokens": 0
+    },
+    {
      "key": "v2a41",
      "out": "Bitte buchen Sie von {{IBAN_1}} ab.",
      "tokens": 1
@@ -437,6 +535,16 @@
     {
      "key": "v2a50",
      "out": "IBAN {{IBAN_1}} ({{NAME_1}})",
+     "tokens": 2
+    },
+    {
+     "key": "v2a129",
+     "out": "Meine {{KENNNR_2}}, die Kundennummer ist {{KENNNR_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a130",
+     "out": "Die Vertragsnummer lautet {{KENNNR_2}}; {{KENNNR_1}}.",
      "tokens": 2
     },
     {
@@ -611,8 +719,8 @@
     },
     {
      "key": "v2a85",
-     "out": "NAME: ZIEGLER, UWE; {{DATUM_1}}; ORT: JENA",
-     "tokens": 1
+     "out": "NAME: {{NAME_1}}; {{DATUM_1}}; ORT: JENA",
+     "tokens": 2
     },
     {
      "key": "v2a86",
@@ -666,8 +774,8 @@
     },
     {
      "key": "v2a96",
-     "out": "Mr. {{NAME_1}}, SSN {{TEL_1}}, 4 Elm Court, Austin, TX 78701.",
-     "tokens": 2
+     "out": "Mr. {{NAME_1}}, SSN 561-48-3927, 4 Elm Court, Austin, TX 78701.",
+     "tokens": 1
     },
     {
      "key": "v2a97",
@@ -751,12 +859,12 @@
     },
     {
      "key": "v2n03",
-     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.",
+     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.\nAnders als geplant fällt die Sitzung aus. Knapp 30 Personen kamen zur Feier.",
      "tokens": 0
     },
     {
      "key": "v2n04",
-     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.",
+     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.\nEhrlich gesagt ist das Wetter schön. Der Kluge gibt nach. Schenk den Wein ein!",
      "tokens": 0
     },
     {
@@ -766,12 +874,12 @@
     },
     {
      "key": "v2n06",
-     "out": "Das Werk in Freiburg und das Lager in Dortmund werden zusammengelegt.",
+     "out": "Das Werk im Süden und das Lager im Westen werden zusammengelegt.",
      "tokens": 0
     },
     {
      "key": "v2n07",
-     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.",
+     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.\nBusse und Bahnen fahren im Takt. Funk und Fernsehen berichten ausführlich.",
      "tokens": 0
     },
     {
@@ -786,17 +894,17 @@
     },
     {
      "key": "v2n10",
-     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.",
+     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.\nEin Heller ist keine Münze mehr. Lenz und Sommer wechseln sich ab.",
      "tokens": 0
     },
     {
      "key": "v2n11",
-     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.",
+     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.\nVermerk: WICHTIG, Fristablauf beachten.",
      "tokens": 0
     },
     {
      "key": "v2n12",
-     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.",
+     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.\nWICHTIG, Dieses Schreiben ist fristgebunden.\nACHTUNG, Frist läuft ab.\nDSGVO, Art. 5",
      "tokens": 0
     },
     {
@@ -806,7 +914,7 @@
     },
     {
      "key": "v2n14",
-     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.",
+     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.\nIm August ist es heiß. Der Druck wird in Pascal gemessen.",
      "tokens": 0
     },
     {
@@ -816,22 +924,22 @@
     },
     {
      "key": "v2n16",
-     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.",
+     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.\nZander und Hecht sind Fische. Der Vogt und der Knecht arbeiteten auf dem Hof.",
      "tokens": 0
     },
     {
      "key": "v2n17",
-     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.",
+     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.\nDer Krämer verkauft Kleinwaren. Die Lampe an der Decke brennt.",
      "tokens": 0
     },
     {
      "key": "v2n18",
-     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.",
+     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.\nDer Binder am Hals sitzt schief. Der Bergmann fährt in den Schacht ein.",
      "tokens": 0
     },
     {
      "key": "v2n19",
-     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.",
+     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.\nDer Bader schneidet Haare. Mit dem Schlegel schlägt man die Trommel.",
      "tokens": 0
     },
     {
@@ -846,7 +954,7 @@
     },
     {
      "key": "v2n22",
-     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.",
+     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.\nAm Kai liegt ein Schiff. Der Teddy liegt im Bett. Wolle und Garn sind teuer.",
      "tokens": 0
     },
     {
@@ -856,7 +964,7 @@
     },
     {
      "key": "v2n24",
-     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.",
+     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.\nIm Korb liegt ein Appel. Pape und Wolff sind seltene Schreibweisen. Kühn ging der Fiedler voran.",
      "tokens": 0
     },
     {
@@ -866,12 +974,12 @@
     },
     {
      "key": "v2n26",
-     "out": "Die Rheinbrücke bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
-     "tokens": 1
+     "out": "Die Brücke über den Fluss ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 0
     },
     {
      "key": "v2n27",
-     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.",
+     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.\nDie Iris blüht im Mai. Ein Falk jagt über dem Feld. Die Mona wurde restauriert.",
      "tokens": 0
     },
     {
@@ -951,12 +1059,12 @@
     },
     {
      "key": "v2n43",
-     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht Nürnberg um 9:15 Uhr.",
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht den Endbahnhof um 9:15 Uhr.",
      "tokens": 0
     },
     {
      "key": "v2n44",
-     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in München und Hamburg.",
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in Großstädten mit knappem Wohnraum.",
      "tokens": 0
     },
     {
@@ -1011,7 +1119,7 @@
     },
     {
      "key": "v2n55",
-     "out": "Der Roman spielt 1923 in Leipzig und handelt von einer Druckerfamilie.",
+     "out": "Der Roman spielt 1923 in einer Großstadt und handelt von einer Druckerfamilie.",
      "tokens": 0
     },
     {
@@ -1103,8 +1211,8 @@
     },
     {
      "key": "syn12",
-     "out": "{{NAME_1}}\n{{NAME_3}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} (haftungsbeschränkt)\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 58804570822.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{NAME_3}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} (haftungsbeschränkt)\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn13",
@@ -1173,8 +1281,8 @@
     },
     {
      "key": "syn26",
-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 69407739933.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn27",
@@ -1243,8 +1351,8 @@
     },
     {
      "key": "syn40",
-     "out": "Çağlar de Richter\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 37 709 699 732.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Richter\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 8
+     "out": "Çağlar de Richter\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 9
     },
     {
      "key": "syn41",
@@ -1313,8 +1421,8 @@
     },
     {
      "key": "syn54",
-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 46259569466.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn55",
@@ -1383,8 +1491,8 @@
     },
     {
      "key": "syn68",
-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 71 359 431 433.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn69",
@@ -1453,7 +1561,7 @@
     },
     {
      "key": "syn82",
-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_2}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 98 {{TEL_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
      "tokens": 10
     },
     {
@@ -1513,17 +1621,17 @@
     },
     {
      "key": "syn94",
-     "out": "{{NAME_3}}\n{{TEL_1}}\n\nArbeitsunfähigkeitsbescheinigung\n\nPatient: {{NAME_2}} von der Richter, {{DATUM_3}}\nAnschrift: {{ADRESSE_1}}\n\nDie Arbeitsunfähigkeit besteht seit dem {{DATUM_2}} voraussichtlich bis zum {{DATUM_1}}.\n\n{{NAME_1}}",
+     "out": "{{NAME_3}}\n{{TEL_1}}\n\nArbeitsunfähigkeitsbescheinigung\n\nPatient: {{NAME_2}}, {{DATUM_3}}\nAnschrift: {{ADRESSE_1}}\n\nDie Arbeitsunfähigkeit besteht seit dem {{DATUM_2}} voraussichtlich bis zum {{DATUM_1}}.\n\n{{NAME_1}}",
      "tokens": 8
     },
     {
      "key": "syn95",
-     "out": "{{NAME_6}}\n\nArztbrief\n\nPatient: {{NAME_5}} von der Richter, geboren am {{DATUM_1}}\nAnschrift: {{NAME_4}}\n\nSehr geehrter Herr {{NAME_3}},\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre {{NAME_2}} ist nicht erforderlich. Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+     "out": "{{NAME_6}}\n\nArztbrief\n\nPatient: {{NAME_5}}, geboren am {{DATUM_1}}\nAnschrift: {{NAME_4}}\n\nSehr geehrter Herr {{NAME_3}},\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre {{NAME_2}} ist nicht erforderlich. Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
      "tokens": 8
     },
     {
      "key": "syn96",
-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_2}}, {{EMAIL_1}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 91 {{TEL_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
      "tokens": 10
     },
     {
@@ -1538,14 +1646,9 @@
   "mode": "fallback",
   "cases": {
    "V2-IDENT": {
-    "total": 10,
-    "leaked": 4,
-    "ids": [
-     "v2a03",
-     "v2a06",
-     "v2a07",
-     "v2a08"
-    ]
+    "total": 23,
+    "leaked": 0,
+    "ids": []
    },
    "V2-KONTAKT": {
     "total": 10,
@@ -1565,27 +1668,26 @@
     ]
    },
    "V2-STANDORT": {
-    "total": 10,
-    "leaked": 2,
+    "total": 15,
+    "leaked": 3,
     "ids": [
      "v2a35",
-     "v2a39"
+     "v2a39",
+     "v2a111"
     ]
    },
    "V2-NUMMER": {
-    "total": 10,
-    "leaked": 2,
+    "total": 12,
+    "leaked": 1,
     "ids": [
-     "v2a45",
-     "v2a47"
+     "v2a45"
     ]
    },
    "V2-PERSON": {
     "total": 10,
-    "leaked": 3,
+    "leaked": 2,
     "ids": [
      "v2a51",
-     "v2a54",
      "v2a57"
     ]
    },
@@ -1593,23 +1695,24 @@
     "total": 12,
     "leaked": 2,
     "ids": [
-     "v2a66",
-     "v2a67"
+     "v2a67",
+     "v2a69"
     ]
    },
    "V2-ART10": {
     "total": 8,
-    "leaked": 0,
-    "ids": []
+    "leaked": 1,
+    "ids": [
+     "v2a78"
+    ]
    },
    "V2-FORM": {
     "total": 10,
-    "leaked": 6,
+    "leaked": 5,
     "ids": [
      "v2a81",
      "v2a83",
      "v2a84",
-     "v2a85",
      "v2a86",
      "v2a87"
     ]
@@ -1640,7 +1743,7 @@
    },
    "NEG": {
     "total": 60,
-    "leaked": 23,
+    "leaked": 20,
     "ids": [
      "v2n01",
      "v2n02",
@@ -1650,15 +1753,12 @@
      "v2n21",
      "v2n23",
      "v2n25",
-     "v2n26",
      "v2n29",
      "v2n30",
      "v2n32",
      "v2n34",
      "v2n35",
      "v2n37",
-     "v2n43",
-     "v2n44",
      "v2n48",
      "v2n50",
      "v2n51",
@@ -1683,7 +1783,7 @@
    },
    "NAME": {
     "total": 191,
-    "leaked": 41
+    "leaked": 0
    },
    "DATUM": {
     "total": 63,
@@ -1715,7 +1815,7 @@
    },
    "TAXID": {
     "total": 14,
-    "leaked": 5
+    "leaked": 0
    },
    "CARD": {
     "total": 7,
@@ -1723,7 +1823,7 @@
    }
   },
   "synthTotal": 860,
-  "synthLeaked": 46,
+  "synthLeaked": 0,
   "raw": {
    "cases": [
     {
@@ -1738,8 +1838,8 @@
     },
     {
      "key": "v2a03",
-     "out": "Anwesend: {{NAME_2}}, Ulf Teschner, {{NAME_1}}.",
-     "tokens": 2
+     "out": "Anwesend: {{NAME_3}}, {{NAME_2}}, {{NAME_1}}.",
+     "tokens": 3
     },
     {
      "key": "v2a04",
@@ -1753,18 +1853,18 @@
     },
     {
      "key": "v2a06",
-     "out": "Danke für den Hinweis, Valentina. Ich melde mich bei Frau {{NAME_1}}.",
-     "tokens": 1
+     "out": "Danke für den Hinweis, {{NAME_2}}. Ich melde mich bei Frau {{NAME_1}}.",
+     "tokens": 2
     },
     {
      "key": "v2a07",
-     "out": "Beschuldigter: {{NAME_1}}, genannt \"Wojtek\".",
-     "tokens": 1
+     "out": "Beschuldigter: {{NAME_2}}, genannt \"{{NAME_1}}\".",
+     "tokens": 2
     },
     {
      "key": "v2a08",
-     "out": "Kontoinhaber: SCHMIEDEBERG, Ottilie ({{NAME_1}})",
-     "tokens": 1
+     "out": "Kontoinhaber: {{NAME_2}} ({{NAME_1}})",
+     "tokens": 2
     },
     {
      "key": "v2a09",
@@ -1775,6 +1875,71 @@
      "key": "v2a10",
      "out": "Geschäftsführer ist {{NAME_2}}, Prokurist {{NAME_1}}.",
      "tokens": 2
+    },
+    {
+     "key": "v2a116",
+     "out": "{{NAME_2}} war beteiligt. Wir danken {{NAME_1}} für die Zusammenarbeit, und {{NAME_1}} bleibt erreichbar.",
+     "tokens": 3
+    },
+    {
+     "key": "v2a117",
+     "out": "[09:12] {{NAME_1}}: Hast du die Daten?\n[09:13] {{NAME_2}}: Ja, die liegen vor.\n[09:14] {{NAME_1}}: Danke.",
+     "tokens": 3
+    },
+    {
+     "key": "v2a118",
+     "out": "Rechnungsempfänger: {{NAME_1}}, {{ADRESSE_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a119",
+     "out": "Vertragspartnerin ist {{NAME_1}}, Mieterin der Wohnung.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a120",
+     "out": "TN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?",
+     "tokens": 1
+    },
+    {
+     "key": "v2a121",
+     "out": "{{NAME_2}} und {{NAME_1}} unterschrieben gemeinsam.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a122",
+     "out": "Absender: {{NAME_1}}\nBetreff: Anfrage zur Rechnung",
+     "tokens": 1
+    },
+    {
+     "key": "v2a123",
+     "out": "Patient: {{NAME_1}} (geb. 1971), Station 4",
+     "tokens": 1
+    },
+    {
+     "key": "v2a124",
+     "out": "Gläubiger\n{{NAME_2}}\nSchuldner: {{NAME_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a125",
+     "out": "Alle rufen ihn nur \"{{NAME_2}}\", gemeldet ist er als {{NAME_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a126",
+     "out": "{{NAME_4}} und {{NAME_3}} holen die Kinder ab; {{NAME_2}} bleibt zu Hause. {{NAME_1}} meldet sich später.",
+     "tokens": 4
+    },
+    {
+     "key": "v2a127",
+     "out": "Die Zeugin, alias „{{NAME_2}}“, wurde gestern befragt; im Verein heißt sie „Kleine {{NAME_1}}“.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a128",
+     "out": "{{NAME_3}} und {{NAME_2}} waren bei {{NAME_1}} anwesend.",
+     "tokens": 3
     },
     {
      "key": "v2a11",
@@ -1927,6 +2092,31 @@
      "tokens": 1
     },
     {
+     "key": "v2a111",
+     "out": "Das Werk in {{ORT_1}} und das Lager in Dortmund werden zusammengelegt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a112",
+     "out": "Die Rheinbrücke bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a113",
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht {{ORT_1}} um 9:15 Uhr.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a114",
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in {{ORT_2}} und {{ORT_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a115",
+     "out": "Der Roman spielt 1923 in {{ORT_1}} und handelt von einer Druckerfamilie.",
+     "tokens": 1
+    },
+    {
      "key": "v2a41",
      "out": "Bitte buchen Sie von {{IBAN_1}} ab.",
      "tokens": 1
@@ -1977,6 +2167,16 @@
      "tokens": 2
     },
     {
+     "key": "v2a129",
+     "out": "Meine {{KENNNR_2}}, die Kundennummer ist {{KENNNR_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a130",
+     "out": "Die Vertragsnummer lautet {{KENNNR_2}}; {{KENNNR_1}}.",
+     "tokens": 2
+    },
+    {
      "key": "v2a51",
      "out": "{{DATUM_1}} in Göttingen, wohnhaft seit 1990 in Kassel.",
      "tokens": 1
@@ -1993,8 +2193,8 @@
     },
     {
      "key": "v2a54",
-     "out": "Unterhaltspflichtig für zwei Kinder: Jonathan ({{DATUM_2}}) und Helene ({{DATUM_1}}).",
-     "tokens": 2
+     "out": "Unterhaltspflichtig für zwei Kinder: {{NAME_2}} ({{DATUM_2}}) und {{NAME_1}} ({{DATUM_1}}).",
+     "tokens": 4
     },
     {
      "key": "v2a55",
@@ -2053,8 +2253,8 @@
     },
     {
      "key": "v2a66",
-     "out": "Er outete sich im Team als {{SENSIBEL_1}} und lebt mit seinem Partner Kai zusammen.",
-     "tokens": 1
+     "out": "Er outete sich im Team als {{SENSIBEL_1}} und lebt mit seinem Partner {{NAME_1}} zusammen.",
+     "tokens": 2
     },
     {
      "key": "v2a67",
@@ -2148,8 +2348,8 @@
     },
     {
      "key": "v2a85",
-     "out": "NAME: ZIEGLER, UWE; {{DATUM_1}}; ORT: JENA",
-     "tokens": 1
+     "out": "NAME: {{NAME_1}}; {{DATUM_1}}; ORT: JENA",
+     "tokens": 2
     },
     {
      "key": "v2a86",
@@ -2203,8 +2403,8 @@
     },
     {
      "key": "v2a96",
-     "out": "Mr. {{NAME_1}}, SSN {{TEL_1}}, 4 Elm Court, Austin, TX 78701.",
-     "tokens": 2
+     "out": "Mr. {{NAME_1}}, SSN 561-48-3927, 4 Elm Court, Austin, TX 78701.",
+     "tokens": 1
     },
     {
      "key": "v2a97",
@@ -2288,12 +2488,12 @@
     },
     {
      "key": "v2n03",
-     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.",
+     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.\nAnders als geplant fällt die Sitzung aus. Knapp 30 Personen kamen zur Feier.",
      "tokens": 0
     },
     {
      "key": "v2n04",
-     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.",
+     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.\nEhrlich gesagt ist das Wetter schön. Der Kluge gibt nach. Schenk den Wein ein!",
      "tokens": 0
     },
     {
@@ -2303,12 +2503,12 @@
     },
     {
      "key": "v2n06",
-     "out": "Das Werk in Freiburg und das Lager in Dortmund werden zusammengelegt.",
+     "out": "Das Werk im Süden und das Lager im Westen werden zusammengelegt.",
      "tokens": 0
     },
     {
      "key": "v2n07",
-     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.",
+     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.\nBusse und Bahnen fahren im Takt. Funk und Fernsehen berichten ausführlich.",
      "tokens": 0
     },
     {
@@ -2323,17 +2523,17 @@
     },
     {
      "key": "v2n10",
-     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.",
+     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.\nEin Heller ist keine Münze mehr. Lenz und Sommer wechseln sich ab.",
      "tokens": 0
     },
     {
      "key": "v2n11",
-     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.",
+     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.\nVermerk: WICHTIG, Fristablauf beachten.",
      "tokens": 0
     },
     {
      "key": "v2n12",
-     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.",
+     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.\nWICHTIG, Dieses Schreiben ist fristgebunden.\nACHTUNG, Frist läuft ab.\nDSGVO, Art. 5",
      "tokens": 0
     },
     {
@@ -2343,7 +2543,7 @@
     },
     {
      "key": "v2n14",
-     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.",
+     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.\nIm August ist es heiß. Der Druck wird in Pascal gemessen.",
      "tokens": 0
     },
     {
@@ -2353,22 +2553,22 @@
     },
     {
      "key": "v2n16",
-     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.",
+     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.\nZander und Hecht sind Fische. Der Vogt und der Knecht arbeiteten auf dem Hof.",
      "tokens": 0
     },
     {
      "key": "v2n17",
-     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.",
+     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.\nDer Krämer verkauft Kleinwaren. Die Lampe an der Decke brennt.",
      "tokens": 0
     },
     {
      "key": "v2n18",
-     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.",
+     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.\nDer Binder am Hals sitzt schief. Der Bergmann fährt in den Schacht ein.",
      "tokens": 0
     },
     {
      "key": "v2n19",
-     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.",
+     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.\nDer Bader schneidet Haare. Mit dem Schlegel schlägt man die Trommel.",
      "tokens": 0
     },
     {
@@ -2383,7 +2583,7 @@
     },
     {
      "key": "v2n22",
-     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.",
+     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.\nAm Kai liegt ein Schiff. Der Teddy liegt im Bett. Wolle und Garn sind teuer.",
      "tokens": 0
     },
     {
@@ -2393,7 +2593,7 @@
     },
     {
      "key": "v2n24",
-     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.",
+     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.\nIm Korb liegt ein Appel. Pape und Wolff sind seltene Schreibweisen. Kühn ging der Fiedler voran.",
      "tokens": 0
     },
     {
@@ -2403,12 +2603,12 @@
     },
     {
      "key": "v2n26",
-     "out": "Die Rheinbrücke bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
-     "tokens": 1
+     "out": "Die Brücke über den Fluss ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 0
     },
     {
      "key": "v2n27",
-     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.",
+     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.\nDie Iris blüht im Mai. Ein Falk jagt über dem Feld. Die Mona wurde restauriert.",
      "tokens": 0
     },
     {
@@ -2488,13 +2688,13 @@
     },
     {
      "key": "v2n43",
-     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht {{ORT_1}} um 9:15 Uhr.",
-     "tokens": 1
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht den Endbahnhof um 9:15 Uhr.",
+     "tokens": 0
     },
     {
      "key": "v2n44",
-     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in München und {{ORT_1}}.",
-     "tokens": 1
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in Großstädten mit knappem Wohnraum.",
+     "tokens": 0
     },
     {
      "key": "v2n45",
@@ -2548,7 +2748,7 @@
     },
     {
      "key": "v2n55",
-     "out": "Der Roman spielt 1923 in Leipzig und handelt von einer Druckerfamilie.",
+     "out": "Der Roman spielt 1923 in einer Großstadt und handelt von einer Druckerfamilie.",
      "tokens": 0
     },
     {
@@ -2590,8 +2790,8 @@
     },
     {
      "key": "syn2",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_2}} (TN1), {{NAME_1}} (TN2), Moderation (MOD)\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Ömer, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 7
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 8
     },
     {
      "key": "syn3",
@@ -2605,8 +2805,8 @@
     },
     {
      "key": "syn5",
-     "out": "[09:12] {{NAME_4}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Thomas: Danke. Wohin soll die Post gehen?\n[09:15] Lena: {{ADRESSE_1}}.\n[09:15] Lena: Oder schreib mir an {{EMAIL_1}}\n[09:16] Thomas: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Thomas: Gruß, {{NAME_1}}",
-     "tokens": 8
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn6",
@@ -2615,8 +2815,8 @@
     },
     {
      "key": "syn7",
-     "out": "{{NAME_1}}\n\nRechnung 124699\nRechnungsempfänger: Dieter de Bärtschi, {{ADRESSE_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  9{{BETRAG_3}}\n2     Material                  6{{BETRAG_2}}\n3     Anfahrt                   7{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
-     "tokens": 7
+     "out": "{{NAME_2}}\n\nRechnung 124699\nRechnungsempfänger: {{NAME_1}}, {{ADRESSE_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  9{{BETRAG_3}}\n2     Material                  6{{BETRAG_2}}\n3     Anfahrt                   7{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
+     "tokens": 8
     },
     {
      "key": "syn8",
@@ -2640,8 +2840,8 @@
     },
     {
      "key": "syn12",
-     "out": "{{NAME_1}}\n{{NAME_3}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} (haftungsbeschränkt)\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 58804570822.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{NAME_3}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} (haftungsbeschränkt)\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn13",
@@ -2650,18 +2850,18 @@
     },
     {
      "key": "syn14",
-     "out": "Arbeitszeugnis\n\n{{NAME_5}} e.V.\n{{ADRESSE_1}}\n\n{{NAME_4}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_3}} tätig.\n\nZu den Aufgaben gehörten die Betreuung unserer Kunden und die Planung und {{NAME_2}}. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt 6{{BETRAG_1}} im Monat.\n\nWir danken Anna für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 10
+     "out": "Arbeitszeugnis\n\n{{NAME_6}} e.V.\n{{ADRESSE_1}}\n\n{{NAME_5}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_4}} tätig.\n\nZu den Aufgaben gehörten die Betreuung unserer Kunden und die Planung und {{NAME_3}}. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt 6{{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 11
     },
     {
      "key": "syn15",
-     "out": "Mietvertrag\n\nzwischen Birgit von der Al-Farsi, {{ADRESSE_1}} (Vermieter)\nund {{NAME_2}} (Mieter)\n\n§ 1 Mietsache\nVermietet wird die Wohnung im 5. {{ORT_1}} im Breisgau.\n\n§ 2 Miete\nDie monatliche Kaltmiete beträgt 5{{BETRAG_2}}. Die Kaution beträgt 9{{BETRAG_1}}. Zahlungen erfolgen auf das Konto {{IBAN_1}}.\n\n§ 3 Erreichbarkeit\nDer Vermieter ist unter {{TEL_1}} erreichbar.\n\n________________  ________________\nBirgit von der Al-{{NAME_1}}",
-     "tokens": 8
+     "out": "Mietvertrag\n\nzwischen {{NAME_3}}, {{ADRESSE_1}} (Vermieter)\nund {{NAME_2}} (Mieter)\n\n§ 1 Mietsache\nVermietet wird die Wohnung im 5. {{ORT_1}} im Breisgau.\n\n§ 2 Miete\nDie monatliche Kaltmiete beträgt 5{{BETRAG_2}}. Die Kaution beträgt 9{{BETRAG_1}}. Zahlungen erfolgen auf das Konto {{IBAN_1}}.\n\n§ 3 Erreichbarkeit\nDer Vermieter ist unter {{TEL_1}} erreichbar.\n\n________________  ________________\n{{NAME_1}}",
+     "tokens": 9
     },
     {
      "key": "syn16",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_1}} e.V.\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Katharina, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 6
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_4}} (TN1), {{NAME_3}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_2}} e.V.\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn17",
@@ -2675,8 +2875,8 @@
     },
     {
      "key": "syn19",
-     "out": "[09:12] Birgit: Hast du die Daten für die Überweisung?\n[09:13] Zoë: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_1}}.\n[09:14] Birgit: Danke. Wohin soll die Post gehen?\n[09:15] Zoë: {{ADRESSE_1}}.\n[09:15] Zoë: Oder schreib mir an {{EMAIL_1}}\n[09:16] Birgit: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Birgit: Gruß, Birgit von der Lüdenscheidt",
-     "tokens": 5
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn20",
@@ -2705,13 +2905,13 @@
     },
     {
      "key": "syn25",
-     "out": "{{NAME_5}} (haftungsbeschränkt)\n\nArztbrief\n\nPatient: {{NAME_4}}, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrter Herr {{NAME_3}} van Al-Farsi,\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre Aufnahme im {{NAME_2}} Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+     "out": "{{NAME_5}} (haftungsbeschränkt)\n\nArztbrief\n\nPatient: {{NAME_4}}, {{DATUM_1}}\nAnschrift: {{ADRESSE_1}}\n\nSehr geehrter Herr Kollege {{NAME_3}},\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre Aufnahme im {{NAME_2}} Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
      "tokens": 8
     },
     {
      "key": "syn26",
-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 69407739933.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn27",
@@ -2720,8 +2920,8 @@
     },
     {
      "key": "syn28",
-     "out": "Arbeitszeugnis\n\n{{NAME_3}}\n{{ADRESSE_1}}\n\nNadine van Al-Farsi, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als Projektleiter tätig.\n\nZu den Aufgaben gehörten die laufende Buchhaltung und die Planung und {{NAME_2}}. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt 4{{BETRAG_1}} im Monat.\n\nWir danken Nadine für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 8
+     "out": "Arbeitszeugnis\n\n{{NAME_5}}\n{{ADRESSE_1}}\n\n{{NAME_4}}, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als Projektleiter tätig.\n\nZu den Aufgaben gehörten die laufende Buchhaltung und die Planung und {{NAME_3}}. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt 4{{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 10
     },
     {
      "key": "syn29",
@@ -2730,13 +2930,13 @@
     },
     {
      "key": "syn30",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Çağlar, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 6
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_4}} (TN1), {{NAME_3}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_2}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn31",
-     "out": "Von: {{NAME_3}} <{{EMAIL_1}}>\nAn: Fatima von der Bärtschi <{{EMAIL_2}}>\nBetreff: AW: AW: Lieferung\n\n{{NAME_6}},\ndanke, das passt so.\n\nGruß\n{{NAME_3}}\n{{NAME_5}}\n{{TEL_1}}{{NAME_4}}-----\nVon: Fatima von der Bärtschi <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: AW: Lieferung\n\n{{NAME_2}},\nich schlage Dienstag vor. Lieferadresse {{ADRESSE_1}}.\n\n{{NAME_1}}",
-     "tokens": 14
+     "out": "Von: {{NAME_3}} <{{EMAIL_1}}>\nAn: {{NAME_4}} <{{EMAIL_2}}>\nBetreff: AW: AW: Lieferung\n\n{{NAME_7}},\ndanke, das passt so.\n\nGruß\n{{NAME_3}}\n{{NAME_6}}\n{{TEL_1}}{{NAME_5}}-----\nVon: {{NAME_4}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: AW: Lieferung\n\n{{NAME_2}},\nich schlage Dienstag vor. Lieferadresse {{ADRESSE_1}}.\n\n{{NAME_1}}",
+     "tokens": 16
     },
     {
      "key": "syn32",
@@ -2745,8 +2945,8 @@
     },
     {
      "key": "syn33",
-     "out": "[09:12] Søren: Hast du die Daten für die Überweisung?\n[09:13] Fatima: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Søren: Danke. Wohin soll die Post gehen?\n[09:15] Fatima: {{ADRESSE_1}}.\n[09:15] Fatima: Oder schreib mir an {{EMAIL_1}}\n[09:16] Søren: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Søren: Gruß, {{NAME_1}}",
-     "tokens": 6
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn34",
@@ -2780,18 +2980,18 @@
     },
     {
      "key": "syn40",
-     "out": "Çağlar de Richter\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 37 709 699 732.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Richter\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 8
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn41",
-     "out": "Schadensmeldung an {{NAME_2}} e.V.\n\nVersicherungsnehmer: Ömer von der Yıldız\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\n\nUnfallhergang\nAm {{DATUM_1}} kam es auf einer Landstraße zu einem Zusammenstoß. Es entstand nur Sachschaden.\n\nZeugen\nZeuge war {{NAME_1}}, erreichbar unter {{TEL_1}}.\n\nAuszahlung\nBitte zahlen Sie auf {{IBAN_1}} oder auf die Karte {{KARTE_1}}.\n\nAnlagen: Fotos, Kostenvoranschlag, Unfallbericht",
-     "tokens": 9
+     "out": "Schadensmeldung an {{NAME_3}} e.V.\n\nVersicherungsnehmer: {{NAME_2}}\nAnschrift: {{ORT_1}} im Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\n\nUnfallhergang\nAm {{DATUM_1}} kam es auf einer Landstraße zu einem Zusammenstoß. Es entstand nur Sachschaden.\n\nZeugen\nZeuge war {{NAME_1}}, erreichbar unter {{TEL_1}}.\n\nAuszahlung\nBitte zahlen Sie auf {{IBAN_1}} oder auf die Karte {{KARTE_1}}.\n\nAnlagen: Fotos, Kostenvoranschlag, Unfallbericht",
+     "tokens": 10
     },
     {
      "key": "syn42",
-     "out": "Arbeitszeugnis\n\n{{ORG_1}}\n{{ADRESSE_1}} Breisgau\n\n{{NAME_3}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_2}} tätig.\n\nZu den Aufgaben gehörten die Bearbeitung eingehender Anfragen und die laufende Buchhaltung. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt 5{{BETRAG_1}} im Monat.\n\nWir danken Lena für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 9
+     "out": "Arbeitszeugnis\n\n{{ORG_1}}\n{{ADRESSE_1}} Breisgau\n\n{{NAME_4}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_3}} tätig.\n\nZu den Aufgaben gehörten die Bearbeitung eingehender Anfragen und die laufende Buchhaltung. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt 5{{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 10
     },
     {
      "key": "syn43",
@@ -2800,8 +3000,8 @@
     },
     {
      "key": "syn44",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Dieter, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 6
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_4}} (TN1), {{NAME_3}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_2}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn45",
@@ -2815,8 +3015,8 @@
     },
     {
      "key": "syn47",
-     "out": "[09:12] {{NAME_3}}: Hast du die Daten für die Überweisung?\n[09:13] Petra: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Petra: Danke. Wohin soll die Post gehen?\n[09:15] Petra: {{ADRESSE_1}}.\n[09:15] Petra: Oder schreib mir an {{EMAIL_1}}\n[09:16] Petra: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Petra: Gruß, {{NAME_1}}",
-     "tokens": 7
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_2}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_3}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_2}}: {{ADRESSE_1}}.\n[09:15] {{NAME_2}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn48",
@@ -2850,8 +3050,8 @@
     },
     {
      "key": "syn54",
-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 46259569466.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn55",
@@ -2860,23 +3060,23 @@
     },
     {
      "key": "syn56",
-     "out": "Arbeitszeugnis\n\n{{NAME_4}} e.V.\n{{ADRESSE_1}}\n\n{{NAME_3}}, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_2}} tätig.\n\nZu den Aufgaben gehörten die Entwicklung interner Werkzeuge und die Entwicklung interner Werkzeuge. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt {{BETRAG_1}} im Monat.\n\nWir danken Sabine für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 9
+     "out": "Arbeitszeugnis\n\n{{NAME_5}} e.V.\n{{ADRESSE_1}}\n\n{{NAME_4}}, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_3}} tätig.\n\nZu den Aufgaben gehörten die Entwicklung interner Werkzeuge und die Entwicklung interner Werkzeuge. Die Leistungen beurteilen wir mit \"gut\". Zuletzt betrug das Bruttogehalt {{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 10
     },
     {
      "key": "syn57",
-     "out": "Mietvertrag\n\nzwischen {{NAME_2}}, {{ADRESSE_1}} (Vermieter)\nund Dieter von der Bärtschi (Mieter)\n\n§ 1 Mietsache\nVermietet wird die Wohnung im 3. {{ORT_1}}.\n\n§ 2 Miete\nDie monatliche Kaltmiete beträgt 8{{BETRAG_2}}. Die Kaution beträgt 6{{BETRAG_1}}. Zahlungen erfolgen auf das Konto {{IBAN_1}}.\n\n§ 3 Erreichbarkeit\nDer Vermieter ist unter {{TEL_1}} erreichbar.\n\n________________  ________________\n{{NAME_1}}",
-     "tokens": 8
+     "out": "Mietvertrag\n\nzwischen {{NAME_3}}, {{ADRESSE_1}} (Vermieter)\nund {{NAME_2}} (Mieter)\n\n§ 1 Mietsache\nVermietet wird die Wohnung im 3. {{ORT_1}}.\n\n§ 2 Miete\nDie monatliche Kaltmiete beträgt 8{{BETRAG_2}}. Die Kaution beträgt 6{{BETRAG_1}}. Zahlungen erfolgen auf das Konto {{IBAN_1}}.\n\n§ 3 Erreichbarkeit\nDer Vermieter ist unter {{TEL_1}} erreichbar.\n\n________________  ________________\n{{NAME_1}}",
+     "tokens": 9
     },
     {
      "key": "syn58",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: Nadine de Aigner-Lechner (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Ralf, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 5
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_4}} (TN1), {{NAME_3}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_2}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn59",
-     "out": "Von: {{NAME_7}} <{{EMAIL_1}}>\nAn: {{NAME_6}} <{{EMAIL_2}}>\nBetreff: AW: AW: Lieferung\n\n{{NAME_5}},\ndanke, das passt so.\n\nGruß\nMarlene de Wagner\n{{NAME_4}}\n{{TEL_1}}{{NAME_3}}-----\nVon: Anna von der Hoffmann <{{EMAIL_2}}>\nAn: Marlene de Wagner <{{EMAIL_1}}>\nBetreff: AW: Lieferung\n\n{{NAME_2}},\nich schlage Dienstag vor. Lieferadresse {{ADRESSE_1}}.\n\n{{NAME_1}}",
-     "tokens": 13
+     "out": "Von: {{NAME_3}} <{{EMAIL_1}}>\nAn: {{NAME_4}} <{{EMAIL_2}}>\nBetreff: AW: AW: Lieferung\n\n{{NAME_7}},\ndanke, das passt so.\n\nGruß\n{{NAME_3}}\n{{NAME_6}}\n{{TEL_1}}{{NAME_5}}-----\nVon: {{NAME_4}} <{{EMAIL_2}}>\nAn: {{NAME_3}} <{{EMAIL_1}}>\nBetreff: AW: Lieferung\n\n{{NAME_2}},\nich schlage Dienstag vor. Lieferadresse {{ADRESSE_1}}.\n\n{{NAME_1}}",
+     "tokens": 16
     },
     {
      "key": "syn60",
@@ -2885,8 +3085,8 @@
     },
     {
      "key": "syn61",
-     "out": "[09:12] Florian: Hast du die Daten für die Überweisung?\n[09:13] Ömer: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Florian: Danke. Wohin soll die Post gehen?\n[09:15] Ömer: {{ADRESSE_1}}.\n[09:15] Ömer: Oder schreib mir an {{EMAIL_1}}\n[09:16] Florian: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Florian: Gruß, {{NAME_1}}",
-     "tokens": 6
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn62",
@@ -2920,8 +3120,8 @@
     },
     {
      "key": "syn68",
-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 71 359 431 433.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn69",
@@ -2930,8 +3130,8 @@
     },
     {
      "key": "syn70",
-     "out": "Arbeitszeugnis\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\n{{NAME_3}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_2}} tätig.\n\nZu den Aufgaben gehörten die Bearbeitung eingehender Anfragen und die Koordination der Auslieferung. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt 8{{BETRAG_1}} im Monat.\n\nWir danken Tobias für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 9
+     "out": "Arbeitszeugnis\n\n{{ORG_1}}\n{{ADRESSE_1}}\n\n{{NAME_4}}, {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_3}} tätig.\n\nZu den Aufgaben gehörten die Bearbeitung eingehender Anfragen und die Koordination der Auslieferung. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt 8{{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 10
     },
     {
      "key": "syn71",
@@ -2940,8 +3140,8 @@
     },
     {
      "key": "syn72",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_2}} (TN1), {{NAME_1}} (TN2), Moderation (MOD)\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Çağlar, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 7
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 8
     },
     {
      "key": "syn73",
@@ -2955,8 +3155,8 @@
     },
     {
      "key": "syn75",
-     "out": "[09:12] Dieter: Hast du die Daten für die Überweisung?\n[09:13] Marlene: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Dieter: Danke. Wohin soll die Post gehen?\n[09:15] Marlene: {{ADRESSE_1}}.\n[09:15] Marlene: Oder schreib mir an {{EMAIL_1}}\n[09:16] Dieter: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Dieter: Gruß, {{NAME_1}}",
-     "tokens": 6
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn76",
@@ -2990,7 +3190,7 @@
     },
     {
      "key": "syn82",
-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_2}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 98 {{TEL_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
      "tokens": 10
     },
     {
@@ -3000,8 +3200,8 @@
     },
     {
      "key": "syn84",
-     "out": "Arbeitszeugnis\n\n{{NAME_5}}\n{{ADRESSE_1}}\n\n{{NAME_4}}, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_3}} tätig.\n\nZu den Aufgaben gehörten die Betreuung unserer Kunden und die Planung und {{NAME_2}}. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt {{BETRAG_1}} im Monat.\n\nWir danken Thomas für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
-     "tokens": 10
+     "out": "Arbeitszeugnis\n\n{{NAME_6}}\n{{ADRESSE_1}}\n\n{{NAME_5}}, geboren am {{DATUM_3}}, war vom {{DATUM_2}} bis zum {{DATUM_1}} in unserem Unternehmen als {{NAME_4}} tätig.\n\nZu den Aufgaben gehörten die Betreuung unserer Kunden und die Planung und {{NAME_3}}. Die Leistungen beurteilen wir mit \"sehr gut\". Zuletzt betrug das Bruttogehalt {{BETRAG_1}} im Monat.\n\nWir danken {{NAME_2}} für die Zusammenarbeit und wünschen alles Gute.\n\n{{NAME_1}}\nGeschäftsleitung",
+     "tokens": 11
     },
     {
      "key": "syn85",
@@ -3010,8 +3210,8 @@
     },
     {
      "key": "syn86",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_2}} (TN1), {{NAME_1}} (TN2), Moderation (MOD)\nOrganisation: {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Anna, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 6
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn87",
@@ -3025,8 +3225,8 @@
     },
     {
      "key": "syn89",
-     "out": "[09:12] Nadine: Hast du die Daten für die Überweisung?\n[09:13] Birgit: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_1}}.\n[09:14] Nadine: Danke. Wohin soll die Post gehen?\n[09:15] Birgit: {{ADRESSE_1}}.\n[09:15] Birgit: Oder schreib mir an {{EMAIL_1}}\n[09:16] Nadine: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Nadine: Gruß, Nadine Al-Farsi",
-     "tokens": 5
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ADRESSE_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn90",
@@ -3035,8 +3235,8 @@
     },
     {
      "key": "syn91",
-     "out": "{{ORG_1}}\n\nRechnung 494619\nRechnungsempfänger: Zoë de Kowalski, {{ADRESSE_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  3{{BETRAG_3}}\n2     Material                  7{{BETRAG_2}}\n3     Anfahrt                   5{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
-     "tokens": 7
+     "out": "{{ORG_1}}\n\nRechnung 494619\nRechnungsempfänger: {{NAME_1}}, {{ADRESSE_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  3{{BETRAG_3}}\n2     Material                  7{{BETRAG_2}}\n3     Anfahrt                   5{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
+     "tokens": 8
     },
     {
      "key": "syn92",
@@ -3050,17 +3250,17 @@
     },
     {
      "key": "syn94",
-     "out": "{{NAME_3}}\n{{TEL_1}}\n\nArbeitsunfähigkeitsbescheinigung\n\nPatient: {{NAME_2}} von der Richter, {{DATUM_3}}\nAnschrift: {{ADRESSE_1}}\n\nDie Arbeitsunfähigkeit besteht seit dem {{DATUM_2}} voraussichtlich bis zum {{DATUM_1}}.\n\n{{NAME_1}}",
+     "out": "{{NAME_3}}\n{{TEL_1}}\n\nArbeitsunfähigkeitsbescheinigung\n\nPatient: {{NAME_2}}, {{DATUM_3}}\nAnschrift: {{ADRESSE_1}}\n\nDie Arbeitsunfähigkeit besteht seit dem {{DATUM_2}} voraussichtlich bis zum {{DATUM_1}}.\n\n{{NAME_1}}",
      "tokens": 8
     },
     {
      "key": "syn95",
-     "out": "{{ORG_1}}\n\nArztbrief\n\nPatient: {{NAME_4}} von der Richter, geboren am {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrter Herr {{NAME_3}},\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre {{NAME_2}} ist nicht erforderlich. Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
+     "out": "{{ORG_2}}\n\nArztbrief\n\nPatient: {{NAME_3}}, geboren am {{DATUM_1}}\nAnschrift: {{ORT_1}}\n\nSehr geehrter Herr {{NAME_2}},\n\nwir berichten über die ambulante Vorstellung des oben genannten Patienten.\n\nAnamnese\nDer Patient berichtet seit mehreren Wochen über wiederkehrende Beschwerden. Vorerkrankungen sind nicht bekannt.\n\nBefund\nDer körperliche Untersuchungsbefund war unauffällig. Die Laborwerte liegen im Referenzbereich.\n\nBeurteilung und Procedere\nEine stationäre {{ORG_1}} ist nicht erforderlich. Wir bitten um Wiedervorstellung in vier Wochen. Rückfragen unter {{TEL_1}}.\n\nAnlage 1: Laborbericht\nAnlage 2: Befundkopie\n\nMit kollegialen Grüßen\n{{NAME_1}}",
      "tokens": 8
     },
     {
      "key": "syn96",
-     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_2}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 91 {{TEL_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "out": "{{NAME_1}}\n{{ADRESSE_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
      "tokens": 10
     },
     {
@@ -3075,10 +3275,10 @@
   "mode": "ki",
   "cases": {
    "V2-IDENT": {
-    "total": 10,
+    "total": 23,
     "leaked": 1,
     "ids": [
-     "v2a08"
+     "v2a117"
     ]
    },
    "V2-KONTAKT": {
@@ -3099,7 +3299,7 @@
     ]
    },
    "V2-STANDORT": {
-    "total": 10,
+    "total": 15,
     "leaked": 2,
     "ids": [
      "v2a35",
@@ -3107,11 +3307,10 @@
     ]
    },
    "V2-NUMMER": {
-    "total": 10,
-    "leaked": 2,
+    "total": 12,
+    "leaked": 1,
     "ids": [
-     "v2a45",
-     "v2a47"
+     "v2a45"
     ]
    },
    "V2-PERSON": {
@@ -3121,32 +3320,35 @@
    },
    "V2-ART9": {
     "total": 12,
-    "leaked": 1,
+    "leaked": 2,
     "ids": [
-     "v2a67"
+     "v2a67",
+     "v2a69"
     ]
    },
    "V2-ART10": {
     "total": 8,
-    "leaked": 0,
-    "ids": []
+    "leaked": 1,
+    "ids": [
+     "v2a78"
+    ]
    },
    "V2-FORM": {
     "total": 10,
-    "leaked": 4,
+    "leaked": 3,
     "ids": [
      "v2a83",
      "v2a84",
-     "v2a85",
      "v2a86"
     ]
    },
    "V2-AUSLAND": {
     "total": 10,
-    "leaked": 3,
+    "leaked": 4,
     "ids": [
      "v2a92",
      "v2a94",
+     "v2a96",
      "v2a99"
     ]
    },
@@ -3164,32 +3366,27 @@
    },
    "NEG": {
     "total": 60,
-    "leaked": 25,
+    "leaked": 20,
     "ids": [
      "v2n01",
      "v2n02",
-     "v2n06",
      "v2n13",
      "v2n15",
      "v2n20",
      "v2n21",
      "v2n23",
      "v2n25",
-     "v2n26",
      "v2n29",
      "v2n30",
      "v2n32",
      "v2n34",
      "v2n35",
      "v2n37",
-     "v2n43",
-     "v2n44",
      "v2n48",
      "v2n50",
      "v2n51",
      "v2n52",
      "v2n53",
-     "v2n55",
      "v2n56"
     ]
    }
@@ -3209,7 +3406,7 @@
    },
    "NAME": {
     "total": 191,
-    "leaked": 19
+    "leaked": 7
    },
    "DATUM": {
     "total": 63,
@@ -3241,7 +3438,7 @@
    },
    "TAXID": {
     "total": 14,
-    "leaked": 5
+    "leaked": 0
    },
    "CARD": {
     "total": 7,
@@ -3249,7 +3446,7 @@
    }
   },
   "synthTotal": 860,
-  "synthLeaked": 24,
+  "synthLeaked": 7,
   "raw": {
    "cases": [
     {
@@ -3289,7 +3486,7 @@
     },
     {
      "key": "v2a08",
-     "out": "Kontoinhaber: SCHMIEDEBERG, {{NAME_2}} ({{NAME_1}})",
+     "out": "Kontoinhaber: {{NAME_2}} ({{NAME_1}})",
      "tokens": 2
     },
     {
@@ -3301,6 +3498,71 @@
      "key": "v2a10",
      "out": "Geschäftsführer ist {{NAME_2}}, Prokurist {{NAME_1}}.",
      "tokens": 2
+    },
+    {
+     "key": "v2a116",
+     "out": "{{NAME_2}} war beteiligt. Wir danken {{NAME_1}} für die Zusammenarbeit, und {{NAME_1}} bleibt erreichbar.",
+     "tokens": 3
+    },
+    {
+     "key": "v2a117",
+     "out": "[09:12] Birgit: Hast du die Daten?\n[09:13] {{NAME_1}}: Ja, die liegen vor.\n[09:14] Birgit: Danke.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a118",
+     "out": "Rechnungsempfänger: {{NAME_1}}, {{ORT_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a119",
+     "out": "Vertragspartnerin ist {{NAME_1}}, Mieterin der Wohnung.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a120",
+     "out": "TN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?",
+     "tokens": 1
+    },
+    {
+     "key": "v2a121",
+     "out": "{{NAME_2}} und {{NAME_1}} unterschrieben gemeinsam.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a122",
+     "out": "Absender: {{NAME_1}}\nBetreff: Anfrage zur Rechnung",
+     "tokens": 1
+    },
+    {
+     "key": "v2a123",
+     "out": "Patient: {{NAME_1}} (geb. 1971), Station 4",
+     "tokens": 1
+    },
+    {
+     "key": "v2a124",
+     "out": "Gläubiger\n{{NAME_2}}: {{NAME_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a125",
+     "out": "Alle rufen ihn nur \"{{NAME_2}}\", gemeldet ist er als {{NAME_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a126",
+     "out": "{{NAME_4}} und {{NAME_3}} holen die Kinder ab; {{NAME_2}} bleibt zu Hause. {{NAME_1}} meldet sich später.",
+     "tokens": 4
+    },
+    {
+     "key": "v2a127",
+     "out": "Die Zeugin, alias „{{NAME_2}}“, wurde gestern befragt; im Verein heißt sie „Kleine {{NAME_1}}“.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a128",
+     "out": "{{NAME_3}} und {{NAME_2}} waren bei {{NAME_1}} anwesend.",
+     "tokens": 3
     },
     {
      "key": "v2a11",
@@ -3453,6 +3715,31 @@
      "tokens": 2
     },
     {
+     "key": "v2a111",
+     "out": "Das Werk in {{ORT_2}} und das Lager in {{ORT_1}} werden zusammengelegt.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a112",
+     "out": "Die {{ORT_1}} bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a113",
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht {{ORT_1}} um 9:15 Uhr.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a114",
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in {{ORT_2}} und {{ORT_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a115",
+     "out": "Der Roman spielt 1923 in {{ORT_1}} und handelt von einer Druckerfamilie.",
+     "tokens": 1
+    },
+    {
      "key": "v2a41",
      "out": "Bitte buchen Sie von {{IBAN_1}} ab.",
      "tokens": 1
@@ -3500,6 +3787,16 @@
     {
      "key": "v2a50",
      "out": "IBAN {{IBAN_1}} ({{NAME_1}})",
+     "tokens": 2
+    },
+    {
+     "key": "v2a129",
+     "out": "Meine {{KENNNR_2}}, die Kundennummer ist {{KENNNR_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a130",
+     "out": "Die Vertragsnummer lautet {{KENNNR_2}}; {{KENNNR_1}}.",
      "tokens": 2
     },
     {
@@ -3674,8 +3971,8 @@
     },
     {
      "key": "v2a85",
-     "out": "NAME: ZIEGLER, UWE; {{DATUM_1}}; ORT: JENA",
-     "tokens": 1
+     "out": "NAME: {{NAME_1}}; {{DATUM_1}}; ORT: JENA",
+     "tokens": 2
     },
     {
      "key": "v2a86",
@@ -3729,8 +4026,8 @@
     },
     {
      "key": "v2a96",
-     "out": "Mr. {{NAME_1}}, SSN {{TEL_1}}, 4 {{ORT_2}}, {{ORT_1}}, TX 78701.",
-     "tokens": 4
+     "out": "Mr. {{NAME_1}}, SSN 561-48-3927, 4 {{ORT_2}}, {{ORT_1}}, TX 78701.",
+     "tokens": 3
     },
     {
      "key": "v2a97",
@@ -3814,12 +4111,12 @@
     },
     {
      "key": "v2n03",
-     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.",
+     "out": "Artikel 6 Absatz 1 Buchstabe f DSGVO regelt das berechtigte Interesse.\nAnders als geplant fällt die Sitzung aus. Knapp 30 Personen kamen zur Feier.",
      "tokens": 0
     },
     {
      "key": "v2n04",
-     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.",
+     "out": "Gemäß § 823 BGB haftet, wer vorsätzlich oder fahrlässig ein Recht verletzt.\nEhrlich gesagt ist das Wetter schön. Der Kluge gibt nach. Schenk den Wein ein!",
      "tokens": 0
     },
     {
@@ -3829,12 +4126,12 @@
     },
     {
      "key": "v2n06",
-     "out": "Das Werk in {{ORT_2}} und das Lager in {{ORT_1}} werden zusammengelegt.",
-     "tokens": 2
+     "out": "Das Werk im Süden und das Lager im Westen werden zusammengelegt.",
+     "tokens": 0
     },
     {
      "key": "v2n07",
-     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.",
+     "out": "Der Quartalsbericht erscheint am 15. Oktober und enthält keine Prognose.\nBusse und Bahnen fahren im Takt. Funk und Fernsehen berichten ausführlich.",
      "tokens": 0
     },
     {
@@ -3849,17 +4146,17 @@
     },
     {
      "key": "v2n10",
-     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.",
+     "out": "Die Teilnehmerzahl lag bei 240 Personen; die Hälfte reiste mit der Bahn an.\nEin Heller ist keine Münze mehr. Lenz und Sommer wechseln sich ab.",
      "tokens": 0
     },
     {
      "key": "v2n11",
-     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.",
+     "out": "Der Schraubendreher Typ PH2 passt zu allen Geräten der Serie X-400.\nVermerk: WICHTIG, Fristablauf beachten.",
      "tokens": 0
     },
     {
      "key": "v2n12",
-     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.",
+     "out": "Heute ist Dienstag, der Termin wurde auf nächste Woche verschoben.\nWICHTIG, Dieses Schreiben ist fristgebunden.\nACHTUNG, Frist läuft ab.\nDSGVO, Art. 5",
      "tokens": 0
     },
     {
@@ -3869,7 +4166,7 @@
     },
     {
      "key": "v2n14",
-     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.",
+     "out": "Version 3.12.4 behebt einen Fehler beim Speichern großer Dateien.\nIm August ist es heiß. Der Druck wird in Pascal gemessen.",
      "tokens": 0
     },
     {
@@ -3879,22 +4176,22 @@
     },
     {
      "key": "v2n16",
-     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.",
+     "out": "Die Bundesregierung beschloss im Kabinett einen Gesetzentwurf zur Digitalisierung.\nZander und Hecht sind Fische. Der Vogt und der Knecht arbeiteten auf dem Hof.",
      "tokens": 0
     },
     {
      "key": "v2n17",
-     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.",
+     "out": "Diese Funktion ist ab Windows 10 verfügbar und benötigt mindestens 8 GB Arbeitsspeicher.\nDer Krämer verkauft Kleinwaren. Die Lampe an der Decke brennt.",
      "tokens": 0
     },
     {
      "key": "v2n18",
-     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.",
+     "out": "Das Fußballspiel endete 2:1 nach Verlängerung, 41.000 Zuschauer waren im Stadion.\nDer Binder am Hals sitzt schief. Der Bergmann fährt in den Schacht ein.",
      "tokens": 0
     },
     {
      "key": "v2n19",
-     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.",
+     "out": "Wir bitten um Beachtung der Hygienevorschriften in allen Räumen.\nDer Bader schneidet Haare. Mit dem Schlegel schlägt man die Trommel.",
      "tokens": 0
     },
     {
@@ -3909,7 +4206,7 @@
     },
     {
      "key": "v2n22",
-     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.",
+     "out": "Zinssatz 3,75 % p. a., Laufzeit 10 Jahre, Sollzinsbindung bis 2034.\nAm Kai liegt ein Schiff. Der Teddy liegt im Bett. Wolle und Garn sind teuer.",
      "tokens": 0
     },
     {
@@ -3919,7 +4216,7 @@
     },
     {
      "key": "v2n24",
-     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.",
+     "out": "Der Wetterdienst warnt vor Dauerregen im Süden, Temperaturen um 9 Grad.\nIm Korb liegt ein Appel. Pape und Wolff sind seltene Schreibweisen. Kühn ging der Fiedler voran.",
      "tokens": 0
     },
     {
@@ -3929,12 +4226,12 @@
     },
     {
      "key": "v2n26",
-     "out": "Die {{ORT_1}} bei {{NAME_1}} ist wegen Bauarbeiten bis Ende November gesperrt.",
-     "tokens": 2
+     "out": "Die Brücke über den Fluss ist wegen Bauarbeiten bis Ende November gesperrt.",
+     "tokens": 0
     },
     {
      "key": "v2n27",
-     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.",
+     "out": "Die ISO-Norm 27001 beschreibt Anforderungen an ein Informationssicherheits-Managementsystem.\nDie Iris blüht im Mai. Ein Falk jagt über dem Feld. Die Mona wurde restauriert.",
      "tokens": 0
     },
     {
@@ -4014,13 +4311,13 @@
     },
     {
      "key": "v2n43",
-     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht {{ORT_1}} um 9:15 Uhr.",
-     "tokens": 1
+     "out": "Der Zug RE 4711 fährt um 7:42 Uhr auf Gleis 5 ab und erreicht den Endbahnhof um 9:15 Uhr.",
+     "tokens": 0
     },
     {
      "key": "v2n44",
-     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in {{ORT_2}} und {{ORT_1}}.",
-     "tokens": 2
+     "out": "Die Mietpreisbremse gilt in angespannten Wohnungsmärkten, etwa in Großstädten mit knappem Wohnraum.",
+     "tokens": 0
     },
     {
      "key": "v2n45",
@@ -4074,8 +4371,8 @@
     },
     {
      "key": "v2n55",
-     "out": "Der Roman spielt 1923 in {{ORT_1}} und handelt von einer Druckerfamilie.",
-     "tokens": 1
+     "out": "Der Roman spielt 1923 in einer Großstadt und handelt von einer Druckerfamilie.",
+     "tokens": 0
     },
     {
      "key": "v2n56",
@@ -4116,8 +4413,8 @@
     },
     {
      "key": "syn2",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_2}} (TN1), {{NAME_1}} (TN2), Moderation ({{ORG_2}})\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Ömer, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 8
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation ({{ORG_2}})\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 9
     },
     {
      "key": "syn3",
@@ -4166,13 +4463,13 @@
     },
     {
      "key": "syn12",
-     "out": "{{NAME_1}}\n{{ORT_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} (haftungsbeschränkt)\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 58804570822.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{ORT_2}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} (haftungsbeschränkt)\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn13",
-     "out": "Schadensmeldung an Tan{{KONTO_1}} {{ORG_1}}\n\nVersicherungsnehmer: Lukas von der Zimmermann\nAnschrift: {{ORT_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\n\nUnfallhergang\nAm {{DATUM_1}} kam es auf einer Landstraße zu einem Zusammenstoß. Es entstand nur Sachschaden.\n\nZeugen\nZeuge war {{NAME_1}}, erreichbar unter {{TEL_1}}.\n\nAuszahlung\nBitte zahlen Sie auf {{IBAN_1}} oder auf die Karte {{KARTE_1}}.\n\nAnlagen: Fotos, Kostenvoranschlag, Unfallbericht",
-     "tokens": 10
+     "out": "Schadensmeldung an Tan{{KONTO_1}} {{ORG_1}}\n\nVersicherungsnehmer: {{NAME_2}}\nAnschrift: {{ORT_1}}\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\n\nUnfallhergang\nAm {{DATUM_1}} kam es auf einer Landstraße zu einem Zusammenstoß. Es entstand nur Sachschaden.\n\nZeugen\nZeuge war {{NAME_1}}, erreichbar unter {{TEL_1}}.\n\nAuszahlung\nBitte zahlen Sie auf {{IBAN_1}} oder auf die Karte {{KARTE_1}}.\n\nAnlagen: Fotos, Kostenvoranschlag, Unfallbericht",
+     "tokens": 11
     },
     {
      "key": "syn14",
@@ -4201,8 +4498,8 @@
     },
     {
      "key": "syn19",
-     "out": "[09:12] {{NAME_3}}: Hast du die Daten für die Überweisung?\n[09:13] Zoë: Ja, IBAN {{IBAN_1}}, läuft auf Zoë {{NAME_2}}.\n[09:14] Birgit: Danke. Wohin soll die Post gehen?\n[09:15] Zoë: {{ORT_1}}.\n[09:15] Zoë: Oder schreib mir an {{EMAIL_1}}\n[09:16] Birgit: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Birgit: Gruß, {{NAME_1}}",
-     "tokens": 7
+     "out": "[09:12] {{NAME_4}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_2}}: Ja, IBAN {{IBAN_1}}, läuft auf Zoë {{NAME_3}}.\n[09:14] Birgit: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_2}}: {{ORT_1}}.\n[09:15] {{NAME_2}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] Birgit: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Birgit: Gruß, {{NAME_1}}",
+     "tokens": 10
     },
     {
      "key": "syn20",
@@ -4211,7 +4508,7 @@
     },
     {
      "key": "syn21",
-     "out": "{{ORG_1}}\n\nRechnung 165117\nRechnungsempfänger: Lena {{ORT_2}}, {{ORT_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  3{{BETRAG_3}}\n2     Material                  3{{BETRAG_2}}\n3     Anfahrt                   4{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
+     "out": "{{ORG_1}}\n\nRechnung 165117\nRechnungsempfänger: {{NAME_1}}, {{ORT_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  3{{BETRAG_3}}\n2     Material                  3{{BETRAG_2}}\n3     Anfahrt                   4{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
      "tokens": 8
     },
     {
@@ -4236,8 +4533,8 @@
     },
     {
      "key": "syn26",
-     "out": "{{NAME_1}}\n{{ORT_1}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 69407739933.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{ORT_1}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn27",
@@ -4256,8 +4553,8 @@
     },
     {
      "key": "syn30",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Çağlar, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 6
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_4}} (TN1), {{NAME_3}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_2}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn31",
@@ -4281,8 +4578,8 @@
     },
     {
      "key": "syn35",
-     "out": "{{ORG_1}}\n\nRechnung 748206\nRechnungsempfänger: Çağlar de Schäfer, {{ORT_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  5{{BETRAG_3}}\n2     Material                  3{{BETRAG_2}}\n3     Anfahrt                   7{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
-     "tokens": 7
+     "out": "{{ORG_1}}\n\nRechnung 748206\nRechnungsempfänger: {{NAME_1}}, {{ORT_1}}\n\nPos.  Beschreibung               Betrag\n1     Beratung                  5{{BETRAG_3}}\n2     Material                  3{{BETRAG_2}}\n3     Anfahrt                   7{{BETRAG_1}}\n\nBitte überweisen Sie auf {{IBAN_1}}. Fragen an {{EMAIL_1}}.",
+     "tokens": 8
     },
     {
      "key": "syn36",
@@ -4306,13 +4603,13 @@
     },
     {
      "key": "syn40",
-     "out": "Çağlar de Richter\n{{ADRESSE_1}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 37 709 699 732.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}} de Richter\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 8
+     "out": "{{NAME_1}}\n{{ADRESSE_1}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}} e.V.\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn41",
-     "out": "Schadensmeldung an {{NAME_2}} e.V.\n\nVersicherungsnehmer: Ömer von der Yıldız\nAnschrift: {{ADRESSE_1}} im Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\n\nUnfallhergang\nAm {{DATUM_1}} kam es auf einer Landstraße zu einem Zusammenstoß. Es entstand nur Sachschaden.\n\nZeugen\nZeuge war {{NAME_1}}, erreichbar unter {{TEL_1}}.\n\nAuszahlung\nBitte zahlen Sie auf {{IBAN_1}} oder auf die Karte {{KARTE_1}}.\n\nAnlagen: Fotos, Kostenvoranschlag, Unfallbericht",
-     "tokens": 9
+     "out": "Schadensmeldung an {{NAME_3}} e.V.\n\nVersicherungsnehmer: {{NAME_2}}\nAnschrift: {{ADRESSE_1}} im Breisgau\nKennzeichen: {{KFZ_2}}\nFahrgestellnummer: {{KFZ_1}}\n\nUnfallhergang\nAm {{DATUM_1}} kam es auf einer Landstraße zu einem Zusammenstoß. Es entstand nur Sachschaden.\n\nZeugen\nZeuge war {{NAME_1}}, erreichbar unter {{TEL_1}}.\n\nAuszahlung\nBitte zahlen Sie auf {{IBAN_1}} oder auf die Karte {{KARTE_1}}.\n\nAnlagen: Fotos, Kostenvoranschlag, Unfallbericht",
+     "tokens": 10
     },
     {
      "key": "syn42",
@@ -4341,8 +4638,8 @@
     },
     {
      "key": "syn47",
-     "out": "[09:12] Petra: Hast du die Daten für die Überweisung?\n[09:13] Petra: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_2}}.\n[09:14] Petra: Danke. Wohin soll die Post gehen?\n[09:15] Petra: {{ORT_1}}.\n[09:15] Petra: Oder schreib mir an {{EMAIL_1}}\n[09:16] Petra: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] Petra: Gruß, {{NAME_1}}",
-     "tokens": 6
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_2}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_3}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_2}}: {{ORT_1}}.\n[09:15] {{NAME_2}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn48",
@@ -4376,8 +4673,8 @@
     },
     {
      "key": "syn54",
-     "out": "{{NAME_1}}\n{{ORT_3}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{ORT_2}}\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 46259569466.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{ORT_3}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{ORT_2}}\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn55",
@@ -4411,8 +4708,8 @@
     },
     {
      "key": "syn61",
-     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] Ömer: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_3}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] Ömer: {{ORT_1}}.\n[09:15] Ömer: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
-     "tokens": 10
+     "out": "[09:12] {{NAME_2}}: Hast du die Daten für die Überweisung?\n[09:13] {{NAME_3}}: Ja, IBAN {{IBAN_1}}, läuft auf {{NAME_4}}.\n[09:14] {{NAME_2}}: Danke. Wohin soll die Post gehen?\n[09:15] {{NAME_3}}: {{ORT_1}}.\n[09:15] {{NAME_3}}: Oder schreib mir an {{EMAIL_1}}\n[09:16] {{NAME_2}}: Ok. Falls was ist, ruf an: {{TEL_1}}\n[09:17] {{NAME_2}}: Gruß, {{NAME_1}}",
+     "tokens": 13
     },
     {
      "key": "syn62",
@@ -4446,8 +4743,8 @@
     },
     {
      "key": "syn68",
-     "out": "{{NAME_1}}\n{{ORT_1}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 71 359 431 433.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
-     "tokens": 9
+     "out": "{{NAME_1}}\n{{ORT_1}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "tokens": 10
     },
     {
      "key": "syn69",
@@ -4466,8 +4763,8 @@
     },
     {
      "key": "syn72",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_2}} (TN1), Çağ{{NAME_1}} (TN2), Moderation (MOD)\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Çağlar, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 7
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), Çağ{{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: Tan{{KONTO_1}} {{ORG_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 8
     },
     {
      "key": "syn73",
@@ -4516,7 +4813,7 @@
     },
     {
      "key": "syn82",
-     "out": "{{NAME_1}}\n{{ORT_1}}\n{{TEL_2}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 98 {{TEL_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "out": "{{NAME_1}}\n{{ORT_1}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{NAME_2}}\n{{ADRESSE_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
      "tokens": 10
     },
     {
@@ -4536,8 +4833,8 @@
     },
     {
      "key": "syn86",
-     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_3}} (TN1), {{NAME_2}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_1}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. Anna, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
-     "tokens": 6
+     "out": "Gesprächsprotokoll vom {{DATUM_1}}\nTeilnehmer: {{NAME_4}} (TN1), {{NAME_3}} (TN2), Moderation (MOD)\nOrganisation: {{NAME_2}}\n\nMOD: Wir beginnen mit dem Stand der Rückmeldungen.\nTN1: Ich habe gestern mit dem Kunden gesprochen, er ist unter {{TEL_1}} erreichbar.\nTN2: Dann schicke ich ihm die Unterlagen an {{EMAIL_1}}.\nMOD: Gut, bitte bis Freitag bestätigen.\nTN1: Mache ich. {{NAME_1}}, kannst du das Protokoll übernehmen?\nTN2: Ja, gerne.",
+     "tokens": 7
     },
     {
      "key": "syn87",
@@ -4586,7 +4883,7 @@
     },
     {
      "key": "syn96",
-     "out": "{{NAME_1}}\n{{ADRESSE_1}}\n{{TEL_2}}, {{EMAIL_1}}\n\n{{ORG_1}}\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine Steuer-ID lautet 91 {{TEL_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
+     "out": "{{NAME_1}}\n{{ADRESSE_1}}\n{{TEL_1}}, {{EMAIL_1}}\n\n{{ORG_1}}\n{{ORT_1}}\n\nKündigung meines Vertrags\n\nSehr geehrte Damen und Herren,\n\nhiermit kündige ich den zwischen uns bestehenden Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nZur Identifikation: Mein Geburtsdatum ist der {{DATUM_1}}, meine {{KENNNR_1}}.\n\nBitte bestätigen Sie die Kündigung schriftlich. Eine eventuelle Rückerstattung veranlassen Sie bitte auf mein Konto {{IBAN_1}}.\n\nMit freundlichen Grüßen\n{{NAME_1}}\n\nAnlagen:\n1. Kopie des Vertrags\n2. Nachweis der Vertretungsberechtigung",
      "tokens": 10
     },
     {

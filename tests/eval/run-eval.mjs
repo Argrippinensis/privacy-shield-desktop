@@ -73,8 +73,9 @@ export async function runEval({ withAI, set = 'v1' }) {
       await f.evaluate(async ({ useAI, mode }) => {
         if (typeof setAIMode === 'function') setAIMode(useAI ? 'auto' : 'off');
         if (useAI) { await loadAIModel(); if (typeof AI_IDLE_MS !== 'undefined') AI_IDLE_MS = 3600000; }
-        // W1: Modell startet nicht, Regeln plus Wortlisten (die App setzt localAIMode nach Modellstart oder -fehler)
-        localAIMode = mode === 'fallback';
+        // W1: Modell startet nicht, Regeln plus Wortlisten (die App setzt localAIMode nach Modellstart oder -fehler).
+        // Im Modus ki bleibt der Wert, den loadAIModel gesetzt hat (App: true); nur wortlisten (nur Regeln) schaltet ihn ab.
+        if (mode !== 'ki') localAIMode = mode === 'fallback';
       }, { useAI: ai, mode });
       if (ai && !(await f.evaluate(() => !!nerPipeline))) throw new Error('KI-Modell nicht geladen');
       const cr = await runIn(f, items);

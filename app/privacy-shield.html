@@ -2558,7 +2558,7 @@
           }
           const rep = PSLib.report.build({
             appVersion: APP_VERSION, startedAt: (prjStart || new Date()).toISOString(), localTime: new Date().toLocaleString("de-DE"),
-            durationMs: prjDur, profileId: curProf, aiMode: localAIMode ? "auto" : "off",
+            durationMs: prjDur, profileId: curProf, aiMode: aiMode(),
             modelId: nerPipeline ? AI_MODEL_ID : undefined,
             whitelistSize: whitelist.length, customRuleCount: cvars.length, documents: documents,
           });
@@ -2774,7 +2774,8 @@
         const r = await mammoth.extractRawText({ arrayBuffer: buf });
         return r.value;
       }
-      let localAIMode = false;
+      // Wortlisten-Erkennung ist der Normalfall ohne KI-Treffer (auch bei ausgeschalteter KI); false nur fuer Diagnosen (Harness)
+      let localAIMode = true;
       const AI_MODEL_ID = "Xenova/distilbert-base-multilingual-cased-ner-hrl";
       let nerPipeline = null;
       let aiCache = { key: null, spans: [] };
@@ -3155,7 +3156,7 @@
           const sev = (k) => (lr.findings.filter((f) => f.severity === k).length);
           const rep = PSLib.report.build({
             appVersion: APP_VERSION, startedAt: repStart.toISOString(), localTime: new Date().toLocaleString("de-DE"),
-            durationMs: repDur, profileId: curProf, aiMode: localAIMode ? "auto" : "off",
+            durationMs: repDur, profileId: curProf, aiMode: aiMode(),
             modelId: nerPipeline ? AI_MODEL_ID : undefined,
             whitelistSize: whitelist.length, customRuleCount: cvars.length,
             documents: [{ index: 1, chars: t.length, counts: counts, resultSha256: sha, leak: { count: lr.count, hoch: sev("hoch"), mittel: sev("mittel") } }],
