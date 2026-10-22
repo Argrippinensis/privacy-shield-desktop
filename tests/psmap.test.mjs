@@ -239,12 +239,18 @@ test('A3.w Pruefer: Abbrechen direkt nach OK ersetzt store nicht', async () => {
     const f = await toolFrame(a.win);
     await runAnon(f, TEXT);
     const before = await storeOf(f);
+    // Schluesselableitung kuenstlich verlangsamen: Abbrechen kommt sonst auf schnellen Rechnern nach dem Ende der
+    // Ableitung (Wettlauf, in der CI schwankend). So liegt Abbrechen immer vor dem Ergebnis.
+    await f.evaluate(() => {
+      const orig = crypto.subtle.deriveKey.bind(crypto.subtle);
+      crypto.subtle.deriveKey = async (...a) => { await new Promise((r) => setTimeout(r, 2500)); return orig(...a); };
+    });
     await f.setInputFiles('#inp-map-load', [{ name: 'x.psmap', mimeType: 'application/octet-stream', buffer: await mkfile({ store: { '{{NAME_1}}': ent() }, cnt: {} }) }]);
     await f.waitForSelector('#PWDLG', { state: 'visible', timeout: 5000 });
     await f.fill('#PWD1', PWFILE);
     await f.click('#PWOK', T);
     await f.click('#PWCANCEL', { timeout: 2000, force: true }).catch(() => f.keyboard.press('Escape'));
-    await new Promise((r) => setTimeout(r, 1500));
+    await new Promise((r) => setTimeout(r, 4000));
     assert.deepEqual(await storeOf(f), before);
   } finally { await a.close(); }
 });
