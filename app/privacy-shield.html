@@ -1244,7 +1244,7 @@
               </div>
               <div class="tool-panel-body">
                 <div class="drop-zone" id="DZ">
-                  <input type="file" id="FI" accept=".txt,.pdf,.docx,.doc,.csv,.md,.json,.rtf" multiple="multiple" />
+                  <input type="file" id="FI" accept=".txt,.pdf,.docx,.doc,.csv,.md,.json,.rtf,.xlsx,.ods,.odt,.odp,.pptx,.eml,.html,.htm" multiple="multiple" />
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
                     <polyline points="16 16 12 12 8 16" />
                     <line x1="12" y1="12" x2="12" y2="21" />
@@ -2083,7 +2083,7 @@
         </div>
       </div>
     </div>
-    <script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script>
+    <script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script><script src="lib/formats.js"></script><script src="lib/officefmt.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
       const PROFILES = PSDetect.PROFILES;
@@ -2276,7 +2276,7 @@
         });
       }
       // Projektliste: mehrere Dokumente mit gemeinsamen Platzhaltern (PSLib.project)
-      const PRJ_EXT = ["txt", "pdf", "docx", "csv", "md", "json", "rtf"];
+      const PRJ_EXT = ["txt", "pdf", "docx", "csv", "md", "json", "rtf", "xlsx", "ods", "odt", "odp", "pptx", "eml", "html", "htm", "doc", "xls", "ppt"];
       const PRJ_ICON = {
         wartet: '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 4.8V8l2.2 1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
         laeuft: '<path d="M8 2a6 6 0 1 0 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
@@ -2291,7 +2291,7 @@
         for (const [fi, f] of files.entries()) {
           const e = f.name.includes(".") ? f.name.split(".").pop().toLowerCase() : "";
           const pre = multi ? "Datei " + (fi + 1) + ": " : "";
-          if (e === "doc") oldDoc = true;
+          if (e === "doc" && multi) oldDoc = true; // einzeln erklaert loadF das alte Format
           else if (!PRJ_EXT.includes(e)) { if (!bad.includes(e)) bad.push(e); }
           else if (f.size === 0) msgs.push(pre + "Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.");
           else if (f.size > 30 * 1024 * 1024) msgs.push(pre + "Datei zu groß (max 30 MB)");
@@ -2581,11 +2581,54 @@
           prjRender();
         }
       }
+      // Liest nur das Zentralverzeichnis (ohne Entpacken) in die Form, die PSLib.formats.guard erwartet
+      function zipDirOf(b) {
+        const v = new DataView(b.buffer, b.byteOffset, b.byteLength), files = {};
+        let e = b.length - 22;
+        while (e >= 0 && e > b.length - 65558 && v.getUint32(e, true) !== 0x06054b50) e--;
+        if (e < 0 || v.getUint32(e, true) !== 0x06054b50) return { files };
+        let n = v.getUint16(e + 10, true), p = v.getUint32(e + 16, true);
+        for (let i = 0; i < n && p + 46 <= b.length && v.getUint32(p, true) === 0x02014b50; i++) {
+          files["e" + i] = { _data: { compressedSize: v.getUint32(p + 20, true), uncompressedSize: v.getUint32(p + 24, true) } };
+          p += 46 + v.getUint16(p + 28, true) + v.getUint16(p + 30, true) + v.getUint16(p + 32, true);
+        }
+        return { files };
+      }
+      // Format erkennen und passend auslesen (Fehler mit fester Meldung, nie Rohtext)
       async function readTextOf(file) {
-        const ext = file.name.split(".").pop().toLowerCase();
-        if (ext === "pdf") return exPDF(file);
-        if (ext === "docx" || ext === "doc") return exDOCX(file);
-        return file.text();
+        const F = PSLib.formats, O = PSLib.officefmt;
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const kind = F.detect(file.name, bytes.slice(0, 512));
+        if (kind === "pdf") return exPDF(file);
+        if (kind === "doc" || kind === "xls" || kind === "ppt")
+          throw new Error("Dateien im alten ." + kind + "-Format werden nicht unterstützt. Bitte in Word/Excel/PowerPoint als .docx/.xlsx/.pptx speichern.");
+        if (kind === "unknown") throw new Error("Dateityp nicht erkannt oder Datei beschädigt.");
+        try {
+          if (["docx", "xlsx", "pptx", "odt", "ods", "odp"].includes(kind)) {
+            F.guard(zipDirOf(bytes)); // vor dem Entpacken: gefaelschte Groessen im Zentralverzeichnis abfangen
+            const zip = await JSZip.loadAsync(bytes);
+            F.guard(zip);
+            if (kind === "docx") {
+              const base = await exDOCX(file);
+              const extra = await O.extractDocxExtras(zip);
+              return extra.text ? base + "\n\n" + extra.text : base;
+            }
+            if (kind === "xlsx") return (await O.extractXlsx(zip)).text;
+            if (kind === "pptx") return (await O.extractPptx(zip)).text;
+            return (await O.extractOdf(zip)).text;
+          }
+          if (kind === "eml") return F.extractEml(bytes).text;
+          const txt = F.decodeText(bytes).text;
+          if (kind === "html") return F.extractHtml(txt).text;
+          if (kind === "rtf") return F.extractRtf(txt).text;
+          return txt;
+        } catch (err) {
+          if (err instanceof F.PSFormatError) {
+            const m = { TOO_BIG: "Archiv zu groß", TOO_MANY: "Archiv hat zu viele Einträge", RATIO: "Archiv ist verdächtig stark komprimiert" };
+            throw new Error(m[err.code] || "Dateityp nicht erkannt oder Datei beschädigt.");
+          }
+          throw err;
+        }
       }
       async function loadF(file) {
         if (file.size === 0) {
