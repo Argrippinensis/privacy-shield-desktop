@@ -1473,25 +1473,6 @@
               <div class="tool-panel-body"><div id="EL"></div></div>
             </div>
             <div class="tool-panel">
-              <div class="tool-panel-header"><span style="font-size: 12px; font-weight: 600">Eigene Muster</span></div>
-              <div class="tool-panel-body">
-                <div id="CVL"></div>
-                <div class="mb-2">
-                  <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px"
-                    for="cv-pattern-name">Variablenname, z. B. VERTRAGSNR</label
-                  >
-                  <input class="input-field" id="cv-pattern-name" type="text" />
-                </div>
-                <div class="mb-2">
-                  <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px" for="VP"
-                    >Muster (Regex oder exakter Text)</label
-                  >
-                  <input class="input-field" id="VP" type="text" placeholder="Muster, z. B. VTR-\d{4,8}" />
-                </div>
-                <button class="btn btn-ghost w-full" onclick="addCV()">+ Eigene Regel hinzufügen</button>
-              </div>
-            </div>
-            <div class="tool-panel">
               <div class="tool-panel-header">
                 <span style="font-size: 12px; font-weight: 600"
                   >Whitelist <span id="WLCNT" style="font-size: 10px; color: #999; font-weight: 400"></span
@@ -1929,13 +1910,12 @@
             <div class="tool-panel" id="policy-panel">
               <div class="tool-panel-header">
                 <span style="font-size: 12px; font-weight: 600"
-                  >Eigene Regeln <span id="policy-count" style="font-size: 10px; color: #999; font-weight: 400"></span
+                  >Eigene Regeln <span id="policy-count" style="font-size: 12px; color: #595959; font-weight: 400"></span
                 ></span>
                 <div style="display: flex; gap: 4px">
-                  <label class="btn btn-ghost" style="padding: 2px 7px; font-size: 10px; cursor: pointer" title="Regeldatei policy.json laden"
-                    >Import<input id="policy-file" type="file" accept=".json,application/json" style="display: none" aria-label="Regeldatei policy.json importieren" onchange="policyImport(this)"
-                  /></label>
-                  <button id="policy-export" class="btn btn-ghost" style="padding: 2px 7px; font-size: 10px" onclick="policyExport()" title="Regeln als policy.json speichern">Export</button>
+                  <button id="policy-import-btn" type="button" class="btn btn-ghost" style="padding: 5px 10px; font-size: 12px; min-height: 28px" title="Regeldatei policy.json laden" onclick="document.getElementById('policy-file').click()">Importieren</button>
+                  <input id="policy-file" type="file" accept=".json,application/json" style="display: none" tabindex="-1" aria-label="Regeldatei policy.json importieren" onchange="policyImport(this)" />
+                  <button id="policy-export" class="btn btn-ghost" style="padding: 5px 10px; font-size: 12px; min-height: 28px" onclick="policyExport()" title="Regeln als policy.json speichern">Export</button>
                 </div>
               </div>
               <div class="tool-panel-body">
@@ -1964,7 +1944,28 @@
                 </div>
                 <div id="policy-preview" aria-live="polite" class="text-xs" style="white-space: pre-wrap; word-break: break-word; margin-bottom: 6px"></div>
                 <div id="policy-error" role="alert" class="text-xs" style="color: #b42318; margin-bottom: 6px"></div>
+                <button id="policy-discard" type="button" class="btn btn-ghost w-full" style="display: none; margin-bottom: 8px" onclick="policyDiscard()">Gespeicherte Regeln verwerfen</button>
                 <button id="policy-add-pattern" class="btn btn-ghost w-full" onclick="policyAddPattern()">+ Muster hinzufügen</button>
+              </div>
+            </div>
+            <div style="height: 14px"></div>
+            <div class="tool-panel">
+              <div class="tool-panel-header"><span style="font-size: 12px; font-weight: 600">Eigene Muster</span></div>
+              <div class="tool-panel-body">
+                <div id="CVL"></div>
+                <div class="mb-2">
+                  <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px"
+                    for="VN">Variablenname, z. B. VERTRAGSNR</label
+                  >
+                  <input class="input-field" id="VN" type="text" />
+                </div>
+                <div class="mb-2">
+                  <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px" for="VP"
+                    >Muster (Regex oder exakter Text)</label
+                  >
+                  <input class="input-field" id="VP" type="text" placeholder="Muster, z. B. VTR-\d{4,8}" />
+                </div>
+                <button class="btn btn-ghost w-full" onclick="addCV()">+ Eigene Regel hinzufügen</button>
               </div>
             </div>
           </div>
@@ -2300,26 +2301,59 @@
           localStorage.setItem("ps_policy_v1", JSON.stringify(policy));
         } catch (e) {}
       }
+      // Fehlerzustand: solange gesetzt, wird nicht anonymisiert (keine Anonymisierung ohne die eigene Regel)
+      let policyFault = null;
+      function policyShowError(msg) {
+        document.getElementById("policy-error").textContent = msg || policyFault || "";
+        document.getElementById("policy-discard").style.display = policyFault ? "" : "none";
+      }
+      function policySetFault(msg) {
+        policyFault = msg;
+        policyShowError();
+        toast(msg, "e");
+      }
       function policyLoad() {
+        let raw = null;
         try {
-          const raw = localStorage.getItem("ps_policy_v1");
-          if (!raw) return;
-          const res = PSLib.policy.parse(raw);
-          if (res.ok) policy = JSON.parse(JSON.stringify(res.policy));
-        } catch (e) {}
+          raw = localStorage.getItem("ps_policy_v1");
+        } catch (e) {
+          policyFault = "Die gespeicherten eigenen Regeln konnten nicht gelesen werden. Anonymisieren ist gesperrt, bis Sie eine Regeldatei importieren oder die Regeln verwerfen.";
+          return;
+        }
+        if (!raw) return;
+        let res;
+        try {
+          res = PSLib.policy.parse(raw);
+        } catch (e) {
+          res = { ok: false, errors: ["Unerwarteter Fehler beim Prüfen."] };
+        }
+        if (res.ok) policy = JSON.parse(JSON.stringify(res.policy));
+        else policyFault = "Die gespeicherten eigenen Regeln sind nicht ladbar: " + res.errors.slice(0, 3).join(" ") + " Anonymisieren ist gesperrt, bis Sie eine Regeldatei importieren oder die Regeln verwerfen.";
+      }
+      function policyDiscard() {
+        policyFault = null;
+        policy = { version: 1, name: "Eigene Regeln", rules: [] };
+        policyChanged();
       }
       function policyChanged() {
         aiCache = { key: null, spans: [] };
         policySave();
         policyRender();
+        policyShowError();
       }
-      // Spans der eigenen Regeln fuer einen Text (Kern nimmt sie als extraSpans)
+      // Spans der eigenen Regeln fuer einen Text (Kern nimmt sie als extraSpans); bei Fehler Abbruch
       function policySpans(text) {
+        if (policyFault) {
+          toast("Eigene Regeln fehlerhaft: Anonymisieren abgebrochen", "e");
+          throw new Error(policyFault);
+        }
         if (!policy.rules.some(policyIsActive)) return [];
         try {
           return PSLib.policy.toSpans(policy, PSDetect.normalizeForDetection(text), curProf);
         } catch (e) {
-          return [];
+          const msg = "Eigene Regeln konnten nicht angewendet werden (" + String((e && e.message) || "Fehler").slice(0, 200) + "). Anonymisieren ist abgebrochen.";
+          policySetFault(msg);
+          throw new Error(msg);
         }
       }
       function policyRuleCount() {
@@ -2376,9 +2410,15 @@
       }
       // Neue Regel nur aufnehmen, wenn die ganze Richtlinie gueltig bleibt
       function policyAdd(rule) {
+        if (policyFault) {
+          policyShowError();
+          toast("Bitte zuerst eine Regeldatei importieren oder die gespeicherten Regeln verwerfen", "e");
+          return false;
+        }
         const next = { version: 1, name: policy.name, rules: policy.rules.concat([rule]) };
         const res = PSLib.policy.parse(JSON.stringify(next));
         if (!res.ok) {
+          policyShowError(res.errors[0]);
           toast(res.errors[0], "e");
           return false;
         }
@@ -2398,14 +2438,13 @@
       function policyTest() {
         const pat = document.getElementById("policy-pattern").value;
         const sample = document.getElementById("policy-sample").value;
-        const err = document.getElementById("policy-error");
         const prev = document.getElementById("policy-preview");
-        err.textContent = "";
+        policyShowError();
         prev.textContent = "";
         if (!pat) return true;
         const chk = PSLib.policy.checkPattern(pat, "");
         if (!chk.ok) {
-          err.textContent = chk.error;
+          policyShowError(chk.error);
           return false;
         }
         if (!sample) return true;
@@ -2438,16 +2477,27 @@
         const file = inp.files && inp.files[0];
         inp.value = "";
         if (!file) return;
-        if (file.size > 1024 * 1024) return toast("Die Datei ist größer als 1 MiB", "e");
+        if (file.size > 1024 * 1024) {
+          policyShowError("Die Datei ist größer als 1 MiB.");
+          return toast("Die Datei ist größer als 1 MiB", "e");
+        }
         const rd = new FileReader();
         rd.onload = () => {
           const res = PSLib.policy.parse(String(rd.result));
-          if (!res.ok) return toast("Regeldatei abgelehnt: " + res.errors[0], "e");
+          if (!res.ok) {
+            policyShowError("Regeldatei abgelehnt: " + res.errors.slice(0, 3).join(" "));
+            return toast("Regeldatei abgelehnt: " + res.errors[0], "e");
+          }
+          const vorher = policy.rules.length;
+          policyFault = null;
           policy = JSON.parse(JSON.stringify(res.policy));
           policyChanged();
-          toast("Regeldatei geladen: " + policy.rules.length + " Regeln", "s");
+          toast("Regeldatei geladen: " + policy.rules.length + " Regeln" + (vorher ? " (ersetzt " + vorher + " Regeln)" : ""), "s");
         };
-        rd.onerror = () => toast("Datei konnte nicht gelesen werden", "e");
+        rd.onerror = () => {
+          policyShowError("Die Datei konnte nicht gelesen werden.");
+          toast("Datei konnte nicht gelesen werden", "e");
+        };
         rd.readAsText(file);
       }
       function policyExport() {
@@ -2455,8 +2505,9 @@
       }
       policyLoad();
       policyRender();
+      policyShowError();
       function addCV() {
-        const n = document.getElementById("cv-pattern-name").value.trim().toUpperCase().replace(/\s+/g, "_");
+        const n = document.getElementById("VN").value.trim().toUpperCase().replace(/\s+/g, "_");
         const p = document.getElementById("VP").value.trim();
         if (!n || !p) {
           toast("Name und Muster benötigt", "e");
@@ -2468,7 +2519,7 @@
           return;
         }
         cvars.push({ n: n, p: p });
-        document.getElementById("cv-pattern-name").value = "";
+        document.getElementById("VN").value = "";
         document.getElementById("VP").value = "";
         renderCV();
         toast("Variable {{" + n + "_N}} hinzugefügt", "s");
@@ -3424,6 +3475,7 @@
         }
         store = {};
         cnt = {};
+        policySpans(input); // Regelfehler: Abbruch vor jeder Verarbeitung
         try {
           await ensureAIReady();
           const det = PSDetect.normalizeForDetection(input);
