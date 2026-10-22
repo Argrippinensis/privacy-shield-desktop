@@ -580,6 +580,9 @@
         transition: width 0.3s;
         width: 0%;
       }
+      #policy-preview mark { background: #dbe7f3; color: #1a3a5c; border-radius: 3px; padding: 0 2px; }
+      #policy-rules input[type=checkbox] { flex-shrink: 0; accent-color: #1a3a5c; }
+      #policy-rules .custom-var-name { max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .custom-var-row {
         display: flex;
         align-items: center;
@@ -1475,15 +1478,15 @@
                 <div id="CVL"></div>
                 <div class="mb-2">
                   <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px"
-                    >Variablenname</label
+                    for="cv-pattern-name">Variablenname, z. B. VERTRAGSNR</label
                   >
-                  <input class="input-field" id="VN" type="text" placeholder="z. B. VERTRAGSNR" />
+                  <input class="input-field" id="cv-pattern-name" type="text" />
                 </div>
                 <div class="mb-2">
-                  <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px"
+                  <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px" for="VP"
                     >Muster (Regex oder exakter Text)</label
                   >
-                  <input class="input-field" id="VP" type="text" placeholder="z. B. VTR-\d{6}" />
+                  <input class="input-field" id="VP" type="text" placeholder="Muster, z. B. VTR-\d{4,8}" />
                 </div>
                 <button class="btn btn-ghost w-full" onclick="addCV()">+ Eigene Regel hinzufügen</button>
               </div>
@@ -1919,6 +1922,54 @@
           </div>
         </div>
       </div>
+      <section class="max-w-container mx-auto px-6" id="policy-section" aria-label="Eigene Regeln" style="margin-top: 32px">
+        <details open>
+          <summary style="cursor: pointer; font-size: 13px; font-weight: 600; color: #1a3a5c; margin-bottom: 10px">Eigene Regeln für Kennungen und Begriffe Ihrer Organisation</summary>
+          <div style="max-width: 520px">
+            <div class="tool-panel" id="policy-panel">
+              <div class="tool-panel-header">
+                <span style="font-size: 12px; font-weight: 600"
+                  >Eigene Regeln <span id="policy-count" style="font-size: 10px; color: #999; font-weight: 400"></span
+                ></span>
+                <div style="display: flex; gap: 4px">
+                  <label class="btn btn-ghost" style="padding: 2px 7px; font-size: 10px; cursor: pointer" title="Regeldatei policy.json laden"
+                    >Import<input id="policy-file" type="file" accept=".json,application/json" style="display: none" aria-label="Regeldatei policy.json importieren" onchange="policyImport(this)"
+                  /></label>
+                  <button id="policy-export" class="btn btn-ghost" style="padding: 2px 7px; font-size: 10px" onclick="policyExport()" title="Regeln als policy.json speichern">Export</button>
+                </div>
+              </div>
+              <div class="tool-panel-body">
+                <p id="policy-hint" class="text-xs text-secondary" style="margin: 0 0 8px">
+                  Eigene Regeln bleiben auf diesem Gerät. Gespeichert werden nur die Regeln, nie Ihre Dokumente.
+                </p>
+                <div id="policy-rules" role="group" aria-label="Eigene Regeln, einzeln ein- und ausschaltbar" style="margin-bottom: 10px"></div>
+                <div class="mb-2">
+                  <label class="text-xs font-medium text-secondary" for="policy-terms" style="display: block; margin-bottom: 3px"
+                    >Begriffe (ein Begriff pro Zeile)</label
+                  >
+                  <textarea class="input-field" id="policy-terms" rows="3" placeholder="z. B. Projekt Falke"></textarea>
+                </div>
+                <button id="policy-add-terms" class="btn btn-ghost w-full" style="margin-bottom: 12px" onclick="policyAddTerms()">+ Begriffe hinzufügen</button>
+                <div class="mb-2">
+                  <label class="text-xs font-medium text-secondary" for="policy-pattern" style="display: block; margin-bottom: 3px"
+                    >Eigenes Suchmuster</label
+                  >
+                  <input class="input-field" id="policy-pattern" type="text" autocomplete="off" spellcheck="false" placeholder="z. B. K-\d{6}" oninput="policyTest()" aria-describedby="policy-error" />
+                </div>
+                <div class="mb-2">
+                  <label class="text-xs font-medium text-secondary" for="policy-sample" style="display: block; margin-bottom: 3px"
+                    >Beispieltext, Treffer werden markiert</label
+                  >
+                  <textarea class="input-field" id="policy-sample" rows="2" oninput="policyTest()"></textarea>
+                </div>
+                <div id="policy-preview" aria-live="polite" class="text-xs" style="white-space: pre-wrap; word-break: break-word; margin-bottom: 6px"></div>
+                <div id="policy-error" role="alert" class="text-xs" style="color: #b42318; margin-bottom: 6px"></div>
+                <button id="policy-add-pattern" class="btn btn-ghost w-full" onclick="policyAddPattern()">+ Muster hinzufügen</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
       <footer class="py-12 border-t border-[#e5e5e5]" style="margin-top: 60px">
         <div class="max-w-container mx-auto px-6 text-center">
           <p class="text-sm font-medium text-ink mb-3">
@@ -2052,7 +2103,7 @@
     <script src="vendor/tesseract/tesseract.min.js"></script>
     <script src="vendor/jspdf/jspdf.umd.min.js"></script>
     <script src="vendor/jszip/jszip.min.js"></script>
-    <script src="lib/placeholder.js"></script><script src="lib/coref.js"></script><script src="lib/leakcheck.js"></script><script src="lib/marks.js"></script><script src="lib/report.js"></script>
+    <script src="lib/placeholder.js"></script><script src="lib/coref.js"></script><script src="lib/leakcheck.js"></script><script src="lib/marks.js"></script><script src="lib/report.js"></script><script src="lib/policy.js"></script>
     <script src="lib/detect.js"></script>
     <div id="PWDLG" role="dialog" aria-modal="true" aria-labelledby="PWTITLE" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(26, 58, 92, 0.45); align-items: center; justify-content: center">
       <form onsubmit="psPwOk(); return false" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 24px; width: min(420px, 92vw); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); text-align: left">
@@ -2239,15 +2290,185 @@
         ENTS.forEach((e) => (e.on = !any));
         initEL();
       }
+      // Eigene Regeln (policy.json): Zustand, Speicherung nur der Regeln unter ps_policy_v1
+      let policy = { version: 1, name: "Eigene Regeln", rules: [] };
+      function policyIsActive(r) {
+        return r.enabled !== false;
+      }
+      function policySave() {
+        try {
+          localStorage.setItem("ps_policy_v1", JSON.stringify(policy));
+        } catch (e) {}
+      }
+      function policyLoad() {
+        try {
+          const raw = localStorage.getItem("ps_policy_v1");
+          if (!raw) return;
+          const res = PSLib.policy.parse(raw);
+          if (res.ok) policy = JSON.parse(JSON.stringify(res.policy));
+        } catch (e) {}
+      }
+      function policyChanged() {
+        aiCache = { key: null, spans: [] };
+        policySave();
+        policyRender();
+      }
+      // Spans der eigenen Regeln fuer einen Text (Kern nimmt sie als extraSpans)
+      function policySpans(text) {
+        if (!policy.rules.some(policyIsActive)) return [];
+        try {
+          return PSLib.policy.toSpans(policy, PSDetect.normalizeForDetection(text), curProf);
+        } catch (e) {
+          return [];
+        }
+      }
+      function policyRuleCount() {
+        return policy.rules.filter(policyIsActive).length;
+      }
+      function policyRender() {
+        const box = document.getElementById("policy-rules");
+        box.innerHTML = "";
+        document.getElementById("policy-count").textContent = policy.rules.length ? "(" + policy.rules.length + ")" : "";
+        if (!policy.rules.length) {
+          const e = document.createElement("div");
+          e.className = "text-xs text-secondary";
+          e.textContent = "Noch keine eigenen Regeln. Datei importieren oder unten Begriffe und Muster hinzufügen.";
+          box.appendChild(e);
+          return;
+        }
+        policy.rules.forEach((r, i) => {
+          const row = document.createElement("div");
+          row.className = "custom-var-row";
+          row.style.marginBottom = "4px";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = policyIsActive(r);
+          cb.id = "policy-rule-" + i;
+          cb.onchange = () => {
+            policy.rules[i].enabled = cb.checked;
+            policyChanged();
+          };
+          const lab = document.createElement("label");
+          lab.htmlFor = cb.id;
+          lab.className = "custom-var-name";
+          lab.style.cursor = "pointer";
+          lab.textContent = r.label;
+          const det = document.createElement("span");
+          det.className = "custom-var-pattern";
+          det.textContent = r.type === "list" ? r.terms.length + " Begriffe" : r.pattern;
+          const del = document.createElement("button");
+          del.className = "custom-var-del";
+          del.type = "button";
+          del.textContent = "×";
+          del.setAttribute("aria-label", "Regel " + r.label + " entfernen");
+          del.onclick = () => {
+            policy.rules.splice(i, 1);
+            policyChanged();
+          };
+          row.append(cb, lab, det, del);
+          box.appendChild(row);
+        });
+      }
+      function policyNewId(base) {
+        let n = 1;
+        while (policy.rules.some((r) => r.id === base + "-" + n)) n++;
+        return base + "-" + n;
+      }
+      // Neue Regel nur aufnehmen, wenn die ganze Richtlinie gueltig bleibt
+      function policyAdd(rule) {
+        const next = { version: 1, name: policy.name, rules: policy.rules.concat([rule]) };
+        const res = PSLib.policy.parse(JSON.stringify(next));
+        if (!res.ok) {
+          toast(res.errors[0], "e");
+          return false;
+        }
+        policy = next;
+        policyChanged();
+        return true;
+      }
+      function policyAddTerms() {
+        const ta = document.getElementById("policy-terms");
+        const terms = ta.value.split(/\r?\n/).map((t) => t.trim()).filter(Boolean);
+        if (!terms.length) return toast("Bitte mindestens einen Begriff eingeben", "e");
+        if (policyAdd({ id: policyNewId("begriffe"), label: "Begriffe", type: "list", terms: terms, caseSensitive: false, category: "EIGEN", profiles: ["*"] })) {
+          ta.value = "";
+          toast(terms.length + " Begriffe hinzugefügt", "s");
+        }
+      }
+      function policyTest() {
+        const pat = document.getElementById("policy-pattern").value;
+        const sample = document.getElementById("policy-sample").value;
+        const err = document.getElementById("policy-error");
+        const prev = document.getElementById("policy-preview");
+        err.textContent = "";
+        prev.textContent = "";
+        if (!pat) return true;
+        const chk = PSLib.policy.checkPattern(pat, "");
+        if (!chk.ok) {
+          err.textContent = chk.error;
+          return false;
+        }
+        if (!sample) return true;
+        // Das Muster ist geprueft (lineare Laufzeit), der Beispieltext ist begrenzt
+        const re = new RegExp(pat, "g");
+        const txt = sample.slice(0, 20000);
+        let last = 0, m;
+        while ((m = re.exec(txt)) !== null) {
+          if (m[0] === "") { re.lastIndex++; continue; }
+          prev.appendChild(document.createTextNode(txt.slice(last, m.index)));
+          const mk = document.createElement("mark");
+          mk.textContent = m[0];
+          prev.appendChild(mk);
+          last = m.index + m[0].length;
+        }
+        prev.appendChild(document.createTextNode(txt.slice(last)));
+        return true;
+      }
+      function policyAddPattern() {
+        const pat = document.getElementById("policy-pattern").value;
+        if (!pat.trim()) return toast("Bitte ein Muster eingeben", "e");
+        if (!policyTest()) return;
+        if (policyAdd({ id: policyNewId("muster"), label: "Muster", type: "regex", pattern: pat, flags: "", category: "EIGEN", profiles: ["*"] })) {
+          document.getElementById("policy-pattern").value = "";
+          policyTest();
+          toast("Muster hinzugefügt", "s");
+        }
+      }
+      function policyImport(inp) {
+        const file = inp.files && inp.files[0];
+        inp.value = "";
+        if (!file) return;
+        if (file.size > 1024 * 1024) return toast("Die Datei ist größer als 1 MiB", "e");
+        const rd = new FileReader();
+        rd.onload = () => {
+          const res = PSLib.policy.parse(String(rd.result));
+          if (!res.ok) return toast("Regeldatei abgelehnt: " + res.errors[0], "e");
+          policy = JSON.parse(JSON.stringify(res.policy));
+          policyChanged();
+          toast("Regeldatei geladen: " + policy.rules.length + " Regeln", "s");
+        };
+        rd.onerror = () => toast("Datei konnte nicht gelesen werden", "e");
+        rd.readAsText(file);
+      }
+      function policyExport() {
+        dl("policy.json", JSON.stringify(policy, null, 2), "application/json");
+      }
+      policyLoad();
+      policyRender();
       function addCV() {
-        const n = document.getElementById("VN").value.trim().toUpperCase().replace(/\s+/g, "_");
+        const n = document.getElementById("cv-pattern-name").value.trim().toUpperCase().replace(/\s+/g, "_");
         const p = document.getElementById("VP").value.trim();
         if (!n || !p) {
           toast("Name und Muster benötigt", "e");
           return;
         }
+        const chk = PSLib.policy.checkPattern(p, "");
+        if (!chk.ok) {
+          toast(chk.error, "e");
+          return;
+        }
         cvars.push({ n: n, p: p });
-        document.getElementById("VN").value = "";
+        document.getElementById("cv-pattern-name").value = "";
         document.getElementById("VP").value = "";
         renderCV();
         toast("Variable {{" + n + "_N}} hinzugefügt", "s");
@@ -2450,6 +2671,7 @@
               const r = PSDetect.anonymize(text, {
                 ents: activeEntIds(),
                 cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+                extraSpans: policySpans(text),
                 whitelist: whitelist,
                 wordlists: localAIMode,
                 aiSpans: aiCache.key === det ? aiCache.spans : null,
@@ -2560,7 +2782,7 @@
             appVersion: APP_VERSION, startedAt: (prjStart || new Date()).toISOString(), localTime: new Date().toLocaleString("de-DE"),
             durationMs: prjDur, profileId: curProf, aiMode: aiMode(),
             modelId: nerPipeline ? AI_MODEL_ID : undefined,
-            whitelistSize: whitelist.length, customRuleCount: cvars.length, documents: documents,
+            whitelistSize: whitelist.length, customRuleCount: cvars.length + policyRuleCount(), documents: documents,
           });
           const z = new JSZip();
           for (const e of plan) {
@@ -3085,7 +3307,7 @@
           ORG: { pfx: "ORG", col: "#8b5cf6" },
           LOC: { pfx: "ORT", col: "#3b82f6" },
         };
-        const plain = PSDetect.maskHard(text, { ents: activeEntIds(), cvars: cvars }).replace(/\x00/g, " ");
+        const plain = PSDetect.maskHard(text, { ents: activeEntIds(), cvars: cvars, extraSpans: policySpans(text) }).replace(/\x00/g, " ");
         const spans = [];
         const chunks = chunkTextForNER(plain, 1e3);
         const progEl = document.getElementById("aiRunProgress");
@@ -3114,6 +3336,7 @@
         return PSDetect.detect(text, {
           ents: activeEntIds(),
           cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+          extraSpans: policySpans(text),
           whitelist: whitelist,
           wordlists: localAIMode,
           aiSpans: aiCache.key === text ? aiCache.spans : null,
@@ -3122,7 +3345,7 @@
       // Gegenpruefung: Erkennung ein zweites Mal ueber das Ergebnis (alle Typen, ohne Freigaben)
       function leakScan(at) {
         const mk = PSLib.marks.toCvars(manualMarks);
-        return PSLib.leakcheck.scan(at, { detect: (t) => PSDetect.detect(t, { ents: ENTS.map((e) => e.id), cvars: cvars.concat(mk), whitelist: [], wordlists: localAIMode, aiSpans: null }), whitelist: whitelist });
+        return PSLib.leakcheck.scan(at, { detect: (t) => PSDetect.detect(t, { ents: ENTS.map((e) => e.id), cvars: cvars.concat(mk), extraSpans: policySpans(t), whitelist: [], wordlists: localAIMode, aiSpans: null }), whitelist: whitelist });
       }
       function runLeakCheck() { const at = document.getElementById("AT").value;
         const r = leakScan(at);
@@ -3158,7 +3381,7 @@
             appVersion: APP_VERSION, startedAt: repStart.toISOString(), localTime: new Date().toLocaleString("de-DE"),
             durationMs: repDur, profileId: curProf, aiMode: aiMode(),
             modelId: nerPipeline ? AI_MODEL_ID : undefined,
-            whitelistSize: whitelist.length, customRuleCount: cvars.length,
+            whitelistSize: whitelist.length, customRuleCount: cvars.length + policyRuleCount(),
             documents: [{ index: 1, chars: t.length, counts: counts, resultSha256: sha, leak: { count: lr.count, hoch: sev("hoch"), mittel: sev("mittel") } }],
           });
           dl("bericht.txt", PSLib.report.toText(rep), "text/plain");
@@ -3211,6 +3434,7 @@
           const r = PSDetect.anonymize(input, {
             ents: activeEntIds(),
             cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+            extraSpans: policySpans(input),
             whitelist: whitelist,
             wordlists: localAIMode,
             aiSpans: aiCache.key === det ? aiCache.spans : null,
