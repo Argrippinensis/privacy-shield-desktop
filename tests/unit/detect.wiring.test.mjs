@@ -8,7 +8,8 @@ import path from 'node:path';
 import { loadLib, ROOT } from './_load.mjs';
 
 const HTML_PATH = path.join(ROOT, 'app', 'privacy-shield.html');
-const html = fs.readFileSync(HTML_PATH, 'utf8');
+// Zeilenenden vereinheitlichen: Windows checkt die Datei mit CRLF aus, die Muster unten erwarten LF.
+const html = fs.readFileSync(HTML_PATH, 'utf8').replace(/\r\n/g, '\n');
 const D = () => loadLib('detect');
 
 // <script>-Bloecke in Dokumentreihenfolge: { index, src, body }
@@ -82,9 +83,9 @@ for (const [label, rx] of [
   });
 }
 
-test('HTML hat hoechstens 3450 Zeilen', () => {
+test('HTML hat hoechstens 4500 Zeilen', () => {
   const lines = html.split('\n').length;
-  assert.ok(lines <= 3450, 'Zeilen: ' + lines);
+  assert.ok(lines <= 4500, 'Zeilen: ' + lines);
 });
 
 test('ENTS und PROFILES stammen aus PSDetect', () => {

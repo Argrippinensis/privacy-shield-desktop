@@ -533,6 +533,35 @@
       .file-tag.on {
         display: flex;
       }
+      /* Projektliste (mehrere Dokumente) */
+      .prj-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; margin-bottom: 12px; }
+      .prj-row { display: flex; align-items: stretch; gap: 4px; }
+      .prj-item { flex: 1; min-width: 0; display: grid; grid-template-columns: 24px 1fr; column-gap: 8px; align-items: center; text-align: left; font: inherit; padding: 7px 9px; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+      .prj-item:hover { background: #f0f4f8; }
+      .prj-item.sel { background: #e8f0fe; border-color: #1a3a5c; }
+      .prj-num { grid-row: 1 / span 2; width: 22px; height: 22px; border-radius: 50%; background: #1a3a5c; color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+      .prj-name { font-size: 12px; font-weight: 500; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .prj-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; min-width: 0; }
+      .prj-st { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+      .prj-st.wartet { color: #666; }
+      .prj-st.laeuft { color: #1a3a5c; }
+      .prj-st.fertig { color: #047857; }
+      .prj-st.rest { color: #92400e; }
+      .prj-st.fehler { color: #b91c1c; }
+      .prj-st.laeuft svg { animation: prjspin 1s linear infinite; }
+      @keyframes prjspin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .prj-st.laeuft svg { animation: none; } }
+      .prj-del { flex: 0 0 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid transparent; border-radius: 8px; color: #999; cursor: pointer; transition: color 0.15s, background 0.15s; }
+      .prj-del:hover:not(:disabled) { color: #b91c1c; background: #fff0ee; }
+      .prj-del:disabled { opacity: 0.4; cursor: default; }
+      .prj-item:focus-visible, .prj-del:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
+      .prj-track { height: 4px; background: #e5e5e5; border-radius: 2px; overflow: hidden; margin-top: 5px; }
+      .prj-fill { height: 100%; width: 0; background: #1a3a5c; transition: width 0.2s; }
+      .prj-out { margin-top: 14px; padding-top: 12px; border-top: 1px solid #e5e5e5; }
+      .prj-opt { display: flex; align-items: center; gap: 8px; min-height: 28px; font-size: 12px; color: #111; cursor: pointer; }
+      .prj-opt input { width: 15px; height: 15px; margin: 0; accent-color: #1a3a5c; cursor: pointer; }
+      .prj-opt input:focus-visible, #PRJZIP:focus-visible, #PRJASK button:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
+      .prj-hint { margin: 0 0 8px 23px; font-size: 11px; line-height: 1.4; color: #666; }
       .progress-bar {
         height: 3px;
         background: #e5e5e5;
@@ -1034,7 +1063,7 @@
                 Bestehendes Mapping importieren
               </p>
               <p style="font-size: 10px; color: #999; margin-bottom: 8px">
-                CSV aus vorheriger Sitzung laden, um dieselben Variablen wiederzuverwenden.
+                Zuordnung (.psmap, oder unverschlüsselte .csv) aus vorheriger Sitzung laden, um dieselben Variablen wiederzuverwenden.
               </p>
               <label
                 class="btn btn-ghost"
@@ -1051,7 +1080,7 @@
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                CSV importieren <input type="file" accept=".csv" style="display: none" onchange="impMap(this)"
+                Zuordnung laden <input type="file" accept=".psmap,.csv" style="display: none" onchange="impMap(this)"
               /></label>
             </div>
             <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5e5; text-align: left">
@@ -1215,7 +1244,7 @@
               </div>
               <div class="tool-panel-body">
                 <div class="drop-zone" id="DZ">
-                  <input type="file" id="FI" accept=".txt,.pdf,.docx,.doc,.csv,.md,.json,.rtf" multiple="multiple" />
+                  <input type="file" id="FI" accept=".txt,.pdf,.docx,.doc,.csv,.md,.json,.rtf,.xlsx,.ods,.odt,.odp,.pptx,.eml,.html,.htm" multiple="multiple" />
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
                     <polyline points="16 16 12 12 8 16" />
                     <line x1="12" y1="12" x2="12" y2="21" />
@@ -1261,6 +1290,31 @@
                   </button>
                 </div>
                 <div class="progress-bar" id="FP"><div class="progress-fill" id="FPB"></div></div>
+              </div>
+            </div>
+            <div class="tool-panel" id="PRJPANEL" style="display: none">
+              <div class="tool-panel-header">
+                <span style="font-size: 12px; font-weight: 600">Dokumente</span>
+                <span style="font-size: 11px; color: #999" id="PRJCOUNT"></span>
+              </div>
+              <div class="tool-panel-body">
+                <div class="prj-list" id="PRJLIST" role="list" aria-label="Dokumente im Projekt"></div>
+                <div id="PRJPROG" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" style="font-size: 11px; color: #666">
+                  <span id="PRJPROGT">0 von 0</span>
+                  <div class="prj-track"><div class="prj-fill" id="PRJFILL"></div></div>
+                </div>
+                <div id="PRJSUM" role="status" aria-live="polite" style="font-size: 12px; color: #111; margin-top: 8px; min-height: 16px"></div>
+                <div style="display: flex; gap: 8px; margin-top: 10px">
+                  <button type="button" id="PRJRUN" class="btn-accent" style="flex: 1; font-size: 12px; padding: 9px 12px" onclick="prjRun()">Alle anonymisieren</button>
+                  <button type="button" id="PRJCANCEL" class="btn btn-ghost" style="font-size: 12px" onclick="prjCancel()" disabled>Abbrechen</button>
+                </div>
+                <div class="prj-out">
+                  <label class="prj-opt" for="PRJMAP"><input type="checkbox" id="PRJMAP" checked />Zuordnung einschließen</label>
+                  <p class="prj-hint" id="PRJMAPHINT">Verschlüsselte Datei, mit der sich Antworten zurückübersetzen lassen. Das Passwort wird beim Speichern abgefragt.</p>
+                  <label class="prj-opt" for="PRJKEEP"><input type="checkbox" id="PRJKEEP" aria-describedby="PRJKEEPHINT" />Originalnamen verwenden</label>
+                  <p class="prj-hint" id="PRJKEEPHINT">Dateinamen enthalten oft Namen. Standard sind neutrale Namen wie anonymisiert_001.txt.</p>
+                  <button type="button" id="PRJZIP" class="btn btn-ghost" style="width: 100%; font-size: 12px; padding: 9px 12px" onclick="prjZip()" disabled>Alles als ZIP speichern</button>
+                </div>
               </div>
             </div>
             <div style="text-align: center; padding: 4px 0 2px">
@@ -1622,11 +1676,16 @@
                     <button class="btn btn-ghost" style="font-size: 11px; padding: 3px 10px" onclick="cpAnon()">
                       Kopieren
                     </button>
+                    <button class="btn btn-ghost" id="btn-report" style="font-size: 11px; padding: 3px 10px" onclick="saveReport()">
+                      Bericht speichern
+                    </button>
                     <button class="btn btn-ghost" style="font-size: 11px; padding: 3px 10px" onclick="showDeanonStep()">
                       KI-Antwort einf&uuml;gen
                     </button>
                   </div>
                 </div>
+                <button type="button" id="LCBAND" role="status" aria-live="polite" aria-controls="LCLIST" aria-expanded="false" onclick="toggleLCList()" style="display: none; align-items: center; gap: 8px; width: 100%; border: 0; border-bottom: 1px solid #e5e5e5; padding: 8px 14px; font: inherit; font-size: 12px; font-weight: 600; text-align: left"></button>
+                <div id="LCLIST" style="display: none; border-bottom: 1px solid #e5e5e5; background: #fffbeb; padding: 6px 14px"></div>
                 <div class="tool-panel-body" style="padding: 12px">
                   <textarea
                     id="AT"
@@ -1839,18 +1898,21 @@
                     <tbody id="MT">
                       <tr>
                         <td colspan="4" style="text-align: center; color: #999; padding: 22px; font-size: 12px">
-                          Noch keine Anonymisierung durchgeführt — CSV importieren oder Text anonymisieren
+                          Noch keine Anonymisierung durchgeführt — Zuordnung laden oder Text anonymisieren
                         </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
                 <div style="display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap">
+                  <button id="btn-map-save" class="btn btn-primary" style="font-size: 11px" onclick="psMapSave()">Zuordnung speichern</button>
+                  <button id="btn-map-load" class="btn btn-ghost" style="font-size: 11px" onclick="document.getElementById('inp-map-load').click()">Zuordnung laden</button>
+                  <input id="inp-map-load" type="file" accept=".psmap,.csv" style="display: none" onchange="impMap(this)" />
                   <button class="btn btn-danger" style="font-size: 11px" onclick="clrMap()">Mapping löschen</button>
-                  <button class="btn btn-ghost" style="font-size: 11px" onclick="expMap()">Als CSV exportieren</button>
-                  <label class="btn btn-ghost" style="font-size: 11px; cursor: pointer"
-                    >CSV importieren<input type="file" accept=".csv" style="display: none" onchange="impMap(this)"
-                  /></label>
+                  <details id="MAPMORE" style="font-size: 11px; align-self: center">
+                    <summary style="cursor: pointer; color: #666">Weitere Optionen</summary>
+                    <button class="btn btn-ghost" style="font-size: 11px; margin-top: 6px" onclick="expMap()">Als CSV exportieren</button>
+                  </details>
                 </div>
               </div>
             </div>
@@ -1990,15 +2052,47 @@
     <script src="vendor/tesseract/tesseract.min.js"></script>
     <script src="vendor/jspdf/jspdf.umd.min.js"></script>
     <script src="vendor/jszip/jszip.min.js"></script>
+    <script src="lib/placeholder.js"></script><script src="lib/leakcheck.js"></script><script src="lib/marks.js"></script><script src="lib/report.js"></script>
     <script src="lib/detect.js"></script>
+    <div id="PWDLG" role="dialog" aria-modal="true" aria-labelledby="PWTITLE" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(26, 58, 92, 0.45); align-items: center; justify-content: center">
+      <form onsubmit="psPwOk(); return false" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 24px; width: min(420px, 92vw); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); text-align: left">
+        <h2 id="PWTITLE" style="font-size: 15px; font-weight: 700; color: #1a3a5c; margin: 0 0 6px">Passwort</h2>
+        <p id="PWINFO" style="font-size: 12px; color: #666; margin: 0 0 14px">Ohne dieses Passwort kann die Zuordnung nicht wiederhergestellt werden.</p>
+        <label for="PWD1" style="display: block; font-size: 11px; font-weight: 600; color: #333; margin-bottom: 3px">Passwort</label>
+        <input id="PWD1" type="password" autocomplete="current-password" aria-describedby="PWINFO PWSTR" oninput="psPwStrength()" style="width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 9px; font-size: 13px" />
+        <div id="PWROW2" style="margin-top: 10px">
+          <label for="PWD2" style="display: block; font-size: 11px; font-weight: 600; color: #333; margin-bottom: 3px">Passwort wiederholen</label>
+          <input id="PWD2" type="password" autocomplete="new-password" aria-describedby="PWINFO" style="width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 9px; font-size: 13px" />
+        </div>
+        <p id="PWSTR" aria-live="polite" style="font-size: 11px; color: #666; margin: 8px 0 0; min-height: 15px"></p>
+        <p id="PWERR" role="alert" style="font-size: 12px; color: #b91c1c; margin: 8px 0 0; min-height: 16px"></p>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px">
+          <button id="PWCANCEL" type="button" class="btn btn-ghost" onclick="psPwClose()">Abbrechen</button>
+          <button id="PWOK" type="submit" class="btn btn-primary">OK</button>
+        </div>
+      </form>
+    </div>
+    <div id="PRJASK" role="dialog" aria-modal="true" aria-labelledby="PRJASKT" aria-describedby="PRJASKD" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(26, 58, 92, 0.45); align-items: center; justify-content: center">
+      <div style="background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 24px; width: min(420px, 92vw); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); text-align: left">
+        <h2 id="PRJASKT" style="font-size: 15px; font-weight: 700; color: #1a3a5c; margin: 0 0 6px">Ohne Zuordnung kann nicht zurückübersetzt werden</h2>
+        <p id="PRJASKD" style="font-size: 12px; color: #666; margin: 0 0 14px">Das ZIP enthält dann nur die anonymisierten Texte und den Bericht. Antworten einer KI lassen sich später nicht mit den Originalwerten zusammenführen.</p>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap">
+          <button type="button" class="btn btn-ghost" onclick="prjAskClose()">Abbrechen</button>
+          <button type="button" id="PRJASKPW" class="btn btn-ghost" onclick="prjAskClose(); prjZip()">Passwort eingeben</button>
+          <button type="button" class="btn btn-primary" onclick="prjAskClose(); prjZip(true)">Ohne Zuordnung fortfahren</button>
+        </div>
+      </div>
+    </div>
+    <script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script><script src="lib/formats.js"></script><script src="lib/officefmt.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
       const PROFILES = PSDetect.PROFILES;
+      let mapSaved = false;
       let store = {},
         cnt = {},
         cvars = [],
         curProf = "standard",
-        whitelist = [];
+        whitelist = [], manualMarks = PSLib.marks.create(), lcIgnored = new Set(), lcLast = null;
       (function boot() {
         const pg = document.getElementById("PG");
         PROFILES.forEach((p) => {
@@ -2015,44 +2109,20 @@
           pg.appendChild(c);
         });
         applyProfile(PROFILES[0]);
-        document.getElementById("FI").addEventListener("change", async function (e) {
-          const files = Array.from(e.target.files);
+        // Gemeinsamer Handler fuer Dateiauswahl (#FI) und Drop (#DZ)
+        async function handleFiles(files) {
           if (!files.length) return;
-          if (files.length === 1) {
-            await loadF(files[0]);
+          if (prjBusy) return toast("Ein Lauf ist noch aktiv", "e");
+          const ok = prjCheckFiles(files);
+          if (!ok.length) return;
+          if (ok.length === 1 && files.length === 1 && !(prj && prj.docs.length)) {
+            hidePrj();
+            await loadF(ok[0]);
             return;
           }
-          const results = [];
-          for (let idx = 0; idx < files.length; idx++) {
-            toast("Datei " + (idx + 1) + "/" + files.length + ": " + files[idx].name, "s");
-            try {
-              await loadF(files[idx]);
-              await anon();
-              results.push({
-                name: files[idx].name.replace(/\.[^.]+$/, "") + "_anonymisiert.txt",
-                content: document.getElementById("AT").value,
-              });
-            } catch (err) {
-              toast("Fehler bei " + files[idx].name + ": " + err.message, "e");
-            }
-          }
-          if (results.length > 1 && typeof JSZip !== "undefined") {
-            const zip = new JSZip();
-            results.forEach(function (r) {
-              zip.file(r.name, r.content);
-            });
-            const blob = await zip.generateAsync({ type: "blob" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "anonymisiert.zip";
-            a.click();
-            setTimeout(function () {
-              URL.revokeObjectURL(url);
-            }, 5e3);
-            toast(results.length + " Dateien als ZIP exportiert", "s");
-          }
-        });
+          await prjAddFiles(ok, files.length > 1);
+        }
+        document.getElementById("FI").addEventListener("change", (e) => handleFiles(Array.from(e.target.files)));
         const dz = document.getElementById("DZ");
         dz.addEventListener("dragover", (e) => {
           e.preventDefault();
@@ -2062,7 +2132,7 @@
         dz.addEventListener("drop", async (e) => {
           e.preventDefault();
           dz.classList.remove("drag");
-          if (e.dataTransfer.files[0]) await loadF(e.dataTransfer.files[0]);
+          await handleFiles(Array.from(e.dataTransfer.files));
         });
         document.getElementById("FC").onclick = () => {
           document.getElementById("FT").classList.remove("on");
@@ -2205,8 +2275,364 @@
           l.appendChild(d);
         });
       }
+      // Projektliste: mehrere Dokumente mit gemeinsamen Platzhaltern (PSLib.project)
+      const PRJ_EXT = ["txt", "pdf", "docx", "csv", "md", "json", "rtf", "xlsx", "ods", "odt", "odp", "pptx", "eml", "html", "htm", "doc", "xls", "ppt"];
+      const PRJ_ICON = {
+        wartet: '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 4.8V8l2.2 1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+        laeuft: '<path d="M8 2a6 6 0 1 0 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+        fertig: '<path d="M3 8.5l3.2 3.2L13 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+        fehler: '<path d="M8 2l6.5 11.5h-13z M8 6.5v3 M8 11.6v.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+      };
+      let prj = null, prjBusy = false, prjAc = null, prjSel = null, prjAborted = false, prjZipBusy = false, prjStart = null, prjDur = 0;
+      const prjRes = new Map(), prjSize = new Map();
+      function prjCheckFiles(files) {
+        const multi = files.length > 1, ok = [], msgs = [], bad = [];
+        let oldDoc = false;
+        for (const [fi, f] of files.entries()) {
+          const e = f.name.includes(".") ? f.name.split(".").pop().toLowerCase() : "";
+          const pre = multi ? "Datei " + (fi + 1) + ": " : "";
+          if (e === "doc" && multi) oldDoc = true; // einzeln erklaert loadF das alte Format
+          else if (!PRJ_EXT.includes(e)) { if (!bad.includes(e)) bad.push(e); }
+          else if (f.size === 0) msgs.push(pre + "Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.");
+          else if (f.size > 30 * 1024 * 1024) msgs.push(pre + "Datei zu groß (max 30 MB)");
+          else ok.push(f);
+        }
+        if (bad.length) msgs.unshift("Dateityp nicht unterstützt: " + bad.map((e) => (e ? "." + e : "(ohne Endung)")).join(", "));
+        if (oldDoc) msgs.unshift("Dateien im alten .doc-Format werden nicht unterstützt. Bitte in Word als .docx speichern.");
+        if (msgs.length) toast(msgs.join(" "), "e");
+        return ok;
+      }
+      async function prjAddFiles(list) {
+        if (!prj) prj = PSLib.project.create();
+        const msgs = [];
+        prjBusy = true;
+        document.getElementById("PRJPANEL").style.display = "block";
+        prjRender();
+        try {
+          for (const [li, f] of list.entries()) {
+            const pre = "Datei " + (li + 1) + ": ";
+            let text;
+            try { text = await readTextOf(f); } catch (err) { msgs.push(pre + (err && err.fixed ? err.message : "konnte nicht gelesen werden")); continue; }
+            if (!text.trim()) { msgs.push(pre + "kein Text gefunden"); continue; }
+            try {
+              prjSize.set(PSLib.project.add(prj, { name: f.name, text: text }), f.size);
+            } catch (err) {
+              msgs.push(err && err.code === "LIMIT" ? "Grenze erreicht: höchstens " + prj.limits.docs + " Dokumente und " + Math.round(prj.limits.totalChars / 1048576) + " MB Text je Projekt." : pre + "nicht aufgenommen");
+              if (err && err.code === "LIMIT") break;
+            }
+            prjRender();
+          }
+        } finally { prjBusy = false; }
+        if (!prj.docs.length) hidePrj(); else prjRender();
+        if (msgs.length) toast(msgs.join(" "), "e");
+      }
+      function hidePrj() {
+        prj = null; prjSel = null;
+        prjRes.clear(); prjSize.clear();
+        document.getElementById("PRJPANEL").style.display = "none";
+      }
+      function prjRender() {
+        if (!prj) return;
+        const list = document.getElementById("PRJLIST");
+        const act = document.activeElement;
+        const keep = act && list.contains(act) ? { c: act.classList.contains("prj-del") ? "prj-del" : "prj-item", id: act.dataset.id } : null;
+        const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+        const items = PSLib.project.index(prj);
+        list.textContent = "";
+        let done = 0;
+        for (const it of items) {
+          if (it.status === "fertig" || it.status === "fehler") done++;
+          const res = prjRes.get(it.id);
+          const leak = it.status === "fertig" && res ? res.leak : 0;
+          const cls = it.status === "fertig" && leak !== 0 ? (leak === null ? "fehler" : "rest") : it.status;
+          const lbl = { wartet: "wartet", laeuft: "läuft", fertig: "fertig", fehler: "Fehler" }[it.status] + (it.status !== "fertig" || leak === 0 ? "" : leak === null ? ", Gegenprüfung nicht möglich" : leak === 1 ? ", 1 möglicher Rest" : ", " + leak + " mögliche Reste");
+          const row = mk("div", "prj-row");
+          row.setAttribute("role", "listitem");
+          const b = mk("button", "prj-item" + (it.id === prjSel ? " sel" : ""));
+          b.type = "button";
+          b.dataset.id = it.id;
+          if (it.id === prjSel) b.setAttribute("aria-current", "true");
+          b.onclick = () => prjShow(it.id);
+          const st = mk("span", "prj-st " + cls);
+          st.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">' + PRJ_ICON[cls === "rest" ? "fehler" : cls] + "</svg>";
+          st.appendChild(mk("span", "", lbl));
+          const meta = mk("span", "prj-meta");
+          meta.append(mk("span", "", fmtSz(prjSize.get(it.id) || 0)), st);
+          const nm = mk("span", "prj-name", it.name);
+          nm.title = it.name;
+          b.append(mk("span", "prj-num", String(it.index)), nm, meta);
+          const del = mk("button", "prj-del");
+          del.type = "button";
+          del.dataset.id = it.id;
+          del.disabled = prjBusy;
+          del.setAttribute("aria-label", "Dokument " + it.index + " entfernen");
+          del.title = "Entfernen";
+          del.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>';
+          del.onclick = () => prjDel(it.id);
+          row.append(b, del);
+          list.appendChild(row);
+        }
+        if (keep) { const n = list.querySelector("." + keep.c + '[data-id="' + keep.id + '"]'); if (n) n.focus(); }
+        const total = items.length, pg = document.getElementById("PRJPROG");
+        document.getElementById("PRJCOUNT").textContent = total + (total === 1 ? " Dokument" : " Dokumente");
+        pg.setAttribute("aria-valuemax", total);
+        pg.setAttribute("aria-valuenow", done);
+        document.getElementById("PRJPROGT").textContent = done + " von " + total;
+        document.getElementById("PRJFILL").style.width = (total ? (done / total) * 100 : 0) + "%";
+        let sum = "";
+        if (prjBusy) sum = "Läuft ...";
+        else if (total && done === total) {
+          const rest = items.filter((x) => { const r = prjRes.get(x.id); return x.status === "fertig" && r && r.leak !== 0; }).length;
+          const err = items.filter((x) => x.status === "fehler").length;
+          sum = total + (total === 1 ? " Dokument" : " Dokumente") + ", " + rest + " mit möglichen Resten" + (err ? ", " + err + " mit Fehler" : "");
+        } else if (done) sum = done + " von " + total + " Dokumenten fertig" + (prjAborted ? ", abgebrochen" : "");
+        document.getElementById("PRJSUM").textContent = sum;
+        document.getElementById("PRJRUN").disabled = prjBusy || !total;
+        document.getElementById("PRJCANCEL").disabled = !prjBusy || !prjAc;
+        document.getElementById("PRJZIP").disabled = prjBusy || prjZipBusy || !items.some((x) => x.status === "fertig" && prjRes.has(x.id));
+      }
+      function prjDel(id) {
+        if (prjBusy || prjZipBusy || !prj) return;
+        const i = prj.docs.findIndex((d) => d.id === id);
+        PSLib.project.remove(prj, id);
+        prjRes.delete(id); prjSize.delete(id);
+        if (prjSel === id) prjSel = null;
+        if (!prj.docs.length) { hidePrj(); return; }
+        prjRender();
+        const nx = prj.docs[Math.min(i, prj.docs.length - 1)];
+        const n = document.querySelector('#PRJLIST .prj-item[data-id="' + nx.id + '"]');
+        if (n) n.focus();
+      }
+      function prjShow(id) {
+        const d = prj && prj.docs.find((x) => x.id === id);
+        if (!d) return;
+        prjSel = id;
+        const res = prjRes.get(id);
+        document.getElementById("IT").value = d.text;
+        document.getElementById("AT").value = res ? res.text : "";
+        updIC();
+        scheduleHighlight();
+        document.getElementById("resultArea").style.display = res ? "flex" : "none";
+        if (res) {
+          document.getElementById("REANON").style.display = "none";
+          runLeakCheck();
+          updTokenCount();
+        }
+        setStep(res ? 2 : 1);
+        prjRender();
+      }
+      function prjCancel() { if (prjAc) prjAc.abort(); }
+      async function prjRun() {
+        if (prjBusy || !prj || !prj.docs.length) return;
+        if (anonBusy) return toast("Analyse läuft bereits...", "s");
+        prjBusy = anonBusy = true;
+        mapSaved = false;
+        prjAborted = false;
+        prjAc = new AbortController();
+        prjRes.clear();
+        prjStart = new Date(); prjDur = 0;
+        const btn = document.getElementById("ANONBTN");
+        if (btn) btn.disabled = true;
+        const order = prj.docs.slice();
+        let k = 0;
+        prjRender();
+        try {
+          await ensureAIReady();
+          const out = await PSLib.project.run(prj, {
+            signal: prjAc.signal,
+            profile: curProf,
+            onProgress: () => prjRender(),
+            anonymize: async (text, o) => {
+              const d = order[k++];
+              prjRender();
+              const det = PSDetect.normalizeForDetection(text);
+              if (nerPipeline && aiCache.key !== det) await ensureAISpans(det);
+              const r = PSDetect.anonymize(text, {
+                ents: activeEntIds(),
+                cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+                whitelist: whitelist,
+                wordlists: localAIMode,
+                aiSpans: aiCache.key === det ? aiCache.spans : null,
+                state: o.state,
+              });
+              let leak = null;
+              try { const lr = leakScan(r.text); leak = lr.error ? null : lr.count; } catch (e) {}
+              prjRes.set(d.id, { text: r.text, leak: leak });
+              return r;
+            },
+          });
+          prjAborted = out.aborted;
+          prjDur = Date.now() - prjStart.getTime();
+          if (out.state) { store = out.state.store; cnt = out.state.cnt; renderMap(); }
+        } catch (err) {
+          toast("Fehler: " + err.message, "e");
+        } finally {
+          prj.docs.forEach((d) => { if (d.status === "laeuft") d.status = "wartet"; });
+          prjBusy = anonBusy = false;
+          prjAc = null;
+          if (btn) btn.disabled = false;
+          scheduleAIIdleUnload();
+          const pe = document.getElementById("aiRunProgress");
+          if (pe) pe.textContent = "";
+          prjRender();
+          if (prjSel !== null && prjRes.has(prjSel)) prjShow(prjSel);
+        }
+      }
+      // Zuordnung nur für Platzhalter, die in den aktuellen fertigen Ergebnissen vorkommen (D32); store und cnt bleiben unverändert
+      function prjScope() {
+        const keys = new Set(), out = {}, oc = {};
+        for (const d of prj.docs) {
+          const r = prjRes.get(d.id);
+          if (r && d.status === "fertig") (r.text.match(/\{\{[^{}]+\}\}/g) || []).forEach((k) => keys.add(k));
+        }
+        keys.forEach((k) => { if (Object.hasOwn(store, k)) out[k] = store[k]; });
+        const types = new Set(Object.values(out).map((d) => d.t));
+        Object.keys(cnt).forEach((t) => { if (types.has(t)) oc[t] = cnt[t]; });
+        return { store: out, cnt: oc };
+      }
+      async function shaHex(s) {
+        const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+        return Array.from(new Uint8Array(h), (b) => b.toString(16).padStart(2, "0")).join("");
+      }
+      // Zähler je Dokument aus den Platzhaltern des Ergebnistextes (PSDetect liefert keine Zähler)
+      function prjCounts(text) {
+        const c = {};
+        for (const k of text.match(/\{\{[^{}]+\}\}/g) || []) {
+          let t = Object.hasOwn(store, k) && store[k].t ? String(store[k].t).toUpperCase().replace(/[^A-Z0-9_]/g, "_").slice(0, 20) : "";
+          if (!/^[A-Z][A-Z0-9_]{1,19}$/.test(t)) t = "SONSTIGE";
+          c[t] = (c[t] || 0) + 1;
+        }
+        return c;
+      }
+      function prjAskClose() {
+        document.getElementById("PRJASK").style.display = "none";
+        const z = document.getElementById("PRJZIP");
+        if (z && !z.disabled) z.focus();
+      }
+      document.addEventListener("keydown", function (e) {
+        const d = document.getElementById("PRJASK");
+        if (!d || d.style.display === "none") return;
+        if (e.key === "Escape") { e.preventDefault(); prjAskClose(); }
+        else if (e.key === "Tab") {
+          const f = [...d.querySelectorAll("button")];
+          const i = f.indexOf(document.activeElement);
+          if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+          else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+        }
+      });
+      function prjAsk() {
+        document.getElementById("PRJASK").style.display = "flex";
+        document.getElementById("PRJASKPW").focus();
+      }
+      async function prjZip(noMap) {
+        if (prjBusy || prjZipBusy || !prj) return;
+        const items = PSLib.project.index(prj).filter((x) => x.status === "fertig" && prjRes.has(x.id));
+        if (!items.length) return toast("Kein fertiges Dokument zum Speichern", "e");
+        const withMap = noMap !== true && document.getElementById("PRJMAP").checked;
+        const keep = document.getElementById("PRJKEEP").checked;
+        prjZipBusy = true;
+        prjRender();
+        try {
+          let mapBytes = null;
+          if (withMap) {
+            const docs = [];
+            for (const it of items) {
+              const d = prj.docs.find((x) => x.id === it.id);
+              docs.push({ index: it.index, name: d.name, chars: d.text.length, sha256: await shaHex(d.text) });
+            }
+            mapBytes = await new Promise((res) => psPwZip(docs, res));
+            if (!mapBytes) { prjAsk(); return; }
+          }
+          const names = new Map(prj.docs.map((d) => [d.id, d.name]));
+          const plan = PSLib.project.zipPlan(items.map((x) => ({ id: x.id, index: x.index, status: "fertig" })), {
+            report: true, map: !!mapBytes,
+            nameFor: (r) => PSLib.hygiene.safeName(names.get(r.id), r.index, { keepName: keep }),
+          });
+          const documents = [];
+          for (const it of items) {
+            const t = prjRes.get(it.id).text;
+            const lr = leakScan(t);
+            if (lr.error) return toast("Gegenprüfung nicht möglich, ZIP nicht erstellt", "e");
+            const sev = (k) => lr.findings.filter((f) => f.severity === k).length;
+            documents.push({ index: it.index, chars: t.length, counts: prjCounts(t), resultSha256: await shaHex(t), leak: { count: lr.findings.length, hoch: sev("hoch"), mittel: sev("mittel") } });
+          }
+          const rep = PSLib.report.build({
+            appVersion: APP_VERSION, startedAt: (prjStart || new Date()).toISOString(), localTime: new Date().toLocaleString("de-DE"),
+            durationMs: prjDur, profileId: curProf, aiMode: localAIMode ? "auto" : "off",
+            modelId: nerPipeline ? AI_MODEL_ID : undefined,
+            whitelistSize: whitelist.length, customRuleCount: cvars.length, documents: documents,
+          });
+          const z = new JSZip();
+          for (const e of plan) {
+            if (e.kind === "result") z.file(e.path, prjRes.get(e.id).text);
+            else if (e.kind === "report-text") z.file(e.path, PSLib.report.toText(rep));
+            else if (e.kind === "report-json") z.file(e.path, PSLib.report.toJson(rep));
+            else if (e.kind === "map") z.file(e.path, mapBytes);
+          }
+          const out = await z.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+          dl("anonymisiert.zip", out, "application/zip");
+          // mapSaved nur, wenn die Datei den ganzen store enthält
+          if (mapBytes && Object.keys(prjScope().store).length === Object.keys(store).length) mapSaved = true;
+          toast(items.length + (items.length === 1 ? " Dokument" : " Dokumente") + " als ZIP gespeichert", "s");
+        } catch (err) {
+          toast("ZIP konnte nicht erstellt werden", "e");
+        } finally {
+          prjZipBusy = false;
+          prjRender();
+        }
+      }
+      // Liest nur das Zentralverzeichnis (ohne Entpacken) in die Form, die PSLib.formats.guard erwartet
+      function zipDirOf(b) {
+        const v = new DataView(b.buffer, b.byteOffset, b.byteLength), files = {};
+        let e = b.length - 22;
+        while (e >= 0 && e > b.length - 65558 && v.getUint32(e, true) !== 0x06054b50) e--;
+        if (e < 0 || v.getUint32(e, true) !== 0x06054b50) return { files };
+        let n = v.getUint16(e + 10, true), p = v.getUint32(e + 16, true);
+        for (let i = 0; i < n && p + 46 <= b.length && v.getUint32(p, true) === 0x02014b50; i++) {
+          files["e" + i] = { _data: { compressedSize: v.getUint32(p + 20, true), uncompressedSize: v.getUint32(p + 24, true) } };
+          p += 46 + v.getUint16(p + 28, true) + v.getUint16(p + 30, true) + v.getUint16(p + 32, true);
+        }
+        return { files };
+      }
+      // Format erkennen und passend auslesen (Fehler mit fester Meldung, nie Rohtext)
+      async function readTextOf(file) {
+        const F = PSLib.formats, O = PSLib.officefmt;
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const kind = F.detect(file.name, bytes.slice(0, 512));
+        const fix = (m) => Object.assign(new Error(m), { fixed: true });
+        if (kind === "doc" || kind === "xls" || kind === "ppt")
+          throw fix("Dateien im alten ." + kind + "-Format werden nicht unterstützt. Bitte in Word/Excel/PowerPoint als .docx/.xlsx/.pptx speichern.");
+        if (kind === "unknown") throw fix("Dateityp nicht erkannt oder Datei beschädigt.");
+        try {
+          if (kind === "pdf") return await exPDF(file);
+          if (["docx", "xlsx", "pptx", "odt", "ods", "odp"].includes(kind)) {
+            F.guard(zipDirOf(bytes)); // vor dem Entpacken: gefaelschte Groessen im Zentralverzeichnis abfangen
+            const zip = await JSZip.loadAsync(bytes);
+            F.guard(zip);
+            if (kind === "docx") {
+              const base = await exDOCX(file);
+              const extra = await O.extractDocxExtras(zip);
+              return extra.text ? base + "\n\n" + extra.text : base;
+            }
+            if (kind === "xlsx") return (await O.extractXlsx(zip)).text;
+            if (kind === "pptx") return (await O.extractPptx(zip)).text;
+            return (await O.extractOdf(zip)).text;
+          }
+          if (kind === "eml") return F.extractEml(bytes).text;
+          const txt = F.decodeText(bytes).text;
+          if (kind === "html") return F.extractHtml(txt).text;
+          if (kind === "rtf") return F.extractRtf(txt).text;
+          return txt;
+        } catch (err) {
+          if (err && err.fixed) throw err;
+          if (err instanceof F.PSFormatError) {
+            const m = { TOO_BIG: "Archiv zu groß", TOO_MANY: "Archiv hat zu viele Einträge", RATIO: "Archiv ist verdächtig stark komprimiert" };
+            throw fix(m[err.code] || "Dateityp nicht erkannt oder Datei beschädigt.");
+          }
+          throw fix("Dateityp nicht erkannt oder Datei beschädigt."); // nie err.message roh
+        }
+      }
       async function loadF(file) {
-        const ext = file.name.split(".").pop().toLowerCase();
         if (file.size === 0) {
           toast("Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.", "e");
           return;
@@ -2220,10 +2646,7 @@
         document.getElementById("FT").classList.add("on");
         setP(10);
         try {
-          let txt = "";
-          if (ext === "pdf") txt = await exPDF(file);
-          else if (ext === "docx" || ext === "doc") txt = await exDOCX(file);
-          else txt = await file.text();
+          const txt = await readTextOf(file);
           setP(100);
           document.getElementById("IT").value = txt;
           updIC();
@@ -2689,23 +3112,77 @@
       function collectEntities(text) {
         return PSDetect.detect(text, {
           ents: activeEntIds(),
-          cvars: cvars,
+          cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
           whitelist: whitelist,
           wordlists: localAIMode,
           aiSpans: aiCache.key === text ? aiCache.spans : null,
         });
       }
-      let anonBusy = false;
+      // Gegenpruefung: Erkennung ein zweites Mal ueber das Ergebnis (alle Typen, ohne Freigaben)
+      function leakScan(at) {
+        const mk = PSLib.marks.toCvars(manualMarks);
+        return PSLib.leakcheck.scan(at, { detect: (t) => PSDetect.detect(t, { ents: ENTS.map((e) => e.id), cvars: cvars.concat(mk), whitelist: [], wordlists: localAIMode, aiSpans: null }), whitelist: whitelist });
+      }
+      function runLeakCheck() { const at = document.getElementById("AT").value;
+        const r = leakScan(at);
+        r.findings = r.findings.filter((f) => !lcIgnored.has(f.type + "\u0000" + at.slice(f.start, f.end))); r.count = r.findings.length; r.clean = r.count === 0 && !r.error; lcLast = { at: at, res: r }; renderLeakCheck(); return r;
+      }
+      function renderLeakCheck() {
+        const band = document.getElementById("LCBAND"), list = document.getElementById("LCLIST"), r = lcLast.res, ok = r.clean;
+        const msg = r.error ? "nicht möglich" : ok ? "keine Auffälligkeiten" : r.count === 1 ? "1 möglicher Rest" : r.count + " mögliche Reste"; const ic = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="' + (ok ? "M3 8.5l3.2 3.2L13 4.5" : "M8 2l6.5 11.5h-13z M8 6.5v3 M8 11.6v.1") + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        band.style.cssText += ";display:flex;cursor:" + (r.count ? "pointer" : "default") + ";background:" + (ok ? "#ecfdf5;color:#047857" : "#fffbeb;color:#92400e");
+        band.innerHTML = ic + "<span>Gegenprüfung: " + msg + "</span>"; if (!r.count) list.style.display = "none";
+        band.setAttribute("aria-expanded", list.style.display === "none" ? "false" : "true"); const bt = (fn, i, t) => '<button type="button" class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="' + fn + "(" + i + ')">' + t + "</button>";
+        list.innerHTML = r.findings.map((f, i) => '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12px"><span class="pill" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d">' + esc(f.type) + '</span><code style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#444">' + esc(f.snippet) + "</code>" + bt("lcMask", i, "Maskieren") + bt("lcIgnore", i, "Ignorieren") + "</div>").join("");
+      }
+      function toggleLCList() { const list = document.getElementById("LCLIST"); if (!lcLast || !lcLast.res.count) return; list.style.display = list.style.display === "none" ? "block" : "none"; document.getElementById("LCBAND").setAttribute("aria-expanded", list.style.display === "none" ? "false" : "true"); }
+      async function lcMask(i) { const f = lcLast.res.findings[i], v = lcLast.at.slice(f.start, f.end); if (!PSLib.marks.add(manualMarks, { value: v, pfx: f.type })) return toast("Dieser Wert kann nicht markiert werden", "e"); await reanon(); }
+      function lcIgnore(i) { const f = lcLast.res.findings[i]; lcIgnored.add(f.type + "\u0000" + lcLast.at.slice(f.start, f.end)); runLeakCheck(); }
+      let anonBusy = false, repStart = null, repDur = 0;
+      const APP_VERSION = "1.8.0"; // muss mit package.json uebereinstimmen
+      // Bericht ohne personenbezogene Werte: nur Zaehler, Einstellungen und Pruefsumme
+      async function saveReport() {
+        const t = document.getElementById("AT").value;
+        if (!t || !repStart) return toast("Kein Text vorhanden", "e");
+        try {
+          const counts = {};
+          Object.values(store).forEach((d) => { counts[d.t] = (counts[d.t] || 0) + 1; });
+          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+          const sha = Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+          if (!lcLast || lcLast.at !== t || lcLast.res.error) runLeakCheck();
+          const lr = lcLast && lcLast.at === t && lcLast.res && !lcLast.res.error ? lcLast.res : null;
+          if (!lr) return toast("Gegenprüfung nicht möglich, Bericht nicht erstellt", "e");
+          const sev = (k) => (lr.findings.filter((f) => f.severity === k).length);
+          const rep = PSLib.report.build({
+            appVersion: APP_VERSION, startedAt: repStart.toISOString(), localTime: new Date().toLocaleString("de-DE"),
+            durationMs: repDur, profileId: curProf, aiMode: localAIMode ? "auto" : "off",
+            modelId: nerPipeline ? AI_MODEL_ID : undefined,
+            whitelistSize: whitelist.length, customRuleCount: cvars.length,
+            documents: [{ index: 1, chars: t.length, counts: counts, resultSha256: sha, leak: { count: lr.count, hoch: sev("hoch"), mittel: sev("mittel") } }],
+          });
+          dl("bericht.txt", PSLib.report.toText(rep), "text/plain");
+          toast("Bericht gespeichert", "s");
+        } catch (err) {
+          toast("Bericht nicht möglich: " + err.message, "e");
+        }
+      }
       async function anon() {
         if (anonBusy) {
           toast("Analyse läuft bereits...", "s");
           return;
         }
         anonBusy = true;
+        mapSaved = false;
+        repStart = new Date(); repDur = 0;
+        lcIgnored = new Set();
         const btn = document.getElementById("ANONBTN");
         if (btn) btn.disabled = true;
         try {
           await anonCore();
+          if (repStart) repDur = Date.now() - repStart.getTime();
+        } catch (e) {
+          repStart = null;
+          throw e;
         } finally {
           anonBusy = false;
           scheduleAIIdleUnload();
@@ -2717,6 +3194,7 @@
       async function anonCore() {
         const input = document.getElementById("IT").value;
         if (!input.trim()) {
+          repStart = null;
           toast("Bitte Text eingeben", "e");
           return;
         }
@@ -2731,23 +3209,25 @@
           }
           const r = PSDetect.anonymize(input, {
             ents: activeEntIds(),
-            cvars: cvars,
+            cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
             whitelist: whitelist,
             wordlists: localAIMode,
             aiSpans: aiCache.key === det ? aiCache.spans : null,
             state: { store, cnt },
           });
-          store = r.state.store;
-          cnt = r.state.cnt;
+          store = r.state.store; cnt = r.state.cnt;
           const txt = r.text;
           document.getElementById("AT").value = txt;
           renderMap();
+          if (document.getElementById("WS").style.display === "none") { document.getElementById("OB").style.display = "none"; document.getElementById("WS").style.display = "block"; }
           setStep(2);
           document.getElementById("resultArea").style.display = "flex";
           document.getElementById("REANON").style.display = "inline-flex";
           updTokenCount();
           toast(Object.keys(store).length + " Entitäten anonymisiert", "s");
+          runLeakCheck();
         } catch (err) {
+          repStart = null;
           toast("Fehler: " + err.message, "e");
         }
       }
@@ -2778,9 +3258,9 @@
                   '</td><td class="value-cell">' +
                   esc(d.v) +
                   '</td><td><span class="pill" style="background:' +
-                  d.c +
+                  esc(String(d.c)) +
                   "18;color:" +
-                  d.c +
+                  esc(String(d.c)) +
                   ";border:1px solid " +
                   d.c +
                   '44">' +
@@ -2795,6 +3275,166 @@
       function esc(s) {
         return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       }
+      // Verschlüsselte Zuordnung (.psmap)
+      function psMapUnsaved() {
+        return Object.keys(store).length > 0 && !mapSaved;
+      }
+      let psPwMode = null, psPwBytes = null, psPwBusy = false, psPwOpener = null, psPwTok = 0, psPwZipCb = null, psPwDocs = null;
+      // Passwortdialog für die Zuordnung im Projekt-ZIP: cb(bytes) bei Erfolg, cb(null) bei Abbruch
+      function psPwZip(docs, cb) { psPwZipCb = cb; psPwDocs = docs; psPwOpen("zip"); }
+      // Eintraege bereinigen: nur {{...}}-Schluessel, Farbe als #rrggbb, Texte begrenzt
+      function psSanitize(st) {
+        if (!st || typeof st !== "object" || Array.isArray(st) || (st.v !== undefined && st.v !== 1) || !st.store || typeof st.store !== "object" || Array.isArray(st.store)) throw { code: "CORRUPT" };
+        const ns = Object.create(null), nc = {};
+        const keys = Object.keys(st.store);
+        if (keys.length > 200000) throw { code: "CORRUPT" };
+        for (const k of keys) {
+          const e = st.store[k];
+          if (!/^\{\{[^{}]{1,100}\}\}$/.test(k) || /^\{\{(__proto__|constructor|prototype)\}\}$/i.test(k)) throw { code: "CORRUPT" };
+          if (!e || typeof e !== "object" || typeof e.v !== "string" || typeof e.t !== "string" || typeof e.m !== "string") throw { code: "CORRUPT" };
+          if (e.v.length > 1000000 || e.t.length > 50 || e.m.length > 100) throw { code: "CORRUPT" };
+          ns[k] = { v: e.v, t: e.t, c: typeof e.c === "string" && /^#[0-9a-f]{6}$/i.test(e.c) ? e.c : "#8b5cf6", m: e.m };
+        }
+        const c = st.cnt;
+        if (c !== undefined && (!c || typeof c !== "object" || Array.isArray(c))) throw { code: "CORRUPT" };
+        for (const k of Object.keys(c || {})) {
+          if (k === "__proto__" || !Number.isFinite(c[k]) || c[k] < 0) throw { code: "CORRUPT" };
+          nc[k] = c[k];
+        }
+        return { store: Object.assign({}, ns), cnt: nc };
+      }
+      function psPwOpen(mode) {
+        psPwMode = mode;
+        const save = mode === "save" || mode === "zip";
+        document.getElementById("PWTITLE").textContent = save ? "Zuordnung mit Passwort schützen" : "Zuordnung entschlüsseln";
+        document.getElementById("PWINFO").style.display = save ? "" : "none";
+        document.getElementById("PWD1").autocomplete = save ? "new-password" : "current-password";
+        document.getElementById("PWROW2").style.display = save ? "" : "none";
+        ["PWD1", "PWD2"].forEach((id) => (document.getElementById(id).value = ""));
+        document.getElementById("PWERR").textContent = "";
+        psPwStrength();
+        psPwOpener = document.activeElement;
+        document.getElementById("PWDLG").style.display = "flex";
+        document.getElementById("PWD1").focus();
+      }
+      function psPwClose() {
+        if (psPwZipCb) { const cb = psPwZipCb; psPwZipCb = null; psPwDocs = null; cb(null); }
+        ["PWD1", "PWD2"].forEach((id) => (document.getElementById(id).value = ""));
+        document.getElementById("PWDLG").style.display = "none";
+        psPwTok++;
+        psPwBusy = false;
+        document.getElementById("PWOK").disabled = false;
+        psPwMode = null;
+        psPwBytes = null;
+        if (psPwOpener && psPwOpener.focus) psPwOpener.focus();
+      }
+      function psPwStrength() {
+        const n = [...document.getElementById("PWD1").value.normalize("NFC")].length;
+        document.getElementById("PWSTR").textContent =
+          psPwMode !== "save" && psPwMode !== "zip" ? "" : n === 0 ? "Mindestens 10 Zeichen." : n < 10 ? "Zu kurz: " + n + " von mindestens 10 Zeichen." : n < 16 ? "Länge ausreichend (" + n + " Zeichen)." : "Länge gut (" + n + " Zeichen).";
+      }
+      document.addEventListener("keydown", function (e) {
+        const d = document.getElementById("PWDLG");
+        if (!d || d.style.display === "none") return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          psPwClose();
+        } else if (e.key === "Tab") {
+          const f = [...d.querySelectorAll("input,button")].filter((x) => x.offsetParent !== null);
+          const i = f.indexOf(document.activeElement);
+          if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+          else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+        }
+      });
+      function psMapSave() {
+        if (!Object.keys(store).length) {
+          toast("Kein Mapping vorhanden", "e");
+          return;
+        }
+        psPwOpen("save");
+      }
+      function psMapLoad(file) {
+        const r = new FileReader();
+        r.onerror = function () {
+          toast("Die Datei konnte nicht gelesen werden.", "e");
+        };
+        r.onload = function () {
+          psPwOpen("load");
+          psPwBytes = new Uint8Array(r.result);
+        };
+        r.readAsArrayBuffer(file);
+      }
+      function psPwMsg(err) {
+        const c = err && err.code;
+        if (c === "WEAK_PASSWORD") return "Das Passwort muss mindestens 10 Zeichen lang sein.";
+        if (c === "WRONG_PASSWORD") return "Passwort falsch oder Datei beschädigt.";
+        if (c === "NOT_PSMAP") return "Das ist keine PrivacyShield-Zuordnung.";
+        if (c === "UNSUPPORTED_VERSION") return "Diese Zuordnung stammt aus einer neueren Programmversion.";
+        if (c === "CORRUPT") return "Die Datei ist beschädigt.";
+        return "Vorgang fehlgeschlagen.";
+      }
+      async function psPwOk() {
+        if (psPwBusy || !psPwMode) return;
+        const err = document.getElementById("PWERR");
+        const pw = document.getElementById("PWD1").value;
+        err.textContent = "";
+        psPwBusy = true;
+        const tok = psPwTok;
+        const okb = document.getElementById("PWOK");
+        okb.disabled = true;
+        try {
+          if (psPwMode === "save" || psPwMode === "zip") {
+            const zipMode = psPwMode === "zip";
+            if (pw !== document.getElementById("PWD2").value) {
+              err.textContent = "Die beiden Passwörter stimmen nicht überein.";
+              return;
+            }
+            const fn = (document.getElementById("FN") || {}).textContent || "";
+            const it = document.getElementById("IT").value;
+            const docs = zipMode ? psPwDocs : [];
+            if (!zipMode && (fn.trim() || it)) {
+              const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(it));
+              if (tok !== psPwTok) return;
+              docs.push({ index: 1, name: fn.trim(), chars: it.length, sha256: [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("") });
+            }
+            const bytes = await PSLib.psmap.encrypt({ v: 1, created: new Date().toISOString(), state: zipMode ? prjScope() : { store: store, cnt: cnt }, docs: docs }, pw);
+            if (tok !== psPwTok) return;
+            if (zipMode) { const cb = psPwZipCb; psPwZipCb = null; psPwDocs = null; psPwClose(); cb(bytes); return; }
+            dl("zuordnung.psmap", bytes, "application/octet-stream");
+            mapSaved = true;
+            psPwClose();
+            toast("Zuordnung verschlüsselt gespeichert", "s");
+          } else {
+            const p = await PSLib.psmap.decrypt(psPwBytes, pw);
+            if (tok !== psPwTok) return;
+            if (!p || typeof p !== "object" || p.v !== 1) throw { code: "CORRUPT" };
+            const clean = psSanitize(p.state);
+            const oldS = store, oldC = cnt;
+            try {
+              store = clean.store;
+              cnt = clean.cnt;
+              renderMap();
+            } catch (e2) {
+              store = oldS;
+              cnt = oldC;
+              renderMap();
+              throw { code: "CORRUPT" };
+            }
+            mapSaved = true;
+            psPwClose();
+            toast(Object.keys(store).length + " Einträge geladen", "s");
+          }
+        } catch (e) {
+          err.textContent = psPwMsg(e);
+          if (e && e.code !== "WEAK_PASSWORD") document.getElementById("PWD1").select();
+        } finally {
+          if (tok === psPwTok) {
+            psPwBusy = false;
+            okb.disabled = false;
+          }
+          if (!psPwMode) document.getElementById("PWD1").value = "";
+        }
+      }
       function clrMap() {
         if (!confirm("Mapping löschen? Rückführung danach nicht mehr möglich.")) return;
         store = {};
@@ -2808,10 +3448,12 @@
           toast("Kein Mapping vorhanden", "e");
           return;
         }
+        if (!confirm("Die Datei enthält alle Originalwerte im Klartext. Trotzdem als CSV exportieren?")) return;
         const csv =
           "Variable,Originalwert,Typ,Methode\n" +
           e.map(([t, d]) => '"' + t + '","' + d.v.replace(/"/g, '""') + '","' + d.t + '","' + d.m + '"').join("\n");
         dl("privacyshield_mapping.csv", csv, "text/csv");
+        mapSaved = true;
         toast("Mapping exportiert", "s");
       }
       function cpAnon() {
@@ -2835,6 +3477,10 @@
         a.href = URL.createObjectURL(new Blob([c], { type: type }));
         a.download = name;
         a.click();
+        // URL nach Frist freigeben (Tests: window.__PS_REVOKE_MS)
+        const url = a.href;
+        const REVOKE_MS = typeof window.__PS_REVOKE_MS === "number" ? window.__PS_REVOKE_MS : 10000;
+        setTimeout(() => URL.revokeObjectURL(url), REVOKE_MS);
       }
       function clearAll() {
         if (!confirm("Alles zurücksetzen?")) return;
@@ -3146,12 +3792,7 @@
       }
       function tokenizeAnnotateWord(start, word, pfx, color) {
         if (word.startsWith("{{") && word.endsWith("}}")) return;
-        const token = PSDetect.token({ store, cnt }, word, pfx, color, "Annotieren");
-        const ta = document.getElementById("IT");
-        ta.value = ta.value.substring(0, start) + token + ta.value.substring(start + word.length);
-        buildAnnotateOverlay();
-        renderMap();
-        toast("→ " + token, "s");
+        addManualMark(word, pfx);
       }
       function showAnnotatePopup(start, word) {
         closePopup();
@@ -3187,12 +3828,11 @@
         }
         closePopup();
         if (typeof start !== "number" || !word) return;
-        const token = PSDetect.token({ store, cnt }, word, pfx, color, "Annotieren (manuell)");
-        const ta = document.getElementById("IT");
-        ta.value = ta.value.substring(0, start) + token + ta.value.substring(start + word.length);
-        buildAnnotateOverlay();
-        renderMap();
-        toast("→ " + token, "s");
+        addManualMark(word, pfx);
+      }
+      function addManualMark(word, pfx) {
+        const ok = PSLib.marks.add(manualMarks, { value: word, pfx: pfx }); if (ok) buildAnnotateOverlay();
+        toast(ok ? "Markiert als " + pfx + ": wird beim Anonymisieren ersetzt" : "Dieser Wert kann nicht markiert werden", ok ? "s" : "e");
       }
       function closePopup() {
         const popup = document.getElementById("AMP");
@@ -3239,7 +3879,16 @@
         if (document.getElementById("WS") && document.getElementById("WS").style.display === "none") {
           startApp();
         }
+        if (/\.psmap$/i.test(file.name)) {
+          psMapLoad(file);
+          input.value = "";
+          return;
+        }
+        const wasSaved = !psMapUnsaved();
         const reader = new FileReader();
+        reader.onerror = function () {
+          toast("Die Datei konnte nicht gelesen werden.", "e");
+        };
         reader.onload = function (e) {
           const lines = e.target.result.split(/\r?\n/).filter((l) => l.trim());
           let imported = 0;
@@ -3296,7 +3945,8 @@
           });
           renderMap();
           input.value = "";
-          toast(imported + " Einträge importiert", "s");
+          if (wasSaved && imported > 0) mapSaved = true;
+          toast(imported + " Einträge importiert (unverschlüsselte CSV)", "s");
         };
         reader.readAsText(file, "UTF-8");
       }
@@ -3313,6 +3963,8 @@
         try {
           const jsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
           const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+          // Keine Metadaten aus dem Original uebernehmen
+          doc.setProperties({ title: "Anonymisiertes Dokument", subject: "", author: "", keywords: "", creator: "PrivacyShield" });
           const margin = 20;
           const pageW = doc.internal.pageSize.getWidth();
           const usableW = pageW - margin * 2;
