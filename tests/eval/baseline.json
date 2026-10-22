@@ -29,6 +29,36 @@
     "synthLeaked": 18,
     "synthTotal": 276
   },
+  "fallback": {
+    "cases": {
+      "NAME": 1,
+      "ORG": 2,
+      "ADR": 0,
+      "ORT": 1,
+      "KONTAKT": 0,
+      "FINANZ": 0,
+      "DATUM": 0,
+      "KFZ": 0,
+      "MED": 0,
+      "NEG": 0,
+      "G-NAME": 3,
+      "G-KONTAKT": 0,
+      "G-GERAET": 0,
+      "G-STANDORT": 0,
+      "G-NUMMER": 0,
+      "G-GEBURT": 2,
+      "G-GEHALT": 0,
+      "G-FAMILIE": 0,
+      "G-NATION": 1,
+      "G-ART9": 1,
+      "G-ART10": 0,
+      "G-FORM": 0,
+      "G-AUSLAND": 1,
+      "G-SECRET": 0
+    },
+    "synthLeaked": 11,
+    "synthTotal": 276
+  },
   "ki": {
     "cases": {
       "NAME": 0,
