@@ -1622,6 +1622,9 @@
                     <button class="btn btn-ghost" style="font-size: 11px; padding: 3px 10px" onclick="cpAnon()">
                       Kopieren
                     </button>
+                    <button class="btn btn-ghost" id="btn-report" style="font-size: 11px; padding: 3px 10px" onclick="saveReport()">
+                      Bericht speichern
+                    </button>
                     <button class="btn btn-ghost" style="font-size: 11px; padding: 3px 10px" onclick="showDeanonStep()">
                       KI-Antwort einf&uuml;gen
                     </button>
@@ -1992,7 +1995,7 @@
     <script src="vendor/tesseract/tesseract.min.js"></script>
     <script src="vendor/jspdf/jspdf.umd.min.js"></script>
     <script src="vendor/jszip/jszip.min.js"></script>
-    <script src="lib/placeholder.js"></script><script src="lib/leakcheck.js"></script><script src="lib/marks.js"></script>
+    <script src="lib/placeholder.js"></script><script src="lib/leakcheck.js"></script><script src="lib/marks.js"></script><script src="lib/report.js"></script>
     <script src="lib/detect.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
@@ -2714,18 +2717,50 @@
       function toggleLCList() { const list = document.getElementById("LCLIST"); if (!lcLast || !lcLast.res.count) return; list.style.display = list.style.display === "none" ? "block" : "none"; document.getElementById("LCBAND").setAttribute("aria-expanded", list.style.display === "none" ? "false" : "true"); }
       async function lcMask(i) { const f = lcLast.res.findings[i], v = lcLast.at.slice(f.start, f.end); if (!PSLib.marks.add(manualMarks, { value: v, pfx: f.type })) return toast("Dieser Wert kann nicht markiert werden", "e"); await reanon(); }
       function lcIgnore(i) { const f = lcLast.res.findings[i]; lcIgnored.add(f.type + "\u0000" + lcLast.at.slice(f.start, f.end)); runLeakCheck(); }
-      let anonBusy = false;
+      let anonBusy = false, repStart = null, repDur = 0;
+      const APP_VERSION = "1.8.0"; // muss mit package.json uebereinstimmen
+      // Bericht ohne personenbezogene Werte: nur Zaehler, Einstellungen und Pruefsumme
+      async function saveReport() {
+        const t = document.getElementById("AT").value;
+        if (!t || !repStart) return toast("Kein Text vorhanden", "e");
+        try {
+          const counts = {};
+          Object.values(store).forEach((d) => { counts[d.t] = (counts[d.t] || 0) + 1; });
+          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+          const sha = Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+          if (!lcLast || lcLast.at !== t || lcLast.res.error) runLeakCheck();
+          const lr = lcLast && lcLast.at === t && lcLast.res && !lcLast.res.error ? lcLast.res : null;
+          if (!lr) return toast("Gegenprüfung nicht möglich, Bericht nicht erstellt", "e");
+          const sev = (k) => (lr.findings.filter((f) => f.severity === k).length);
+          const rep = PSLib.report.build({
+            appVersion: APP_VERSION, startedAt: repStart.toISOString(), localTime: new Date().toLocaleString("de-DE"),
+            durationMs: repDur, profileId: curProf, aiMode: localAIMode ? "auto" : "off",
+            modelId: nerPipeline ? AI_MODEL_ID : undefined,
+            whitelistSize: whitelist.length, customRuleCount: cvars.length,
+            documents: [{ index: 1, chars: t.length, counts: counts, resultSha256: sha, leak: { count: lr.count, hoch: sev("hoch"), mittel: sev("mittel") } }],
+          });
+          dl("bericht.txt", PSLib.report.toText(rep), "text/plain");
+          toast("Bericht gespeichert", "s");
+        } catch (err) {
+          toast("Bericht nicht möglich: " + err.message, "e");
+        }
+      }
       async function anon() {
         if (anonBusy) {
           toast("Analyse läuft bereits...", "s");
           return;
         }
         anonBusy = true;
+        repStart = new Date(); repDur = 0;
         lcIgnored = new Set();
         const btn = document.getElementById("ANONBTN");
         if (btn) btn.disabled = true;
         try {
           await anonCore();
+          if (repStart) repDur = Date.now() - repStart.getTime();
+        } catch (e) {
+          repStart = null;
+          throw e;
         } finally {
           anonBusy = false;
           scheduleAIIdleUnload();
@@ -2737,6 +2772,7 @@
       async function anonCore() {
         const input = document.getElementById("IT").value;
         if (!input.trim()) {
+          repStart = null;
           toast("Bitte Text eingeben", "e");
           return;
         }
@@ -2769,6 +2805,7 @@
           toast(Object.keys(store).length + " Entitäten anonymisiert", "s");
           runLeakCheck();
         } catch (err) {
+          repStart = null;
           toast("Fehler: " + err.message, "e");
         }
       }
