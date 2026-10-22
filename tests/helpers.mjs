@@ -24,10 +24,30 @@ export async function launchApp({ offline = false, env = {}, appDir = ROOT, extr
   // Kein Netz: toter Proxy. Betrifft Chromium und electron-updater gleichermassen.
   if (offline) args.push('--proxy-server=http://127.0.0.1:9');
   const app = await _electron.launch({ executablePath: packaged || electronPath, args, env: { ...process.env, PS_BLOCK_EXTERNAL: '1', ...env } });
-  const win = await app.firstWindow();
-  // Playwright haengt sich bei schnellem Start erst nach dem Laden ein und kennt dann den Tool-Iframe nicht
-  // (frames() liefert nur den leeren Hauptframe). Ein Reload macht die Frame-Struktur sichtbar.
-  await win.reload({ waitUntil: 'load' });
+  let win;
+  try {
+    win = await app.firstWindow();
+    // Playwright haengt sich bei schnellem Start erst nach dem Laden ein und kennt dann den Tool-Iframe nicht
+    // (frames() liefert nur den leeren Hauptframe). Ein Reload macht die Frame-Struktur sichtbar.
+    // Mit neueren Electron-Versionen (unter Windows gemessen: etwa jeder dritte Start nach dem ersten in einer Sitzung)
+    // liefert firstWindow() die Seite, bevor sie aktiv angebunden ist; Page.reload meldet dann
+    // "Not attached to an active page". Ein erneuter Versuch kurz danach gelingt. Nur dieser Fehler wird wiederholt.
+    for (let versuch = 1; ; versuch++) {
+      try {
+        await win.reload({ waitUntil: 'load' });
+        break;
+      } catch (e) {
+        if (versuch >= 10 || !/Not attached to an active page/i.test(String(e && e.message))) throw e;
+        console.error(`launchApp: Reload-Versuch ${versuch} fehlgeschlagen (Seite noch nicht aktiv, url=${JSON.stringify(win.url())}); neuer Versuch`);
+        await sleep(300);
+      }
+    }
+  } catch (e) {
+    // Sonst bliebe der Electron-Prozess stehen und der Testlauf haengt bis zum Zeitlimit.
+    await app.close().catch(() => {});
+    if (!userDataDir) fs.rmSync(userData, { recursive: true, force: true });
+    throw e;
+  }
   const errors = [];
   const watch = (page) => {
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
