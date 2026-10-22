@@ -1348,7 +1348,8 @@
           note: "",
         },
       ];
-      let localAIMode = false;
+      // Wortlisten-Erkennung (Namen, Organisationen, Orte) ist der Normalfall ohne KI-Treffer; nur wordlists: false schaltet sie ab (Diagnose, Referenz w0)
+      let wordlistsOn = true;
       const LOCAL_NAMES = new Set([
         "Alexander",
         "Andreas",
@@ -1996,7 +1997,7 @@
               meth: "KI (NER-Modell)",
             });
           }
-        } else if (localAIMode) {
+        } else if (wordlistsOn && activeEnts.size > 0) {
           try {
             const aiMap = {
               PER: { pfx: "NAME", col: "#f59e0b" },
@@ -2297,7 +2298,7 @@
     extraSpans = [];
     activeEnts = new Set();
     aiCache = { key: null, spans: [] };
-    localAIMode = false;
+    wordlistsOn = true;
   }
 
   // Aktive Regeln: opts.ents hat Vorrang; sonst die Regeln des Profils (unbekanntes Profil: standard)
@@ -2312,7 +2313,7 @@
     cvars = Array.isArray(o.cvars) ? o.cvars : [];
     whitelist = Array.isArray(o.whitelist) ? o.whitelist : [];
     activeEnts = new Set(activeIds(o));
-    localAIMode = !!o.wordlists;
+    wordlistsOn = o.wordlists !== false;
     extraSpans = (Array.isArray(o.extraSpans) ? o.extraSpans : [])
       .filter((x) => x && Number.isInteger(x.start) && Number.isInteger(x.end) && x.start >= 0 && x.end > x.start && x.end <= det.length)
       .map((x) => ({

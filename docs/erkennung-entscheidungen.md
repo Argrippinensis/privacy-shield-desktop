@@ -201,6 +201,20 @@ Je Fall-Id ein Absatz: Fall-Id, Entscheidung, Grund. Messwerte vorher/nachher st
 
 Baseline `baseline-v2.json`: nur in Kategorien neu gesetzt, in denen Faelle geaendert oder ergaenzt wurden (V2-STANDORT 5 neue Faelle, V2-NUMMER v2a47, V2-AUSLAND v2a96, V2-ART9 v2a69, V2-ART10 v2a78, NEG fuenf umgeschriebene Faelle); alle anderen Zahlen unveraendert.
 
+### Gruppe B: Wortlisten immer aktiv (Backlog 0, Befund P0)
+
+**Entscheidung E-WL: Wortlisten sind der Normalfall ohne KI-Treffer.** Vorher setzte die App `localAIMode` erst nach einem Modellstart oder -fehler auf true; wer die KI ausgeschaltet hatte (`ps_ai_mode = off`) oder bei wenig Arbeitsspeicher kein Autostart hatte, bekam nur die Regeln (W0), obwohl das KI-Panel "Es gilt die Standard-Erkennung (Regeln und Wortlisten)" verspricht. Jetzt: `PSDetect.detect/anonymize` behandeln `wordlists` als eingeschaltet, solange es nicht ausdruecklich `false` ist (`wordlistsOn = o.wordlists !== false`); in der Oberflaeche beginnt `localAIMode` mit `true` (die Variable bleibt als Diagnoseschalter fuer den Harness erhalten, weil `tests/unit/detect.wiring.test.mjs` sie als Vertragsname verlangt). Der Bericht (`aiMode`) liest jetzt den echten Einstellungswert `aiMode()` statt aus `localAIMode` zu schliessen (der Bericht hat vorher bei ausgeschalteter KI "off" nur gemeldet, weil `localAIMode` false war).
+
+Bei leerer `ents`-Liste liefern die Wortlisten nichts (`activeEnts.size > 0`): "nichts ausgewaehlt" heisst "nichts erkannt" (`tests/unit/detect.api.test.mjs`, Leere ents-Liste); bei Profilen und eigener Auswahl mit mindestens einer Kategorie ist das Verhalten wie vorher.
+
+**Referenzmodus w0, erklaerte Abweichung: keine Abweichung gemessen.** `dump-reference.mjs` und `diff-reference.mjs` setzen den Modus w0 ausdruecklich (`localAIMode = false` bzw. `wordlists: false`), deshalb bleibt `node tests/eval/diff-reference.mjs --node` bei 0 Abweichungen; w0 ist ab jetzt ein reiner Diagnosemodus (Regeln allein), kein Produktmodus mehr. Es ist kein Eintrag in `tests/golden/reference-allow.json` noetig (ein ungenutzter Eintrag wuerde nur eine Warnung ausloesen). Der Produktmodus "KI aus" entspricht jetzt w1.
+
+**Harness:** Die Modi bleiben `wortlisten` (nur Regeln, Diagnose, `localAIMode = false`), `fallback` (= w1, Produktmodus KI aus oder KI-Start fehlgeschlagen) und `ki`. `wortlisten` bleibt als dritter Modus, weil die Ratschen `tests/eval.test.mjs` und `tests/eval-v2.test.mjs` und `baseline.json` ihn verlangen; die Abnahmetabelle C1 bewertet nur `fallback` und `ki`.
+
+**Golden-Stand (`tests/golden/baseline.json`, Abschnitt `wordlist`):** neu gesetzt, weil der Test "Wortlisten-Erkennung entspricht dem Golden-Stand" und "Ausgeschaltet: kein Modell, Ergebnis der Standard-Erkennung" jetzt W1 vergleichen (KI aus). Diff gelesen: (1) "Hamburg" wird als ORT maskiert (vorher Klartext); (2) die Adresse "Werner-von-Siemens-Strasse 1, 80333 Muenchen" wird als NAME statt ADRESSE maskiert (Wortliste "Werner" greift, die Spanne ist dieselbe; nur die Platzhalterart wechselt, nichts bleibt lesbar); (3) "Hans Fischer fuer die Mustermann GmbH" hat die Methode "KI-Erkennung (Wortlisten)" statt "Regex (Pass 2)". Der Abschnitt `model` ist unveraendert.
+
+**Messung Gruppe B (Harness, vorher/nachher):** unveraendert in allen Modi (die Harness-Modi setzen den Wert ausdruecklich); der Gewinn liegt im Produkt: "KI aus" verhaelt sich wie `fallback` (Handfaelle alt 12 statt 21, Synthetik 11 statt 18 von 276; neue Handfaelle 40 statt 41, Synthetik 46 statt 68 von 860). Fehlalarme: keine neuen.
+
 
 ---
 
