@@ -1089,14 +1089,11 @@
     "npm run test:unit",
     "xvfb-run -a node --test --test-concurrency=1 tests/policy.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261022-1830",
-    "ts": 1792703361321
-   },
+   "commit": "b27d29497ef2199735eb1f978354b0d325f5b6bc",
+   "lease": null,
    "notes": ""
   },
   {
