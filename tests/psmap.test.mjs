@@ -2,8 +2,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { launchApp, toolFrame, captureDownloads, getDownloads, runAnon } from './helpers.mjs';
+import { createRequire } from 'node:module';
 import { generateDocs } from './eval/generate.mjs';
 
+const psmap = createRequire(import.meta.url)('../app/lib/psmap.js');
+const PWFILE = 'korrektes Pferd Batterie';
+// Wartebedingung statt fester Schlafzeit: Dialog offen und Eingabe verarbeitet (Hauptschleife ein paar Mal durchlaufen)
+const settle = (f) => f.evaluate(() => new Promise((r) => { let n = 0; const t = () => (++n > 30 ? r() : setTimeout(t, 10)); t(); }));
+const mkfile = (state) => psmap.encrypt({ v: 1, created: '2026-10-21T00:00:00Z', state, docs: [] }, PWFILE, { iterations: 100000 }).then((u) => Buffer.from(u));
+const ent = (o = {}) => Object.assign({ v: 'Müller', t: 'NAME', c: '#f59e0b', m: 'KI' }, o);
 const PW = 'korrektes Pferd Batterie';
 const docs = generateDocs(2);
 const TEXT = docs.map((d) => d.text).join('\n\n');
@@ -100,7 +107,7 @@ test('A3.w: zu kurzes Passwort speichert nicht', async () => {
     const f = await toolFrame(a.win);
     await runAnon(f, TEXT);
     await save(f, 'kurz9abcd');
-    await new Promise((r) => setTimeout(r, 1500));
+    await settle(f);
     assert.equal((await getDownloads(f)).length, 0);
     assert.equal(await f.isVisible('#PWDLG'), true, 'Dialog bleibt offen');
   } finally { await a.close(); }
@@ -112,7 +119,7 @@ test('A3.w: ungleiche Wiederholung speichert nicht', async () => {
     const f = await toolFrame(a.win);
     await runAnon(f, TEXT);
     await save(f, PW, PW + 'x');
-    await new Promise((r) => setTimeout(r, 1500));
+    await settle(f);
     assert.equal((await getDownloads(f)).length, 0);
     assert.equal(await f.isVisible('#PWDLG'), true, 'Dialog bleibt offen');
   } finally { await a.close(); }
@@ -147,5 +154,97 @@ test('A3.w: mapSaved und psMapUnsaved()', async () => {
     assert.equal(await f.evaluate(() => psMapUnsaved()), false);
     await runAnon(f, TEXT);
     assert.equal(await f.evaluate(() => mapSaved), false);
+  } finally { await a.close(); }
+});
+
+async function loadInto(state, mutate) {
+  const a = await launchApp({ offline: true });
+  try {
+    const f = await toolFrame(a.win);
+    await runAnon(f, TEXT);
+    const before = await storeOf(f);
+    await f.evaluate(() => { window.__xss = 0; });
+    await load(f, 'x.psmap', await mkfile(state), PWFILE);
+    await settle(f); await settle(f); await settle(f);
+    await new Promise((r) => setTimeout(r, 1500));
+    return await mutate(f, before);
+  } finally { await a.close(); }
+}
+
+test('A3.w Pruefer: Farbe mit HTML-Einschleusung fuehrt nichts aus', async () => {
+  await loadInto({ store: { '{{NAME_1}}': ent({ c: 'x"><img src=x onerror="window.__xss=1">' }) }, cnt: { NAME: 1 } }, async (f) => {
+    assert.equal(await f.evaluate(() => window.__xss), 0);
+    assert.equal(await f.evaluate(() => document.getElementById('MT').innerHTML.includes('<img')), false);
+  });
+});
+
+for (const [name, state] of [
+  ['v: 5', { v: 5, store: { '{{NAME_1}}': ent() }, cnt: {} }],
+  ['store als Array', { store: [ent()], cnt: {} }],
+]) {
+  test('A3.w Pruefer: ungueltige Struktur (' + name + ') laesst store unveraendert', async () => {
+    await loadInto(state, async (f, before) => {
+      assert.deepEqual(await storeOf(f), before);
+      assert.ok((await bodyText(f)).length > 0);
+    });
+  });
+}
+
+for (const key of ['', 'Herr', '__proto__']) {
+  test('A3.w Pruefer: Schluessel ' + JSON.stringify(key) + ' wird abgelehnt', async () => {
+    const store = JSON.parse('{' + JSON.stringify(key) + ':' + JSON.stringify(ent()) + '}');
+    await loadInto({ store, cnt: {} }, async (f, before) => {
+      assert.deepEqual(await storeOf(f), before);
+    });
+  });
+}
+
+test('A3.w Pruefer: falsches Passwort bei nicht leerem store laesst ihn unveraendert', async () => {
+  const a = await launchApp({ offline: true });
+  try {
+    const f = await toolFrame(a.win);
+    await runAnon(f, TEXT);
+    const before = await storeOf(f);
+    await load(f, 'x.psmap', await mkfile({ store: { '{{NAME_1}}': ent() }, cnt: {} }), 'ganz anderes Passwort');
+    await f.waitForFunction((m) => document.body.innerText.includes(m), MSG_WRONG, { timeout: 15000 });
+    assert.deepEqual(await storeOf(f), before);
+  } finally { await a.close(); }
+});
+
+test('A3.w Pruefer: CSV mit 0 Zeilen laesst psMapUnsaved() wahr', async () => {
+  const a = await launchApp({ offline: true });
+  try {
+    const f = await toolFrame(a.win);
+    await runAnon(f, TEXT);
+    await load(f, 'leer.csv', Buffer.from('Variable,Originalwert,Typ,Methode\n', 'utf8'));
+    await settle(f); await settle(f);
+    assert.equal(await f.evaluate(() => psMapUnsaved()), true);
+  } finally { await a.close(); }
+});
+
+test('A3.w Pruefer: CSV-Import bei ungespeichertem store: psMapUnsaved() bleibt wahr', async () => {
+  const a = await launchApp({ offline: true });
+  try {
+    const f = await toolFrame(a.win);
+    await runAnon(f, TEXT);
+    await load(f, 'a.csv', Buffer.from('Variable,Originalwert,Typ,Methode\n"{{NAME_99}}","Zed","NAME","KI"\n', 'utf8'));
+    await f.waitForFunction(() => '{{NAME_99}}' in store, null, { timeout: 8000 });
+    assert.equal(await f.evaluate(() => psMapUnsaved()), true);
+  } finally { await a.close(); }
+});
+
+test('A3.w Pruefer: Abbrechen direkt nach OK ersetzt store nicht', async () => {
+  const a = await launchApp({ offline: true });
+  try {
+    const f = await toolFrame(a.win);
+    await runAnon(f, TEXT);
+    const before = await storeOf(f);
+    await f.setInputFiles('#inp-map-load', [{ name: 'x.psmap', mimeType: 'application/octet-stream', buffer: await mkfile({ store: { '{{NAME_1}}': ent() }, cnt: {} }) }]);
+    await f.waitForSelector('#PWDLG', { state: 'visible', timeout: 5000 });
+    await f.fill('#PWD1', PWFILE);
+    await f.click('#PWOK', T);
+    await f.click('#PWCANCEL', { timeout: 2000, force: true }).catch(() => f.keyboard.press('Escape'));
+    await new Promise((r) => setTimeout(r, 1500));
+    assert.deepEqual(await storeOf(f), before);
   } finally { await a.close(); }
 });
