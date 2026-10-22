@@ -1109,7 +1109,14 @@
    "build": false,
    "deps": [
     "C1.1",
-    "C2.w"
+    "C2.w",
+    "E1.fix",
+    "K2.fix",
+    "K1.fix",
+    "K4.fix",
+    "C2.fix",
+    "Q1.fix",
+    "Q2.fix"
    ],
    "allowed": [
     "app/lib/detect.js",
@@ -1236,7 +1243,14 @@
    "deps": [
     "D1.m",
     "A1.w",
-    "F1.b"
+    "F1.b",
+    "E1.fix",
+    "K2.fix",
+    "K1.fix",
+    "K4.fix",
+    "C2.fix",
+    "Q1.fix",
+    "Q2.fix"
    ],
    "allowed": [
     "app/privacy-shield.html",
@@ -1678,7 +1692,8 @@
    "deps": [
     "F1.b",
     "F5",
-    "B2.m2"
+    "B2.m2",
+    "K2.fix"
    ],
    "allowed": [
     "tests/unit/properties.test.mjs",
@@ -1790,7 +1805,10 @@
    "kann": false,
    "build": true,
    "deps": [
-    "G1.docs"
+    "G1.docs",
+    "S3.fix",
+    "B2.fix",
+    "Q2.fix"
    ],
    "allowed": [
     "docs/**",
@@ -1973,6 +1991,318 @@
    "allowed": [],
    "tests": [],
    "accept": [],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "E1.fix",
+   "title": "Triage E1: manuelle Markierungen und Richtlinienbegriffe gegen Normalisierung, Treffer-Rueckmeldung",
+   "doc": "V2-TRIAGE-T0.md#e1fix",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "C3.w"
+   ],
+   "allowed": [
+    "app/lib/detect.js",
+    "app/lib/marks.js",
+    "app/privacy-shield.html",
+    "tests/unit/marks-detect.test.mjs",
+    "tests/marks-detect-app.test.mjs"
+   ],
+   "tests": [
+    "tests/unit/marks-detect.test.mjs",
+    "tests/marks-detect-app.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit",
+    "xvfb-run -a node --test --test-concurrency=1 tests/marks-detect-app.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "K2.fix",
+   "title": "Triage K2: woertliche Platzhalter im Original reservieren (alle Kategorien, ganzes Projekt)",
+   "doc": "V2-TRIAGE-T0.md#k2fix",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "E1.fix"
+   ],
+   "allowed": [
+    "app/lib/detect.js",
+    "app/lib/project.js",
+    "app/lib/placeholder.js",
+    "tests/unit/detect.literal.test.mjs",
+    "docs/erkennung-entscheidungen.md"
+   ],
+   "tests": [
+    "tests/unit/detect.literal.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "K1.fix",
+   "title": "Triage K1 und S2: Projektrevision (veraltete Ergebnisse sperren), gemeinsame Exportquelle, clearAll vollstaendig",
+   "doc": "V2-TRIAGE-T0.md#k1fix",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "K2.fix",
+    "B1.w2"
+   ],
+   "allowed": [
+    "app/privacy-shield.html",
+    "tests/project.test.mjs",
+    "tests/project-reset.test.mjs"
+   ],
+   "tests": [
+    "tests/project.test.mjs",
+    "tests/project-reset.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit",
+    "xvfb-run -a node --test --test-concurrency=1 tests/project.test.mjs tests/project-reset.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "K4.fix",
+   "title": "Triage K4 (und D30-Rest): Gespeichert erst nach bestaetigtem Schreiben, Speicherzustand unbekannt warnt",
+   "doc": "V2-TRIAGE-T0.md#k4fix",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "K1.fix"
+   ],
+   "allowed": [
+    "app/privacy-shield.html",
+    "app/index.html",
+    "main.js",
+    "preload.js",
+    "tests/ipc-security.test.mjs",
+    "tests/psmap.test.mjs",
+    "tests/export-hygiene.test.mjs",
+    "tests/helpers.mjs"
+   ],
+   "tests": [
+    "tests/psmap.test.mjs",
+    "tests/ipc-security.test.mjs"
+   ],
+   "accept": [
+    "xvfb-run -a node --test --test-concurrency=1 tests/psmap.test.mjs tests/ipc-security.test.mjs tests/export-hygiene.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "S3.fix",
+   "title": "Triage S3: Eigene Variablen strikt validieren, renderCV ohne innerHTML",
+   "doc": "V2-TRIAGE-T0.md#s3fix",
+   "tier": "bau",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "K4.fix"
+   ],
+   "allowed": [
+    "app/privacy-shield.html",
+    "tests/cvar-html.test.mjs",
+    "tests/unit/placeholder.test.mjs"
+   ],
+   "tests": [
+    "tests/cvar-html.test.mjs"
+   ],
+   "accept": [
+    "xvfb-run -a node --test --test-concurrency=1 tests/cvar-html.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "C2.fix",
+   "title": "Triage K3: Koreferenz mit Gegenhinweisen (Anrede, Beziehungswoerter) nicht verknuepfen",
+   "doc": "V2-TRIAGE-T0.md#c2fix",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "K2.fix"
+   ],
+   "allowed": [
+    "app/lib/coref.js",
+    "tests/unit/coref.test.mjs",
+    "tests/unit/detect.coref.test.mjs",
+    "docs/erkennung-entscheidungen.md"
+   ],
+   "tests": [
+    "tests/unit/coref.test.mjs",
+    "tests/unit/detect.coref.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "B2.fix",
+   "title": "Triage S1: tatsaechlich entpackte Bytes begrenzen (Zaehler, Trockenlauf vor Mammoth)",
+   "doc": "V2-TRIAGE-T0.md#b2fix",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "B2.w"
+   ],
+   "allowed": [
+    "app/lib/formats.js",
+    "app/lib/officefmt.js",
+    "app/privacy-shield.html",
+    "tests/unit/formats.test.mjs",
+    "tests/unit/officefmt.test.mjs",
+    "tests/zip-bomb-app.test.mjs"
+   ],
+   "tests": [
+    "tests/unit/formats.test.mjs",
+    "tests/unit/officefmt.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit",
+    "xvfb-run -a node --test --test-concurrency=1 tests/zip-bomb-app.test.mjs"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "Q1.fix",
+   "title": "Triage Q1: Referenzausnahmen an genehmigten Hash binden, fehlende Faelle nie erlaubt",
+   "doc": "V2-TRIAGE-T0.md#q1fix",
+   "tier": "bau",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "C2.w"
+   ],
+   "allowed": [
+    "tests/eval/diff-reference.mjs",
+    "tests/golden/reference-allow.json",
+    "tests/unit/diff-reference.test.mjs",
+    "tests/unit/detect.differential.test.mjs"
+   ],
+   "tests": [
+    "tests/unit/diff-reference.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit"
+   ],
+   "status": "offen",
+   "attempts": 0,
+   "branch": "",
+   "commit": "",
+   "lease": null,
+   "notes": ""
+  },
+  {
+   "id": "Q2.fix",
+   "title": "Triage Q2: Leckmessung mit Teilresten, Import- und Leckquote getrennt",
+   "doc": "V2-TRIAGE-T0.md#q2fix",
+   "tier": "denk",
+   "review": true,
+   "crypto": false,
+   "serial": true,
+   "parallel": false,
+   "kann": false,
+   "build": false,
+   "deps": [
+    "Q1.fix"
+   ],
+   "allowed": [
+    "tests/eval/run-eval.mjs",
+    "tests/realdocs.test.mjs",
+    "tests/unit/leakcheck.test.mjs",
+    "tests/unit/eval-measure.test.mjs"
+   ],
+   "tests": [
+    "tests/unit/eval-measure.test.mjs"
+   ],
+   "accept": [
+    "npm run test:unit"
+   ],
    "status": "offen",
    "attempts": 0,
    "branch": "",

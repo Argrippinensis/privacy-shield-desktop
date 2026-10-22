@@ -1,0 +1,34 @@
+# Bericht K1, S2, K4 (Stand v2/main b27d294, Vergleich 1.8.0 a6acfff)
+Alle Tests liegen ausserhalb der Repos, laufen in der echten Electron-App (xvfb-run -a node --test), nur synthetische Werte.
+Testdateien: /tmp/triage/K1/k1.test.mjs, /tmp/triage/S2/s2.test.mjs (+ sibling*.test.mjs), /tmp/triage/K4/k4.test.mjs.
+Aufruf gegen 1.8.0 nicht moeglich fuer K1/S2 (Projektmodus und Gespeichert-Merker existieren dort nicht: kein prjRes, kein mapSaved, kein psMapUnsaved).
+
+## K1 Projektkorrektur: Text, ZIP und Zuordnung widersprechen sich - BESTAETIGT (nur v2, Rueckschritt durch B1.w1/w2)
+Beleg (rot): Dok1 "Kontakt: anna...", Dok2 "Kontakt: ben... Notiz: Zwiebelbaum."; Lauf; Dok2 oeffnen, "Zwiebelbaum" markieren, reanon():
+- vorher store {EMAIL_1: anna, EMAIL_2: ben}; Ergebnisse ["Kontakt: {{EMAIL_1}}.", "Kontakt: {{EMAIL_2}}. Notiz: Zwiebelbaum."]
+- nachher sichtbar (Dok2): "Kontakt: {{EMAIL_1}}. Notiz: {{NAME_1}}."; store {NAME_1: Zwiebelbaum, EMAIL_1: ben...}; prjRes unveraendert
+- Rueckuebersetzung Dok1: "Kontakt: ben.beispiel@example.invalid." (falsche Person); ZIP-Knopf nicht gesperrt
+- ZIP: anonymisiert_002.txt = "Kontakt: {{EMAIL_2}}. Notiz: Zwiebelbaum." (Klartext, EMAIL_2 ohne Zuordnung)
+Ausgabe: "not ok 1 ... error: 'ZIP enthaelt Klartext Zwiebelbaum trotz Markierung'".
+Ursache: anon()/anonCore() (privacy-shield.html:3444-3510) setzt store={}/cnt={} (3476) und rechnet nur den Text in #IT neu; Projektzustand prjRes (2559) wird weder neu berechnet noch als veraltet markiert. prjZip (2800) liest prjRes (2826, 2840), prjScope (2755) liest den inzwischen fremden store. Es gibt keine Revision/Veraltet-Markierung. Eingang ueber lcMask (3414), Annotieren (4111) und "Neu anonymisieren" (3837) - jeder Weg landet in anon().
+Spaetere Pakete/D-Nr: nicht behoben, keine D-Nummer (D32 betrifft nur prjDel). Neuester Stand b27d294 geprueft.
+Geschwister: gleiche Ursache bei jeder Aenderung nach dem Lauf, die prjRes nicht neu berechnet: Whitelist (addWL), eigene Regeln/cvars, Profilwechsel, Policy-Import; prjDel (siehe S2). Alle ohne Veraltet-Sperre.
+Paket-Vorschlag "K1.fix": privacy-shield.html (anon/reanon, prjRun, prjZip, prjRender), tests/project.test.mjs. Kleinste Loesung: ist ein Projekt mit Ergebnissen aktiv, ruft reanon() prjRun() (ganzes Projekt, gemeinsamer Zustand); zusaetzlich Zaehler prjRev, der bei Aenderung von marks/whitelist/cvars/profile/policy steigt, prjRes[id].rev speichert; ZIP/psmap/CSV nur bei gleicher Revision, sonst Hinweis "Ergebnisse veraltet, erneut pruefen". Test: das obige Szenario (rot) + je ein Fall Whitelist/Regel. Aufwand M. Dringlichkeit: HOCH, vor D1.w1/D1.w2 (Leck + Personenverwechslung).
+
+## S2 Zuruecksetzen/Entfernen - BESTAETIGT (A und B), Projektteil nur v2
+A (rot): nach clearAll (confirm bestaetigt): {"docs":2,"res":2,"panel":"block","zipDisabled":false,"store":0,"items":2}; Klick auf Eintrag zeigt Eingabe "Kontakt: anna.beispiel@example.invalid." und Ergebnis "Kontakt: {{EMAIL_1}}." wieder an. "not ok ... prj.docs nicht geleert 2 !== 0".
+B (rot): nach Entfernen von d2: docs [d1], store enthaelt weiter EMAIL_2->ben; prjScope() korrekt nur anna. Aber .psmap (psMapSave) enthaelt ["anna...","ben..."] und die CSV (expMap) enthaelt beide Zeilen. "not ok ... .psmap enthaelt Wert des entfernten Dokuments".
+Ursache: clearAll (3762-3779) kennt prj/prjRes/prjSize nicht (hidePrj 2601 wird nicht gerufen); psMapSave/psPwOk (3677, nicht-zip: {store,cnt}) und expMap (3722) nehmen den ganzen store; nur ZIP nutzt prjScope. prjDel (2666) entfernt Dokument und Ergebnis, nicht dessen Zuordnung.
+D-Nr: D32 nennt Punkt (1) prjDel/store ausdruecklich als Nachholpunkt; Umsetzung nur fuer den ZIP-Weg (tests/project.test.mjs:242), .psmap/CSV offen. Keine bewusste Entscheidung dagegen. D23 (Cache-Retention) deckt A nicht ab: prj ist ueber die Oberflaeche erreichbar.
+Vergleich 1.8.0: dort kein Projekt; clearAll identisch, laesst aiCache (Text) stehen = D23, bewusst.
+Geschwister (v2, Probe sibling.test.mjs, Einzeldokument nach clearAll): manualMarks bleibt mit dem markierten Wert ("Zwiebelbaum" im Muster), lcLast bleibt gesetzt, aiCache.key bleibt (D23). Nach hidePrj (letztes Dokument entfernt) bleibt store ebenfalls stehen.
+Paket-Vorschlag "S2.fix": privacy-shield.html (clearAll, prjDel, psPwOk, expMap), ggf. neue Funktion exportScope() = prj ? prjScope() : {store,cnt} fuer ZIP/.psmap/CSV/Tabelle; clearAll ruft hidePrj(), leert manualMarks (mit Rueckfrage-Text im confirm: Umfang nennen), lcLast. Test: A und B oben, dazu "Tabelle zeigt nur Eintraege der verbliebenen Dokumente". Aufwand M (klein, wenn mit K1.fix gebuendelt). Dringlichkeit: HOCH (Weitergabe fremder Klartextwerte), A mittel.
+
+## K4 "Gespeichert" ohne bestaetigte Speicherung - BESTAETIGT (Merker nur v2; Erfolgsmeldung nach dl() auch in 1.8.0)
+Beleg (rot, echter Download im Hauptprozess abgebrochen, entspricht Abbruch des Speichern-Dialogs/Schreibfehler): Download-Zustand {"name":"zuordnung.psmap","state":"cancelled"}, Toast "Zuordnung verschluesselt gespeichert", psMapUnsaved() von true auf false. "not ok 1 ... expected: true actual: false". Gleiches fuer ZIP mit Zuordnung (K4b): Toast "2 Dokumente als ZIP gespeichert", psMapUnsaved() = false.
+Ursache: dl() (3752-3761) klickt nur einen Blob-Anker, liefert kein Ergebnis; Aufrufer setzen mapSaved=true sofort (3681 .psmap, 3733 CSV, 2848 ZIP) und melden Erfolg. main.js:197-232 (close-Handler) vertraut psMapUnsaved(). Es gibt keinen will-download-Handler in main.js. Zusatz: mapSaved ist ein Boolean, nicht an den Stand gebunden; ZIP-Pruefung 2848 vergleicht nur die Schluesselanzahl, nicht Inhalt.
+1.8.0: kein mapSaved/psMapUnsaved/Schliess-Abfrage; Toasts "Mapping exportiert" (4943) nach dl() gleich ungeprueft, aber ohne Folgeschaden. D-Nr: D29 behandelt mapSaved nach CSV, nicht den Abbruch; keine Entscheidung dagegen.
+Paket-Vorschlag "K4.fix": dl() fuer Zuordnung ueber vorhandenen IPC save-file (main.js:269, preload saveFile, index.html:323 Bruecke), dort SAVE_TYPES um psmap/zip/csv erweitern, Rueckgabe {success} auswerten; mapSaved erst bei success, sonst Toast "nicht gespeichert". Dateien: privacy-shield.html (dl + 3 Aufrufer), index.html, main.js, tests/ipc-security.test.mjs, tests/helpers.mjs (captureDownloads muss Abbruch simulieren koennen). Alternative ohne IPC-Aenderung: will-download in main.js mit done-Zustand an Renderer melden. Zusatz: mapSaved an Zustandsrevision (aus K1.fix) binden. Test: obiger Abbruch-Test (rot). Aufwand M. Dringlichkeit: HOCH (einzige Zuordnung kann unbemerkt verloren gehen), nach K1.fix, da Revision gemeinsam genutzt wird.
+
+## Empfehlung Reihenfolge
+K1.fix (Revision/Neuberechnung) -> S2.fix (gemeinsamer Exportumfang + Reset) -> K4.fix (bestaetigtes Speichern, Merker an Revision). Alle drei vor D1.w1/D1.w2. Nicht geprueft: echte Betriebssystem-Schreibfehler (nur abgebrochener Download simuliert), macOS/Windows.
