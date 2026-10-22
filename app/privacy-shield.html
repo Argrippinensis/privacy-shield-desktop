@@ -2718,7 +2718,7 @@
       async function lcMask(i) { const f = lcLast.res.findings[i], v = lcLast.at.slice(f.start, f.end); if (!PSLib.marks.add(manualMarks, { value: v, pfx: f.type })) return toast("Dieser Wert kann nicht markiert werden", "e"); await reanon(); }
       function lcIgnore(i) { const f = lcLast.res.findings[i]; lcIgnored.add(f.type + "\u0000" + lcLast.at.slice(f.start, f.end)); runLeakCheck(); }
       let anonBusy = false, repStart = null, repDur = 0;
-      const APP_VERSION = "1.8.0";
+      const APP_VERSION = "1.8.0"; // muss mit package.json uebereinstimmen
       // Bericht ohne personenbezogene Werte: nur Zaehler, Einstellungen und Pruefsumme
       async function saveReport() {
         const t = document.getElementById("AT").value;
@@ -2728,14 +2728,16 @@
           Object.values(store).forEach((d) => { counts[d.t] = (counts[d.t] || 0) + 1; });
           const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
           const sha = Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+          if (!lcLast || lcLast.at !== t || lcLast.res.error) runLeakCheck();
           const lr = lcLast && lcLast.at === t && lcLast.res && !lcLast.res.error ? lcLast.res : null;
-          const sev = (k) => (lr ? lr.findings.filter((f) => f.severity === k).length : 0);
+          if (!lr) return toast("Gegenprüfung nicht möglich, Bericht nicht erstellt", "e");
+          const sev = (k) => (lr.findings.filter((f) => f.severity === k).length);
           const rep = PSLib.report.build({
             appVersion: APP_VERSION, startedAt: repStart.toISOString(), localTime: new Date().toLocaleString("de-DE"),
             durationMs: repDur, profileId: curProf, aiMode: localAIMode ? "auto" : "off",
             modelId: nerPipeline ? AI_MODEL_ID : undefined,
             whitelistSize: whitelist.length, customRuleCount: cvars.length,
-            documents: [{ index: 1, chars: t.length, counts: counts, resultSha256: sha, leak: { count: lr ? lr.count : 0, hoch: sev("hoch"), mittel: sev("mittel") } }],
+            documents: [{ index: 1, chars: t.length, counts: counts, resultSha256: sha, leak: { count: lr.count, hoch: sev("hoch"), mittel: sev("mittel") } }],
           });
           dl("bericht.txt", PSLib.report.toText(rep), "text/plain");
           toast("Bericht gespeichert", "s");
@@ -2755,7 +2757,10 @@
         if (btn) btn.disabled = true;
         try {
           await anonCore();
-          repDur = Date.now() - repStart.getTime();
+          if (repStart) repDur = Date.now() - repStart.getTime();
+        } catch (e) {
+          repStart = null;
+          throw e;
         } finally {
           anonBusy = false;
           scheduleAIIdleUnload();
@@ -2767,6 +2772,7 @@
       async function anonCore() {
         const input = document.getElementById("IT").value;
         if (!input.trim()) {
+          repStart = null;
           toast("Bitte Text eingeben", "e");
           return;
         }
@@ -2799,6 +2805,7 @@
           toast(Object.keys(store).length + " Entitäten anonymisiert", "s");
           runLeakCheck();
         } catch (err) {
+          repStart = null;
           toast("Fehler: " + err.message, "e");
         }
       }
