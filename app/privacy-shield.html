@@ -557,6 +557,11 @@
       .prj-item:focus-visible, .prj-del:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
       .prj-track { height: 4px; background: #e5e5e5; border-radius: 2px; overflow: hidden; margin-top: 5px; }
       .prj-fill { height: 100%; width: 0; background: #1a3a5c; transition: width 0.2s; }
+      .prj-out { margin-top: 14px; padding-top: 12px; border-top: 1px solid #e5e5e5; }
+      .prj-opt { display: flex; align-items: center; gap: 8px; min-height: 28px; font-size: 12px; color: #111; cursor: pointer; }
+      .prj-opt input { width: 15px; height: 15px; margin: 0; accent-color: #1a3a5c; cursor: pointer; }
+      .prj-opt input:focus-visible, #PRJZIP:focus-visible, #PRJASK button:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
+      .prj-hint { margin: 0 0 8px 23px; font-size: 11px; line-height: 1.4; color: #666; }
       .progress-bar {
         height: 3px;
         background: #e5e5e5;
@@ -1302,6 +1307,13 @@
                 <div style="display: flex; gap: 8px; margin-top: 10px">
                   <button type="button" id="PRJRUN" class="btn-accent" style="flex: 1; font-size: 12px; padding: 9px 12px" onclick="prjRun()">Alle anonymisieren</button>
                   <button type="button" id="PRJCANCEL" class="btn btn-ghost" style="font-size: 12px" onclick="prjCancel()" disabled>Abbrechen</button>
+                </div>
+                <div class="prj-out">
+                  <label class="prj-opt" for="PRJMAP"><input type="checkbox" id="PRJMAP" checked />Zuordnung einschließen</label>
+                  <p class="prj-hint" id="PRJMAPHINT">Verschlüsselte Datei, mit der sich Antworten zurückübersetzen lassen. Das Passwort wird beim Speichern abgefragt.</p>
+                  <label class="prj-opt" for="PRJKEEP"><input type="checkbox" id="PRJKEEP" aria-describedby="PRJKEEPHINT" />Originalnamen verwenden</label>
+                  <p class="prj-hint" id="PRJKEEPHINT">Dateinamen enthalten oft Namen. Standard sind neutrale Namen wie anonymisiert_001.txt.</p>
+                  <button type="button" id="PRJZIP" class="btn btn-ghost" style="width: 100%; font-size: 12px; padding: 9px 12px" onclick="prjZip()" disabled>Alles als ZIP speichern</button>
                 </div>
               </div>
             </div>
@@ -2060,6 +2072,17 @@
         </div>
       </form>
     </div>
+    <div id="PRJASK" role="dialog" aria-modal="true" aria-labelledby="PRJASKT" aria-describedby="PRJASKD" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(26, 58, 92, 0.45); align-items: center; justify-content: center">
+      <div style="background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 24px; width: min(420px, 92vw); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); text-align: left">
+        <h2 id="PRJASKT" style="font-size: 15px; font-weight: 700; color: #1a3a5c; margin: 0 0 6px">Ohne Zuordnung kann nicht zurückübersetzt werden</h2>
+        <p id="PRJASKD" style="font-size: 12px; color: #666; margin: 0 0 14px">Das ZIP enthält dann nur die anonymisierten Texte und den Bericht. Antworten einer KI lassen sich später nicht mit den Originalwerten zusammenführen.</p>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap">
+          <button type="button" class="btn btn-ghost" onclick="prjAskClose()">Abbrechen</button>
+          <button type="button" id="PRJASKPW" class="btn btn-ghost" onclick="prjAskClose(); prjZip()">Passwort eingeben</button>
+          <button type="button" class="btn btn-primary" onclick="prjAskClose(); prjZip(true)">Ohne Zuordnung fortfahren</button>
+        </div>
+      </div>
+    </div>
     <script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
@@ -2260,14 +2283,14 @@
         fertig: '<path d="M3 8.5l3.2 3.2L13 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
         fehler: '<path d="M8 2l6.5 11.5h-13z M8 6.5v3 M8 11.6v.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
       };
-      let prj = null, prjBusy = false, prjAc = null, prjSel = null, prjAborted = false;
+      let prj = null, prjBusy = false, prjAc = null, prjSel = null, prjAborted = false, prjZipBusy = false, prjStart = null, prjDur = 0;
       const prjRes = new Map(), prjSize = new Map();
       function prjCheckFiles(files) {
         const multi = files.length > 1, ok = [], msgs = [], bad = [];
         let oldDoc = false;
-        for (const f of files) {
+        for (const [fi, f] of files.entries()) {
           const e = f.name.includes(".") ? f.name.split(".").pop().toLowerCase() : "";
-          const pre = multi ? f.name + ": " : "";
+          const pre = multi ? "Datei " + (fi + 1) + ": " : "";
           if (e === "doc") oldDoc = true;
           else if (!PRJ_EXT.includes(e)) { if (!bad.includes(e)) bad.push(e); }
           else if (f.size === 0) msgs.push(pre + "Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.");
@@ -2286,14 +2309,15 @@
         document.getElementById("PRJPANEL").style.display = "block";
         prjRender();
         try {
-          for (const f of list) {
+          for (const [li, f] of list.entries()) {
+            const pre = "Datei " + (li + 1) + ": ";
             let text;
-            try { text = await readTextOf(f); } catch (err) { msgs.push(f.name + ": " + err.message); continue; }
-            if (!text.trim()) { msgs.push(f.name + ": kein Text gefunden"); continue; }
+            try { text = await readTextOf(f); } catch (err) { msgs.push(pre + "konnte nicht gelesen werden"); continue; }
+            if (!text.trim()) { msgs.push(pre + "kein Text gefunden"); continue; }
             try {
               prjSize.set(PSLib.project.add(prj, { name: f.name, text: text }), f.size);
             } catch (err) {
-              msgs.push(err && err.code === "LIMIT" ? "Grenze erreicht: höchstens " + prj.limits.docs + " Dokumente und " + Math.round(prj.limits.totalChars / 1048576) + " MB Text je Projekt." : f.name + ": nicht aufgenommen");
+              msgs.push(err && err.code === "LIMIT" ? "Grenze erreicht: höchstens " + prj.limits.docs + " Dokumente und " + Math.round(prj.limits.totalChars / 1048576) + " MB Text je Projekt." : pre + "nicht aufgenommen");
               if (err && err.code === "LIMIT") break;
             }
             prjRender();
@@ -2334,7 +2358,9 @@
           st.appendChild(mk("span", "", lbl));
           const meta = mk("span", "prj-meta");
           meta.append(mk("span", "", fmtSz(prjSize.get(it.id) || 0)), st);
-          b.append(mk("span", "prj-num", String(it.index)), mk("span", "prj-name", it.name), meta);
+          const nm = mk("span", "prj-name", it.name);
+          nm.title = it.name;
+          b.append(mk("span", "prj-num", String(it.index)), nm, meta);
           const del = mk("button", "prj-del");
           del.type = "button";
           del.dataset.id = it.id;
@@ -2363,9 +2389,10 @@
         document.getElementById("PRJSUM").textContent = sum;
         document.getElementById("PRJRUN").disabled = prjBusy || !total;
         document.getElementById("PRJCANCEL").disabled = !prjBusy || !prjAc;
+        document.getElementById("PRJZIP").disabled = prjBusy || prjZipBusy || !items.some((x) => x.status === "fertig" && prjRes.has(x.id));
       }
       function prjDel(id) {
-        if (prjBusy || !prj) return;
+        if (prjBusy || prjZipBusy || !prj) return;
         const i = prj.docs.findIndex((d) => d.id === id);
         PSLib.project.remove(prj, id);
         prjRes.delete(id); prjSize.delete(id);
@@ -2403,6 +2430,7 @@
         prjAborted = false;
         prjAc = new AbortController();
         prjRes.clear();
+        prjStart = new Date(); prjDur = 0;
         const btn = document.getElementById("ANONBTN");
         if (btn) btn.disabled = true;
         const order = prj.docs.slice();
@@ -2434,6 +2462,7 @@
             },
           });
           prjAborted = out.aborted;
+          prjDur = Date.now() - prjStart.getTime();
           if (out.state) { store = out.state.store; cnt = out.state.cnt; renderMap(); }
         } catch (err) {
           toast("Fehler: " + err.message, "e");
@@ -2447,6 +2476,109 @@
           if (pe) pe.textContent = "";
           prjRender();
           if (prjSel !== null && prjRes.has(prjSel)) prjShow(prjSel);
+        }
+      }
+      // Zuordnung nur für Platzhalter, die in den aktuellen fertigen Ergebnissen vorkommen (D32); store und cnt bleiben unverändert
+      function prjScope() {
+        const keys = new Set(), out = {}, oc = {};
+        for (const d of prj.docs) {
+          const r = prjRes.get(d.id);
+          if (r && d.status === "fertig") (r.text.match(/\{\{[^{}]+\}\}/g) || []).forEach((k) => keys.add(k));
+        }
+        keys.forEach((k) => { if (Object.hasOwn(store, k)) out[k] = store[k]; });
+        const types = new Set(Object.values(out).map((d) => d.t));
+        Object.keys(cnt).forEach((t) => { if (types.has(t)) oc[t] = cnt[t]; });
+        return { store: out, cnt: oc };
+      }
+      async function shaHex(s) {
+        const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+        return Array.from(new Uint8Array(h), (b) => b.toString(16).padStart(2, "0")).join("");
+      }
+      // Zähler je Dokument aus den Platzhaltern des Ergebnistextes (PSDetect liefert keine Zähler)
+      function prjCounts(text) {
+        const c = {};
+        for (const k of text.match(/\{\{[^{}]+\}\}/g) || []) {
+          let t = Object.hasOwn(store, k) && store[k].t ? String(store[k].t).toUpperCase().replace(/[^A-Z0-9_]/g, "_").slice(0, 20) : "";
+          if (!/^[A-Z][A-Z0-9_]{1,19}$/.test(t)) t = "SONSTIGE";
+          c[t] = (c[t] || 0) + 1;
+        }
+        return c;
+      }
+      function prjAskClose() {
+        document.getElementById("PRJASK").style.display = "none";
+        const z = document.getElementById("PRJZIP");
+        if (z && !z.disabled) z.focus();
+      }
+      document.addEventListener("keydown", function (e) {
+        const d = document.getElementById("PRJASK");
+        if (!d || d.style.display === "none") return;
+        if (e.key === "Escape") { e.preventDefault(); prjAskClose(); }
+        else if (e.key === "Tab") {
+          const f = [...d.querySelectorAll("button")];
+          const i = f.indexOf(document.activeElement);
+          if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+          else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+        }
+      });
+      function prjAsk() {
+        document.getElementById("PRJASK").style.display = "flex";
+        document.getElementById("PRJASKPW").focus();
+      }
+      async function prjZip(noMap) {
+        if (prjBusy || prjZipBusy || !prj) return;
+        const items = PSLib.project.index(prj).filter((x) => x.status === "fertig" && prjRes.has(x.id));
+        if (!items.length) return toast("Kein fertiges Dokument zum Speichern", "e");
+        const withMap = noMap !== true && document.getElementById("PRJMAP").checked;
+        const keep = document.getElementById("PRJKEEP").checked;
+        prjZipBusy = true;
+        prjRender();
+        try {
+          let mapBytes = null;
+          if (withMap) {
+            const docs = [];
+            for (const it of items) {
+              const d = prj.docs.find((x) => x.id === it.id);
+              docs.push({ index: it.index, name: d.name, chars: d.text.length, sha256: await shaHex(d.text) });
+            }
+            mapBytes = await new Promise((res) => psPwZip(docs, res));
+            if (!mapBytes) { prjAsk(); return; }
+          }
+          const names = new Map(prj.docs.map((d) => [d.id, d.name]));
+          const plan = PSLib.project.zipPlan(items.map((x) => ({ id: x.id, index: x.index, status: "fertig" })), {
+            report: true, map: !!mapBytes,
+            nameFor: (r) => PSLib.hygiene.safeName(names.get(r.id), r.index, { keepName: keep }),
+          });
+          const documents = [];
+          for (const it of items) {
+            const t = prjRes.get(it.id).text;
+            const lr = leakScan(t);
+            if (lr.error) return toast("Gegenprüfung nicht möglich, ZIP nicht erstellt", "e");
+            const sev = (k) => lr.findings.filter((f) => f.severity === k).length;
+            documents.push({ index: it.index, chars: t.length, counts: prjCounts(t), resultSha256: await shaHex(t), leak: { count: lr.findings.length, hoch: sev("hoch"), mittel: sev("mittel") } });
+          }
+          const rep = PSLib.report.build({
+            appVersion: APP_VERSION, startedAt: (prjStart || new Date()).toISOString(), localTime: new Date().toLocaleString("de-DE"),
+            durationMs: prjDur, profileId: curProf, aiMode: localAIMode ? "auto" : "off",
+            modelId: nerPipeline ? AI_MODEL_ID : undefined,
+            whitelistSize: whitelist.length, customRuleCount: cvars.length, documents: documents,
+          });
+          const z = new JSZip();
+          for (const e of plan) {
+            if (e.kind === "result") z.file(e.path, prjRes.get(e.id).text);
+            else if (e.kind === "report-text") z.file(e.path, PSLib.report.toText(rep));
+            else if (e.kind === "report-json") z.file(e.path, PSLib.report.toJson(rep));
+            else if (e.kind === "map") z.file(e.path, mapBytes);
+          }
+          const out = await z.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+          dl("anonymisiert.zip", out, "application/zip");
+          // mapSaved nur, wenn die Datei den ganzen store enthält
+          if (mapBytes && Object.keys(prjScope().store).length === Object.keys(store).length) mapSaved = true;
+          toast(items.length + (items.length === 1 ? " Dokument" : " Dokumente") + " als ZIP gespeichert", "s");
+        } catch (err) {
+          toast("ZIP konnte nicht erstellt werden", "e");
+        } finally {
+          prjZipBusy = false;
+          prjRender();
         }
       }
       async function readTextOf(file) {
@@ -3102,7 +3234,9 @@
       function psMapUnsaved() {
         return Object.keys(store).length > 0 && !mapSaved;
       }
-      let psPwMode = null, psPwBytes = null, psPwBusy = false, psPwOpener = null, psPwTok = 0;
+      let psPwMode = null, psPwBytes = null, psPwBusy = false, psPwOpener = null, psPwTok = 0, psPwZipCb = null, psPwDocs = null;
+      // Passwortdialog für die Zuordnung im Projekt-ZIP: cb(bytes) bei Erfolg, cb(null) bei Abbruch
+      function psPwZip(docs, cb) { psPwZipCb = cb; psPwDocs = docs; psPwOpen("zip"); }
       // Eintraege bereinigen: nur {{...}}-Schluessel, Farbe als #rrggbb, Texte begrenzt
       function psSanitize(st) {
         if (!st || typeof st !== "object" || Array.isArray(st) || (st.v !== undefined && st.v !== 1) || !st.store || typeof st.store !== "object" || Array.isArray(st.store)) throw { code: "CORRUPT" };
@@ -3126,7 +3260,7 @@
       }
       function psPwOpen(mode) {
         psPwMode = mode;
-        const save = mode === "save";
+        const save = mode === "save" || mode === "zip";
         document.getElementById("PWTITLE").textContent = save ? "Zuordnung mit Passwort schützen" : "Zuordnung entschlüsseln";
         document.getElementById("PWINFO").style.display = save ? "" : "none";
         document.getElementById("PWD1").autocomplete = save ? "new-password" : "current-password";
@@ -3139,6 +3273,7 @@
         document.getElementById("PWD1").focus();
       }
       function psPwClose() {
+        if (psPwZipCb) { const cb = psPwZipCb; psPwZipCb = null; psPwDocs = null; cb(null); }
         ["PWD1", "PWD2"].forEach((id) => (document.getElementById(id).value = ""));
         document.getElementById("PWDLG").style.display = "none";
         psPwTok++;
@@ -3151,7 +3286,7 @@
       function psPwStrength() {
         const n = [...document.getElementById("PWD1").value.normalize("NFC")].length;
         document.getElementById("PWSTR").textContent =
-          psPwMode !== "save" ? "" : n === 0 ? "Mindestens 10 Zeichen." : n < 10 ? "Zu kurz: " + n + " von mindestens 10 Zeichen." : n < 16 ? "Länge ausreichend (" + n + " Zeichen)." : "Länge gut (" + n + " Zeichen).";
+          psPwMode !== "save" && psPwMode !== "zip" ? "" : n === 0 ? "Mindestens 10 Zeichen." : n < 10 ? "Zu kurz: " + n + " von mindestens 10 Zeichen." : n < 16 ? "Länge ausreichend (" + n + " Zeichen)." : "Länge gut (" + n + " Zeichen).";
       }
       document.addEventListener("keydown", function (e) {
         const d = document.getElementById("PWDLG");
@@ -3203,21 +3338,23 @@
         const okb = document.getElementById("PWOK");
         okb.disabled = true;
         try {
-          if (psPwMode === "save") {
+          if (psPwMode === "save" || psPwMode === "zip") {
+            const zipMode = psPwMode === "zip";
             if (pw !== document.getElementById("PWD2").value) {
               err.textContent = "Die beiden Passwörter stimmen nicht überein.";
               return;
             }
             const fn = (document.getElementById("FN") || {}).textContent || "";
             const it = document.getElementById("IT").value;
-            const docs = [];
-            if (fn.trim() || it) {
+            const docs = zipMode ? psPwDocs : [];
+            if (!zipMode && (fn.trim() || it)) {
               const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(it));
               if (tok !== psPwTok) return;
               docs.push({ index: 1, name: fn.trim(), chars: it.length, sha256: [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("") });
             }
-            const bytes = await PSLib.psmap.encrypt({ v: 1, created: new Date().toISOString(), state: { store: store, cnt: cnt }, docs: docs }, pw);
+            const bytes = await PSLib.psmap.encrypt({ v: 1, created: new Date().toISOString(), state: zipMode ? prjScope() : { store: store, cnt: cnt }, docs: docs }, pw);
             if (tok !== psPwTok) return;
+            if (zipMode) { const cb = psPwZipCb; psPwZipCb = null; psPwDocs = null; psPwClose(); cb(bytes); return; }
             dl("zuordnung.psmap", bytes, "application/octet-stream");
             mapSaved = true;
             psPwClose();
