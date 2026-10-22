@@ -195,7 +195,7 @@ Ausgangslage (Modus fallback, nach Gruppe B): Handfaelle alt 12, neu 40; Synthet
 
 **Bekannte Nebenwirkung (bewusst offen, kein Leck):** "Braun zur Abgabe aller Erklaerungen" wird als ein Name mitmaskiert, weil "zur" als Namenszusatz gilt (Verhalten der Verlaengerungsregel, durch die jetzt gefundenen Treffer haeufiger sichtbar: syn13, syn27). Ueberzaehlige Maskierung, nichts bleibt lesbar; Behebung moeglich ueber eine Einschraenkung von "zu/zur/vom" als Zusatz (C1.2).
 
-**Referenz (Differenztest `--node`):** 22 erklaerte Abweichungen in `tests/golden/reference-allow.json` (w1: n12, n23, d03, ga09, ga22, ga24, ge04, syn0, syn4, syn11, syn12, syn13, syn27, syn29, syn30, syn34, syn40, syn41, golden-sample; w0, w1, ki: syn28). Pruefung je Eintrag mit altem und neuem Kern: ausschliesslich zusaetzliche oder verlaengerte Maskierung (neue Orts-/Namenstreffer, Zusatzteile von Namen), keine Stelle verliert eine Maskierung.
+**Referenz (Differenztest `--node`):** Nach Gruppe C1 standen 22 erklaerte Abweichungen in `tests/golden/reference-allow.json` (w1: n12, n23, d03, ga09, ga22, ga24, ge04, syn0, syn4, syn11, syn12, syn13, syn27, syn29, syn30, syn34, syn40, syn41, golden-sample; w0, w1, ki: syn28). **Endstand nach allen Gruppen: 29 Eintraege** (dazu ga03 und ga05 je in w0, w1 und ki sowie ki/syn12 aus Gruppe E; 19 + 3 + 3 + 3 + 1). Pruefung je Eintrag mit altem und neuem Kern: ausschliesslich zusaetzliche oder verlaengerte Maskierung (neue Orts-/Namenstreffer, Zusatzteile von Namen), keine Stelle verliert eine Maskierung.
 
 **Messung Gruppe C1 (vorher, nachher, Harness):**
 
@@ -250,6 +250,113 @@ Restliche Namenslecks im Ausfallmodus der Synthetik: keine; offen sind in den ne
 | fallback | 8 | 31 (inkl. 2 neue Faelle v2a129/130, gruen) | 20 / 0 | 0 von 276 | 5, danach 0 von 860 |
 | ki | 2 | 26, danach 25 | 20 / 0 | 1, danach 0 von 276 | 24, danach 7 von 860 |
 | wortlisten (Diagnose) | 19 | 44 | 20 / 0 | 18 | 66, danach 61 |
+
+
+
+### Gruppe F: Korrektur nach Pruefung (mehrdeutige Namen, M1 und M2)
+
+**Befund des Pruefers:** Das erweiterte Namenswoerterbuch maskierte Alltagswoerter, was v2/main nicht tat ("Anders als geplant", "Ehrlich gesagt", "Busse und Bahnen", "Funk und Fernsehen", "Lenz und Sommer", "Zander und Hecht", "Vogt", "Kraemer"); mit Modell (Gruppe E) auch einzelne Vornamen wie "die Iris", "ein Falk", "Mona".
+
+**Entscheidung (Woerterbuch/Regel):** (1) Aus den in C1.1 ergaenzten Nachnamen entfernt: Anders, Appel, Bader, Bergmann, Binder, Busse, Ehrlich, Fiedler, Funk, Heller, Kluge, Knapp, Kraemer, Kuehn, Kraus, Lampe, Lenz, Pape, Schenk, Schlegel, Vogt, Wolff, Zander (Adjektive, Berufe, Tiere, Gegenstaende). Aus den ergaenzten Vornamen entfernt: August (Monat), Pascal (Einheit), Wolle. Namen, die schon in v2/main standen, blieben unberuehrt. (2) Kai, Iris, Falk, Mona und Teddy bleiben als schwache Vornamen (`WEAK_NAMES`): kein Treffer hinter Artikel oder Praeposition mit Artikel ("am Kai", "die Iris", "ein Falk") und nicht als Erstglied eines Kompositums ("Iris-Blende", dagegen "Kai-Uwe" bleibt). Grund fuer das Behalten: v2a66 ("Partner Kai") und Chat-Anreden. (3) Mit Modell (Gruppe E) gilt zusaetzlich fuer jeden einzelnen Vornamen: kein Treffer hinter Artikel oder Praeposition mit Artikel, auch wenn der Artikel am Satzanfang als Teil des Treffers gelesen wurde ("Ein Anton").
+
+**Absicherung:** Die NEG-Faelle v2n03, v2n04, v2n07, v2n10, v2n14, v2n16, v2n17, v2n18, v2n19, v2n22, v2n24 und v2n27 tragen zusaetzliche alltaegliche Saetze mit jedem entfernten oder eingeschraenkten Eintrag (rot angelegt, dann gruen; die Zahl der Negativfaelle bleibt 60, weil `eval-v2.test.mjs` sie fest verlangt). Dazu der Vergleich gegen v2/main (`detect_old.js` des Pruefers) mit 103 Alltagssaetzen, je im Modus fallback und ki: keine neue Maskierung eines Alltagsworts; uebrig sind sechs Saetze, in denen echte Personennamen stehen (Franz, Dieter, Ulrich, Gerhard, Marie, Richard, Albers, Zeller u. a.).
+
+**Messung (vor und nach der Korrektur, unveraendert):** fallback alt 8, neu 31, Synthetik 0 von 276 und 0 von 860; ki alt 2, neu 25, Synthetik 0 von 276 und 7 von 860; Fehlalarme 0 alt und 20 neu in allen Modi, keiner neu; Differenztest 0 Abweichungen.
+
+### Entscheidung je offenem Fund (Stand Ende Durchlauf 1, Ergänzung zur Prüfung)
+
+Jede Fall-Id der Liste "Offene Luecken" hat hier eine Zeile: Modi, in denen sie noch offen ist, Entscheidung ("geht nach C1.2: Regel/Woerterbuch/Modell" oder "bewusst offen" mit Grund), Grund. "alle" heisst wortlisten, fallback und ki. Die Fälle der Gruppen A bis E, die geschlossen wurden, stehen in den Abschnitten oben.
+
+| Fall-Id | Modi | Entscheidung | Grund |
+|---|---|---|---|
+| ga01 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Namenspaar Nachname, Vorname mit Klammerzusatz |
+| ga02 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Absender-/Empfaengerzeile mit Komma |
+| ga06 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Name hinter Herrn mit Komma |
+| ga07 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Anrede und Grussformel |
+| ga27 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Familienangaben |
+| n03 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Name hinter Label |
+| n10 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Nachname am Satzanfang |
+| n12 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Name mit Bindestrich-Nachname |
+| n13 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Sonderbuchstaben |
+| n17 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Eltern: zwei Vornamen mit gemeinsamem Nachnamen |
+| v2a03 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Namensliste |
+| v2a06 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Vorname in Anrede |
+| v2a113 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Ort |
+| v2a114 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Orte |
+| v2a115 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Ort |
+| v2a116 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | wiederholte Namen |
+| v2a118 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Name mit Zusatz |
+| v2a119 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Name mit Zusatz |
+| v2a120 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Ansprache |
+| v2a126 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Kurzformen |
+| v2a54 | nur wortlisten | bewusst offen im Diagnosemodus wortlisten (nur Regeln); im Produktmodus fallback und ki ist der Fall gedeckt (Wortlisten sind Normalfall, Gruppen B bis E) | Kinder mit Vornamen |
+| ga24 | wortlisten | bewusst offen im Diagnosemodus wortlisten; fallback und ki decken den Fall | Geburtsdatum und Ort |
+| ga04 | wortlisten, fallback | geht nach C1.2: Regel (Verlaengerungsregel um 'und' im Namenszusatz erweitern: 'von und zu') | 'Freifrau von und zu Hohenberg-Lindenau': Nachnamenteil bleibt stehen, auch mit Modell gedeckt |
+| ga25 | wortlisten, fallback | geht nach C1.2: Regel (Wert hinter 'Geburtsort:' darf Abkuerzungen wie 'v. d.' enthalten) | Ortsname mit 'v. d. Hoehe' wird nach 'Homburg' abgeschnitten |
+| ga28 | wortlisten, fallback, ki | geht nach C1.2: Regel (Aufenthaltstitel: Nummer in Klammer 'Nr. 12345678', Backlog 4) | Kennzahl hinter 'Nr.' ohne Stichwort unmittelbar davor |
+| gb09 | wortlisten, fallback | geht nach C1.2: Woerterbuch (Begriffsliste Art. 9: Roma, Sinti u. a. im Profil strict) | 'Roma' fehlt in der Begriffsliste; mit Modell gedeckt |
+| ge01 | wortlisten, fallback, ki | geht nach C1.2: Regel (UK National Insurance Number mit Stichwort 'NI number'; Praefix QQ ist formal ungueltig, deshalb greift die Formregel nicht) | Stichwort-Regel haette Vorrang vor der Formpruefung |
+| a07 | wortlisten, fallback | geht nach C1.2: Woerterbuch (Ortsliste um Gemeinden und Doppelnamen wie Garmisch-Partenkirchen) | reiner Ortsname nach 'in', Punkt E-ORT |
+| o03 | wortlisten, fallback | geht nach C1.2: Regel (Behoerdenname 'Bundesagentur fuer Arbeit' als Organisation; derzeit wird nur 'Arbeit' als Name maskiert) | Organisationsregel kennt 'Bundesagentur' nicht |
+| o10 | wortlisten, fallback | geht nach C1.2: Woerterbuch (Krankenkassen: AOK, TK, Barmer, DAK, IKK u. a.) | Kuerzel AOK steht in keiner Liste |
+| v2a101 | wortlisten, fallback, ki | geht nach C1.2: Regel (Gruppe account, Zugangsdaten) | Login mit 'Benutzer' vor dem Namen und 'Kennwort' mit Sonderzeichen |
+| v2a103 | wortlisten, fallback, ki | geht nach C1.2: Regel (Gruppe account, Zugangsdaten) | Umgebungsvariable 'AWS_SECRET_ACCESS_KEY=...' mit 40 Zeichen |
+| v2a104 | wortlisten, fallback, ki | geht nach C1.2: Regel (Gruppe account, Zugangsdaten) | PIN und TAN mit Verb 'ist' zwischen Stichwort und Wert (wie Gruppe D) |
+| v2a105 | wortlisten, fallback, ki | geht nach C1.2: Regel (Gruppe account, Zugangsdaten) | WLAN-Schluessel mit Bindestrich-Wert |
+| v2a109 | wortlisten, fallback, ki | geht nach C1.2: Regel (Gruppe account, Zugangsdaten) | Tresorcode (Stichwort fehlt in der Zugangsdaten-Regel) |
+| v2a110 | wortlisten, fallback, ki | geht nach C1.2: Regel (Gruppe account, Zugangsdaten) | 'Passwort fuer das Kundenportal:' mit Zwischenwoertern |
+| v2a111 | wortlisten, fallback | geht nach C1.2: Woerterbuch (Fehler: die Ortsliste der Stichwortregel kennt Dortmund, die Score-Liste in detectLocalEntities nicht; ein Ort der Stichwortliste ohne Eintrag in der Score-Liste wird verworfen. Beide Listen zusammenfuehren) | Dortmund, Goettingen, Kassel, Detmold fehlen in der Score-Liste |
+| v2a51 | wortlisten, fallback | geht nach C1.2: Woerterbuch (wie v2a111, Goettingen) | Ortsliste |
+| v2a57 | wortlisten, fallback | geht nach C1.2: Woerterbuch (wie v2a111, Detmold) | Ortsliste |
+| v2a66 | wortlisten | bewusst offen im Diagnosemodus wortlisten; in fallback und ki gedeckt (Kai ist ein schwacher Vorname, gilt ohne Artikel davor) | Gruppe F |
+| v2a117 | wortlisten, ki | geht nach C1.2: Regel (Ueberlappung: ein Wortlistentreffer, der einen reinen Namen-Modelltreffer verlaengert oder ersetzt) | Modelltreffer 'Birgit: Danke' beruehrt den Wortlistentreffer, deshalb wird 'Zoe' nicht ergaenzt |
+| v2a12 | alle | geht nach C1.2: Regel (Telefon: 'Mobil: +49 160 ...' und 'Buero: 0711 / 55 20 61-14' mit Schraegstrich und Durchwahl) | Formate mit Leerzeichen um den Schraegstrich |
+| v2a15 | alle | geht nach C1.2: Regel (Postfach plus Postleitzahl-Ort) | Stichwort 'Postfach' ohne Regel |
+| v2a19 | alle | geht nach C1.2: Regel (Profil-Adressen github.com/..., xing.com/profile/...) | Domainliste kennt github.com nicht |
+| v2a20 | alle | geht nach C1.2: Regel (Telefon 0049 (0) mit Gruppen aus einzelnen Ziffern) | Format '8821 7 33 90' |
+| v2a30 | alle | geht nach C1.2: Regel (Anmeldename/Domaenenname im Arbeitsplatz-Zusammenhang) | 'Anmeldename' fehlt als Stichwort |
+| v2a35 | alle | geht nach C1.2: Regel (Koordinaten 'lat=..., lon=...') | Schluesselwoerter lat/lon fehlen |
+| v2a39 | alle | geht nach C1.2: Regel (Koordinaten in URL-Parametern ?q=lat,lon) | URL-Regel greift nicht auf Koordinatenteil |
+| v2a45 | alle | geht nach C1.2: Regel (Rentenversicherungsnummer mit Leerzeichen, Krankenversichertennummer A123456780) | Format-Varianten |
+| v2a67 | alle | geht nach C1.2: Woerterbuch (Begriffsliste Art. 9: genetische Marker wie BRCA1) | Begriff fehlt in der Liste |
+| v2a69 | alle | geht nach C1.2: Woerterbuch/Regel (Art. 9: Rollstuhl, Grad der Behinderung, Merkzeichen; Standardprofil strict) | nur 'Pflegegrad' ist gelistet |
+| v2a78 | alle | geht nach C1.2: Regel (Art. 10: Ordnungswidrigkeit mit Punkten und Fahrverbot) | nur 'Fahrverbot' ist gelistet; Betraege und km/h bleiben |
+| v2a81 | wortlisten, fallback | geht nach C1.2: Regel (Tabellenzeile mit senkrechtem Strich: Spalte 'Strasse' ohne Postleitzahl) | 'Am Anger 12' hat keine Postleitzahl in der Zeile |
+| v2a83 | alle | geht nach C1.2: Regel (IBAN ueber Zeilenumbruch hinweg) | Zeilenumbruch mitten in der IBAN |
+| v2a84 | alle | geht nach C1.2: Regel (E-Mail ueber Zeilenumbruch hinweg) | Zeilenumbruch hinter dem @ |
+| v2a86 | alle | geht nach C1.2: Regel (Hr. Joh. Wittkopp: Abkuerzung 'Joh.' vor dem Nachnamen; 'Hauptstr. 3' ohne Postleitzahl-Format) | Abkuerzung und Postleitzahl mit Leerzeichen |
+| v2a87 | wortlisten, fallback | geht nach C1.2: Regel (CSV-Zeile: Nachname in Anfuehrungszeichen vor Vorname) | 'Mueller' ist kein Woerterbuchname |
+| v2a92 | alle | geht nach C1.2: Regel (Ausland) | franzoesische Adresse 'avenue' mit Hausnummer davor, Telefonformat tel. 04 78 12 34 56 |
+| v2a94 | alle | geht nach C1.2: Regel (Ausland) | polnisches Namensformat Zielinska und ul. Dluga 7/3 |
+| v2a96 | alle | geht nach C1.2: Regel (Ausland) | US-SSN ddd-dd-dddd (keine Regel; Stichwort 'SSN') |
+| v2a99 | alle | geht nach C1.2: Regel (Ausland) | tschechische Geburtsnummer und Adresse |
+| v2a95 | wortlisten, fallback | geht nach C1.2: Regel (spanische Adresse 'avenida de la ...') | Adresse ohne Postleitzahl-Format |
+| v2a97 | wortlisten, fallback | geht nach C1.2: Regel (niederlaendische Adresse Strasse Hausnummer) | Hausnummer ohne Postleitzahl-Format |
+
+Fehlalarme (Kategorie NEG, in allen Modi offen: wortlisten, fallback und ki; alle schon in C1.0 gemessen, keiner neu):
+
+| Fall-Id | Beobachtung | Entscheidung |
+|---|---|---|
+| v2n01 | 'Hamburger Hafen' und 'Tonnen' werden als Namen maskiert | geht nach C1.2: Wörterbuch/Modell (Ortsadjektive auf -er und Gattungswörter wie Tonnen nicht als Namen) |
+| v2n02 | 'Berliner Philharmoniker' und 'Brahms' | geht nach C1.2: Wörterbuch (Komponisten und Ortsadjektive als Ausnahmeliste), sonst bewusst offen (Modell) |
+| v2n13 | 'Hotel Alpenblick' wird als Name maskiert (Garmisch als Ort bleibt nach E-ORT maskiert) | geht nach C1.2: Regel (Stichwort Hotel plus Eigenname ist kein Personenname); der Ortsteil bleibt bewusst offen |
+| v2n15 | '12 Stück Kabelbinder': Gattungswort 'Stück' als Name | geht nach C1.2: Wörterbuch (Stoppwörter für Mengenangaben) |
+| v2n20 | 'Berg Zugspitze', 'Gipfel': Stichwort Berg | geht nach C1.2: Wörterbuch (Bergnamen und Gattungswörter) |
+| v2n21 | 'Stadtwerke München' | bewusst offen: Ortsname wird nach E-ORT maskiert, der Firmenname enthält ihn |
+| v2n23 | Code-Beispiel: die URL im String wird als Weblink maskiert | bewusst offen: Weblinks mit Pfad gelten als Kennung (Profil-Entscheidung), Codebeispiele sind selten |
+| v2n25 | 'Siehe Tabelle 4': 'Tabelle' wird als Name gelesen | geht nach C1.2: Wörterbuch (Stoppwort 'Tabelle', 'Abbildung') |
+| v2n29 | 'Museum Ludwig': Eigenname einer Institution | bewusst offen: enthält einen Personennamen (Ludwig); nur mit Kontext (Museum) zu unterscheiden, Nutzen gering |
+| v2n30 | '§ 15 Abs. 3 TMG ist die Nutzung von Pseudonymen': 'Nutzung' wird zum Namen | geht nach C1.2: Regel (Gesetzeszitat mit Kürzel TMG) |
+| v2n32 | 'Volkshochschule Heidelberg' | bewusst offen: Ortsname, E-ORT |
+| v2n34 | '100 Grad Celsius': 'Celsius' als Name | geht nach C1.2: Wörterbuch (Einheiten und Personennamen als Einheit: Celsius, Newton, Pascal) |
+| v2n35 | 'Frankfurter Würstchen': Ortsadjektiv | geht nach C1.2: Wörterbuch (Ortsadjektive auf -er) |
+| v2n37 | Datei 'aus dem Ordner Projekte': 'Projekte' wird zum Namen | geht nach C1.2: Wörterbuch (Stoppwort) |
+| v2n48 | 'Wiener Sängerknaben', 'Japan' | geht nach C1.2: Wörterbuch (Ortsadjektive), Japan bewusst offen (Ortsname, E-ORT) |
+| v2n50 | 'eine Prise Salz': 'Prise' wird zum Namen | geht nach C1.2: Wörterbuch (Stoppwort) |
+| v2n51 | 'Sparkasse Köln-Bonn', 'Volksbank Mittelhessen' | bewusst offen: Ortsnamen im Bankennamen, E-ORT |
+| v2n52 | 'das Passwort mindestens zwölf Zeichen': 'mindestens' wird als Kennwort gelesen | geht nach C1.2: Regel (Stichwort Passwort ohne Doppelpunkt nur mit Wert aus Sonderzeichen oder Ziffern) |
+| v2n53 | 'Bundesstraße 27' wird als Adresse maskiert | geht nach C1.2: Regel (Bundesstraße/Autobahn mit Nummer ist keine Adresse) |
+| v2n56 | 'Tag der Deutschen Einheit': 'Einheit' als Name | geht nach C1.2: Wörterbuch (Feiertagsnamen) |
 
 
 ---
