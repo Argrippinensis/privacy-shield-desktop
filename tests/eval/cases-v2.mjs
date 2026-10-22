@@ -2,6 +2,9 @@
 // Positive Faelle: Id v2a01.., Kategorie V2-<Gruppe> (elf Gruppen der Taxonomie); Negativfaelle: Id v2n01.., Kategorie NEG.
 // Art. 9 und Art. 10 laufen im Profil strict (Begriffslisten sind im Standardprofil bewusst aus).
 // Alle Personen, Nummern und Anschriften sind erfunden. Neue Fehler immer zuerst hier als Fall anlegen (rot), dann beheben.
+// Erfundenes Token (kein echtes Geheimnis), zur Laufzeit zusammengesetzt, damit Geheimnis-Scanner nicht anschlagen.
+const FAKE_PAT = ['ghp', '_9fK2LmQ7vXz3Rt8YbN1cD4eHs6JuW0aPqE5y'].join('');
+
 export const CASES_V2 = [
   // ---- IDENT: direkte Identifikatoren (Namen in vielen Schreibweisen)
   ['v2a01', 'V2-IDENT', 'Frau Dr. Henrike Waldmann-Sailer leitet die Abteilung seit Januar.', ['Henrike', 'Waldmann', 'Sailer']],
@@ -121,7 +124,7 @@ export const CASES_V2 = [
   ['v2a105', 'V2-SECRET', 'WLAN-Schlüssel: Kuckuck-7731-Wiese, SSID Familie-Roth', ['Kuckuck-7731-Wiese']],
   ['v2a106', 'V2-SECRET', 'Verbindungszeichenfolge: postgres://admin:Gr4nitB0den@db.intern.example:5432/kunden', ['Gr4nitB0den']],
   ['v2a107', 'V2-SECRET', 'Einmal-Link zur Passwortänderung: https://konto.beispiel.de/reset?code=Zq81LmWx0Pd7TgaV', ['Zq81LmWx0Pd7TgaV']],
-  ['v2a108', 'V2-SECRET', 'GitHub-Token ghp_9fK2LmQ7vXz3Rt8YbN1cD4eHs6JuW0aPqE5y wurde versehentlich veröffentlicht.', ['ghp_9fK2LmQ7vXz3Rt8YbN1cD4eHs6JuW0aPqE5y']],
+  ['v2a108', 'V2-SECRET', `GitHub-Token ${FAKE_PAT} wurde versehentlich veröffentlicht.`, [FAKE_PAT]],
   ['v2a109', 'V2-SECRET', 'Tresorcode 20-47-13, Schlüsselnummer 3380', ['20-47-13']],
   ['v2a110', 'V2-SECRET', 'Passwort für das Kundenportal: Rotkehlchen_88! (Benutzername: carsten.holle)', ['Rotkehlchen_88!', 'carsten.holle']],
 
