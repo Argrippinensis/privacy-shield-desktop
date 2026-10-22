@@ -20,9 +20,9 @@ Modi: wortlisten (nur Regeln), fallback (Regeln plus Wortlisten, Modell startet 
 ## Offene Luecken (je Modus, je Fall-Id, synthetisch je Dokument und Wert)
 
 <!-- BACKLOG-START -->
-Stand der Messung: C1.1 nach Gruppen D und E (Endstand Durchlauf 1)
+Stand der Messung: C1.1 Endstand Durchlauf 1
 
-| Modus | Luecken Handfaelle (von 125) | Fehlalarme (NEG von 60) | Synthetik undicht (von 860) |
+| Modus | Luecken Handfaelle (von 130) | Fehlalarme (NEG von 60) | Synthetik undicht (von 860) |
 |---|---|---|---|
 | wortlisten | 44 | 20 | 61 |
 | fallback | 31 | 20 | 0 |
@@ -119,7 +119,7 @@ Stand der Messung: C1.1 nach Gruppen D und E (Endstand Durchlauf 1)
 * V2-PERSON: v2a51 v2a57
 * V2-SECRET: v2a101 v2a103 v2a104 v2a105 v2a109 v2a110
 * V2-STANDORT: v2a35 v2a39 v2a111
-* Synthetik je Typ (undicht/gesamt): 
+* Synthetik je Typ (undicht/gesamt): keine
 * Synthetische Lecks einzeln (Vorlage, Dokument-Nr, Typ, noch lesbares Fragment):
 
 ### Modus ki
