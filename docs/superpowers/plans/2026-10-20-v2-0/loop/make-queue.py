@@ -60,8 +60,8 @@ add('F2.h', 'Haertung der Bruecke (Absender, Argumente, Ursprung, Berechtigungen
     ['main.js', 'preload.js', IDX, HTML, 'tests/ipc-security.test.mjs', 'tests/helpers.mjs'], ['tests/ipc-security.test.mjs'],
     [e2e('ipc-security.test.mjs'), 'xvfb-run -a npm test'], serial=True)
 add('F5', 'Kern-Leistung bei pathologischen Eingaben (lange Zeilen, Leerraumfolgen)', 'V2-F-fundament.md#f5', 'S', ['F1.b'],
-    ['app/lib/detect.js', HTML, 'tests/unit/detect.pathological.test.mjs', 'tests/golden/reference-allow.json', 'docs/erkennung-entscheidungen.md'],
-    ['tests/unit/detect.pathological.test.mjs'], [U, DIFF_NODE, DIFF_APP, 'xvfb-run -a npm run eval'], serial=True)
+    ['app/lib/detect.js', HTML, 'tests/unit/detect.pathological.test.mjs', 'tests/unit/detect.glued.test.mjs', 'tests/golden/reference-allow.json', 'docs/erkennung-entscheidungen.md'],
+    ['tests/unit/detect.pathological.test.mjs', 'tests/unit/detect.glued.test.mjs'], [U, DIFF_NODE, DIFF_APP, 'xvfb-run -a npm run eval'], serial=True)
 
 # ---- Vertrauen -----------------------------------------------------------------------------------------------------------------
 add('M1.m', 'Manuelle Markierungen als Daten: Modul', 'V2-A-vertrauen.md#m1', 'H', ['F2'],

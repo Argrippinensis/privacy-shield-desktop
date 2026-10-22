@@ -290,10 +290,12 @@
     "app/privacy-shield.html",
     "tests/unit/detect.pathological.test.mjs",
     "tests/golden/reference-allow.json",
-    "docs/erkennung-entscheidungen.md"
+    "docs/erkennung-entscheidungen.md",
+    "tests/unit/detect.glued.test.mjs"
    ],
    "tests": [
-    "tests/unit/detect.pathological.test.mjs"
+    "tests/unit/detect.pathological.test.mjs",
+    "tests/unit/detect.glued.test.mjs"
    ],
    "accept": [
     "npm run test:unit",
