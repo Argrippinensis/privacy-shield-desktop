@@ -284,3 +284,5 @@ Nachweis: `tests/unit/detect.pathological.test.mjs` (alle Eingaben unter 2 s, Ru
 | PDF als Bild (OCR) | 5 von 27 (18,5 %) | 6 | 18:TEL (3 Mal), 4:TEL, 5:NAME |
 
 Ziel (C1.3): hoechstens 2 % (OCR 6 %). Die Format-Unterschiede (IBAN im PDF, Telefonnummern bei OCR) gehen als Funde in die Schleife C1.1 bis C1.3.
+
+Stand nach C1.1 Durchlauf 1 (Ratsche in `tests/realdocs.test.mjs` entsprechend nach unten gezogen): TXT 2 von 97 (2,1 %), DOCX 2 von 97, PDF mit Textebene 3 von 97 (3,1 %), OCR 5 von 27 (unveraendert); Modus fallback TXT 0, DOCX 0, PDF 1, OCR 4. Verbleibende Lecks mit Modell: 19:NAME (zwei Mal, Chat-Sprecher, siehe Gruppe E), 15:IBAN (PDF), 18:TEL und 4:TEL, 5:NAME (OCR).
