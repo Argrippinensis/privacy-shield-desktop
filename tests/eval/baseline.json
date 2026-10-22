@@ -71,7 +71,7 @@
       "KFZ": 0,
       "MED": 0,
       "NEG": 0,
-      "G-NAME": 0,
+      "G-NAME": 2,
       "G-KONTAKT": 0,
       "G-GERAET": 0,
       "G-STANDORT": 0,
@@ -86,7 +86,7 @@
       "G-AUSLAND": 1,
       "G-SECRET": 0
     },
-    "synthLeaked": 0,
+    "synthLeaked": 1,
     "synthTotal": 276
   }
 }
