@@ -168,6 +168,11 @@ app.on('web-contents-created', (event, contents) => {
   contents.on('will-frame-navigate', (e) => guard(e, e.url));
 });
 
+// Freigabe-Merker fuers Schliessen. Ausdrueckliches Beenden (app.quit, auch Cmd-Q) und Update-Installation
+// werden nie vom Dialog blockiert; Cmd-Q umgeht die Warnung bewusst.
+let closeFreigegeben = false;
+app.on('before-quit', () => { closeFreigegeben = true; });
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -182,6 +187,50 @@ function createWindow() {
       contextIsolation: true,
       sandbox: true
     }
+  });
+
+  // Schliessen: bei ungespeicherter Zuordnung nachfragen
+  closeFreigegeben = false;
+  let closePruefung = false;
+  // Herunterfahren (Windows) nie blockieren
+  mainWindow.on('session-end', () => { closeFreigegeben = true; });
+  mainWindow.on('close', (event) => {
+    if (closeFreigegeben) return;
+    event.preventDefault();
+    if (closePruefung) return;
+    closePruefung = true;
+    const win = mainWindow;
+    const schliessen = () => {
+      closePruefung = false;
+      closeFreigegeben = true;
+      if (!win.isDestroyed()) win.close();
+    };
+    (async () => {
+      let ungespeichert = false;
+      try {
+        const frame = win.webContents.mainFrame.frames.find((f) => f.url.includes('privacy-shield.html'));
+        if (frame) {
+          // Haengt der Frame, nach 2,5 s als gespeichert werten (Fenster schliesst)
+          const antwort = await Promise.race([
+            frame.executeJavaScript('typeof psMapUnsaved === "function" && psMapUnsaved()'),
+            new Promise((ok) => setTimeout(() => ok(false), 2500))
+          ]);
+          ungespeichert = antwort === true;
+        }
+      } catch (e) { ungespeichert = false; }
+      if (!ungespeichert) return schliessen();
+      try {
+        const r = await dialog.showMessageBox(win, {
+          type: 'warning',
+          buttons: ['Abbrechen', 'Trotzdem schließen'],
+          defaultId: 0,
+          cancelId: 0,
+          message: 'Die Zuordnung wurde nicht gespeichert. Später können Platzhalter nicht zurückübersetzt werden. Trotzdem schließen?'
+        });
+        if (r.response === 1) return schliessen();
+      } catch (e) { return schliessen(); }
+      closePruefung = false;
+    })();
   });
 
   mainWindow.loadURL(APP_ORIGIN + 'index.html');
@@ -446,6 +495,7 @@ function setupAutoUpdater() {
       mainWindow.webContents.send('update-downloaded', info.version);
     }
     setTimeout(() => {
+      closeFreigegeben = true;
       autoUpdater.quitAndInstall(false, true);
     }, 2000);
   });
