@@ -692,11 +692,14 @@
     "npm run test:unit",
     "xvfb-run -a node --test --test-concurrency=1 tests/project-list.test.mjs"
    ],
-   "status": "offen",
-   "attempts": 0,
+   "status": "laeuft",
+   "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": null,
+   "lease": {
+    "owner": "orch-20261022-1",
+    "ts": 1792644076911
+   },
    "notes": ""
   },
   {
