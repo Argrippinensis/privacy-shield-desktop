@@ -29,7 +29,7 @@ async function runIn(frame, items) {
       document.getElementById('IT').value = it.text; aiCache = { key: null, spans: [] };
       await anon();
       const out = document.getElementById('AT').value;
-      res.push({ key: it.key, out, tokens: (out.match(/\{\{[A-Z_0-9]+\}\}/g) || []).length });
+      res.push({ key: it.key, out, tokens: PSLib.placeholder.find(out).length });
     }
     return res;
   }, items);
