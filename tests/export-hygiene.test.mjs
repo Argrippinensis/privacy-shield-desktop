@@ -195,8 +195,8 @@ test('D30: haengender Renderer bei ungespeicherter Zuordnung, "Trotzdem schliess
     await sleep(300);
     const closed = a.app.waitForEvent('close', { timeout: 15000 }).then(() => true, () => false);
     await closeWin(a.app).catch(() => {});
+    assert.equal(await dlgSeen(a.app, 8000), 1, 'Erwartet genau eine Warnung statt stillem Schliessen');
     assert.equal(await closed, true, 'Fenster nicht geschlossen');
-    assert.equal(await dlgCount(a.app), 1, 'Erwartet genau eine Warnung statt stillem Schliessen');
   } finally { await a.close(); }
 });
 

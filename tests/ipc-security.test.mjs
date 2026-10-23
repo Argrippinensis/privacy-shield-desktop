@@ -341,7 +341,8 @@ async function saveFileMit(ziel, args) {
       } catch (e) { return { ok: false, err: String(e && e.message || e), opts: globalThis.__dlgOpts }; }
     }, { ziel, dir, args, trusted: TRUSTED });
     r.files = fs.readdirSync(dir).sort();
-    r.read = (n) => fs.readFileSync(path.join(dir, n));
+    const inhalt = Object.fromEntries(r.files.map((n) => [n, fs.readFileSync(path.join(dir, n))]));
+    r.read = (n) => inhalt[n];
     return r;
   } finally { await a.close(); fs.rmSync(dir, { recursive: true, force: true }); fs.rmSync(dir + '.blocker', { force: true }); }
 }
