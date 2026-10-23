@@ -2938,7 +2938,9 @@
             if (kind === "docx") {
               // Trockenlauf: Mammoth oeffnet das Archiv mit eigener JSZip-Kopie ohne Grenze, daher vorher zaehlend entpacken
               const bud = { used: 0, max: F.MAX_TOTAL };
-              for (const nm of Object.keys(zip.files)) if (!zip.files[nm].dir) await F.boundedRead(zip, nm, { budget: bud, as: "count" });
+              // nur Textteile (.xml, .rels): Medien liest Mammoth nicht, sie zaehlen nicht
+              for (const nm of Object.keys(zip.files))
+                if (!zip.files[nm].dir && /\.(xml|rels)$/i.test(nm)) await F.boundedRead(zip, nm, { budget: bud, as: "count" });
               const base = await exDOCX(file);
               const extra = await O.extractDocxExtras(zip);
               return extra.text ? base + "\n\n" + extra.text : base;
@@ -2984,6 +2986,7 @@
         } catch (err) {
           document.getElementById("IT").value = ""; // abgelehnte Datei: kein Text der vorigen Datei stehen lassen
           updIC();
+          scheduleHighlight();
           toast("Fehler: " + err.message, "e");
         }
       }
