@@ -2307,14 +2307,11 @@
    "accept": [
     "npm run test:unit"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261023-2",
-    "ts": 1792778986101
-   },
+   "commit": "15da25da7ef9ad566e26e3d6b98206e8903fd8a6",
+   "lease": null,
    "notes": ""
   }
  ],
