@@ -23,7 +23,7 @@
       "G-ART9": 1,
       "G-ART10": 0,
       "G-FORM": 0,
-      "G-AUSLAND": 1,
+      "G-AUSLAND": 2,
       "G-SECRET": 0
     },
     "synthLeaked": 18,
@@ -53,7 +53,7 @@
       "G-ART9": 1,
       "G-ART10": 0,
       "G-FORM": 0,
-      "G-AUSLAND": 1,
+      "G-AUSLAND": 2,
       "G-SECRET": 0
     },
     "synthLeaked": 0,
@@ -83,7 +83,7 @@
       "G-ART9": 0,
       "G-ART10": 0,
       "G-FORM": 0,
-      "G-AUSLAND": 1,
+      "G-AUSLAND": 2,
       "G-SECRET": 0
     },
     "synthLeaked": 1,

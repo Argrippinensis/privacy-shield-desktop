@@ -6,21 +6,25 @@ import assert from 'node:assert/strict';
 import { launchApp, toolFrame, setFiles, makePdf } from './helpers.mjs';
 import { loadVendor } from './unit/_load.mjs';
 import { generateDocs2 } from './eval/generate.mjs';
+import { measureDoc, mergeResults, rates, assessImport } from './eval/measure.mjs';
 
 const JSZip = loadVendor('jszip');
 
 // Schwellen (Anteil undichter Werte), fest im Test
 const MAX_LEAK_TEXT = 0.02;   // DOCX, PDF mit Textebene, TXT, mit Modell
 const MAX_LEAK_OCR = 0.06;    // OCR: Zeichenverwechslung ist kein Erkennungsfehler
-const OCR_MIN_FRAG = 5;       // bei OCR zaehlen nur Fragmente ab 5 Zeichen
+const OCR_MIN_FRAG = 5;       // bei OCR werden nur Fragmente ab 5 Zeichen gemessen; kuerzere Werte stehen als unmeasured im Bericht
 // Ratsche: heute gemessener Stand (Anzahl undichter Werte), darf nicht steigen. Ziel C1.3 sind die Schwellen oben.
+// Q2.fix: Messung verschaerft (Teilreste, Nenner nur importierte Werte); die Staende ki/fb sind mit der neuen Messung
+// unveraendert bestaetigt (keine Teilreste gefunden). Nenner OCR: 24 importierte Werte statt 27, 3 verloren, 1 ungemessen.
 const RATCHET = {
   TXT: { ki: 2, fb: 0 },
   DOCX: { ki: 2, fb: 0 },
   'PDF-Text': { ki: 3, fb: 1 },
   OCR: { ki: 5, fb: 4 },
 };
-const MIN_EXTRACTED = 0.9;    // Vorbedingung: mindestens so viele Werte muessen den Import ueberstehen
+// Vorbedingung Import (Q2.fix): TXT, DOCX, PDF mit Textebene muessen alle Werte erhalten (assessImport, 100 %);
+// bei OCR ist Verlust erlaubt, wird aber als eigene Fehlerklasse 'ocr' ausgewiesen. Die Leckquote hat nur importierte Werte im Nenner.
 
 // Erste 6 Vorlagen mit je 2 Dokumenten = 12 Dokumente (Index 0..5 und 14..19 bei 14 Vorlagen)
 const ALL = generateDocs2(98);
@@ -101,42 +105,31 @@ const anonymize = (f) => f.evaluate(async () => {
   return document.getElementById('AT').value;
 });
 
-function leaks(doc, out, minFrag = 0) {
-  let total = 0, leaked = 0; const hits = [];
-  for (const t of doc.truth) {
-    const frags = t.frags.filter((x) => x.length >= minFrag);
-    if (!frags.length) continue;
-    total++;
-    const hit = frags.find((x) => out.includes(x));
-    if (hit) { leaked++; hits.push(t.type); }
-  }
-  return { total, leaked, hits };
-}
-
 // Misst alle Dokumente eines Formats: mit Modell und im Modus fallback. Liefert die Zahlen (nie Klartextwerte).
 async function measure(label, f, docs, build, { minFrag = 0, timeout } = {}) {
   await modelOn(f);
-  const inputs = [], ki = { total: 0, leaked: 0, hits: [] }; let present = 0, presentTotal = 0;
+  const inputs = [], kiList = [];
   for (const d of docs) {
     const file = await build(d);
     const input = await load(f, file, timeout);
     inputs.push(input);
     const out = await anonymize(f);
     assert.ok(/\{\{[A-Z_0-9.]+\}\}/.test(out), `${label}: Dokument ${d.idx} ohne Platzhalter`);
-    for (const t of d.truth) { const fr = t.frags.filter((x) => x.length >= minFrag); if (fr.length) { presentTotal++; if (fr.some((x) => input.includes(x))) present++; } }
-    const r = leaks(d, out, minFrag);
-    ki.total += r.total; ki.leaked += r.leaked; ki.hits.push(...r.hits.map((h) => d.idx + ':' + h));
+    const r = measureDoc(d, out, { input, minFrag });
+    kiList.push({ ...r, hits: r.hits.map((h) => ({ ...h, doc: d.idx })) });
   }
   // Modus fallback (W1): ohne Modell, Regeln plus Wortlisten
   await f.evaluate(() => { setAIMode('off'); localAIMode = true; });
-  const fb = { total: 0, leaked: 0 };
+  const fbList = [];
   for (let i = 0; i < docs.length; i++) {
     await f.evaluate((t) => { document.getElementById('IT').value = t; }, inputs[i]);
-    const r = leaks(docs[i], await anonymize(f), minFrag);
-    fb.total += r.total; fb.leaked += r.leaked;
+    fbList.push(measureDoc(docs[i], await anonymize(f), { input: inputs[i], minFrag }));
   }
-  return { label, ki, fb, present, presentTotal };
+  return { label, ki: mergeResults(kiList), fb: mergeResults(fbList) };
 }
+
+const hitList = (m) => m.hits.map((h) => `${h.doc}:${h.type}:${h.kind}`).join(' ');
+const pct = (x) => (100 * x).toFixed(1) + ' %';
 
 // Pro Format einmal messen; Ratschen- und Zieltest teilen das Ergebnis
 const cache = new Map();
@@ -164,15 +157,18 @@ test('Testdokumente: 12 Dokumente aus den ersten 6 Vorlagen, 3 davon fuer die OC
 for (const [key, F] of Object.entries(FORMATS)) {
   test(`${F.title}: Ratsche, Lecks mit Modell hoechstens ${RATCHET[key].ki}, fallback hoechstens ${RATCHET[key].fb}, Import funktioniert`, { timeout: 900000 }, async () => {
     const r = await measured(key, F.run);
-    // Bericht: Dokumentnummer und Typ, nie der Klartextwert
-    console.log(`  ${key}: mit Modell ${r.ki.leaked}/${r.ki.total} (${(100 * r.ki.leaked / r.ki.total).toFixed(1)} %) [${r.ki.hits.join(' ')}]; fallback ${r.fb.leaked}/${r.fb.total} (${(100 * r.fb.leaked / r.fb.total).toFixed(1)} %)`);
-    assert.ok(r.present / r.presentTotal >= MIN_EXTRACTED, `${key}: nur ${r.present}/${r.presentTotal} Werte ueberstehen den Import`);
-    assert.ok(r.ki.leaked <= RATCHET[key].ki, `${key}: ${r.ki.leaked} Lecks mit Modell, Stand ${RATCHET[key].ki}: ${r.ki.hits.join(' ')}`);
+    const q = rates(r.ki), qf = rates(r.fb);
+    // Bericht: Dokumentnummer, Typ und Art, nie der Klartextwert; Import- und Leckquote getrennt
+    console.log(`  ${key}: mit Modell ${r.ki.leaked}/${r.ki.imported} (${pct(q.leakRate)}) [${hitList(r.ki)}]; fallback ${r.fb.leaked}/${r.fb.imported} (${pct(qf.leakRate)}); Import ${r.ki.imported}/${r.ki.imported + r.ki.lost} (${pct(q.importRate)}), verloren ${r.ki.lost}, OCR-veraendert in Ausgabe ${r.ki.ocrChanged}, ungemessen ${r.ki.unmeasured}`);
+    const imp = assessImport(key, r.ki);
+    assert.ok(imp.ok, `${key}: ${r.ki.lost} von ${r.ki.imported + r.ki.lost} Werten ueberstehen den Import nicht (Fehlerklasse ${imp.errorClass})`);
+    assert.ok(r.ki.leaked <= RATCHET[key].ki, `${key}: ${r.ki.leaked} Lecks mit Modell, Stand ${RATCHET[key].ki}: ${hitList(r.ki)}`);
     assert.ok(r.fb.leaked <= RATCHET[key].fb, `${key}: ${r.fb.leaked} Lecks im Modus fallback, Stand ${RATCHET[key].fb}`);
   });
 
   test(`${F.title}: Ziel hoechstens ${F.max * 100} % undichte Werte mit Modell`, { timeout: 900000, todo: 'Ziel C1.3: hoechstens 2 % (OCR 6 %)' }, async () => {
     const r = await measured(key, F.run);
-    assert.ok(r.ki.leaked / r.ki.total <= F.max, `${key}: ${r.ki.leaked}/${r.ki.total} undicht, erlaubt ${F.max * 100} %: ${r.ki.hits.join(' ')}`);
+    const q = rates(r.ki);
+    assert.ok(q.leakRate <= F.max, `${key}: ${r.ki.leaked}/${r.ki.imported} undicht, erlaubt ${F.max * 100} %: ${hitList(r.ki)}`);
   });
 }
