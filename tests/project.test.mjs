@@ -259,3 +259,40 @@ test('D32: Dokument nach dem Lauf entfernen, dann ZIP: .psmap-Nutzlast und Ergeb
     assert.ok(!/Schmidtbauer|keep1|keep2/.test(toasts), 'Dateiname in Toast: ' + toasts);
   } finally { await a.close(); }
 });
+
+test('K1.fix/K2: woertlicher Platzhalter in Dokument 2 wird bei Dokument 1 nie neu vergeben (reserved wird durchgereicht)', async () => {
+  const { a, f } = await prepare();
+  try {
+    const d1 = 'Kontakt: ben.beispiel@example.invalid.';
+    const d2 = 'Hinweis: {{EMAIL_1}} steht woertlich im Original.';
+    await setFiles(f, [txt('r1.txt', d1), txt('r2.txt', d2)]);
+    await runAll(f, 2);
+    const s = await f.evaluate(() => ({ res: [...prjRes.values()].map((r) => r.text), back: [...prjRes.values()].map((r) => PSDetect.deanonymize(r.text, { store })) }));
+    assert.ok(!s.res[0].includes('{{EMAIL_1}}'), 'Dokument 1 bekommt den woertlich vorkommenden Platzhalter: ' + s.res[0]);
+    assert.equal(s.back[0], d1);
+    assert.equal(s.back[1], d2);
+  } finally { await a.close(); }
+});
+
+test('K1.fix/K2: Zuordnungstabelle zeigt Eintraege mit Methode "wortlich" ohne "null" als Farbe', async () => {
+  const { a, f } = await prepare();
+  try {
+    await f.evaluate(() => {
+      store = { '{{EMAIL_2}}': { v: '{{EMAIL_1}}', t: 'EMAIL', c: null, m: 'wortlich' } };
+      renderMap();
+    });
+    const html = await f.evaluate(() => document.getElementById('MT').innerHTML);
+    assert.ok(!/null/.test(html), 'Tabelle enthaelt "null": ' + html);
+  } finally { await a.close(); }
+});
+
+test('K1.fix/K2: prjCounts zaehlt woertliche Eintraege nicht als erkannte Entitaet', async () => {
+  const { a, f } = await prepare();
+  try {
+    const c = await f.evaluate(() => {
+      store = { '{{EMAIL_2}}': { v: '{{EMAIL_1}}', t: 'EMAIL', c: null, m: 'wortlich' } };
+      return prjCounts('Hinweis {{EMAIL_2}} bleibt.');
+    });
+    assert.equal(c.EMAIL, undefined, 'woertlicher Eintrag zaehlt als EMAIL: ' + JSON.stringify(c));
+  } finally { await a.close(); }
+});
