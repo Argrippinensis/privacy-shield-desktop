@@ -6,10 +6,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { ROOT } from './_load.mjs';
 
-const { compareItems } = await import('../eval/diff-reference.mjs');
+const { compareItems, collectItemsNode, exitCodeOf, reportLines, proposeEntries } = await import('../eval/diff-reference.mjs');
 
 const item = (mode, key, o = {}) => ({ mode, key, profile: 'standard', inputSha256: 'a'.repeat(64), outSha256: 'b'.repeat(64), storeSha256: 'c'.repeat(64), entities: 3, ...o });
 const ref = () => [item('w0', 'k1'), item('w0', 'k2'), item('w1', 'k1')];
@@ -224,12 +226,11 @@ test('reference-allow.json: jeder Eintrag verweist auf einen Fall der Referenz 1
   assert.deepEqual(realAllow.map((e) => e.mode + '/' + e.key).filter((id) => !ids.has(id)), []);
 });
 
-test('reference-allow.json: genehmigter Stand wird mit den echten Eintraegen erlaubt (Positivfall je Eintrag)', () => {
-  assert.ok(realAllow.every((e) => HEX.test(e.outSha256) && HEX.test(e.storeSha256)), 'Eintraege ohne genehmigten Stand');
-  const cur = refFile.map((r) => { const e = realAllow.find((a) => a.mode === r.mode && a.key === r.key); return e ? { ...r, outSha256: e.outSha256, storeSha256: e.storeSha256, entities: e.entities } : r; });
+test('reference-allow.json: echter Lauf (collectItemsNode ueber den Korpus) gegen die echte Datei: 0 Abweichungen, alle Eintraege genutzt', { timeout: 120000 }, async () => {
+  const cur = await collectItemsNode(refFile);
   const r = compareItems(refFile, cur, realAllow);
-  assert.equal(r.unused.length, 0, 'ein Eintrag ist identisch mit der Referenz (nicht noetig) oder greift nicht');
-  assert.equal(r.deviations.length, 0);
+  assert.deepEqual(r.deviations.map((d) => d.line), []);
+  assert.deepEqual(r.unused.map((e) => e.mode + '/' + e.key), [], 'ein Eintrag greift nicht mehr');
   assert.equal(r.allowed.length, realAllow.length);
 });
 
@@ -281,4 +282,56 @@ test('compareItems: geaenderter inputSha256 ist eine Abweichung (Eingabe abweich
   const r = compareItems(ref(), cur, []);
   assert.equal(r.deviations.length, 1);
   assert.ok(has(r.deviations, 'eingabe'));
+});
+
+// Q1.fix Nachtests: ungenutzte Ausnahmen sind im CLI Fehler; --propose erzeugt Eintragskoepfe
+const CLI = path.join(ROOT, 'tests', 'eval', 'diff-reference.mjs');
+
+test('exitCodeOf: ungenutzte Ausnahme ist ein Fehler (Exit 1), sonst 0', () => {
+  const k2 = changed('w0', 'k2');
+  assert.equal(exitCodeOf(compareItems(ref(), withK2(k2), [approve(k2)])), 0);
+  assert.equal(exitCodeOf(compareItems(ref(), ref(), [approve(k2)])), 1, 'ungenutzt');
+  assert.equal(exitCodeOf(compareItems(ref(), withK2(k2), [])), 1, 'Abweichung');
+});
+
+test('reportLines: ungenutzter Eintrag erscheint als Fehler mit mode/key', () => {
+  const k2 = changed('w0', 'k2');
+  const lines = reportLines(compareItems(ref(), ref(), [approve(k2)]), 3);
+  assert.ok(lines.some((l) => /^Fehler: ungenutzt: w0\/k2/.test(l)), lines.join('\n'));
+});
+
+test('proposeEntries: nur unerlaubte Abweichungen, mit mode/key/outSha256/storeSha256/entities und ohne reason', () => {
+  const k2 = changed('w0', 'k2'), k1 = changed('w1', 'k1');
+  const cur = [item('w0', 'k1'), k2, k1];
+  const r = compareItems(ref(), cur, [approve(k2)]);
+  const p = proposeEntries(r, cur);
+  assert.deepEqual(p, [{ mode: 'w1', key: 'k1', outSha256: k1.outSha256, storeSha256: k1.storeSha256, entities: k1.entities }]);
+});
+
+test('proposeEntries: fehlende Faelle und geaenderte Eingabe werden nicht vorgeschlagen', () => {
+  const cur = [item('w0', 'k1', { inputSha256: 'f'.repeat(64) }), item('w1', 'k1')];
+  const p = proposeEntries(compareItems(ref(), cur, []), cur);
+  assert.deepEqual(p, []);
+});
+
+const tmpAllow = (entries) => { const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'q1-')), 'allow.json'); fs.writeFileSync(f, JSON.stringify(entries)); return f; };
+
+test('CLI: ungenutzter Eintrag in der Allow-Datei ergibt Exit 1 und nennt mode/key', { timeout: 120000 }, () => {
+  const extra = { mode: 'w0', key: 'n12', reason: 'Test, ungenutzt', outSha256: '1'.repeat(64), storeSha256: '2'.repeat(64), entities: 0 };
+  const f = tmpAllow([...realAllow, extra]);
+  const r = spawnSync(process.execPath, [CLI, '--node', '--allow', f], { cwd: ROOT, encoding: 'utf8', timeout: 100000 });
+  assert.equal(r.status, 1, r.stdout.split('\n').slice(-5).join('\n'));
+  assert.match(r.stdout, /Fehler: ungenutzt: w0\/n12/);
+  assert.match(r.stdout, /Abweichungen: 0 von/);
+});
+
+test('CLI --propose: ohne Allow-Datei gibt genau die Eintragskoepfe des heutigen Stands aus (= genehmigte Hashes der echten Datei)', { timeout: 120000 }, () => {
+  const f = tmpAllow([]);
+  const r = spawnSync(process.execPath, [CLI, '--node', '--propose', '--allow', f], { cwd: ROOT, encoding: 'utf8', timeout: 100000 });
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.ok(out.every((e) => !('reason' in e) && HEX.test(e.outSha256) && HEX.test(e.storeSha256) && Number.isInteger(e.entities)));
+  const strip = (e) => ({ mode: e.mode, key: e.key, outSha256: e.outSha256, storeSha256: e.storeSha256, entities: e.entities });
+  const key = (e) => e.mode + '/' + e.key;
+  assert.deepEqual(out.map(strip).sort((a, b) => key(a).localeCompare(key(b))), realAllow.map(strip).sort((a, b) => key(a).localeCompare(key(b))));
 });
