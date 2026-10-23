@@ -2298,7 +2298,8 @@
     "tests/realdocs.test.mjs",
     "tests/unit/leakcheck.test.mjs",
     "tests/unit/eval-measure.test.mjs",
-    "tests/eval/measure.mjs"
+    "tests/eval/measure.mjs",
+    "tests/eval/baseline.json"
    ],
    "tests": [
     "tests/unit/eval-measure.test.mjs"
