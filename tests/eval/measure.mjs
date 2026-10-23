@@ -12,6 +12,19 @@ export const MIN_PART = 4;     // Mindestlaenge (alphanumerische Zeichen) eines 
 export const MIN_OCR_LEN = 4;  // Mindestlaenge eines verlorenen Fragments, damit eine OCR-Variante gesucht wird
 export const MAX_EDIT = 1;     // Editierdistanz der OCR-Variante (Zeichenverwechslung, ein Zeichen mehr oder weniger)
 
+// Allgemeinwoerter (Anreden, Titel, Strassenarten, Artikel/Praepositionen in Namen, Rechtsformen): ein Rest, der nur aus
+// ihnen besteht, ist kein Teilrest des Werts; es zaehlt erst, wenn Name, Hausnummer oder Stamm davor/danach steht.
+export const GENERAL_WORDS = new Set([
+  'herr', 'herrn', 'frau', 'fraeulein', 'fräulein', 'dr', 'prof', 'dipl', 'ing', 'med', 'mag', 'mr', 'mrs', 'ms', 'madame', 'monsieur', 'sig', 'sigra', 'senor', 'señor', 'senora', 'señora',
+  'strasse', 'straße', 'str', 'weg', 'platz', 'allee', 'gasse', 'ring', 'damm', 'ufer', 'steig', 'pfad', 'markt', 'street', 'road', 'avenue', 'lane', 'calle', 'rue', 'via', 'ul', 'plaza', 'corso', 'avenida', 'viale', 'piazza',
+  'am', 'an', 'der', 'die', 'das', 'dem', 'im', 'in', 'zu', 'zum', 'zur', 'von', 'van', 'vom', 'de', 'del', 'di', 'la', 'le', 'du', 'des', 'the', 'of',
+  'gmbh', 'ag', 'kg', 'ug', 'mbh', 'co', 'ev', 'praxis', 'kanzlei', 'firma',
+]);
+const onlyGeneral = (s) => {
+  const toks = s.toLowerCase().match(/[\p{L}\p{N}]+/gu) || [];
+  return toks.length > 0 && toks.every((t) => GENERAL_WORDS.has(t));
+};
+
 const PLACEHOLDER = /\{\{[A-Z_0-9.]+\}\}/g;
 const ALNUM = /[\p{L}\p{N}]/u;
 const alnumCount = (s) => (s.match(/[\p{L}\p{N}]/gu) || []).length;
@@ -54,6 +67,7 @@ function hasHead(out, V, headLen, spaceOk) {
       const L = commonSuffix(B, V.slice(0, j));
       if (L === 0 || alnumCount(B.slice(B.length - L)) < MIN_PART) continue;
       if (isAlnum(B[B.length - L - 1])) continue; // Wortgrenze links
+      if (onlyGeneral(B.slice(B.length - L))) continue; // nur Anrede/Strassenart steht davor
       return true;
     }
   }
@@ -70,6 +84,7 @@ function hasTail(out, f) {
       const L = commonPrefix(A, f.slice(i));
       if (L === 0 || alnumCount(A.slice(0, L)) < MIN_PART) continue;
       if (isAlnum(A[L])) continue; // Wortgrenze rechts
+      if (onlyGeneral(A.slice(0, L))) continue; // nur Strassenart/Rechtsform steht danach
       return true;
     }
   }

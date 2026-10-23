@@ -17,11 +17,14 @@ const OCR_MIN_FRAG = 5;       // bei OCR werden nur Fragmente ab 5 Zeichen gemes
 // Ratsche: heute gemessener Stand (Anzahl undichter Werte), darf nicht steigen. Ziel C1.3 sind die Schwellen oben.
 // Q2.fix: Messung verschaerft (Teilreste, Nenner nur importierte Werte); die Staende ki/fb sind mit der neuen Messung
 // unveraendert bestaetigt (keine Teilreste gefunden). Nenner OCR: 24 importierte Werte statt 27, 3 verloren, 1 ungemessen.
+// Weitere Ratschen je Format: lost (Werte, die den Import nicht ueberstanden), ocrChanged (verlorener Wert, dessen
+// leicht veraenderte Form unmaskiert in der Ausgabe steht, zaehlt wie ein Leck) und minImport (Mindest-Importquote).
+// Verlust darf die Leckquote nicht kaschieren: lost und ocrChanged duerfen nicht steigen, auch wenn leaked gleich bleibt.
 const RATCHET = {
-  TXT: { ki: 2, fb: 0 },
-  DOCX: { ki: 2, fb: 0 },
-  'PDF-Text': { ki: 3, fb: 1 },
-  OCR: { ki: 5, fb: 4 },
+  TXT: { ki: 2, fb: 0, lost: 0, ocrChanged: 0, minImport: 1 },
+  DOCX: { ki: 2, fb: 0, lost: 0, ocrChanged: 0, minImport: 1 },
+  'PDF-Text': { ki: 3, fb: 1, lost: 0, ocrChanged: 0, minImport: 1 },
+  OCR: { ki: 5, fb: 4, lost: 3, ocrChanged: 0, minImport: 0.85 }, // Q2.fix: neuer Ausgangswert (heute 24/27 = 88,9 %)
 };
 // Vorbedingung Import (Q2.fix): TXT, DOCX, PDF mit Textebene muessen alle Werte erhalten (assessImport, 100 %);
 // bei OCR ist Verlust erlaubt, wird aber als eigene Fehlerklasse 'ocr' ausgewiesen. Die Leckquote hat nur importierte Werte im Nenner.
@@ -162,6 +165,9 @@ for (const [key, F] of Object.entries(FORMATS)) {
     console.log(`  ${key}: mit Modell ${r.ki.leaked}/${r.ki.imported} (${pct(q.leakRate)}) [${hitList(r.ki)}]; fallback ${r.fb.leaked}/${r.fb.imported} (${pct(qf.leakRate)}); Import ${r.ki.imported}/${r.ki.imported + r.ki.lost} (${pct(q.importRate)}), verloren ${r.ki.lost}, OCR-veraendert in Ausgabe ${r.ki.ocrChanged}, ungemessen ${r.ki.unmeasured}`);
     const imp = assessImport(key, r.ki);
     assert.ok(imp.ok, `${key}: ${r.ki.lost} von ${r.ki.imported + r.ki.lost} Werten ueberstehen den Import nicht (Fehlerklasse ${imp.errorClass})`);
+    assert.ok(r.ki.lost <= RATCHET[key].lost, `${key}: ${r.ki.lost} verlorene Werte, Stand ${RATCHET[key].lost}`);
+    assert.ok(r.ki.ocrChanged <= RATCHET[key].ocrChanged, `${key}: ${r.ki.ocrChanged} OCR-veraenderte Werte unmaskiert in der Ausgabe, Stand ${RATCHET[key].ocrChanged}`);
+    assert.ok(q.importRate >= RATCHET[key].minImport, `${key}: Importquote ${pct(q.importRate)}, Minimum ${pct(RATCHET[key].minImport)}`);
     assert.ok(r.ki.leaked <= RATCHET[key].ki, `${key}: ${r.ki.leaked} Lecks mit Modell, Stand ${RATCHET[key].ki}: ${hitList(r.ki)}`);
     assert.ok(r.fb.leaked <= RATCHET[key].fb, `${key}: ${r.fb.leaked} Lecks im Modus fallback, Stand ${RATCHET[key].fb}`);
   });
