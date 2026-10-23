@@ -678,3 +678,25 @@ test('guard: bleibt eine reine Kopfpruefung (gefaelschter kleiner Kopf wird erst
   assert.doesNotThrow(() => formats.guard(zip));
   assert.equal(count.bytes, 0, 'guard darf nichts entpacken');
 });
+
+// ---- B2.fix Nachtests nach Pruefung ------------------------------------------------------------------------
+
+test('boundedRead: Standardgrenze (ohne max) bricht eine 256-MiB-Bombe nach hoechstens ca. 70 MiB ab', async () => {
+  const { zip, count } = await bomb(256, 32);
+  assertFormatError(await boundedCode(zip, XML_NAME, {}), 'TOO_BIG');
+  assert.ok(count.bytes < 70 * MiB, 'zu viel entpackt: ' + (count.bytes / MiB).toFixed(1) + ' MiB');
+});
+
+test('boundedRead: geteiltes Budget ueber mehrere Eintraege, Summe darueber wirft TOO_BIG (jeder Eintrag fuer sich ist klein)', async () => {
+  const zip = await JSZip.loadAsync(buildZip([
+    { name: 'a.xml', content: 'x'.repeat(MiB) },
+    { name: 'b.xml', content: 'y'.repeat(MiB) },
+    { name: 'c.xml', content: 'z'.repeat(MiB) },
+  ]));
+  const budget = { used: 0, max: Math.floor(2.5 * MiB) };
+  assert.equal((await formats.boundedRead(zip, 'a.xml', { budget })).length, MiB);
+  assert.equal((await formats.boundedRead(zip, 'b.xml', { budget })).length, MiB);
+  assertFormatError(await boundedCode(zip, 'c.xml', { budget }), 'TOO_BIG');
+  // ohne Budget ist derselbe Eintrag in Ordnung
+  assert.equal((await formats.boundedRead(zip, 'c.xml', {})).length, MiB);
+});

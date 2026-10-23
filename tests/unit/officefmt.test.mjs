@@ -488,3 +488,25 @@ test('extractOdf: ehrliches Archiv mit mehreren MiB Text funktioniert weiter (Po
   assert.ok(r.text.endsWith('\nENDE'));
   assert.equal(r.text.split('\n').length, paras.length + 2);
 });
+
+// ---- B2.fix Nachtests nach Pruefung ------------------------------------------------------------------------
+
+// Vier Tabellenblaetter mit je 49 MiB (ehrliche Kopfgroessen; nur die komprimierte Groesse wird nach dem Laden hochgesetzt,
+// damit die Kopfpruefung das stark komprimierbare Fuellmaterial nicht als RATIO wertet): insgesamt 196 MiB, knapp unter 200 MiB.
+async function nahAnDerGrenze() {
+  const sheet = (n) => ({
+    name: 'xl/worksheets/sheet' + n + '.xml', mib: 49,
+    prefix: '<worksheet><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>', suffix: '</t></is></c></row></sheetData></worksheet>',
+  });
+  const zip = await JSZip.loadAsync(buildZip([1, 2, 3, 4].map(sheet)));
+  for (const f of Object.values(zip.files)) if (!f.dir) f._data.compressedSize = Math.ceil(f._data.uncompressedSize / 10);
+  return zip;
+}
+
+test('extractXlsx: knapp unter der Archivgrenze (196 MiB ueber vier Blaetter) wird gelesen, danach geht ein zweites Archiv ebenfalls durch', async () => {
+  for (let lauf = 1; lauf <= 2; lauf++) {
+    const r = await office.extractXlsx(await nahAnDerGrenze());
+    assert.equal(r.sheets, 4, 'Lauf ' + lauf);
+    assert.ok(r.text.length > 190 * MiB, 'Lauf ' + lauf + ': Text unvollstaendig (' + r.text.length + ')');
+  }
+});

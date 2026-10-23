@@ -182,3 +182,41 @@ test('Ehrliches XLSX wird weiter gelesen', ZEIT, async () => {
     assert.match(r.text, /Hans Mueller/);
   } finally { await a.close(); }
 });
+
+// ---- Nachtests nach Pruefung ----------------------------------------------------------------------------------
+
+// Grosses Bild (60 MiB entpackt) in einem ehrlichen DOCX: Medien werden von Mammoth nicht gelesen und zaehlen nicht gegen
+// die Grenze fuer Textteile. Fuellmaterial mit Verhaeltnis weit unter 100:1 (jedes 16. Byte pseudozufaellig).
+function grosseGrafik(mib) {
+  const block = Buffer.alloc(MiB);
+  let s = 12345;
+  for (let i = 0; i < block.length; i += 16) { s = (s * 1103515245 + 12345) & 0x7fffffff; block[i] = s >>> 16; }
+  return Buffer.concat(Array.from({ length: mib }, () => block));
+}
+
+test('Ehrliches DOCX mit grossem Bild (60 MiB entpackt) wird weiter gelesen, Mammoth laeuft', ZEIT, async () => {
+  const { a, f } = await vorbereiten();
+  try {
+    const z = new JSZip();
+    z.file('[Content_Types].xml', CT);
+    z.file('_rels/.rels', RELS);
+    z.file('word/document.xml', docXml('Hans Mueller wohnt in Berlin'));
+    z.file('word/media/image1.bmp', grosseGrafik(60));
+    const buf = Buffer.from(await z.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }));
+    assert.ok(buf.length < 30 * MiB, 'Testarchiv zu gross fuer die App: ' + buf.length);
+    const r = await laden(f, 'brief.docx', 'docx', buf);
+    assert.ok(r.toasts.every((t) => t.type !== 'e'), 'Fehlermeldung: ' + JSON.stringify(r.toasts));
+    assert.match(r.text, /Hans Mueller wohnt in Berlin/);
+    assert.ok(r.mammoth >= 1, 'Mammoth muss laufen');
+  } finally { await a.close(); }
+});
+
+test('Abgelehnte Datei leert auch die Hervorhebung (HLMIRROR)', ZEIT, async () => {
+  const { a, f } = await vorbereiten();
+  try {
+    await f.evaluate(() => { document.getElementById('HLMIRROR').innerHTML = 'ALTER-INHALT'; });
+    const r = await laden(f, 'tabelle.xlsx', 'xlsx', Buffer.from(bombe('xlsx')));
+    assertAbgelehnt(r, 'xlsx');
+    await f.waitForFunction(() => document.getElementById('HLMIRROR').innerHTML === '', null, { timeout: 5000 });
+  } finally { await a.close(); }
+});
