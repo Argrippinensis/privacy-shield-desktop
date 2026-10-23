@@ -9,6 +9,7 @@
   // Kontext des laufenden (synchronen) Aufrufs; wird in detect()/anonymize() gesetzt und danach geleert
   let store = {},
     cnt = {},
+    reserved = new Set(), // K2.fix: woertliche Platzhalter des Eingabetexts (und frueherer Dokumente), nie neu vergeben
     cvars = [],
     whitelist = [],
     extraSpans = [],
@@ -2351,7 +2352,8 @@
           .replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
       }
       function smartSuffix(val, pfx) {
-        cnt[pfx] = (cnt[pfx] || 0) + 1;
+        // K2.fix: woertlich im Original stehende Platzhalter (reserved) werden nie vergeben
+        do { cnt[pfx] = (cnt[pfx] || 0) + 1; } while (reserved.size && reserved.has("{{" + pfx + "_" + cnt[pfx] + "}}"));
         return String(cnt[pfx]);
       }
       // Rueckwaerts-Index Wert -> erstes Token. Wird neu aufgebaut, sobald `store` ein neues Objekt ist (Zuruecksetzen).
@@ -2374,8 +2376,10 @@
         const suffix = smartSuffix(cleanVal, pfx);
         let base = "{{" + pfx + "_" + suffix + "}}";
         if (store[base] && store[base].v !== cleanVal) {
-          cnt[pfx] = (cnt[pfx] || 0) + 1;
-          base = "{{" + pfx + "_" + suffix + "_" + cnt[pfx] + "}}";
+          do {
+            cnt[pfx] = (cnt[pfx] || 0) + 1;
+            base = "{{" + pfx + "_" + suffix + "_" + cnt[pfx] + "}}";
+          } while (reserved.size && reserved.has(base));
         }
         store[base] = { v: cleanVal, t: pfx, c: col, m: meth };
         if (!idx.has(cleanVal)) idx.set(cleanVal, base);
@@ -2445,7 +2449,7 @@
   // oder im store stehen; alle anderen Spans laufen unveraendert durch tok() (D24: personKey null = keine Verknuepfung).
   function linkState(input, linked) {
     const used = new Set();
-    PH.find(input).forEach((h) => { const m = /^\{\{NAME_(\d+)[.}]/.exec(h.token); if (m) used.add(m[1]); });
+    reserved.forEach((t) => { const m = /^\{\{NAME_(\d+)[.}]/.exec(t); if (m) used.add(m[1]); });
     const forms = new Map();
     linked.forEach((s) => {
       if (!s.personKey || !s.form) return;
@@ -2499,6 +2503,33 @@
     cnt = state.cnt;
     storeIdx = new Map();
     storeIdxFor = null;
+    // K2.fix: woertliche Platzhalter vorab reservieren (Eingabetext, state frueherer Dokumente, opts.reserved des Projekts)
+    const lits = PH.find(input).map((h) => h.token);
+    reserved = new Set(lits);
+    if (Array.isArray(state.reserved)) state.reserved.forEach((t) => reserved.add(t));
+    if (o.reserved) for (const t of o.reserved) reserved.add(t);
+    if (reserved.size) state.reserved = Array.from(reserved);
+    // Woertlicher Platzhalter, der im state schon als Schluessel steht (frueheres Dokument): durch frischen Schluessel
+    // mit dem Platzhaltertext als Wert ersetzen, damit deanonymize allein mit store den Originaltext herstellt
+    const clash = new Set(lits.filter((t) => Object.hasOwn(state.store, t)));
+    const esc = new Map();
+    const escape = (gap) => {
+      if (!clash.size) return gap;
+      const hits = PH.find(gap).filter((h) => clash.has(h.token));
+      for (let k = hits.length - 1; k >= 0; k--) {
+        const h = hits[k];
+        if (!esc.has(h.token)) {
+          const m = /^\{\{([A-ZÄÖÜ][A-ZÄÖÜ0-9.\-]*)_\d+/.exec(h.token);
+          const pfx = m ? m[1] : "PH";
+          let key;
+          do { cnt[pfx] = (cnt[pfx] || 0) + 1; key = "{{" + pfx + "_" + cnt[pfx] + "}}"; } while (reserved.has(key) || Object.hasOwn(store, key));
+          store[key] = { v: h.token, t: pfx, c: null, m: "wortlich" };
+          esc.set(h.token, key);
+        }
+        gap = gap.slice(0, h.start) + esc.get(h.token) + gap.slice(h.end);
+      }
+      return gap;
+    };
     try {
       const parts = [];
       let tail = input.length;
@@ -2507,12 +2538,13 @@
       for (let i = spans.length - 1; i >= 0; i--) {
         const s = spans[i];
         const t = linkedTok(link, linked[i]);
-        parts.push(input.slice(s.end, tail), t !== null ? t : tok(s.val, s.pfx, s.col, s.meth));
+        parts.push(escape(input.slice(s.end, tail)), t !== null ? t : tok(s.val, s.pfx, s.col, s.meth));
         tail = s.start;
       }
-      parts.push(input.slice(0, tail));
+      parts.push(escape(input.slice(0, tail)));
       return { text: parts.reverse().join(""), state: state, spans: spans };
     } finally {
+      reserved = new Set();
       store = {};
       cnt = {};
       storeIdx = new Map();
@@ -2552,11 +2584,13 @@
     if (!state || !state.store || !state.cnt) throw new TypeError("state mit store und cnt erforderlich");
     store = state.store;
     cnt = state.cnt;
+    reserved = new Set(Array.isArray(state.reserved) ? state.reserved : []);
     storeIdx = new Map();
     storeIdxFor = null;
     try {
       return tok(String(val), pfx, col, meth);
     } finally {
+      reserved = new Set();
       store = {};
       cnt = {};
       storeIdx = new Map();
