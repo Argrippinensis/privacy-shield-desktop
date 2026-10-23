@@ -2272,15 +2272,12 @@
    "accept": [
     "npm run test:unit"
    ],
-   "status": "laeuft",
-   "attempts": 1,
+   "status": "fertig",
+   "attempts": 2,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261023-1",
-    "ts": 1792770937295
-   },
-   "notes": ""
+   "commit": "cfd0b38c42043cba7867d29f4f3d02f9dbcf750f",
+   "lease": null,
+   "notes": "[Lease abgelaufen 2026-10-23T17:38:16.747Z]"
   },
   {
    "id": "Q2.fix",
