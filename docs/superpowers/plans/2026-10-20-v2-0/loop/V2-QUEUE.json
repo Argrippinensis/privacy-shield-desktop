@@ -2297,7 +2297,8 @@
     "tests/eval/run-eval.mjs",
     "tests/realdocs.test.mjs",
     "tests/unit/leakcheck.test.mjs",
-    "tests/unit/eval-measure.test.mjs"
+    "tests/unit/eval-measure.test.mjs",
+    "tests/eval/measure.mjs"
    ],
    "tests": [
     "tests/unit/eval-measure.test.mjs"
@@ -2305,11 +2306,14 @@
    "accept": [
     "npm run test:unit"
    ],
-   "status": "offen",
-   "attempts": 0,
+   "status": "laeuft",
+   "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": null,
+   "lease": {
+    "owner": "orch-20261023-2",
+    "ts": 1792778986101
+   },
    "notes": ""
   }
  ],
