@@ -317,6 +317,13 @@
     return out;
   }
 
+  // Laengengleiche Angleichung wie normalizeForDetection des Kerns (Positionen bleiben gueltig)
+  function normalisiere(t) {
+    return t
+      .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
+      .replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
+  }
+
   // Kompakter Trie je erstem Wort: Blaetter speichern den Rest als Zeichenkette
   function trieNeu() { return { kids: undefined, end: undefined, tail: undefined }; }
   function trieEinfuegen(knoten, s) {
@@ -369,7 +376,8 @@
     let idx = indexCache.get(regel);
     if (idx) return idx;
     idx = new Map();
-    for (const t of regel.terms) {
+    for (const t0 of regel.terms) {
+      const t = normalisiere(t0); // wie der Kern den Text: Leerraumvarianten und Vollbreite
       const s = regel.caseSensitive ? t : klein(t);
       const w = erstesWort(s);
       if (!w) continue;
