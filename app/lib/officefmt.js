@@ -41,10 +41,13 @@
     return out;
   }
 
-  async function read(zip, name) {
-    const f = zip.file(name);
-    return f ? tokens(await f.async('string')) : null;
+  // Zaehlt beim Entpacken (formats.boundedRead); budget gilt fuer das ganze Archiv eines Aufrufs
+  async function read(zip, name, budget) {
+    const t = await formats.boundedRead(zip, name, { budget });
+    return t === null ? null : tokens(t);
   }
+
+  function newBudget() { return { used: 0, max: formats.MAX_TOTAL }; }
 
   // Dateinamen nach Muster, numerisch nach der Nummer sortiert
   function numbered(zip, re) {
@@ -126,12 +129,13 @@
 
   async function extractXlsx(zip) {
     formats.guard(zip);
-    const sstToks = await read(zip, 'xl/sharedStrings.xml');
+    const budget = newBudget();
+    const sstToks = await read(zip, 'xl/sharedStrings.xml', budget);
     const sst = sstToks ? sharedStrings(sstToks) : [];
     const names = numbered(zip, /^xl\/worksheets\/sheet(\d+)\.xml$/);
     const blocks = [];
     for (let k = 0; k < names.length; k++) {
-      blocks.push('== Blatt ' + (k + 1) + ' ==\n' + sheetText(await read(zip, names[k]), sst));
+      blocks.push('== Blatt ' + (k + 1) + ' ==\n' + sheetText(await read(zip, names[k], budget), sst));
     }
     return { text: blocks.join('\n\n').replace(/\n+$/, ''), sheets: names.length };
   }
@@ -140,7 +144,8 @@
 
   async function extractOdf(zip) {
     formats.guard(zip);
-    const toks = await read(zip, 'content.xml');
+    const budget = newBudget();
+    const toks = await read(zip, 'content.xml', budget);
     if (!toks) return { text: '' };
     const lines = [];
     let para = null;
@@ -171,12 +176,13 @@
 
   async function extractPptx(zip) {
     formats.guard(zip);
+    const budget = newBudget();
     const names = numbered(zip, /^ppt\/slides\/slide(\d+)\.xml$/);
     const blocks = [];
     for (let k = 0; k < names.length; k++) {
       const n = /slide(\d+)\.xml$/.exec(names[k])[1];
-      let s = '== Folie ' + (k + 1) + ' ==\n' + paragraphs(await read(zip, names[k]), 'a:p', 'a:t').join('\n');
-      const nt = await read(zip, 'ppt/notesSlides/notesSlide' + n + '.xml');
+      let s = '== Folie ' + (k + 1) + ' ==\n' + paragraphs(await read(zip, names[k], budget), 'a:p', 'a:t').join('\n');
+      const nt = await read(zip, 'ppt/notesSlides/notesSlide' + n + '.xml', budget);
       const notes = nt ? paragraphs(nt, 'a:p', 'a:t') : [];
       if (notes.length) s += '\n-- Notizen --\n' + notes.join('\n');
       blocks.push(s);
@@ -188,6 +194,7 @@
 
   async function extractDocxExtras(zip) {
     formats.guard(zip);
+    const budget = newBudget();
     const groups = [
       ['== Kopfzeile ==', numbered(zip, /^word\/header(\d*)\.xml$/)],
       ['== Fußzeile ==', numbered(zip, /^word\/footer(\d*)\.xml$/)],
@@ -199,7 +206,7 @@
     for (const [title, files] of groups) {
       const lines = [];
       for (const f of files) {
-        const toks = await read(zip, f);
+        const toks = await read(zip, f, budget);
         if (toks) lines.push(...paragraphs(toks, 'w:p', 'w:t'));
       }
       if (lines.length) parts.push(title + '\n' + lines.join('\n'));

@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadLib, loadVendor } from './_load.mjs';
+import { buildZip, countInflated } from './_zipfake.mjs';
 
 const formats = loadLib('formats');
 const office = loadLib('officefmt');
@@ -385,5 +386,127 @@ test('Robustheit: kaputtes XML wirft nur PSFormatError oder liefert ein Ergebnis
       const err = await codeOf(() => fn(z));
       assert.ok(err === null || err instanceof formats.PSFormatError, 'unerwartete Ausnahme: ' + (err && err.message));
     }
+  }
+});
+
+// ---- B2.fix: gefaelschte Kopfgroessen im Zentralverzeichnis ------------------------------------------------
+// Das Archiv behauptet 32 Byte, enthaelt aber 256 MiB. Die Auszuege muessen waehrend des Entpackens zaehlen und abbrechen
+// (TOO_BIG), statt alles zu entpacken und erst danach an JSZips Groessenvergleich zu scheitern.
+
+const BOMB_MIB = 256;
+const READ_LIMIT = 224 * MiB; // 200 MiB Gesamtgrenze (formats) plus Spielraum fuer den letzten Brocken
+const NS_W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+
+async function fakeBomb(name, prefix, suffix, declared = 32) {
+  const zip = await JSZip.loadAsync(buildZip([{ name, prefix, suffix, mib: BOMB_MIB, declared }]));
+  return { zip, count: countInflated(zip) };
+}
+
+async function assertAbgelehnt(extract, built) {
+  const err = await codeOf(() => extract(built.zip));
+  assert.ok(err, 'Ausnahme erwartet, Archiv wurde akzeptiert');
+  assert.ok(err instanceof formats.PSFormatError, 'PSFormatError erwartet, war: ' + err.name + ': ' + err.message);
+  assert.equal(err.code, 'TOO_BIG');
+  assert.ok(built.count.bytes < READ_LIMIT, 'tatsaechlich entpackt: ' + (built.count.bytes / MiB).toFixed(0) + ' MiB von ' + BOMB_MIB);
+}
+
+test('extractXlsx: gemeinsame Zeichenketten mit gefaelschter Kopfgroesse (32 Byte, tatsaechlich 256 MiB) werden abgelehnt', async () => {
+  await assertAbgelehnt(office.extractXlsx, await fakeBomb('xl/sharedStrings.xml', '<sst><si><t>', '</t></si></sst>'));
+});
+
+test('extractXlsx: Tabellenblatt mit gefaelschter Kopfgroesse wird abgelehnt', async () => {
+  await assertAbgelehnt(office.extractXlsx, await fakeBomb('xl/worksheets/sheet1.xml',
+    '<worksheet><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>', '</t></is></c></row></sheetData></worksheet>'));
+});
+
+test('extractOdf: content.xml mit gefaelschter Kopfgroesse wird abgelehnt', async () => {
+  await assertAbgelehnt(office.extractOdf, await fakeBomb('content.xml', '<office:document-content><text:p>', '</text:p></office:document-content>'));
+});
+
+test('extractPptx: Folie mit gefaelschter Kopfgroesse wird abgelehnt', async () => {
+  await assertAbgelehnt(office.extractPptx, await fakeBomb('ppt/slides/slide1.xml', '<p:sld><a:p><a:r><a:t>', '</a:t></a:r></a:p></p:sld>'));
+});
+
+test('extractDocxExtras: Kopfzeile mit gefaelschter Kopfgroesse wird abgelehnt', async () => {
+  await assertAbgelehnt(office.extractDocxExtras, await fakeBomb('word/header1.xml', '<w:hdr ' + NS_W + '><w:p><w:r><w:t>', '</w:t></w:r></w:p></w:hdr>'));
+});
+
+test('extractDocxExtras: Kommentare mit gefaelschter Kopfgroesse werden abgelehnt', async () => {
+  await assertAbgelehnt(office.extractDocxExtras, await fakeBomb('word/comments.xml', '<w:comments ' + NS_W + '><w:comment><w:p><w:r><w:t>', '</w:t></w:r></w:p></w:comment></w:comments>'));
+});
+
+test('extractXlsx: kleiner Eintrag (4 MiB) mit gefaelschtem Kopf wird als PSFormatError abgelehnt, nie als rohe Ausnahme', async () => {
+  const zip = await JSZip.loadAsync(buildZip([{ name: 'xl/sharedStrings.xml', prefix: '<sst><si><t>', suffix: '</t></si></sst>', mib: 4, declared: 32 }]));
+  const err = await codeOf(() => office.extractXlsx(zip));
+  assert.ok(err, 'Ausnahme erwartet: der Kopf luegt');
+  assert.ok(err instanceof formats.PSFormatError, 'PSFormatError erwartet, war: ' + err.name + ': ' + err.message);
+});
+
+// Abwechslungsreicher Text (Verhaeltnis weit unter 100:1, wie ein echtes Dokument), deterministisch
+function wortSalat(bytes, seed = 7) {
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) >>> 8;
+  const words = Array.from({ length: 4000 }, (_, i) => 'w' + (i * 7919).toString(36));
+  const out = [];
+  let n = 0;
+  while (n < bytes) { const w = words[rnd() % words.length] + ' ' + words[rnd() % words.length] + ' ' + (rnd() % 100000); out.push(w); n += w.length + 1; }
+  return out;
+}
+
+test('extractXlsx: ehrliches Archiv mit mehreren MiB Text funktioniert weiter (Positivfall)', async () => {
+  const items = wortSalat(3 * MiB).map((w) => '<si><t>' + w + '</t></si>');
+  items[0] = '<si><t>ERSTER</t></si>';
+  items[items.length - 1] = '<si><t>LETZTER</t></si>';
+  const last = items.length - 1;
+  const zip = await JSZip.loadAsync(buildZip([
+    { name: 'xl/sharedStrings.xml', content: XML + '<sst ' + NS_S + '>' + items.join('') + '</sst>' },
+    { name: 'xl/worksheets/sheet1.xml', content: sheetXml('<row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>' + last + '</v></c></row>') },
+  ]));
+  const r = await office.extractXlsx(zip);
+  assert.equal(r.text, '== Blatt 1 ==\nERSTER\tLETZTER');
+});
+
+test('extractXlsx: mehrere Aufrufe nacheinander zaehlen getrennt (kein Zaehler ueber Archive hinweg)', async () => {
+  const items = wortSalat(MiB).map((w) => '<si><t>' + w + '</t></si>');
+  items.push('<si><t>ENDE</t></si>');
+  const mk = () => JSZip.loadAsync(buildZip([
+    { name: 'xl/sharedStrings.xml', content: XML + '<sst ' + NS_S + '>' + items.join('') + '</sst>' },
+    { name: 'xl/worksheets/sheet1.xml', content: sheetXml('<row r="1"><c r="A1" t="s"><v>' + (items.length - 1) + '</v></c></row>') },
+  ]));
+  for (let i = 0; i < 3; i++) {
+    const r = await office.extractXlsx(await mk());
+    assert.equal(r.text, '== Blatt 1 ==\nENDE', 'Lauf ' + (i + 1));
+  }
+});
+
+test('extractOdf: ehrliches Archiv mit mehreren MiB Text funktioniert weiter (Positivfall)', async () => {
+  const paras = wortSalat(3 * MiB, 11).map((w) => '<text:p>' + w + '</text:p>');
+  const content = '<office:document-content><office:body><office:text><text:p>ANFANG</text:p>' +
+    paras.join('') + '<text:p>ENDE</text:p></office:text></office:body></office:document-content>';
+  const zip = await JSZip.loadAsync(buildZip([{ name: 'content.xml', content }]));
+  const r = await office.extractOdf(zip);
+  assert.ok(r.text.startsWith('ANFANG\n'));
+  assert.ok(r.text.endsWith('\nENDE'));
+  assert.equal(r.text.split('\n').length, paras.length + 2);
+});
+
+// ---- B2.fix Nachtests nach Pruefung ------------------------------------------------------------------------
+
+// Vier Tabellenblaetter mit je 49 MiB (ehrliche Kopfgroessen; nur die komprimierte Groesse wird nach dem Laden hochgesetzt,
+// damit die Kopfpruefung das stark komprimierbare Fuellmaterial nicht als RATIO wertet): insgesamt 196 MiB, knapp unter 200 MiB.
+async function nahAnDerGrenze() {
+  const sheet = (n) => ({
+    name: 'xl/worksheets/sheet' + n + '.xml', mib: 49,
+    prefix: '<worksheet><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>', suffix: '</t></is></c></row></sheetData></worksheet>',
+  });
+  const zip = await JSZip.loadAsync(buildZip([1, 2, 3, 4].map(sheet)));
+  for (const f of Object.values(zip.files)) if (!f.dir) f._data.compressedSize = Math.ceil(f._data.uncompressedSize / 10);
+  return zip;
+}
+
+test('extractXlsx: knapp unter der Archivgrenze (196 MiB ueber vier Blaetter) wird gelesen, danach geht ein zweites Archiv ebenfalls durch', async () => {
+  for (let lauf = 1; lauf <= 2; lauf++) {
+    const r = await office.extractXlsx(await nahAnDerGrenze());
+    assert.equal(r.sheets, 4, 'Lauf ' + lauf);
+    assert.ok(r.text.length > 190 * MiB, 'Lauf ' + lauf + ': Text unvollstaendig (' + r.text.length + ')');
   }
 });

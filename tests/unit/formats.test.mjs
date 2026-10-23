@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadLib, loadVendor } from './_load.mjs';
+import { buildZip, countInflated } from './_zipfake.mjs';
 
 const formats = loadLib('formats');
 const JSZip = loadVendor('jszip');
@@ -617,4 +618,85 @@ test('Fuzz: detect mit beliebigen Bytes und Namen wirft nie', () => {
       assert.equal(typeof formats.detect(nm, arr), 'string');
     }
   }
+});
+
+// ---- B2.fix: tatsaechlich entpackte Menge begrenzen (gefaelschte Kopfgroessen) ----------------------------
+// Annahme (Bericht S1): formats.boundedRead(zip, name, { max }) liest einen Eintrag und zaehlt waehrend des Entpackens.
+// Ergebnis: Inhalt (Text oder Bytes, hier nur .length geprueft); mehr als max tatsaechliche Bytes -> PSFormatError TOO_BIG,
+// und zwar ohne den Rest zu entpacken (JSZip liefert die Bytes in Brocken; der Abbruch greift beim Brocken, der max ueberschreitet).
+
+const XML_NAME = 'xl/sharedStrings.xml';
+
+async function bomb(mib, declared, name = XML_NAME) {
+  const zip = await JSZip.loadAsync(buildZip([{ name, prefix: '<sst>', suffix: '</sst>', mib, declared }]));
+  return { zip, count: countInflated(zip) };
+}
+
+async function boundedCode(zip, name, opts) {
+  try { await formats.boundedRead(zip, name, opts); } catch (e) { return e; }
+  return null;
+}
+
+test('boundedRead: das Modul stellt die Funktion bereit', () => {
+  assert.equal(typeof formats.boundedRead, 'function');
+});
+
+test('boundedRead: ehrlicher Eintrag unter der Grenze wird vollstaendig geliefert', async () => {
+  const zip = await JSZip.loadAsync(buildZip([{ name: 'a.xml', content: '<a>Hallo Welt</a>' }]));
+  const r = await formats.boundedRead(zip, 'a.xml', { max: 1 * MiB });
+  assert.equal(r.length, '<a>Hallo Welt</a>'.length);
+});
+
+test('boundedRead: Eintrag genau an der Grenze ist erlaubt, ein Byte mehr wirft TOO_BIG', async () => {
+  const genau = await JSZip.loadAsync(buildZip([{ name: 'a.txt', content: 'x'.repeat(1000) }]));
+  const r = await formats.boundedRead(genau, 'a.txt', { max: 1000 });
+  assert.equal(r.length, 1000);
+  const drueber = await JSZip.loadAsync(buildZip([{ name: 'a.txt', content: 'x'.repeat(1001) }]));
+  assertFormatError(await boundedCode(drueber, 'a.txt', { max: 1000 }), 'TOO_BIG');
+});
+
+test('boundedRead: Kopf sagt 32 Byte, tatsaechlich 64 MiB, Grenze 8 MiB: TOO_BIG', async () => {
+  const { zip } = await bomb(64, 32);
+  assertFormatError(await boundedCode(zip, XML_NAME, { max: 8 * MiB }), 'TOO_BIG');
+});
+
+test('boundedRead: gefaelschter Kopf, entpackt werden weniger als 2 x Grenze (Abbruch waehrend des Entpackens)', async () => {
+  const { zip, count } = await bomb(64, 32);
+  await boundedCode(zip, XML_NAME, { max: 8 * MiB });
+  assert.ok(count.bytes > 0, 'es muss ueberhaupt gelesen werden (Zaehler arbeitet)');
+  assert.ok(count.bytes < 16 * MiB, 'zu viel entpackt: ' + (count.bytes / MiB).toFixed(1) + ' MiB bei Grenze 8 MiB');
+});
+
+test('boundedRead: fehlender Eintrag liefert null statt einer Ausnahme', async () => {
+  const zip = await JSZip.loadAsync(buildZip([{ name: 'a.xml', content: '<a/>' }]));
+  const r = await formats.boundedRead(zip, 'gibt-es-nicht.xml', { max: MiB });
+  assert.equal(r, null);
+});
+
+test('guard: bleibt eine reine Kopfpruefung (gefaelschter kleiner Kopf wird erst beim Lesen erkannt)', async () => {
+  const { zip, count } = await bomb(8, 32);
+  assert.doesNotThrow(() => formats.guard(zip));
+  assert.equal(count.bytes, 0, 'guard darf nichts entpacken');
+});
+
+// ---- B2.fix Nachtests nach Pruefung ------------------------------------------------------------------------
+
+test('boundedRead: Standardgrenze (ohne max) bricht eine 256-MiB-Bombe nach hoechstens ca. 70 MiB ab', async () => {
+  const { zip, count } = await bomb(256, 32);
+  assertFormatError(await boundedCode(zip, XML_NAME, {}), 'TOO_BIG');
+  assert.ok(count.bytes < 70 * MiB, 'zu viel entpackt: ' + (count.bytes / MiB).toFixed(1) + ' MiB');
+});
+
+test('boundedRead: geteiltes Budget ueber mehrere Eintraege, Summe darueber wirft TOO_BIG (jeder Eintrag fuer sich ist klein)', async () => {
+  const zip = await JSZip.loadAsync(buildZip([
+    { name: 'a.xml', content: 'x'.repeat(MiB) },
+    { name: 'b.xml', content: 'y'.repeat(MiB) },
+    { name: 'c.xml', content: 'z'.repeat(MiB) },
+  ]));
+  const budget = { used: 0, max: Math.floor(2.5 * MiB) };
+  assert.equal((await formats.boundedRead(zip, 'a.xml', { budget })).length, MiB);
+  assert.equal((await formats.boundedRead(zip, 'b.xml', { budget })).length, MiB);
+  assertFormatError(await boundedCode(zip, 'c.xml', { budget }), 'TOO_BIG');
+  // ohne Budget ist derselbe Eintrag in Ordnung
+  assert.equal((await formats.boundedRead(zip, 'c.xml', {})).length, MiB);
 });
