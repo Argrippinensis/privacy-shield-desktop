@@ -6,6 +6,7 @@
   'use strict';
   const VOR = '(?<![A-Za-z0-9_À-ɏ])';
   const NACH = '(?![A-Za-z0-9_À-ɏ])';
+  const METH = 'Manuelle Markierung';
   const PFX_RE = /^[A-Z][A-Z0-9_]{1,19}$/;
 
   function gueltig(e) {
@@ -38,12 +39,22 @@
 
   function maskiere(s) { return s.replace(/[.*+?^${}()|[\]\\\/-]/g, '\\$&'); }
 
-  // laengere Werte zuerst (stabil), Eingabe fuer die eigenen Variablen des Kerns
+  // NFC und NFD des Werts als Alternativen (Text kann in beiden Formen vorliegen); sonst nur der Wert
+  function formen(v) {
+    const a = v.normalize('NFC'), b = v.normalize('NFD');
+    const alle = [v];
+    if (!alle.includes(a)) alle.push(a);
+    if (!alle.includes(b)) alle.push(b);
+    return alle.length === 1 ? maskiere(v) : '(?:' + alle.map(maskiere).join('|') + ')';
+  }
+
+  // laengere Werte zuerst (stabil), Eingabe fuer die eigenen Variablen des Kerns.
+  // f = 'i': Gross-/Kleinschreibung egal; m: Herkunft fuer die Trefferzaehlung. Leerraum und Vollbreite gleicht der Kern an.
   function toCvars(m) {
     return m.items
       .map((i, k) => ({ i, k }))
       .sort((a, b) => b.i.value.length - a.i.value.length || a.k - b.k)
-      .map(({ i }) => ({ n: i.pfx, p: VOR + maskiere(i.value) + NACH }));
+      .map(({ i }) => ({ n: i.pfx, p: VOR + formen(i.value) + NACH, f: 'i', m: METH }));
   }
 
   function snapshot(m) { return JSON.parse(JSON.stringify(m)); }

@@ -3501,7 +3501,12 @@
           document.getElementById("resultArea").style.display = "flex";
           document.getElementById("REANON").style.display = "inline-flex";
           updTokenCount();
-          toast(Object.keys(store).length + " Entitäten anonymisiert", "s");
+          // Trefferzahl der manuellen Markierungen immer nennen, auch bei 0 (keine stille Annahme)
+          const nMark = manualMarks.items.length ? r.spans.filter((s) => s.meth === "Manuelle Markierung").length : -1;
+          toast(
+            Object.keys(store).length + " Entitäten anonymisiert" + (nMark < 0 ? "" : ". Markierungen: " + nMark + " Treffer" + (nMark === 0 ? ", Wert im Text nicht gefunden" : "")),
+            nMark === 0 ? "e" : "s",
+          );
           runLeakCheck();
         } catch (err) {
           repStart = null;
