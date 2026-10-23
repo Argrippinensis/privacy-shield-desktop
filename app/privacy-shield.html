@@ -520,6 +520,9 @@
         background: #fff0ee;
         color: #ff3b30;
       }
+      /* S3.fix: Symbole fest im Markup, nur umgeschaltet (kein neues SVG pro Meldung) */
+      .toast-icon svg { display: none; }
+      .toast.s .ti-s, .toast.e .ti-e { display: block; }
       .file-tag {
         display: none;
         align-items: center;
@@ -2000,7 +2003,7 @@
       </footer>
     </div>
     <div class="toast" id="TOAST">
-      <div class="toast-icon" id="TI"></div>
+      <div class="toast-icon" id="TI"><svg class="ti-s" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg class="ti-e" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="14"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
       <span id="TT"></span>
     </div>
     <div
@@ -2520,6 +2523,11 @@
           toast("Name und Muster benötigt", "e");
           return;
         }
+        // S3.fix: strenge Namensregel wie Regel-Kategorien und Markierungen, Ablehnen statt Bereinigen
+        if (!/^[A-Z][A-Z0-9_]{1,19}$/.test(n)) {
+          toast("Name: 2 bis 20 Zeichen, nur A-Z, 0-9 und _, am Anfang ein Buchstabe", "e");
+          return;
+        }
         const chk = PSLib.policy.checkPattern(p, "");
         if (!chk.ok) {
           toast(chk.error, "e");
@@ -2539,20 +2547,23 @@
       }
       function renderCV() {
         const l = document.getElementById("CVL");
-        l.innerHTML = "";
+        l.textContent = "";
+        // S3.fix: Zeilen per DOM-Aufbau, Namen und Muster nur als Text
         cvars.forEach((v, i) => {
           const d = document.createElement("div");
           d.className = "custom-var-row";
-          d.innerHTML =
-            '<span class="custom-var-name">{{' +
-            v.n +
-            '}}</span><span class="custom-var-pattern" title="' +
-            v.p.replace(/"/g, "&quot;") +
-            '">' +
-            esc(v.p) +
-            '</span><button class="custom-var-del" onclick="removeCV(' +
-            i +
-            ')">×</button>';
+          const nm = document.createElement("span");
+          nm.className = "custom-var-name";
+          nm.textContent = "{{" + v.n + "}}";
+          const pt = document.createElement("span");
+          pt.className = "custom-var-pattern";
+          pt.title = v.p;
+          pt.textContent = v.p;
+          const b = document.createElement("button");
+          b.className = "custom-var-del";
+          b.textContent = "×";
+          b.addEventListener("click", () => removeCV(i));
+          d.append(nm, pt, b);
           l.appendChild(d);
         });
       }
@@ -3899,10 +3910,6 @@
       function toast(msg, type = "s") {
         const el = document.getElementById("TOAST");
         document.getElementById("TT").textContent = msg;
-        document.getElementById("TI").innerHTML =
-          type === "s"
-            ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
-            : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="14"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
         el.className = "toast on " + type;
         clearTimeout(el._t);
         el._t = setTimeout(() => el.classList.remove("on"), 3500);
