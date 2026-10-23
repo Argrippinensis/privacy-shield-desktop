@@ -2097,11 +2097,14 @@
     "npm run test:unit",
     "xvfb-run -a node --test --test-concurrency=1 tests/project.test.mjs tests/project-reset.test.mjs"
    ],
-   "status": "offen",
-   "attempts": 0,
+   "status": "laeuft",
+   "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": null,
+   "lease": {
+    "owner": "orch-20261023-run",
+    "ts": 1792720234062
+   },
    "notes": "Aus K2.fix-Pruefung (D36): (1) privacy-shield.html ~2726 Projektlauf: reserved: o.reserved an PSDetect.anonymize durchreichen; (2) Eintraege mit m:wortlich (c:null) in renderMap (String(d.c)), Toast-Zaehlung, prjCounts, CSV neutral behandeln/ausnehmen; (3) .psmap speichert state.reserved nicht (Grenze dokumentieren); Tests dafuer in K1.fix aufnehmen."
   },
   {
