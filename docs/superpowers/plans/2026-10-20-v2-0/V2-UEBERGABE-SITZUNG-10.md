@@ -34,3 +34,5 @@ Bereit (Stand Uebergabe): C1.2, D1.w1, D3, E1.w, E2, F3.a, F4.a, F4.b; D1.w2, D2
 * `pkill -f` mit Worktree-Pfaden beendet die eigene Shell; stattdessen Prozess-IDs gezielt beenden.
 * Der Auslöser (2-Stunden-Cron, `trig_01BFtBbS69N7ymWDXat91cb4`) kann parallel eine eigene Sitzung starten; Sperre mit `queue.mjs lock acquire` beachten. Wenn die neue Sitzung die Triage macht, den Auslöser vorher pausieren (Nutzer fragen), damit keine Pakete auf einem moeglicherweise falschen Zustand aufsetzen.
 * Release 2.0.0 nur nach schriftlicher Freigabe des Nutzers (Gate G1).
+
+> ERSETZT: aktuelle Uebergabe ist V2-UEBERGABE-SITZUNG-13.md (T0 und K4.fix erledigt).
