@@ -2201,10 +2201,10 @@
    "accept": [
     "npm run test:unit"
    ],
-   "status": "offen",
-   "attempts": 0,
+   "status": "fertig",
+   "attempts": 1,
    "branch": "",
-   "commit": "",
+   "commit": "1d94998d56d46b0968214629eb2808baf9a7bf85",
    "lease": null,
    "notes": ""
   },
