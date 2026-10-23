@@ -2,146 +2,233 @@
  {
   "mode": "w1",
   "key": "n12",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "ff3f7890efa954f9e75537554a7933a060a1c52fc53097a0bc3fb0ce1573b813",
+  "storeSha256": "318144154cb6dea9f45e937238fec2bcafa3ba867eea467d09b016b163bd7bfc",
+  "entities": 1
  },
  {
   "mode": "w1",
   "key": "n23",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "33c6629e593f6e807e49ec123479a152a6e063b265687cfef214b24ab0c34d53",
+  "storeSha256": "8a833e3c5388aeb60e410433c159ae203e1d13dff1f6a2b0db350f228826285a",
+  "entities": 2
  },
  {
   "mode": "w1",
   "key": "d03",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "2f2079a70fe511126fb51ca927d94b81ac6fc698a75a73a18b7b160d0ea79929",
+  "storeSha256": "7ecb5b1fd3f6005378ea164af233e31c5b876538af59d5c643d214cb27bcfe4f",
+  "entities": 2
  },
  {
   "mode": "w1",
   "key": "ga09",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "58c496a897de70efc9282356cb71d9bfcb283ec63eb99d49d9a99bfef73adce7",
+  "storeSha256": "c623237df6fe60a385486a78c1c6971c51446555ac120c1e582dff62f799e14c",
+  "entities": 1
  },
  {
   "mode": "w1",
   "key": "ga22",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "bc738b9fd8425eeaf1a11bef4cc8863343140db751a64e496c7cb745d9fc96a1",
+  "storeSha256": "21a384e2de858d147528ef93487687c40cf105c904e3a2646792228a1869717f",
+  "entities": 3
  },
  {
   "mode": "w1",
   "key": "ga24",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "15aa6e7b1eafa8557eee9a90c91afa100a76202a2f34a8bfb526c42be27b5f35",
+  "storeSha256": "06b7fd5ad8fc139a516febc1c8cfa8978bc136e7bfeca3512079812c8fe9176a",
+  "entities": 3
  },
  {
   "mode": "w1",
   "key": "ge04",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "f6c4366b792c6af183f572cf65acfb4c78ebbb632b5e0cb421e0b1a7daaedaaa",
+  "storeSha256": "145884065dedb19fbcd834f9de3c08a4166f1311bdef5818c07eee43cb7d351b",
+  "entities": 3
  },
  {
   "mode": "w1",
   "key": "syn0",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "05aa5ab77efe2f5de9204b138e0a44e4cf97fa1593534966e531815dd5b9133a",
+  "storeSha256": "ac286ffcf0d8b436c9f063b359524b136470728ac2e1debc4bc9c46ce3fe249f",
+  "entities": 9
  },
  {
   "mode": "w1",
   "key": "syn4",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "0fd2615af23f066311f8dde3afe28fdbaab8749917f9588ff95ce6bd3da923f9",
+  "storeSha256": "73d558d751f376dd8b5f349faf5cb9ce0dc4c6e42c88658d3702552dce302da3",
+  "entities": 8
  },
  {
   "mode": "w1",
   "key": "syn11",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "0fd2615af23f066311f8dde3afe28fdbaab8749917f9588ff95ce6bd3da923f9",
+  "storeSha256": "3d4f23203fee4e2b1eb6061130efd5a356fe89068751765d065c67028e7b4d13",
+  "entities": 8
  },
  {
   "mode": "w1",
   "key": "syn12",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "8b319059ebe00a9c9de54cc1d1982de8313b4894e81585f3bceb8c42e7be2b4e",
+  "storeSha256": "23b6d73c10049ae854e8ff7579839e20b204e1d415e780eae54cf8d62d6bc3c9",
+  "entities": 8
  },
  {
   "mode": "w1",
   "key": "syn13",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "faaf2f4e0c505dcc8687952b540f934d330c70ba3b4e4ab28adf0f79c2be66bb",
+  "storeSha256": "96dab8061ecf78133777b0b369d732a02099e2f35fa34aff063fd082467f3ee8",
+  "entities": 3
  },
  {
   "mode": "w1",
   "key": "syn27",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "24bee7644ed8863561535a0ff78a8334b34a45fcfa52bdfe7ca196b5c87ced8a",
+  "storeSha256": "a51769f0222f6117813f413f008441ff988754e38c48cb7e882ac0f269b06ffd",
+  "entities": 3
  },
  {
   "mode": "w1",
   "key": "syn29",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "13b47d7da0c188d9b88aedd9d561b093e21ae90c09bf160a00d6003db89f02bf",
+  "storeSha256": "2510f86762ce569c81c12db4ba19c4d6d81a0d5e849221c540d2221e8beece4e",
+  "entities": 6
  },
  {
   "mode": "w1",
   "key": "syn30",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "c6328dc075fd21740c8dec84333ed0e7e65b4b61a8262b200f4757bb924acfb9",
+  "storeSha256": "f022d825ff2198ec2c1fb9500f243cdeb81dc89b4f2d7124dd2eb5714e1d1c65",
+  "entities": 7
  },
  {
   "mode": "w1",
   "key": "syn34",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "226676487a80c3f8abab17a7f7265a13111390f4b530eaa000edaff735a9a5c5",
+  "storeSha256": "57d6f02dbbf7c4c7083d627148ce4e16476ebe40476160e745c194f5aa25467f",
+  "entities": 3
  },
  {
   "mode": "w1",
   "key": "syn40",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "06b5e0ff8ebf010e58972f7d1b389d4c80e7da7af3583a8d1b84996ba5bb5bfc",
+  "storeSha256": "ee5bfdd0b60bb92a1aa7beac6e91b9db5e5b66b427d8b05bf0756738451a6b76",
+  "entities": 7
  },
  {
   "mode": "w1",
   "key": "syn41",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "15f0a4ce2e1bb64d997c840df0b81feae43ec047d061a2896ed1a3ead91b7ba4",
+  "storeSha256": "63fa8996a72f94501de9834185d561f0b5d92ed0352ec34b67d0ee5f8b46b795",
+  "entities": 3
  },
  {
   "mode": "w1",
   "key": "golden-sample",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md"
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
+  "outSha256": "2ba5eca6b7a1080706849d2e8a9de436401c2455169b27b410bce73a6bbb2bcd",
+  "storeSha256": "9586e7b1d18e84f2ba3bf280dcf04d8c92e6751e4d718893b2128926c42858a1",
+  "entities": 18
  },
  {
   "mode": "w0",
   "key": "syn28",
-  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext"
+  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext",
+  "outSha256": "c8621503de16edc4bfb2062fc7541e688099f63335fe4033b8b9a5a1eeb5f783",
+  "storeSha256": "3f1effa2e6fc4a5b70316ca7ba374a0d59ad42d439e827360bebd32118b66f90",
+  "entities": 9
  },
  {
   "mode": "w1",
   "key": "syn28",
-  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext"
+  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext",
+  "outSha256": "78b660aec1ef84012745537279d825ccab256d2d37df3ff1c941436582aef71a",
+  "storeSha256": "e22831c6fcf3c7b971270676777e9df9912087bae9a96a2458d2e47c6dbc989e",
+  "entities": 9
  },
  {
   "mode": "ki",
   "key": "syn28",
-  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext"
+  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext",
+  "outSha256": "7eae6d4d348e769d4ab5f0951008f61bb619159b06e9280a25d92c709d72c970",
+  "storeSha256": "e183ba65bb0d3d8b5379bba40dbc6b089335afb9c1f7d8cd0a0c3d45df6172ad",
+  "entities": 9
  },
  {
   "mode": "w0",
   "key": "ga03",
-  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext"
+  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext",
+  "outSha256": "a43492a3715af2852d355e332be4cfdbe9302f5f84d72a9d837aca01082fb6ac",
+  "storeSha256": "214029cae9fd56c756896d29ac9ddb50434500a0d41daa0bc0ee48a8567caeff",
+  "entities": 2
  },
  {
   "mode": "w1",
   "key": "ga03",
-  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext"
+  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext",
+  "outSha256": "a43492a3715af2852d355e332be4cfdbe9302f5f84d72a9d837aca01082fb6ac",
+  "storeSha256": "f28b3e3fe490fad1fa9550f61347df8e67261b0b21c5a734847aff9bf74b224e",
+  "entities": 2
  },
  {
   "mode": "ki",
   "key": "ga03",
-  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext"
+  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext",
+  "outSha256": "a43492a3715af2852d355e332be4cfdbe9302f5f84d72a9d837aca01082fb6ac",
+  "storeSha256": "c2abc570fbd4e3a5395b68dc233921bc8db9a314f78147986ba82d3eea2a2087",
+  "entities": 2
  },
  {
   "mode": "w0",
   "key": "ga05",
-  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext"
+  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext",
+  "outSha256": "26244206be06550008a00e907f3b867e25d8c2ae08da608b660f6487c02823ef",
+  "storeSha256": "418bd30b03046e49ef202284c111dbbeafbec267987a0a6ccde739ef2758cf4a",
+  "entities": 2
  },
  {
   "mode": "w1",
   "key": "ga05",
-  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext"
+  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext",
+  "outSha256": "26244206be06550008a00e907f3b867e25d8c2ae08da608b660f6487c02823ef",
+  "storeSha256": "418bd30b03046e49ef202284c111dbbeafbec267987a0a6ccde739ef2758cf4a",
+  "entities": 2
  },
  {
   "mode": "ki",
   "key": "ga05",
-  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext"
+  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext",
+  "outSha256": "0f4ba2fa044ac27f4b9c75cc0a0c7810825c8f88545bc9e11df4f9c9af952a29",
+  "storeSha256": "89514570e072511a48fb94a8d7a109b20b90f38caf340d05d7f46e4d8bd67537",
+  "entities": 3
  },
  {
   "mode": "ki",
   "key": "syn12",
-  "reason": "C1.1 Gruppe E: Mit KI-Treffern ergaenzen die Wortlisten Personennamen mit bekanntem Vornamen, die das Modell uebersehen hat und die keinen anderen Treffer beruehren; vorher blieb der Name im Klartext"
+  "reason": "C1.1 Gruppe E: Mit KI-Treffern ergaenzen die Wortlisten Personennamen mit bekanntem Vornamen, die das Modell uebersehen hat und die keinen anderen Treffer beruehren; vorher blieb der Name im Klartext",
+  "outSha256": "8b319059ebe00a9c9de54cc1d1982de8313b4894e81585f3bceb8c42e7be2b4e",
+  "storeSha256": "7bb8f09128897d81ff3cd5049866936e97e118a6f6855573ff0c165d65916312",
+  "entities": 8
  }
 ]
