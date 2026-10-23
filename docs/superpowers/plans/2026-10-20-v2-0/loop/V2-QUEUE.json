@@ -1265,14 +1265,11 @@
     "npm run test:unit",
     "xvfb-run -a node --test --test-concurrency=1 tests/review.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261023-2",
-    "ts": 1792782322895
-   },
+   "commit": "bcb2d21e32e80a71f5ee093322bbfeff76241e2d",
+   "lease": null,
    "notes": ""
   },
   {
