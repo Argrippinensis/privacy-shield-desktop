@@ -2167,10 +2167,10 @@
    "accept": [
     "xvfb-run -a node --test --test-concurrency=1 tests/cvar-html.test.mjs"
    ],
-   "status": "offen",
-   "attempts": 0,
+   "status": "fertig",
+   "attempts": 1,
    "branch": "",
-   "commit": "",
+   "commit": "fa00da1dc8f0e288a411fdc1ee6a6e22a30339f1",
    "lease": null,
    "notes": ""
   },
