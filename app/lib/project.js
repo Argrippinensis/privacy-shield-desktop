@@ -1,8 +1,8 @@
 // Projekt mit gemeinsamen Platzhaltern (B1.m): reines Modul ohne DOM. Der Erkennungskern wird als anonymize hineingereicht.
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else { root.PSLib = root.PSLib || {}; root.PSLib.project = factory(); }
-})(typeof self !== 'undefined' ? self : this, function () {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./placeholder.js'));
+  else { root.PSLib = root.PSLib || {}; root.PSLib.project = factory(root.PSLib.placeholder); }
+})(typeof self !== 'undefined' ? self : this, function (PH) {
   'use strict';
   const LIMITS = { docs: 200, totalChars: 209715200 };
 
@@ -44,6 +44,14 @@
     const docs = p.docs.slice();
     docs.forEach((d) => { d.status = 'wartet'; });
     const state = p.shared ? { store: {}, cnt: {} } : null;
+    // K2.fix: woertliche Platzhalter aller Dokumente vorab reservieren (nur bei gemeinsamem state), damit kein Dokument
+    // einen Platzhalter vergibt, der in einem anderen Dokument woertlich steht
+    let reserved = null;
+    if (p.shared) {
+      const set = new Set();
+      docs.forEach((d) => PH.find(d.text).forEach((h) => set.add(h.token)));
+      if (set.size) reserved = Array.from(set);
+    }
     const results = [];
     let aborted = false;
     for (let i = 0; i < docs.length; i++) {
@@ -54,7 +62,7 @@
       const res = { id: d.id, index: i + 1, text: null, counts: null, status: 'fertig' };
       if (!p.shared) res.state = st;
       try {
-        const r = await o.anonymize(d.text, { state: st, profile: o.profile });
+        const r = await o.anonymize(d.text, reserved ? { state: st, profile: o.profile, reserved } : { state: st, profile: o.profile });
         res.text = r.text;
         res.counts = r.counts;
       } catch (err) {
