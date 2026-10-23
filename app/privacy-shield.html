@@ -2936,6 +2936,9 @@
             const zip = await JSZip.loadAsync(bytes);
             F.guard(zip);
             if (kind === "docx") {
+              // Trockenlauf: Mammoth oeffnet das Archiv mit eigener JSZip-Kopie ohne Grenze, daher vorher zaehlend entpacken
+              const bud = { used: 0, max: F.MAX_TOTAL };
+              for (const nm of Object.keys(zip.files)) if (!zip.files[nm].dir) await F.boundedRead(zip, nm, { budget: bud, as: "count" });
               const base = await exDOCX(file);
               const extra = await O.extractDocxExtras(zip);
               return extra.text ? base + "\n\n" + extra.text : base;
@@ -2979,6 +2982,8 @@
           toast('"' + file.name + '" geladen', "s");
           setStep(1);
         } catch (err) {
+          document.getElementById("IT").value = ""; // abgelehnte Datei: kein Text der vorigen Datei stehen lassen
+          updIC();
           toast("Fehler: " + err.message, "e");
         }
       }

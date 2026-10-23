@@ -16,6 +16,7 @@
 
   const MAX_ENTRIES = 2000;
   const MAX_TOTAL = 209715200;
+  const MAX_ENTRY = 52428800; // je Eintrag beim Lesen (Tokenliste waechst mit der Menge)
   const RATIO_FROM = 1048576;
   const RATIO_MAX = 100;
 
@@ -75,6 +76,60 @@
       if (d.uncompressedSize > RATIO_FROM &&
           (d.compressedSize === 0 || d.uncompressedSize / d.compressedSize > RATIO_MAX)) throw new PSFormatError('RATIO');
     }
+  }
+
+  // ---- boundedRead ----------------------------------------------------------------------
+
+  // Liest einen ZIP-Eintrag und zaehlt die tatsaechlich entpackten Bytes beim Entpacken (der Kopf kann luegen).
+  // opts: { max (je Eintrag, Standard MAX_ENTRY 50 MiB), budget ({ used, max }, geteilt ueber mehrere Eintraege), as: 'string'|'uint8array'|'count' (nur zaehlen, nichts behalten) }
+  // Ueberschreitung -> PSFormatError TOO_BIG (Entpacken wird angehalten); fehlender Eintrag -> null; sonstige Fehler -> CORRUPT
+  function boundedRead(zip, name, opts) {
+    const o = opts || {};
+    const f = zip && typeof zip.file === 'function' ? zip.file(name) : null;
+    if (!f) return Promise.resolve(null);
+    const max = typeof o.max === 'number' ? o.max : MAX_ENTRY;
+    const budget = o.budget || null;
+    return new Promise(function (resolve, reject) {
+      const chunks = [];
+      let n = 0;
+      let done = false;
+      let h;
+      function fail(err) {
+        if (done) return;
+        done = true;
+        try { if (h) h.pause(); } catch (e) { /* Strom schon zu Ende */ }
+        reject(err);
+      }
+      try {
+        h = f.internalStream('uint8array');
+      } catch (e) { fail(new PSFormatError('CORRUPT', String(e && e.message || e))); return; }
+      h.on('data', function (c) {
+        if (done) return;
+        n += c.length;
+        if (budget) budget.used += c.length;
+        if (n > max || (budget && budget.used > budget.max)) { fail(new PSFormatError('TOO_BIG')); return; }
+        if (o.as !== 'count') chunks.push(c);
+      });
+      h.on('error', function (e) { fail(new PSFormatError('CORRUPT', String(e && e.message || e))); });
+      h.on('end', function () {
+        if (done) return;
+        done = true;
+        if (o.as === 'count') { resolve(n); return; }
+        let all;
+        if (chunks.length === 1) all = chunks[0];
+        else {
+          all = new Uint8Array(n);
+          let p = 0;
+          for (const c of chunks) { all.set(c, p); p += c.length; }
+        }
+        if (o.as === 'uint8array') resolve(all);
+        else {
+          try { resolve(new TextDecoder('utf-8', { ignoreBOM: true }).decode(all)); }
+          catch (e) { reject(new PSFormatError('CORRUPT', String(e && e.message || e))); }
+        }
+      });
+      h.resume();
+    });
   }
 
   // ---- decodeText -----------------------------------------------------------------------
@@ -461,5 +516,5 @@
   const extractEml = wrap(extractEmlRaw);
   const extractRtf = wrap(function (r) { return { text: extractRtfRaw(r) }; });
 
-  return { detect, guard, decodeText, extractHtml, extractEml, extractRtf, PSFormatError };
+  return { detect, guard, boundedRead, MAX_TOTAL, decodeText, extractHtml, extractEml, extractRtf, PSFormatError };
 });
