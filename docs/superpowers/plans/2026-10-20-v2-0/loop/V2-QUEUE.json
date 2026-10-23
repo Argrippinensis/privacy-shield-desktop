@@ -2135,14 +2135,11 @@
    "accept": [
     "xvfb-run -a node --test --test-concurrency=1 tests/psmap.test.mjs tests/ipc-security.test.mjs tests/export-hygiene.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261023-s12",
-    "ts": 1792750315995
-   },
+   "commit": "a54418cc8425d74ed092adc00c243d46e32ddb49",
+   "lease": null,
    "notes": ""
   },
   {
