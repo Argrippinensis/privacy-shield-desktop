@@ -34,6 +34,23 @@ async function addVar(f, name, pat = 'ZZQ\\d{3}') {
   }, { name, pat });
   await f.waitForTimeout(500);
 }
+// Ablehnung: Liste eigener Variablen bleibt leer, ein Fehler-Toast mit dem Regeltext erscheint, die Anzeige hat keine Zeile
+async function ablehnen(f, name, pat) {
+  await f.evaluate(() => { const t = document.getElementById('TOAST'); t.className = 'toast'; document.getElementById('TT').textContent = ''; });
+  await addVar(f, name, pat);
+  const r = await f.evaluate(() => ({
+    cvars: cvars.map((v) => v.n),
+    zeilen: document.querySelectorAll('#CVL .custom-var-row').length,
+    toastKlasse: document.getElementById('TOAST').className,
+    toastText: document.getElementById('TT').textContent,
+  }));
+  const label = JSON.stringify(name);
+  assert.deepEqual(r.cvars, [], 'Name ' + label + ' wurde gespeichert');
+  assert.equal(r.zeilen, 0, 'Name ' + label + ' erzeugt eine Zeile');
+  assert.match(r.toastKlasse, /\bon\b/, 'kein sichtbarer Toast fuer ' + label);
+  assert.match(r.toastKlasse, /\be\b/, 'Toast fuer ' + label + ' ist kein Fehler-Toast');
+  assert.match(r.toastText, /2 bis 20 Zeichen/, 'Toast ohne Regeltext fuer ' + label + ': ' + r.toastText);
+}
 const namen = (f) => f.evaluate(() => cvars.map((v) => v.n));
 // Alles, was in #CVL ausser den drei erwarteten Elementarten steht (div-Zeile, span, button)
 const fremdeElemente = (f) => f.evaluate(() => [...document.querySelectorAll('#CVL *')]
@@ -45,9 +62,8 @@ test('Markup-Name <b>test</b>: kein <b>-Element in der Variablenliste, nur woert
   assert.equal(await f.evaluate(() => document.querySelectorAll('#CVL b').length), 0);
 }));
 
-test('Markup-Name <b>test</b>: der gespeicherte Name erfuellt die strenge Kategorienregel (oder die Variable wurde abgelehnt)', () => mitApp(async (a, f) => {
-  await addVar(f, '<b>test</b>');
-  for (const n of await namen(f)) assert.match(n, STRIKT, 'Name ' + JSON.stringify(n) + ' verletzt ^[A-Z][A-Z0-9_]{1,19}$');
+test('Markup-Name <b>test</b> wird abgelehnt (leere Liste, Fehler-Toast)', () => mitApp(async (a, f) => {
+  await ablehnen(f, '<b>test</b>');
 }));
 
 test('Ereignishandler im Namen (<img onerror=...>) wird nicht ausgefuehrt und erzeugt kein img-Element', () => mitApp(async (a, f) => {
@@ -79,24 +95,50 @@ test('Markup-Name bringt kein neues Element ausserhalb der Variablenliste in die
   assert.equal(await zaehle(), vorher, 'die Zahl der Elemente darf durch einen Namen nicht wachsen');
 }));
 
-// Jedes Markup-Zeichen einzeln: abgelehnt oder neutralisiert, nie unveraendert gespeichert
+// Jedes Markup-Zeichen einzeln: abgelehnt, nie gespeichert
 for (const [zeichen, bezeichnung] of [['<', 'spitze Klammer auf'], ['>', 'spitze Klammer zu'], ['&', 'Und-Zeichen'], ['"', 'doppeltes Anfuehrungszeichen'], ["'", 'einfaches Anfuehrungszeichen']]) {
-  test(`Name mit ${bezeichnung} (${zeichen}) wird abgelehnt oder neutralisiert und nie unveraendert gespeichert`, () => mitApp(async (a, f) => {
-    await addVar(f, 'KUNDE' + zeichen + 'NR');
-    const ns = await namen(f);
-    for (const n of ns) {
-      assert.ok(!n.includes(zeichen), 'Zeichen ' + zeichen + ' steckt im gespeicherten Namen ' + JSON.stringify(n));
-      assert.match(n, STRIKT);
-    }
+  test(`Name mit ${bezeichnung} (${zeichen}) wird abgelehnt (leere Liste, Fehler-Toast)`, () => mitApp(async (a, f) => {
+    await ablehnen(f, 'KUNDE' + zeichen + 'NR');
     assert.ok(!(await f.evaluate(() => document.getElementById('CVL').innerHTML)).includes('KUNDE' + zeichen + 'NR'), 'Rohname steht im HTML der Liste');
   }));
 }
 
-test('Name mit fuehrender Ziffer oder zu lang wird abgelehnt oder auf die strenge Regel gebracht (wie Regeln und Markierungen)', () => mitApp(async (a, f) => {
-  await addVar(f, '1ABC');
-  await addVar(f, 'EIN_SEHR_LANGER_VARIABLENNAME_UEBER_ZWANZIG');
-  await addVar(f, 'X');
-  for (const n of await namen(f)) assert.match(n, STRIKT, 'Name ' + JSON.stringify(n) + ' verletzt ^[A-Z][A-Z0-9_]{1,19}$');
+for (const [name, bezeichnung] of [['1ABC', 'fuehrende Ziffer'], ['X', 'ein Zeichen'], ['A'.repeat(21), '21 Zeichen'], ['_ABC', 'fuehrender Unterstrich'], ['KUNDE-NR', 'Bindestrich'], ['K\u00dcNDE', 'Umlaut']]) {
+  test(`Name mit ${bezeichnung} (${name}) wird abgelehnt (leere Liste, Fehler-Toast)`, () => mitApp(async (a, f) => {
+    await ablehnen(f, name);
+  }));
+}
+
+test('Gutfaelle an der Grenze: VTR_2, zwei Zeichen und genau 20 Zeichen werden angelegt', () => mitApp(async (a, f) => {
+  const zwanzig = 'A' + 'B'.repeat(19);
+  assert.equal(zwanzig.length, 20);
+  await addVar(f, 'VTR_2', 'ZZQ\\d{3}');
+  await addVar(f, 'ab', 'YYQ\\d{3}');
+  await addVar(f, zwanzig, 'XXQ\\d{3}');
+  assert.deepEqual(await namen(f), ['VTR_2', 'AB', zwanzig]);
+  for (const n of await namen(f)) assert.match(n, STRIKT);
+  assert.equal(await f.evaluate(() => document.querySelectorAll('#CVL .custom-var-row').length), 3);
+}));
+
+test('Loeschen: bei zwei Variablen entfernt der Loeschknopf der richtigen Zeile nur diese', () => mitApp(async (a, f) => {
+  await addVar(f, 'ALPHA', 'AAQ\\d{3}');
+  await addVar(f, 'BETA', 'BBQ\\d{3}');
+  assert.deepEqual(await namen(f), ['ALPHA', 'BETA']);
+  await f.evaluate(() => {
+    const zeile = [...document.querySelectorAll('#CVL .custom-var-row')].find((z) => z.querySelector('.custom-var-name').textContent === '{{ALPHA}}');
+    zeile.querySelector('.custom-var-del').click();
+  });
+  await f.waitForTimeout(300);
+  assert.deepEqual(await namen(f), ['BETA']);
+  assert.deepEqual(await f.evaluate(() => [...document.querySelectorAll('#CVL .custom-var-name')].map((e) => e.textContent)), ['{{BETA}}']);
+  // zweite Variable (nicht die erste) loeschen: wieder nur die gewaehlte verschwindet
+  await addVar(f, 'GAMMA', 'GGQ\\d{3}');
+  await f.evaluate(() => {
+    const zeile = [...document.querySelectorAll('#CVL .custom-var-row')].find((z) => z.querySelector('.custom-var-name').textContent === '{{GAMMA}}');
+    zeile.querySelector('.custom-var-del').click();
+  });
+  await f.waitForTimeout(300);
+  assert.deepEqual(await namen(f), ['BETA']);
 }));
 
 test('Rundlauf: Platzhalter aus einem Markup-Namen ist immer ein gueltiger Platzhalter (Gegenpruefung und Rueckuebersetzung erkennen ihn)', () => mitApp(async (a, f) => {
@@ -111,13 +153,33 @@ test('Rundlauf: Platzhalter aus einem Markup-Namen ist immer ein gueltiger Platz
   for (const m of out.match(/\{\{[^}]*\}\}/g) || []) assert.ok(placeholder.isToken(m), 'kein gueltiger Platzhalter: ' + m);
 }));
 
+// Funktionsende per Klammerzaehlung; Zeichenketten und Kommentare werden uebersprungen
+function funktionsKoerper(src, kopf) {
+  const start = src.indexOf(kopf);
+  if (start < 0) return null;
+  let i = src.indexOf('{', start);
+  const von = i;
+  let tiefe = 0;
+  for (; i < src.length; i++) {
+    const c = src[i];
+    if (c === '"' || c === "'" || c === '`') {
+      for (i++; i < src.length && src[i] !== c; i++) if (src[i] === '\\') i++;
+    } else if (c === '/' && src[i + 1] === '/') {
+      i = src.indexOf('\n', i); if (i < 0) return null;
+    } else if (c === '/' && src[i + 1] === '*') {
+      i = src.indexOf('*/', i); if (i < 0) return null; i++;
+    } else if (c === '{') tiefe++;
+    else if (c === '}' && --tiefe === 0) return src.slice(von, i + 1);
+  }
+  return null;
+}
+
 test('renderCV setzt den Namen ohne innerHTML ein (textContent/createElement)', () => {
   const html = fs.readFileSync(path.join(ROOT, 'app', 'privacy-shield.html'), 'utf8');
-  const start = html.indexOf('function renderCV()');
-  assert.ok(start >= 0, 'renderCV nicht gefunden');
-  const ende = html.indexOf('\n      }\n', start);
-  const body = html.slice(start, ende);
-  assert.ok(!/innerHTML/.test(body), 'renderCV verwendet innerHTML:\n' + body);
+  const body = funktionsKoerper(html, 'function renderCV()');
+  assert.ok(body, 'renderCV nicht gefunden oder Klammern unausgeglichen');
+  assert.ok(body.includes('custom-var-del') && body.trim().endsWith('}'), 'Funktionskoerper unvollstaendig erkannt:\n' + body);
+  assert.ok(!/innerHTML|insertAdjacentHTML|outerHTML/.test(body), 'renderCV verwendet HTML-Zeichenketten:\n' + body);
 });
 
 test('Kontrolle (bleibt gruen): gueltiger Name mit Leerraum wird gross geschrieben, als Text gezeigt und im Ergebnis ersetzt', () => mitApp(async (a, f) => {
