@@ -2228,7 +2228,8 @@
     "app/privacy-shield.html",
     "tests/unit/formats.test.mjs",
     "tests/unit/officefmt.test.mjs",
-    "tests/zip-bomb-app.test.mjs"
+    "tests/zip-bomb-app.test.mjs",
+    "tests/unit/_zipfake.mjs"
    ],
    "tests": [
     "tests/unit/formats.test.mjs",
@@ -2238,11 +2239,14 @@
     "npm run test:unit",
     "xvfb-run -a node --test --test-concurrency=1 tests/zip-bomb-app.test.mjs"
    ],
-   "status": "offen",
-   "attempts": 0,
+   "status": "laeuft",
+   "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": null,
+   "lease": {
+    "owner": "orch-20261023-1",
+    "ts": 1792767663200
+   },
    "notes": ""
   },
   {
