@@ -685,6 +685,7 @@
       .funde-head h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; color: #1a3a5c; }
       .funde-close { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #e5e5e5; border-radius: 6px; color: #666; cursor: pointer; }
       .funde-close:hover { background: #f5f5f5; color: #111; }
+      .funde-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
       .funde-hint { padding: 8px 16px; font-size: 11px; line-height: 1.5; color: #666; border-bottom: 1px solid #e5e5e5; background: #fafafa; }
       #FUNDELIST { flex: 1; overflow-y: auto; padding: 0 0 24px; }
       #FUNDELIST .fg-h { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: #fff; border-bottom: 1px solid #e5e5e5; }
@@ -2155,7 +2156,8 @@
         </button>
       </div>
       <div class="funde-hint">Die Originalwerte sind nur hier sichtbar. Freigegebene Werte bleiben im Ergebnis im Klartext. Nichts wird gespeichert.</div>
-      <div id="FUNDELIST" aria-live="polite"></div>
+      <div id="FUNDELIST"></div>
+      <div id="FUNDESTATUS" class="funde-sr" role="status"></div>
     </aside>
     <script src="vendor/pdfjs/pdf.min.js"></script>
     <script src="vendor/mammoth/mammoth.browser.min.js"></script>
@@ -2260,6 +2262,7 @@
           updIC();
           setStep(1);
           scheduleHighlight();
+          fundeTextChanged();
         });
         document.getElementById("IT").addEventListener("scroll", syncMirrorScroll);
         document.getElementById("IT").addEventListener("paste", function () {
@@ -2780,6 +2783,7 @@
         document.getElementById("AT").value = res ? res.text : "";
         updIC();
         scheduleHighlight();
+        fundeDirty = true; refreshFunde();
         document.getElementById("resultArea").style.display = res ? "flex" : "none";
         if (res) {
           document.getElementById("REANON").style.display = "none";
@@ -3507,7 +3511,7 @@
           cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
           extraSpans: policySpans(text),
           whitelist: whitelist,
-                released: released,
+          released: released,
           wordlists: localAIMode,
           aiSpans: aiCache.key === text ? aiCache.spans : null,
         });
@@ -3630,7 +3634,7 @@
             cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
             extraSpans: policySpans(input),
             whitelist: whitelist,
-                released: released,
+            released: released,
             wordlists: localAIMode,
             aiSpans: aiCache.key === det ? aiCache.spans : null,
             state: { store, cnt },
@@ -3944,7 +3948,7 @@
         stateTouch();
         // S2/D23: Projekt, manuelle Markierungen, letzte Leckpruefung und KI-Zwischenspeicher leeren
         hidePrj(); prjAgain = false; prjStale = false;
-        manualMarks = PSLib.marks.create(); released = []; lcIgnored = new Set(); lcLast = null; fundeDirty = true; fundeCache = null; refreshFunde();
+        manualMarks = PSLib.marks.create(); released = []; lcIgnored = new Set(); lcLast = null; fundeReset();
         aiCache = { key: null, spans: [] };
         const lb = document.getElementById("LCBAND"), ll = document.getElementById("LCLIST");
         if (lb) lb.style.display = "none";
@@ -4016,7 +4020,7 @@
         }
       }
       // D1.w1: Seitenleiste "Funde" (Pruefansicht). Entscheidungen liegen nur im Speicher (released), nichts wird gespeichert.
-      let fundeOpen = false, fundeDirty = true, fundeKeep = false, fundeCache = null, fundeList = [], fundeFlash = null, _fundeDeb = null, _fundeFlashT = null;
+      let fundeOpen = false, fundeDirty = true, fundeKeep = false, fundeCache = null, fundeList = [], fundeFlash = null, _fundeDeb = null, _fundeFlashT = null, _fundeTxt = null, fundeSnap = "[]";
       const FUNDE_FLASH = "rgba(26,58,92,0.28)";
       function escA(v) { return esc(String(v)).replace(/"/g, "&quot;"); }
       function fundeIsReleased(pfx, value) { return released.some((r) => r.pfx === pfx && r.value === value); }
@@ -4026,11 +4030,29 @@
         document.body.classList.toggle("funde-open", fundeOpen);
         const b = document.getElementById("FUNDEBTN");
         b.setAttribute("aria-expanded", fundeOpen ? "true" : "false");
-        if (fundeOpen) refreshFunde();
+        if (fundeOpen) { fundeDirty = true; refreshFunde(); }
       }
       // Funde aus dem Original (IT) berechnen, ohne Freigaben, damit freigegebene Werte sichtbar bleiben
+      // Kennung der Erkennungskonfiguration: Aenderung macht den Cache der Funde ungueltig
+      function fundeSig() {
+        let c = "";
+        try { c = JSON.stringify([activeEntIds(), curProf, cvars, PSLib.marks.toCvars(manualMarks), policyRuleCount(), localAIMode, aiCache.key ? aiCache.key.length : 0, aiCache.spans.length]); } catch (e) { c = String(Math.random()); }
+        return c;
+      }
+      function fundeTextChanged() {
+        fundeDirty = true;
+        if (!fundeOpen) return;
+        clearTimeout(_fundeTxt);
+        _fundeTxt = setTimeout(renderFunde, 500);
+      }
+      function fundeReset() {
+        clearTimeout(_fundeDeb); clearTimeout(_fundeTxt); clearTimeout(_fundeFlashT);
+        fundeFlash = null; fundeList = []; fundeCache = null; fundeDirty = true; fundeSnap = "[]";
+        renderFunde();
+      }
       function fundeSpans(text) {
-        if (fundeCache && !fundeDirty && fundeCache.text === text) return fundeCache.spans;
+        const sig = fundeSig();
+        if (fundeCache && !fundeDirty && fundeCache.text === text && fundeCache.sig === sig) return fundeCache.spans;
         let spans = [];
         try {
           const det = PSDetect.normalizeForDetection(text);
@@ -4044,7 +4066,7 @@
             aiSpans: aiCache.key === det ? aiCache.spans : null,
           });
         } catch (e) { spans = []; }
-        fundeCache = { text: text, spans: spans };
+        fundeCache = { text: text, sig: sig, spans: spans };
         fundeDirty = false;
         return spans;
       }
@@ -4052,7 +4074,9 @@
         if (!fundeOpen) { fundeDirty = true; return; }
         renderFunde();
       }
+      function fundeRelSig() { return JSON.stringify(released.map((r) => r.pfx + "\u0000" + r.value).sort()); }
       function fundeAfterAnon() {
+        fundeSnap = fundeRelSig();
         if (fundeKeep) { fundeKeep = false; renderFunde(); } else { fundeDirty = true; refreshFunde(); }
       }
       function fundeTokenOf() {
@@ -4075,10 +4099,10 @@
         const groups = [];
         for (const e of list) { const g = groups[groups.length - 1]; if (g && g.type === e.type) g.items.push(e); else groups.push({ type: e.type, items: [e] }); }
         let h = "";
-        for (const g of groups) {
+        for (const [gi, g] of groups.entries()) {
           const alle = g.items.every((e) => e.decision === "freigeben");
-          h += '<section class="fg" data-type="' + escA(g.type) + '"><div class="fg-h"><span class="fg-t">' + esc(fundeLabel(g.type)) + '</span><span class="fg-n" title="Anzahl verschiedener Werte">' + g.items.length + '</span>'
-            + '<button type="button" class="fg-all" data-type="' + escA(g.type) + '" data-act="' + (alle ? "maskieren" : "freigeben") + '">alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + "</button></div><ul>";
+          h += '<section class="fg" data-type="' + escA(g.type) + '" aria-labelledby="fgt' + gi + '"><div class="fg-h"><span class="fg-t" id="fgt' + gi + '">' + esc(fundeLabel(g.type)) + '</span><span class="fg-n" title="Anzahl verschiedener Werte">' + g.items.length + '</span>'
+            + '<button type="button" class="fg-all" data-type="' + escA(g.type) + '" data-act="' + (alle ? "maskieren" : "freigeben") + '" aria-label="alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + ": " + escA(fundeLabel(g.type)) + '">alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + "</button></div><ul>";
           for (const e of g.items) {
             const frei = e.decision === "freigeben", viaWL = frei && !fundeIsReleased(e.type, e.value);
             const ph = frei ? (viaWL ? "freigegeben über die Whitelist" : "im Klartext") : (e.token || "wird maskiert");
@@ -4106,11 +4130,16 @@
           if (!release && i >= 0) released.splice(i, 1);
         });
         renderFunde();
+        const st = document.getElementById("FUNDESTATUS");
+        if (st) st.textContent = (release ? "Freigegeben: " : "Maskiert: ") + entries.length + (entries.length === 1 ? " Wert" : " Werte");
         clearTimeout(_fundeDeb);
         _fundeDeb = setTimeout(fundeApply, 300);
       }
       async function fundeApply() {
-        if (anonBusy || prjBusy) { _fundeDeb = setTimeout(fundeApply, 300); return; }
+        if (fundeRelSig() === fundeSnap) return; // nichts geaendert
+        if (prj) { prjRefresh(); return; } // Projekt: wie nach Whitelist-Aenderung (laufend: vormerken, ZIP: veraltet)
+        if (!document.getElementById("AT").value.trim()) return; // noch nie anonymisiert: Entscheidung gilt beim ersten Lauf
+        if (anonBusy) { _fundeDeb = setTimeout(fundeApply, 300); return; }
         fundeKeep = true;
         try { await reanon(); } catch (e) { /* Fehler zeigt anon() selbst */ } finally { fundeKeep = false; }
         scheduleHighlight();
@@ -4128,9 +4157,15 @@
         syncMirrorScroll();
       }
       function fundeJump(key) {
-        const e = fundeList.find((x) => x.key === key), ta = document.getElementById("IT");
+        const ta = document.getElementById("IT");
+        let e = fundeList.find((x) => x.key === key);
         if (!e) return;
+        if (ta.value.slice(e.firstStart, e.firstStart + e.value.length) !== e.value) { fundeDirty = true; renderFunde(); e = fundeList.find((x) => x.key === key); if (!e) return; }
+        const back = document.activeElement;
+        // war das Feld zuvor fokussiert, stellt Chromium die alte Auswahl wieder her: kurz fokussieren, auswaehlen, Fokus zurueckgeben
+        ta.focus({ preventScroll: true });
         ta.setSelectionRange(e.firstStart, e.firstStart + e.value.length);
+        if (back && back !== ta && back.focus) back.focus({ preventScroll: true });
         fundeScrollTo(ta, e.firstStart);
         try { ta.scrollIntoView({ block: "nearest" }); } catch (x) { /* ignorieren */ }
         fundeFlash = { start: e.firstStart, end: e.firstStart + e.value.length };
