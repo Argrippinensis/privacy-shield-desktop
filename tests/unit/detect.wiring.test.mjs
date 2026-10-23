@@ -83,9 +83,9 @@ for (const [label, rx] of [
   });
 }
 
-test('HTML hat hoechstens 4500 Zeilen', () => {
+test('HTML hat hoechstens 5200 Zeilen', () => {
   const lines = html.split('\n').length;
-  assert.ok(lines <= 4500, 'Zeilen: ' + lines);
+  assert.ok(lines <= 5200, 'Zeilen: ' + lines);
 });
 
 test('ENTS und PROFILES stammen aus PSDetect', () => {

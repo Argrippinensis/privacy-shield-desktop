@@ -661,6 +661,49 @@
         font-family: monospace;
         color: #111;
       }
+      /* D1.w1: Seitenleiste "Funde" */
+      #FUNDEBTN {
+        position: fixed; right: 0; top: 140px; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 8px;
+        padding: 14px 8px 12px; background: #1a3a5c; color: #fff; border: 0; border-radius: 8px 0 0 8px; cursor: pointer;
+        font: 600 12px/1 "Plus Jakarta Sans", system-ui, sans-serif; letter-spacing: 0.02em; box-shadow: -1px 1px 4px rgba(0, 0, 0, 0.12);
+      }
+      #FUNDEBTN .funde-t { writing-mode: vertical-rl; }
+      #FUNDEBTN .funde-n { font-size: 10px; font-weight: 600; background: #fff; color: #1a3a5c; border-radius: 100px; padding: 2px 6px; min-width: 18px; text-align: center; }
+      #FUNDEBTN .funde-n:empty { display: none; }
+      #FUNDEBTN:focus-visible, #FUNDE button:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
+      #FUNDEBTN:focus-visible { outline-color: #fff; outline-offset: -4px; }
+      body.funde-open #FUNDEBTN { right: 360px; }
+      #FUNDE {
+        display: none; position: fixed; top: 0; right: 0; bottom: 0; width: 360px; max-width: 100vw; z-index: 55; flex-direction: column;
+        background: #fff; border-left: 1px solid #e5e5e5; box-shadow: -6px 0 24px rgba(0, 0, 0, 0.06); font-size: 12px; color: #111;
+      }
+      #FUNDE.on { display: flex; }
+      @media (min-width: 1100px) { body.funde-open { padding-right: 360px; } }
+      @media (max-width: 1099px) { #FUNDE { width: 320px; } body.funde-open #FUNDEBTN { right: 320px; } }
+      @media (max-width: 480px) { #FUNDE { width: 100vw; } body.funde-open #FUNDEBTN { right: 0; top: 8px; } }
+      .funde-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px 10px; border-bottom: 1px solid #e5e5e5; }
+      .funde-head h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; color: #1a3a5c; }
+      .funde-close { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #e5e5e5; border-radius: 6px; color: #666; cursor: pointer; }
+      .funde-close:hover { background: #f5f5f5; color: #111; }
+      .funde-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+      .funde-hint { padding: 8px 16px; font-size: 11px; line-height: 1.5; color: #666; border-bottom: 1px solid #e5e5e5; background: #fafafa; }
+      #FUNDELIST { flex: 1; overflow-y: auto; padding: 0 0 24px; }
+      #FUNDELIST .fg-h { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: #fff; border-bottom: 1px solid #e5e5e5; }
+      #FUNDELIST .fg-t { font-weight: 600; font-size: 12px; color: #1a3a5c; white-space: nowrap; }
+      #FUNDELIST .fg-n { font-size: 11px; color: #666; flex: 1; white-space: nowrap; }
+      #FUNDELIST .fg-all { font: 500 11px "Plus Jakarta Sans", system-ui, sans-serif; color: #1a3a5c; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 4px 9px; cursor: pointer; white-space: nowrap; }
+      #FUNDELIST .fg-all:hover, #FUNDELIST .fund-toggle:hover:not(:disabled) { background: #f5f5f5; }
+      #FUNDELIST ul { list-style: none; margin: 0; padding: 0; }
+      #FUNDELIST li[data-key] { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; padding: 8px 16px 8px 13px; border-bottom: 1px solid #f0f0f0; border-left: 3px solid #1a3a5c; }
+      #FUNDELIST li.frei { border-left-color: #e5e5e5; background: #fafafa; }
+      #FUNDELIST .fund-jump { grid-column: 1; text-align: left; background: none; border: 0; padding: 2px 0; font: 600 13px/1.35 "Plus Jakarta Sans", system-ui, sans-serif; color: #111; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+      #FUNDELIST .fund-jump:hover { color: #1a3a5c; text-decoration: underline; }
+      #FUNDELIST li.frei .fund-jump { color: #666; font-weight: 500; }
+      #FUNDELIST .fund-cnt { grid-column: 2; font-size: 11px; color: #666; text-align: right; }
+      #FUNDELIST .fund-ph { grid-column: 1; font: 11px monospace; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #FUNDELIST .fund-toggle { grid-column: 2; font: 500 11px "Plus Jakarta Sans", system-ui, sans-serif; color: #1a3a5c; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+      #FUNDELIST .fund-toggle:disabled { color: #999; cursor: default; background: #f5f5f5; }
+      #FUNDELIST .funde-empty { padding: 28px 16px; color: #666; line-height: 1.6; text-align: center; }
       .pill {
         display: inline-block;
         padding: 2px 7px;
@@ -2102,6 +2145,20 @@
       </div>
       <div id="AMPERROR" style="display: none; margin-top: 6px; font-size: 11px; color: #ff3b30"></div>
     </div>
+    <button id="FUNDEBTN" type="button" onclick="toggleFunde()" aria-controls="FUNDE" aria-expanded="false" title="Liste aller Funde anzeigen">
+      <span class="funde-t">Funde</span><span class="funde-n" id="FUNDECNT"></span>
+    </button>
+    <aside id="FUNDE" aria-label="Funde">
+      <div class="funde-head">
+        <h2>Funde</h2>
+        <button type="button" class="funde-close" onclick="toggleFunde(false)" aria-label="Funde schließen">
+          <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="funde-hint">Die Originalwerte sind nur hier sichtbar. Freigegebene Werte bleiben im Ergebnis im Klartext. Nichts wird gespeichert.</div>
+      <div id="FUNDELIST"></div>
+      <div id="FUNDESTATUS" class="funde-sr" role="status"></div>
+    </aside>
     <script src="vendor/pdfjs/pdf.min.js"></script>
     <script src="vendor/mammoth/mammoth.browser.min.js"></script>
     <script src="vendor/tesseract/tesseract.min.js"></script>
@@ -2138,7 +2195,7 @@
         </div>
       </div>
     </div>
-    <script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script><script src="lib/formats.js"></script><script src="lib/officefmt.js"></script>
+    <script src="lib/review.js"></script><script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script><script src="lib/formats.js"></script><script src="lib/officefmt.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
       const PROFILES = PSDetect.PROFILES;
@@ -2150,7 +2207,7 @@
         cnt = {},
         cvars = [],
         curProf = "standard",
-        whitelist = [], manualMarks = PSLib.marks.create(), lcIgnored = new Set(), lcLast = null;
+        whitelist = [], released = [], manualMarks = PSLib.marks.create(), lcIgnored = new Set(), lcLast = null;
       (function boot() {
         const pg = document.getElementById("PG");
         PROFILES.forEach((p) => {
@@ -2205,6 +2262,7 @@
           updIC();
           setStep(1);
           scheduleHighlight();
+          fundeTextChanged();
         });
         document.getElementById("IT").addEventListener("scroll", syncMirrorScroll);
         document.getElementById("IT").addEventListener("paste", function () {
@@ -2725,6 +2783,7 @@
         document.getElementById("AT").value = res ? res.text : "";
         updIC();
         scheduleHighlight();
+        fundeDirty = true; refreshFunde();
         document.getElementById("resultArea").style.display = res ? "flex" : "none";
         if (res) {
           document.getElementById("REANON").style.display = "none";
@@ -2767,6 +2826,7 @@
                 cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
                 extraSpans: policySpans(text),
                 whitelist: whitelist,
+                released: released,
                 wordlists: localAIMode,
                 aiSpans: aiCache.key === det ? aiCache.spans : null,
                 state: o.state,
@@ -2780,7 +2840,7 @@
           });
           prjAborted = out.aborted;
           prjDur = Date.now() - prjStart.getTime();
-          if (out.state) { store = out.state.store; cnt = out.state.cnt; stateTouch(); renderMap(); }
+          if (out.state) { store = out.state.store; cnt = out.state.cnt; stateTouch(); renderMap(); fundeAfterAnon(); }
         } catch (err) {
           toast("Fehler: " + err.message, "e");
         } finally {
@@ -3451,6 +3511,7 @@
           cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
           extraSpans: policySpans(text),
           whitelist: whitelist,
+          released: released,
           wordlists: localAIMode,
           aiSpans: aiCache.key === text ? aiCache.spans : null,
         });
@@ -3458,7 +3519,7 @@
       // Gegenpruefung: Erkennung ein zweites Mal ueber das Ergebnis (alle Typen, ohne Freigaben)
       function leakScan(at) {
         const mk = PSLib.marks.toCvars(manualMarks);
-        return PSLib.leakcheck.scan(at, { detect: (t) => PSDetect.detect(t, { ents: ENTS.map((e) => e.id), cvars: cvars.concat(mk), extraSpans: policySpans(t), whitelist: [], wordlists: localAIMode, aiSpans: null }), whitelist: whitelist });
+        return PSLib.leakcheck.scan(at, { detect: (t) => PSDetect.detect(t, { ents: ENTS.map((e) => e.id), cvars: cvars.concat(mk), extraSpans: policySpans(t), whitelist: [], wordlists: localAIMode, aiSpans: null }), whitelist: whitelist, released: released });
       }
       function runLeakCheck() { const at = document.getElementById("AT").value;
         const r = leakScan(at);
@@ -3573,6 +3634,7 @@
             cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
             extraSpans: policySpans(input),
             whitelist: whitelist,
+            released: released,
             wordlists: localAIMode,
             aiSpans: aiCache.key === det ? aiCache.spans : null,
             state: { store, cnt },
@@ -3594,6 +3656,7 @@
             mt && mt.ohne ? "e" : "s",
           );
           runLeakCheck();
+          fundeAfterAnon();
         } catch (err) {
           repStart = null;
           toast("Fehler: " + err.message, "e");
@@ -3885,7 +3948,7 @@
         stateTouch();
         // S2/D23: Projekt, manuelle Markierungen, letzte Leckpruefung und KI-Zwischenspeicher leeren
         hidePrj(); prjAgain = false; prjStale = false;
-        manualMarks = PSLib.marks.create(); lcIgnored = new Set(); lcLast = null;
+        manualMarks = PSLib.marks.create(); released = []; lcIgnored = new Set(); lcLast = null; fundeReset();
         aiCache = { key: null, spans: [] };
         const lb = document.getElementById("LCBAND"), ll = document.getElementById("LCLIST");
         if (lb) lb.style.display = "none";
@@ -3956,6 +4019,175 @@
           bar.style.display = "block";
         }
       }
+      // D1.w1: Seitenleiste "Funde" (Pruefansicht). Entscheidungen liegen nur im Speicher (released), nichts wird gespeichert.
+      let fundeOpen = false, fundeDirty = true, fundeKeep = false, fundeCache = null, fundeList = [], fundeFlash = null, _fundeDeb = null, _fundeFlashT = null, _fundeTxt = null, fundeSnap = "[]";
+      const FUNDE_FLASH = "rgba(26,58,92,0.28)";
+      function escA(v) { return esc(String(v)).replace(/"/g, "&quot;"); }
+      function fundeIsReleased(pfx, value) { return released.some((r) => r.pfx === pfx && r.value === value); }
+      function toggleFunde(open) {
+        fundeOpen = typeof open === "boolean" ? open : !fundeOpen;
+        document.getElementById("FUNDE").classList.toggle("on", fundeOpen);
+        document.body.classList.toggle("funde-open", fundeOpen);
+        const b = document.getElementById("FUNDEBTN");
+        b.setAttribute("aria-expanded", fundeOpen ? "true" : "false");
+        if (fundeOpen) { fundeDirty = true; refreshFunde(); }
+      }
+      // Funde aus dem Original (IT) berechnen, ohne Freigaben, damit freigegebene Werte sichtbar bleiben
+      // Kennung der Erkennungskonfiguration: Aenderung macht den Cache der Funde ungueltig
+      function fundeSig() {
+        let c = "";
+        try { c = JSON.stringify([activeEntIds(), curProf, cvars, PSLib.marks.toCvars(manualMarks), policyRuleCount(), localAIMode, aiCache.key ? aiCache.key.length : 0, aiCache.spans.length]); } catch (e) { c = String(Math.random()); }
+        return c;
+      }
+      function fundeTextChanged() {
+        fundeDirty = true;
+        if (!fundeOpen) return;
+        clearTimeout(_fundeTxt);
+        _fundeTxt = setTimeout(renderFunde, 500);
+      }
+      function fundeReset() {
+        clearTimeout(_fundeDeb); clearTimeout(_fundeTxt); clearTimeout(_fundeFlashT);
+        fundeFlash = null; fundeList = []; fundeCache = null; fundeDirty = true; fundeSnap = "[]";
+        renderFunde();
+      }
+      function fundeSpans(text) {
+        const sig = fundeSig();
+        if (fundeCache && !fundeDirty && fundeCache.text === text && fundeCache.sig === sig) return fundeCache.spans;
+        let spans = [];
+        try {
+          const det = PSDetect.normalizeForDetection(text);
+          spans = PSDetect.detect(text, {
+            ents: activeEntIds(),
+            cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+            extraSpans: policySpans(text),
+            whitelist: [],
+            released: [],
+            wordlists: localAIMode,
+            aiSpans: aiCache.key === det ? aiCache.spans : null,
+          });
+        } catch (e) { spans = []; }
+        fundeCache = { text: text, sig: sig, spans: spans };
+        fundeDirty = false;
+        return spans;
+      }
+      function refreshFunde() {
+        if (!fundeOpen) { fundeDirty = true; return; }
+        renderFunde();
+      }
+      function fundeRelSig() { return JSON.stringify(released.map((r) => r.pfx + "\u0000" + r.value).sort()); }
+      function fundeAfterAnon() {
+        fundeSnap = fundeRelSig();
+        if (fundeKeep) { fundeKeep = false; renderFunde(); } else { fundeDirty = true; refreshFunde(); }
+      }
+      function fundeTokenOf() {
+        const idx = new Map();
+        for (const k in store) { const d = store[k]; if (d && d.m !== "wortlich" && !idx.has(d.t + "|" + d.v)) idx.set(d.t + "|" + d.v, k); }
+        return (v, pfx) => idx.get(pfx + "|" + v) || null;
+      }
+      function fundeLabel(pfx) { const e = ENTS.find((x) => x.pfx === pfx); return e ? e.lbl : pfx; }
+      function renderFunde() {
+        const box = document.getElementById("FUNDELIST");
+        const text = document.getElementById("IT").value;
+        const cnt = document.getElementById("FUNDECNT");
+        const keep = document.activeElement && box.contains(document.activeElement) ? { key: (document.activeElement.closest("li[data-key]") || {}).dataset ? document.activeElement.closest("li[data-key]").dataset.key : null, cls: document.activeElement.className, grp: document.activeElement.dataset ? document.activeElement.dataset.type : null } : null;
+        const top = box.scrollTop;
+        if (!text.trim()) { fundeList = []; fundeCache = null; cnt.textContent = ""; box.innerHTML = '<div class="funde-empty">Noch keine Funde. Text einfügen und auf „Anonymisieren“ klicken.</div>'; return; }
+        const list = PSLib.review.build(fundeSpans(text), text, { tokenOf: fundeTokenOf(), released: released, whitelist: whitelist });
+        fundeList = list;
+        cnt.textContent = list.length ? String(list.length) : "";
+        if (!list.length) { box.innerHTML = '<div class="funde-empty">Keine Funde im Text.</div>'; return; }
+        const groups = [];
+        for (const e of list) { const g = groups[groups.length - 1]; if (g && g.type === e.type) g.items.push(e); else groups.push({ type: e.type, items: [e] }); }
+        let h = "";
+        for (const [gi, g] of groups.entries()) {
+          const alle = g.items.every((e) => e.decision === "freigeben");
+          h += '<section class="fg" data-type="' + escA(g.type) + '" aria-labelledby="fgt' + gi + '"><div class="fg-h"><span class="fg-t" id="fgt' + gi + '">' + esc(fundeLabel(g.type)) + '</span><span class="fg-n" title="Anzahl verschiedener Werte">' + g.items.length + '</span>'
+            + '<button type="button" class="fg-all" data-type="' + escA(g.type) + '" data-act="' + (alle ? "maskieren" : "freigeben") + '" aria-label="alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + ": " + escA(fundeLabel(g.type)) + '">alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + "</button></div><ul>";
+          for (const e of g.items) {
+            const frei = e.decision === "freigeben", viaWL = frei && !fundeIsReleased(e.type, e.value);
+            const ph = frei ? (viaWL ? "freigegeben über die Whitelist" : "im Klartext") : (e.token || "wird maskiert");
+            h += '<li data-key="' + escA(e.key) + '" class="' + (frei ? "frei" : "") + '">'
+              + '<button type="button" class="fund-jump" title="Erste Fundstelle im Text markieren">' + esc(e.value) + "</button>"
+              + '<span class="fund-cnt">' + e.count + "×</span>"
+              + '<span class="fund-ph">' + esc(ph) + "</span>"
+              + '<button type="button" class="fund-toggle"' + (viaWL ? ' disabled title="Über die Whitelist freigegeben"' : "") + ' aria-label="' + escA(e.value) + (frei ? " maskieren" : " freigeben") + '">' + (frei ? "Maskieren" : "Freigeben") + "</button></li>";
+          }
+          h += "</ul></section>";
+        }
+        box.innerHTML = h;
+        box.scrollTop = top;
+        if (keep && (keep.key || keep.grp)) {
+          let el = null;
+          if (keep.key) { const li = Array.from(box.querySelectorAll("li[data-key]")).find((x) => x.dataset.key === keep.key); if (li) el = li.querySelector(keep.cls.indexOf("fund-jump") >= 0 ? ".fund-jump" : ".fund-toggle:not(:disabled)") || li.querySelector(".fund-jump"); }
+          else el = Array.from(box.querySelectorAll(".fg-all")).find((x) => x.dataset.type === keep.grp);
+          if (el) el.focus({ preventScroll: true });
+        }
+      }
+      function fundeDecide(entries, release) {
+        entries.forEach((e) => {
+          const i = released.findIndex((r) => r.pfx === e.type && r.value === e.value);
+          if (release && i < 0) released.push({ pfx: e.type, value: e.value });
+          if (!release && i >= 0) released.splice(i, 1);
+        });
+        renderFunde();
+        const st = document.getElementById("FUNDESTATUS");
+        if (st) st.textContent = (release ? "Freigegeben: " : "Maskiert: ") + entries.length + (entries.length === 1 ? " Wert" : " Werte");
+        clearTimeout(_fundeDeb);
+        _fundeDeb = setTimeout(fundeApply, 300);
+      }
+      async function fundeApply() {
+        if (fundeRelSig() === fundeSnap) return; // nichts geaendert
+        if (prj) { prjRefresh(); return; } // Projekt: wie nach Whitelist-Aenderung (laufend: vormerken, ZIP: veraltet)
+        if (!document.getElementById("AT").value.trim()) return; // noch nie anonymisiert: Entscheidung gilt beim ersten Lauf
+        if (anonBusy) { _fundeDeb = setTimeout(fundeApply, 300); return; }
+        fundeKeep = true;
+        try { await reanon(); } catch (e) { /* Fehler zeigt anon() selbst */ } finally { fundeKeep = false; }
+        scheduleHighlight();
+      }
+      function fundeScrollTo(ta, idx) {
+        if (!ta.clientWidth) return;
+        const cs = getComputedStyle(ta), d = document.createElement("div");
+        ["fontFamily", "fontSize", "fontWeight", "lineHeight", "letterSpacing", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft", "tabSize"].forEach((k) => { d.style[k] = cs[k]; });
+        d.style.cssText += ";position:absolute;left:-9999px;top:0;visibility:hidden;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:break-word;width:" + ta.clientWidth + "px";
+        d.textContent = ta.value.slice(0, idx);
+        const m = document.createElement("span"); m.textContent = "​"; d.appendChild(m);
+        document.body.appendChild(d);
+        const y = m.offsetTop; d.remove();
+        ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+        syncMirrorScroll();
+      }
+      function fundeJump(key) {
+        const ta = document.getElementById("IT");
+        let e = fundeList.find((x) => x.key === key);
+        if (!e) return;
+        if (ta.value.slice(e.firstStart, e.firstStart + e.value.length) !== e.value) { fundeDirty = true; renderFunde(); e = fundeList.find((x) => x.key === key); if (!e) return; }
+        const back = document.activeElement;
+        // war das Feld zuvor fokussiert, stellt Chromium die alte Auswahl wieder her: kurz fokussieren, auswaehlen, Fokus zurueckgeben
+        ta.focus({ preventScroll: true });
+        ta.setSelectionRange(e.firstStart, e.firstStart + e.value.length);
+        if (back && back !== ta && back.focus) back.focus({ preventScroll: true });
+        fundeScrollTo(ta, e.firstStart);
+        try { ta.scrollIntoView({ block: "nearest" }); } catch (x) { /* ignorieren */ }
+        fundeFlash = { start: e.firstStart, end: e.firstStart + e.value.length };
+        clearTimeout(_fundeFlashT);
+        _fundeFlashT = setTimeout(() => { fundeFlash = null; runHighlight(); }, 2500);
+        runHighlight();
+      }
+      document.addEventListener("click", function (ev) {
+        const box = document.getElementById("FUNDELIST");
+        if (!box || !box.contains(ev.target)) return;
+        const li = ev.target.closest("li[data-key]");
+        const all = ev.target.closest(".fg-all");
+        if (all) {
+          const items = fundeList.filter((e) => e.type === all.dataset.type);
+          fundeDecide(items.filter((e) => !(e.decision === "freigeben" && !fundeIsReleased(e.type, e.value))), all.dataset.act === "freigeben");
+          return;
+        }
+        if (!li) return;
+        const key = li.dataset.key, e = fundeList.find((x) => x.key === key);
+        if (ev.target.closest(".fund-toggle") && e) fundeDecide([e], e.decision !== "freigeben");
+        else if (ev.target.closest(".fund-jump")) fundeJump(key);
+      });
       async function reanon() {
         const at = document.getElementById("AT").value;
         if (!at.trim() && !document.getElementById("IT").value.trim()) {
@@ -4043,6 +4275,11 @@
         const merged2 = collectEntities(text).map(function (s) {
           return { start: s.start, end: s.end, color: HIGHLIGHT_COLORS[s.id] || "rgba(180,180,180,0.15)" };
         });
+        if (fundeFlash) {
+          let hit = false;
+          merged2.forEach((r) => { if (r.start < fundeFlash.end && r.end > fundeFlash.start) { r.color = FUNDE_FLASH; hit = true; } });
+          if (!hit) { merged2.push({ start: fundeFlash.start, end: fundeFlash.end, color: FUNDE_FLASH }); merged2.sort((x, y) => x.start - y.start); }
+        }
         let html = "";
         let pos = 0;
         for (const r of merged2) {
