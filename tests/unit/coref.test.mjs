@@ -270,3 +270,237 @@ test('Genitiv-Grenze: Webers bei Anna Weber verknüpft', () => {
   const r = coref.link(mk(text, ['Anna Weber', 'Webers']), text);
   assert.equal(r[1].personKey, 'anna|weber');
 });
+
+// ---- C2.fix (K3): gleicher Nachname ist nicht gleiche Person. Gegenhinweise (Anrede, Beziehungswoerter, Zusaetze) verhindern die Verknuepfung ----
+// Die Erkennung liefert Spans ohne Anrede ("Herr" steht im Text vor dem Span); link() bekommt den Text und muss ihn um den Span herum lesen.
+// Ein Gegenhinweis macht aus dem alleinstehenden Nachnamen personKey null; die VOLL-Person behaelt ihren Schluessel.
+
+test('K3: Frau Anna Weber und Herr Weber (Anrede ausserhalb des Spans): Herr Weber bleibt ohne Verknuepfung', () => {
+  const text = 'Frau Anna Weber kommt. Herr Weber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[0].personKey, 'anna|weber');
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3: Herr Paul Weber und Frau Weber (umgekehrte Anrede): Frau Weber bleibt ohne Verknuepfung', () => {
+  const text = 'Herr Paul Weber kommt. Frau Weber wartet.';
+  const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+  assert.equal(r[0].personKey, 'paul|weber');
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3: Anrede innerhalb der Spans (Frau Anna Weber, Herr Weber): Herr Weber bleibt ohne Verknuepfung', () => {
+  const text = 'Frau Anna Weber kommt. Herr Weber wartet.';
+  const r = coref.link(mk(text, ['Frau Anna Weber', 'Herr Weber']), text);
+  assert.equal(r[0].personKey, 'anna|weber');
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3: Anrede im Span in der Form Herrn (Wir danken Herrn Weber) steht gegen Frau Anna Weber: keine Verknuepfung', () => {
+  const text = 'Frau Anna Weber kommt. Wir danken Herrn Weber.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Herrn Weber']), text);
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3: Frau Anna Weber und Herr A. Weber: die Kurzform mit Initiale bleibt bei Anrede-Konflikt ohne Verknuepfung', () => {
+  const text = 'Frau Anna Weber kommt. Herr A. Weber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'A. Weber']), text);
+  assert.equal(r[0].personKey, 'anna|weber');
+  assert.equal(r[1].personKey, null);
+});
+
+for (const [wort, text, namen] of [
+  ['Ehemann', 'Frau Anna Weber kommt. Ihr Ehemann Herr Weber wartet.', ['Anna Weber', 'Weber']],
+  ['Ehefrau', 'Herr Paul Weber kommt. Seine Ehefrau Frau Weber wartet.', ['Paul Weber', 'Weber']],
+]) {
+  test('K3: Beziehungswort ' + wort + ' vor Anrede und Nachname trennt die Personen', () => {
+    const r = coref.link(mk(text, namen), text);
+    assert.equal(r[1].personKey, null);
+  });
+}
+
+for (const wort of ['Ehemann', 'Ehefrau', 'Ehepartner', 'Gatte', 'Gattin', 'Bruder', 'Schwester', 'Vater', 'Mutter', 'Sohn', 'Tochter']) {
+  test('K3: Beziehungswort ' + wort + ' unmittelbar vor dem alleinstehenden Nachnamen: keine Verknuepfung', () => {
+    const text = 'Anna Weber kommt. Ihr ' + wort + ' Weber wartet.';
+    const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+    assert.equal(r[0].personKey, 'anna|weber');
+    assert.equal(r[1].personKey, null);
+  });
+}
+
+test('K3: Beziehungswort mit Komma (Der Ehemann, Weber, wartet) trennt die Personen', () => {
+  const text = 'Frau Anna Weber kommt. Der Ehemann, Weber, wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3: Beziehungswort mit Anrede dazwischen (Ihr Bruder, Herr Weber) trennt die Personen', () => {
+  const text = 'Frau Anna Weber kommt. Ihr Bruder, Herr Weber, wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3: Beziehungswort mit von (Die Ehefrau von Herrn Weber) trennt die Personen', () => {
+  const text = 'Frau Anna Weber kommt. Die Ehefrau von Herrn Weber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3: Beziehungswort wirkt auch gegen Initialen-Kurzform (Ihr Sohn H. Weber)', () => {
+  const text = 'Hans Weber kommt. Sein Sohn H. Weber wartet.';
+  const r = coref.link(mk(text, ['Hans Weber', 'H. Weber']), text);
+  assert.equal(r[0].personKey, 'hans|weber');
+  assert.equal(r[1].personKey, null);
+});
+
+for (const zusatz of ['junior', 'jun.', 'senior', 'sen.']) {
+  test('K3: Generationszusatz ' + zusatz + ' nach dem Nachnamen verhindert die Verknuepfung', () => {
+    const text = 'Paul Weber kommt. Weber ' + zusatz + ' wartet.';
+    const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+    assert.equal(r[0].personKey, 'paul|weber');
+    assert.equal(r[1].personKey, null);
+  });
+}
+
+// Positivfaelle: echte Koreferenz bleibt bestehen
+
+test('K3 Positiv: gleiche Anrede (Frau Anna Weber, Frau Weber) bleibt verknuepft', () => {
+  const text = 'Frau Anna Weber kommt. Frau Weber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].form, 'NACHNAME');
+  assert.equal(r[1].personKey, 'anna|weber');
+});
+
+test('K3 Positiv: gleiche Anrede (Herr Paul Weber, Herr Weber) bleibt verknuepft', () => {
+  const text = 'Herr Paul Weber kommt. Herr Weber wartet.';
+  const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'paul|weber');
+});
+
+test('K3 Positiv: Anrede nur auf einer Seite (Anna Weber, Frau Weber) ist kein Konflikt', () => {
+  const text = 'Anna Weber kommt. Frau Weber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'anna|weber');
+});
+
+test('K3 Positiv: Anrede nur auf der Nachnamenseite (Paul Weber, Herr Weber) ist kein Konflikt', () => {
+  const text = 'Paul Weber kommt. Herr Weber wartet.';
+  const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'paul|weber');
+});
+
+test('K3 Positiv: Beziehungswort ohne Bezug zum Nachnamen (anderer Satz) hindert die Verknuepfung nicht', () => {
+  const text = 'Ihr Ehemann wartet. Frau Anna Weber kommt. Frau Weber setzt sich.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'anna|weber');
+});
+
+test('K3 Positiv: Beziehungswort vor der VOLL-Person selbst (Ihr Ehemann Paul Weber, Herr Weber) gilt weiter fuer dieselbe Person', () => {
+  const text = 'Ihr Ehemann Paul Weber kommt. Herr Weber setzt sich.';
+  const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+  assert.equal(r[0].personKey, 'paul|weber');
+  assert.equal(r[1].personKey, 'paul|weber');
+});
+
+test('K3 Positiv: Beziehungswort vor einer anderen VOLL-Person (Ihr Ehemann Paul Meier) betrifft Frau Weber nicht', () => {
+  const text = 'Frau Anna Weber kommt. Ihr Ehemann Paul Meier wartet. Frau Weber setzt sich.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Paul Meier', 'Weber']), text);
+  assert.equal(r[0].personKey, 'anna|weber');
+  assert.equal(r[1].personKey, 'paul|meier');
+  assert.equal(r[2].personKey, 'anna|weber');
+});
+
+test('K3: ein Gegenhinweis trennt nur den betroffenen Span (Herr Weber ohne, Frau Weber mit Verknuepfung)', () => {
+  const text = 'Frau Anna Weber kommt. Herr Weber wartet. Frau Weber geht.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, null);
+  assert.equal(r[2].personKey, 'anna|weber');
+});
+
+// ---- C2.fix, Nachtests nach Pruefung ----
+
+test('K3 Nach: ausgeschriebene Namen mit unterschiedlichem Generationszusatz sind zwei Personen (kein Nachname-, kein Vorname-Link)', () => {
+  const text = 'Hans Weber senior kommt. Hans Weber junior wartet. Herr Weber geht. Hans schweigt.';
+  const r = coref.link(mk(text, ['Hans Weber', 'Hans Weber', 'Weber', 'Hans']), text);
+  assert.notEqual(r[0].personKey, r[1].personKey);
+  assert.equal(r[2].personKey, null);
+  assert.equal(r[3].personKey, null);
+});
+
+test('K3 Nach: gleicher Generationszusatz bei gleicher Vollform bleibt dieselbe Person', () => {
+  const text = 'Hans Weber senior kommt. Hans Weber senior wartet. Herr Weber geht.';
+  const r = coref.link(mk(text, ['Hans Weber', 'Hans Weber', 'Weber']), text);
+  assert.equal(r[0].personKey, r[1].personKey);
+  assert.ok(r[0].personKey);
+  assert.equal(r[2].personKey, r[0].personKey);
+});
+
+test('K3 Nach: Jr. und Sr. gelten als Generationszusatz', () => {
+  for (const zusatz of ['Jr.', 'Sr.']) {
+    const text = 'Paul Weber kommt. Weber ' + zusatz + ' wartet.';
+    const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+    assert.equal(r[1].personKey, null, zusatz);
+  }
+});
+
+test('K3 Nach: Zusatz gilt nicht ueber einen Zeilenumbruch hinweg (Weber / senior in der naechsten Zeile)', () => {
+  const text = 'Paul Weber kommt. Weber\nsenior wartet.';
+  const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'paul|weber');
+});
+
+test('K3 Nach: Weber Senior Partner (Berufsbezeichnung, grossgeschrieben) ist kein Generationszusatz', () => {
+  const text = 'Paul Weber kommt. Weber Senior Partner wartet.';
+  const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'paul|weber');
+});
+
+test('K3 Nach: Herr Dr. Weber neben Herr Dr. Paul Weber bleibt verknuepft (Titel nach der Anrede)', () => {
+  const text = 'Herr Dr. Paul Weber kommt. Herr Dr. Weber wartet.';
+  const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'paul|weber');
+});
+
+test('K3 Nach: Herr Dr. Weber steht gegen Frau Anna Weber (Anrede-Konflikt ueber den Titel hinweg)', () => {
+  const text = 'Frau Anna Weber kommt. Herr Dr. Weber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3 Nach: Ihr Ehemann Dr. Weber (Punkt am Titel ist keine Satzgrenze) trennt die Personen', () => {
+  const text = 'Anna Weber kommt. Ihr Ehemann Dr. Weber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3 Nach: Absatzumbruch ist eine Satzgrenze fuer das Beziehungswort', () => {
+  const text = 'Anna Weber kommt. Ihr Ehemann\n\nWeber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'anna|weber');
+});
+
+test('K3 Nach: Apposition (Herr Weber, der Ehemann von Anna Weber) trennt Herr Weber von Anna Weber', () => {
+  const text = 'Herr Weber, der Ehemann von Anna Weber, wartet.';
+  const r = coref.link(mk(text, ['Weber', 'Anna Weber']), text);
+  assert.equal(r[0].personKey, null);
+  assert.equal(r[1].personKey, 'anna|weber');
+});
+
+test('K3 Nach: Apposition mit Ehefrau des (Frau Weber, die Ehefrau des Paul Weber)', () => {
+  const text = 'Frau Weber, die Ehefrau des Paul Weber, wartet.';
+  const r = coref.link(mk(text, ['Weber', 'Paul Weber']), text);
+  assert.equal(r[0].personKey, null);
+});
+
+test('K3 Nach: Laufzeit 10000 Spans bleibt unter 1500 ms (begrenztes Fenster statt Gesamttext)', () => {
+  const satz = 'Herr Weber sagt, dass der Vertrag gilt und Frau Weber zustimmt. Lorem ipsum dolor sit amet. ';
+  const n = 5000;
+  const text = 'Frau Anna Weber kommt. ' + satz.repeat(n);
+  const spans = mk(text, ['Anna Weber', ...Array.from({ length: 2 * n }, () => 'Weber')]);
+  assert.equal(spans.length, 10001);
+  const t0 = Date.now();
+  const r = coref.link(spans, text);
+  const ms = Date.now() - t0;
+  assert.equal(r.length, spans.length);
+  assert.ok(ms < 1500, 'Laufzeit ' + ms + ' ms');
+});

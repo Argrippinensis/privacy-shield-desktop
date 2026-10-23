@@ -14,6 +14,41 @@
 
   const norm = (s) => s.normalize('NFC').toLowerCase();
 
+  // Gegenhinweise (C2.fix, K3): gleicher Nachname ist nicht gleiche Person. Starker Hinweis auf eine andere Person: personKey null.
+  const ANREDE = { herr: 'M', herrn: 'M', 'hr.': 'M', 'hrn.': 'M', frau: 'F', 'fr.': 'F', 'frl.': 'F' };
+  const REL = 'ehemann|ehefrau|ehepartner|ehepartnerin|gatte|gattin|bruder|schwester|vater|mutter|sohn|tochter';
+  const BEZIEHUNG = new RegExp('^(?:' + REL + ')$');
+  // Apposition nach dem Span: "Herr Weber, der Ehemann von Anna Weber"
+  const BEZIEHUNG_DANACH = new RegExp('^[ \\t]*,[ \\t]*(?:(?:der|die|das|dessen|deren)[ \\t]+)?(?:' + REL + ')(?:es|s)?[ \\t]+(?:von|des|der)(?![\\p{L}])', 'iu');
+  // Generationszusatz unmittelbar nach dem Span, nicht ueber einen Zeilenumbruch; ausgeschrieben nur kleingeschrieben (nicht "Senior Partner")
+  const ZUSATZ = /^[ \t]+(?:(junior|senior)(?![\p{L}])|(jun\.|sen\.|jr\.|sr\.)(?![\p{L}]))/iu;
+  const ANREDE_DAVOR = /(?<![\p{L}])(herrn?|hr\.|hrn\.|frau|fr\.|frl\.)[ \t]+(?:(?:dr|prof)\.?[ \t]+)*$/iu;
+  // Satzgrenze im Vortext: Satzzeichen plus Leerraum (aber nicht nach Titelkuerzel) oder Absatzumbruch
+  const SATZGRENZE = /(?<!(?:^|[^\p{L}])(?:dr|prof|hr|hrn|fr|frl|mag|ing|med|jur|rer|nat))[.!?;:]\s|\n[ \t]*\n/iu;
+  const FENSTER = 150; // Zeichen vor dem Span, die gelesen werden (Laufzeit linear in der Spanzahl)
+  const NACHLAUF = 60; // Zeichen nach dem Span
+
+  // Anrede des Spans: erstes Wort im Span, sonst das Wort unmittelbar davor (Titel dazwischen erlaubt)
+  function anredeOf(str, before) {
+    const first = str.trim().split(/\s+/)[0] || '';
+    if (ANREDE[first.toLowerCase()]) return ANREDE[first.toLowerCase()];
+    const m = ANREDE_DAVOR.exec(before);
+    return m ? ANREDE[m[1].toLowerCase()] : null;
+  }
+
+  // Beziehungswort in den bis zu drei Woertern vor dem Span, nicht ueber ein Satzende hinweg
+  function beziehungDavor(before) {
+    const ws = before.split(SATZGRENZE).pop().split(/[\s,]+/).filter(Boolean).slice(-3);
+    return ws.some((w) => BEZIEHUNG.test(w.toLowerCase()));
+  }
+
+  // Generationszusatz nach dem Span: 'sen', 'jun' oder ''
+  function zusatzOf(after) {
+    const m = ZUSATZ.exec(after);
+    if (m && m[1] && /^[ \t]+\p{Lu}/u.test(after.slice(m[0].length))) return ''; // "Senior Partner": Berufsbezeichnung
+    return m ? (m[1] || m[2]).toLowerCase().slice(0, 3) : '';
+  }
+
   // Zerlegung in { toks: Vornamen-Woerter samt Initialen, parts: Bindestrichteile, given: ausgeschriebene Vornamen, surname }
   function parse(str) {
     const words = str.normalize('NFC').split(/\s+/).filter(Boolean);
@@ -35,18 +70,27 @@
   }
 
   function link(spans, text) {
-    const infos = spans.map((s) => {
-      if (!s || s.pfx !== 'NAME') return null;
-      const t = typeof text === 'string' && s.end > s.start ? text.slice(s.start, s.end) : '';
-      return parse(t);
+    if (typeof text !== 'string') text = '';
+    const raw = spans.map((s) => (!s || s.pfx !== 'NAME' || !(s.end > s.start) ? '' : text.slice(s.start, s.end)));
+    const infos = spans.map((s, i) => (!s || s.pfx !== 'NAME' ? null : parse(raw[i])));
+    const davor = (s) => text.slice(Math.max(0, s.start - FENSTER), s.start);
+    const danach = (s) => text.slice(s.end, s.end + NACHLAUF);
+    const anrede = spans.map((s, i) => (infos[i] ? anredeOf(raw[i], davor(s)) : null));
+    // Voll-Schluessel: Generationszusatz gehoert zur Person (Hans Weber senior und junior sind zwei Personen)
+    const vollKey = spans.map((s, i) => {
+      const p = infos[i];
+      if (!p || !p.given.length) return null;
+      const z = zusatzOf(danach(s));
+      return p.toks.join(' ') + '|' + p.surname + (z ? '|' + z : '');
     });
 
     // VOLL-Personen: mindestens ein ausgeschriebener Vorname plus Nachname (Mittelinitialen zaehlen zum Schluessel)
     const persons = new Map();
-    infos.forEach((p) => {
+    infos.forEach((p, i) => {
       if (p && p.given.length) {
-        const key = p.toks.join(' ') + '|' + p.surname;
-        if (!persons.has(key)) persons.set(key, { key, given: p.given, parts: p.parts, surname: p.surname });
+        const key = vollKey[i];
+        if (!persons.has(key)) persons.set(key, { key, given: p.given, parts: p.parts, surname: p.surname, anrede: new Set() });
+        if (anrede[i]) persons.get(key).anrede.add(anrede[i]);
       }
     });
     const list = [...persons.values()];
@@ -63,7 +107,7 @@
         // nur Titel, leer oder unbrauchbar: ohne Verknuepfung
       } else if (p.given.length) {
         form = 'VOLL';
-        personKey = p.toks.join(' ') + '|' + p.surname;
+        personKey = vollKey[idx];
       } else if (p.initials) {
         // nur Initialen plus Nachname: alle Initialen muessen der Reihe nach passen
         form = 'KURZ';
@@ -86,6 +130,13 @@
           form = 'VORNAME';
           personKey = uniq(gv);
         }
+      }
+      if (personKey && form !== 'VOLL') {
+        // Gegenhinweis nur fuer diesen Span: Anrede-Konflikt, Beziehungswort davor oder Generationszusatz danach
+        const pe = persons.get(personKey);
+        const konflikt = anrede[idx] && pe.anrede.size && !pe.anrede.has(anrede[idx]);
+        const nach = danach(s);
+        if (konflikt || beziehungDavor(davor(s)) || BEZIEHUNG_DANACH.test(nach) || zusatzOf(nach)) personKey = null;
       }
       return Object.assign({}, s, { personKey, form });
     });
