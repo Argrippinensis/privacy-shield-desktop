@@ -1255,7 +1255,8 @@
    "allowed": [
     "app/privacy-shield.html",
     "app/lib/detect.js",
-    "tests/review.test.mjs"
+    "tests/review.test.mjs",
+    "tests/unit/detect.wiring.test.mjs"
    ],
    "tests": [
     "tests/review.test.mjs"
@@ -1264,11 +1265,14 @@
     "npm run test:unit",
     "xvfb-run -a node --test --test-concurrency=1 tests/review.test.mjs"
    ],
-   "status": "offen",
-   "attempts": 0,
+   "status": "laeuft",
+   "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": null,
+   "lease": {
+    "owner": "orch-20261023-2",
+    "ts": 1792782322895
+   },
    "notes": ""
   },
   {
