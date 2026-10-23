@@ -2523,10 +2523,12 @@
         document.getElementById("VP").value = "";
         renderCV();
         toast("Variable {{" + n + "_N}} hinzugefügt", "s");
+        prjRefresh();
       }
       function removeCV(i) {
         cvars.splice(i, 1);
         renderCV();
+        prjRefresh();
       }
       function renderCV() {
         const l = document.getElementById("CVL");
@@ -2557,6 +2559,13 @@
       };
       let prj = null, prjBusy = false, prjAc = null, prjSel = null, prjAborted = false, prjZipBusy = false, prjStart = null, prjDur = 0;
       const prjRes = new Map(), prjSize = new Map();
+      let prjAgain = false; // K1.fix: Aenderung (Whitelist/Regel) waehrend des Laufs, danach neu rechnen
+      // K1.fix: Ergebnisse nach Whitelist-/Regeländerung aktuell halten
+      function prjRefresh() {
+        if (!prj) return;
+        if (prjBusy) { prjAgain = true; return; }
+        if (prjRes.size) prjRun();
+      }
       function prjCheckFiles(files) {
         const multi = files.length > 1, ok = [], msgs = [], bad = [];
         let oldDoc = false;
@@ -2601,6 +2610,7 @@
       function hidePrj() {
         prj = null; prjSel = null;
         prjRes.clear(); prjSize.clear();
+        document.getElementById("PRJLIST").textContent = ""; // Dokumentliste leeren (S2)
         document.getElementById("PRJPANEL").style.display = "none";
       }
       function prjRender() {
@@ -2667,9 +2677,12 @@
         if (prjBusy || prjZipBusy || !prj) return;
         const i = prj.docs.findIndex((d) => d.id === id);
         PSLib.project.remove(prj, id);
+        const ran = prjRes.size > 0;
         prjRes.delete(id); prjSize.delete(id);
         if (prjSel === id) prjSel = null;
-        if (!prj.docs.length) { hidePrj(); return; }
+        if (!prj.docs.length) { store = {}; cnt = {}; renderMap(); hidePrj(); return; }
+        // S2: Zuordnung auf die verbliebenen Ergebnisse beschraenken (Tabelle, .psmap, CSV ohne Werte entfernter Dokumente)
+        if (ran) { const sc = prjScope(); store = sc.store; cnt = sc.cnt; renderMap(); }
         prjRender();
         const nx = prj.docs[Math.min(i, prj.docs.length - 1)];
         const n = document.querySelector('#PRJLIST .prj-item[data-id="' + nx.id + '"]');
@@ -2727,6 +2740,7 @@
                 wordlists: localAIMode,
                 aiSpans: aiCache.key === det ? aiCache.spans : null,
                 state: o.state,
+                reserved: o.reserved,
               });
               let leak = null;
               try { const lr = leakScan(r.text); leak = lr.error ? null : lr.count; } catch (e) {}
@@ -2749,6 +2763,8 @@
           if (pe) pe.textContent = "";
           prjRender();
           if (prjSel !== null && prjRes.has(prjSel)) prjShow(prjSel);
+          if (prjAgain && !prjAborted && prj) { prjAgain = false; prjRun(); }
+          prjAgain = false;
         }
       }
       // Zuordnung nur für Platzhalter, die in den aktuellen fertigen Ergebnissen vorkommen (D32); store und cnt bleiben unverändert
@@ -2771,6 +2787,7 @@
       function prjCounts(text) {
         const c = {};
         for (const k of text.match(/\{\{[^{}]+\}\}/g) || []) {
+          if (Object.hasOwn(store, k) && store[k].m === "wortlich") continue; // K2.fix: woertlicher Platzhalter, keine Entitaet
           let t = Object.hasOwn(store, k) && store[k].t ? String(store[k].t).toUpperCase().replace(/[^A-Z0-9_]/g, "_").slice(0, 20) : "";
           if (!/^[A-Z][A-Z0-9_]{1,19}$/.test(t)) t = "SONSTIGE";
           c[t] = (c[t] || 0) + 1;
@@ -3446,6 +3463,8 @@
           toast("Analyse läuft bereits...", "s");
           return;
         }
+        // K1.fix: im Projektmodus gemeinsamer Zustand, daher immer das ganze Projekt neu rechnen (kein veralteter Altstand)
+        if (prj && prjRes.size) return prjRun();
         anonBusy = true;
         mapSaved = false;
         repStart = new Date(); repDur = 0;
@@ -3525,7 +3544,7 @@
           // Trefferpruefung je Markierung ueber die Abdeckung: Fundstelle zaehlt, wenn ein Span sie ganz umschliesst (auch ein laengerer Treffer)
           const mt = markTreffer(det, r.spans);
           toast(
-            Object.keys(store).length + " Entitäten anonymisiert" + (mt ? ". Markierungen: " + mt.treffer + " Treffer" + (mt.ohne ? ", " + mt.ohne + " ohne Treffer" : "") : ""),
+            Object.values(store).filter((d) => d.m !== "wortlich").length + " Entitäten anonymisiert" + (mt ? ". Markierungen: " + mt.treffer + " Treffer" + (mt.ohne ? ", " + mt.ohne + " ohne Treffer" : "") : ""),
             mt && mt.ohne ? "e" : "s",
           );
           runLeakCheck();
@@ -3555,22 +3574,24 @@
         document.getElementById("MT").innerHTML = entries.length
           ? entries
               .map(
-                ([t, d]) =>
-                  '<tr><td class="token-cell">' +
+                ([t, d]) => {
+                  const c = d.c ? String(d.c) : "#666666"; // woertliche Eintraege (c:null) neutral
+                  return '<tr><td class="token-cell">' +
                   esc(t) +
                   '</td><td class="value-cell">' +
                   esc(d.v) +
                   '</td><td><span class="pill" style="background:' +
-                  esc(String(d.c)) +
+                  esc(c) +
                   "18;color:" +
-                  esc(String(d.c)) +
+                  esc(c) +
                   ";border:1px solid " +
-                  d.c +
+                  esc(c) +
                   '44">' +
                   esc(d.t) +
                   '</span></td><td style="color:#999">' +
                   esc(d.m) +
-                  "</td></tr>",
+                  "</td></tr>";
+                },
               )
               .join("")
           : '<tr><td colspan="4" style="text-align:center;color:#999;padding:22px;font-size:12px">Noch keine Anonymisierung durchgeführt</td></tr>';
@@ -3700,6 +3721,7 @@
               if (tok !== psPwTok) return;
               docs.push({ index: 1, name: fn.trim(), chars: it.length, sha256: [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("") });
             }
+            // Grenze: state.reserved (woertliche Platzhalter des Originals) wird nicht gespeichert, nur store und cnt
             const bytes = await PSLib.psmap.encrypt({ v: 1, created: new Date().toISOString(), state: zipMode ? prjScope() : { store: store, cnt: cnt }, docs: docs }, pw);
             if (tok !== psPwTok) return;
             if (zipMode) { const cb = psPwZipCb; psPwZipCb = null; psPwDocs = null; psPwClose(); cb(bytes); return; }
@@ -3746,7 +3768,7 @@
         toast("Mapping gelöscht", "s");
       }
       function expMap() {
-        const e = Object.entries(store);
+        const e = Object.entries(store).filter(([, d]) => d.m !== "wortlich"); // woertliche Platzhalter sind keine Zuordnung
         if (!e.length) {
           toast("Kein Mapping vorhanden", "e");
           return;
@@ -3786,10 +3808,18 @@
         setTimeout(() => URL.revokeObjectURL(url), REVOKE_MS);
       }
       function clearAll() {
+        if (prjBusy) return toast("Projektlauf läuft, bitte zuerst abbrechen", "e");
         if (!confirm("Alles zurücksetzen?")) return;
         ["IT", "AT", "AR", "RT"].forEach((id) => (document.getElementById(id).value = ""));
         store = {};
         cnt = {};
+        // S2/D23: Projekt, manuelle Markierungen, letzte Leckpruefung und KI-Zwischenspeicher leeren
+        hidePrj(); prjAgain = false;
+        manualMarks = PSLib.marks.create(); lcIgnored = new Set(); lcLast = null;
+        aiCache = { key: null, spans: [] };
+        const lb = document.getElementById("LCBAND"), ll = document.getElementById("LCLIST");
+        if (lb) lb.style.display = "none";
+        if (ll) ll.style.display = "none";
         renderMap();
         setStep(1);
         updIC();
@@ -3883,10 +3913,12 @@
         inp.value = "";
         renderWL();
         toast('"' + val + '" zur Whitelist hinzugefügt', "s");
+        prjRefresh();
       }
       function removeWL(i) {
         whitelist.splice(i, 1);
         renderWL();
+        prjRefresh();
       }
       function renderWL() {
         const l = document.getElementById("WLL");
