@@ -187,3 +187,137 @@ test('Drei Laeufe: mehrdeutige Initiale im dritten Lauf erhaelt kein .KURZ der P
   assert.ok(!/\{\{NAME_\d+\.KURZ\}\}/.test(c.text), c.text);
   for (const r of runs(['Hans Müller wohnt hier. H. Müller kam.', 'Anna Weber kam.', 'Hans Müller und Heike Müller. H. Müller schwieg.'])) assert.equal(r.back, r.in);
 });
+
+// ---- C2.fix (K3): Gegenhinweise (Anrede, Beziehungswoerter, Zusaetze) verhindern die Verknuepfung in anonymize ----
+// Ohne Verknuepfung laeuft der Span wie bisher durch tok(): eigene Nummer, kein Endungs-Platzhalter. Der Rundlauf bleibt in jedem Fall exakt.
+const ENDUNG_NAME = /\{\{NAME_\d+\.(NACHNAME|VORNAME|KURZ)\}\}/;
+function zweiPersonen(t) {
+  const r = run(t);
+  assert.equal(r.back, t, 'Rundlauf');
+  assert.ok(!ENDUNG_NAME.test(r.text), r.text);
+  const nums = [...new Set((r.text.match(/\{\{NAME_(\d+)\}\}/g) || []))];
+  assert.equal(nums.length, 2, 'zwei verschiedene Personen erwartet: ' + r.text);
+  return r;
+}
+
+test('K3: Frau Anna Weber, Ihr Ehemann Herr Weber: zwei Personen, keine Endung', () => {
+  const r = zweiPersonen('Frau Anna Weber kommt. Ihr Ehemann Herr Weber wartet.');
+  assert.match(r.text, /^Frau \{\{NAME_\d+\}\} kommt\. Ihr Ehemann Herr \{\{NAME_\d+\}\} wartet\.$/);
+});
+
+test('K3: Herr Paul Weber, Seine Ehefrau Frau Weber: zwei Personen, keine Endung', () => {
+  const r = zweiPersonen('Herr Paul Weber kommt. Seine Ehefrau Frau Weber wartet.');
+  assert.match(r.text, /^Herr \{\{NAME_\d+\}\} kommt\. Seine Ehefrau Frau \{\{NAME_\d+\}\} wartet\.$/);
+});
+
+test('K3: Anrede-Konflikt Frau Anna Weber und Herr Weber ohne Beziehungswort: zwei Personen', () => {
+  zweiPersonen('Frau Anna Weber kommt. Herr Weber wartet.');
+});
+
+test('K3: Anrede-Konflikt Herr Paul Weber und Frau Weber ohne Beziehungswort: zwei Personen', () => {
+  zweiPersonen('Herr Paul Weber kommt. Frau Weber wartet.');
+});
+
+test('K3: Ihr Ehemann Weber ohne Anrede: zwei Personen', () => {
+  zweiPersonen('Frau Anna Weber kommt. Ihr Ehemann Weber wartet.');
+});
+
+test('K3: Der Ehemann, Weber, wartet: zwei Personen', () => {
+  zweiPersonen('Frau Anna Weber kommt. Der Ehemann, Weber, wartet.');
+});
+
+test('K3: Ihr Ehemann, Herr Weber, wartet: zwei Personen', () => {
+  zweiPersonen('Frau Anna Weber kommt. Ihr Ehemann, Herr Weber, wartet.');
+});
+
+test('K3: Die Ehefrau von Herrn Weber: zwei Personen', () => {
+  zweiPersonen('Frau Anna Weber kommt. Die Ehefrau von Herrn Weber wartet.');
+});
+
+test('K3: Frau Weber senior: zwei Personen (Generationszusatz)', () => {
+  zweiPersonen('Frau Anna Weber kommt. Frau Weber senior wartet.');
+});
+
+test('K3: Weber junior neben Paul Weber: keine Verknuepfung (Generationszusatz)', () => {
+  const t = 'Paul Weber kommt. Weber junior wartet.';
+  const r = run(t);
+  assert.equal(r.back, t);
+  assert.ok(!ENDUNG_NAME.test(r.text), r.text);
+});
+
+test('K3: Weber jun. und Weber sen. neben Paul Weber: keine Verknuepfung (abgekuerzte Zusaetze)', () => {
+  for (const zusatz of ['jun.', 'sen.']) {
+    const t = 'Paul Weber kommt. Weber ' + zusatz + ' wartet.';
+    const r = run(t);
+    assert.equal(r.back, t);
+    assert.ok(!ENDUNG_NAME.test(r.text), r.text);
+  }
+});
+
+test('K3: Herr A. Weber neben Frau Anna Weber: keine .KURZ-Verknuepfung', () => {
+  const t = 'Frau Anna Weber kommt. Herr A. Weber wartet.';
+  const r = run(t);
+  assert.equal(r.back, t);
+  assert.ok(!ENDUNG_NAME.test(r.text), r.text);
+});
+
+test('K3 Schutz: Bruder, Vater, Sohn, Tochter, Schwester, Mutter und Gatte werden nie mit Anna Weber verknuepft (Rundlauf exakt)', () => {
+  for (const wort of ['Bruder', 'Vater', 'Sohn', 'Tochter', 'Schwester', 'Mutter', 'Gatte']) {
+    const t = 'Frau Anna Weber kommt. Ihr ' + wort + ' Herr Weber wartet.';
+    const r = run(t);
+    assert.equal(r.back, t, t);
+    assert.ok(!ENDUNG_NAME.test(r.text), t + ' -> ' + r.text);
+  }
+});
+
+test('K3: Projektlauf mit gemeinsamem state: der Ehemann im zweiten Lauf erhaelt keinen Endungs-Platzhalter der Frau aus dem ersten Lauf', () => {
+  const [a, b] = runs(['Frau Anna Weber kommt. Frau Weber wartet.', 'Frau Anna Weber kommt. Ihr Ehemann Herr Weber wartet.']);
+  assert.match(a.text, /Frau \{\{NAME_1\.NACHNAME\}\}/, 'Lauf 1: gleiche Anrede, echte Koreferenz');
+  assert.ok(!ENDUNG.test(b.text), b.text);
+  assert.equal(a.back, a.in);
+  assert.equal(b.back, b.in);
+});
+
+// Positivfaelle: echte Koreferenz bleibt bestehen
+
+test('K3 Positiv: Frau Anna Weber, Frau Weber, Anna: weiter eine Person (gleiche Anrede)', () => {
+  const t = 'Frau Anna Weber kommt. Frau Weber wartet. Anna geht.';
+  const r = run(t);
+  assert.equal(r.text, 'Frau {{NAME_1}} kommt. Frau {{NAME_1.NACHNAME}} wartet. {{NAME_1.VORNAME}} geht.');
+  assert.equal(r.back, t);
+});
+
+test('K3 Positiv: Herr Paul Weber, Herr Weber: weiter eine Person (gleiche Anrede)', () => {
+  const t = 'Herr Paul Weber kommt. Herr Weber wartet.';
+  const r = run(t);
+  assert.equal(r.text, 'Herr {{NAME_1}} kommt. Herr {{NAME_1.NACHNAME}} wartet.');
+  assert.equal(r.back, t);
+});
+
+test('K3 Positiv: Anna Weber, Frau Weber: Anrede nur auf einer Seite, weiter eine Person', () => {
+  const t = 'Anna Weber kommt. Frau Weber wartet.';
+  const r = run(t);
+  assert.equal(r.text, '{{NAME_1}} kommt. Frau {{NAME_1.NACHNAME}} wartet.');
+  assert.equal(r.back, t);
+});
+
+test('K3 Positiv: Beziehungswort in anderem Satz (Ihr Ehemann wartet.) hindert die Verknuepfung nicht', () => {
+  const t = 'Ihr Ehemann wartet. Frau Anna Weber kommt. Frau Weber setzt sich.';
+  const r = run(t);
+  assert.equal(r.text, 'Ihr Ehemann wartet. Frau {{NAME_1}} kommt. Frau {{NAME_1.NACHNAME}} setzt sich.');
+  assert.equal(r.back, t);
+});
+
+test('K3 Positiv: Ihr Ehemann Paul Weber kommt. Herr Weber setzt sich: der Ehemann wird mit sich selbst verknuepft', () => {
+  const t = 'Ihr Ehemann Paul Weber kommt. Herr Weber setzt sich.';
+  const r = run(t);
+  assert.equal(r.text, 'Ihr Ehemann {{NAME_1}} kommt. Herr {{NAME_1.NACHNAME}} setzt sich.');
+  assert.equal(r.back, t);
+});
+
+test('K3 Positiv: Ihr Ehemann Paul Meier betrifft Frau Weber nicht, Frau Weber bleibt Anna Weber', () => {
+  const t = 'Frau Anna Weber kommt. Ihr Ehemann Paul Meier wartet. Frau Weber setzt sich.';
+  const r = run(t);
+  assert.equal(r.text, 'Frau {{NAME_1}} kommt. Ihr Ehemann {{NAME_2}} wartet. Frau {{NAME_1.NACHNAME}} setzt sich.');
+  assert.equal(r.back, t);
+});
