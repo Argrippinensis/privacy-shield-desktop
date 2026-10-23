@@ -265,3 +265,311 @@ test('Zaehlung der Liste fuer rund 6.000 Entitaeten dauert unter 300 ms', async 
     assert.ok(r.ms < 300, 'Listenberechnung zu langsam: ' + r.ms + ' ms');
   });
 });
+
+// ---------------------------------------------------------------------------------------------
+// Nachtests nach Pruefung (nur ergaenzt, bestehende Tests unveraendert).
+// Weitere angenommene Namen: #FUNDECNT (Abzeichen am Knopf), prjStale/prjBusy/prjZipBusy/prjAgain (vorhandene Projektzustaende),
+// #PRJLIST button.prj-item, #PRJRUN, #PRJSUM, aiErrorDetailsText() (Diagnose-Kopie), expMap() (CSV-Export).
+// ---------------------------------------------------------------------------------------------
+import { setFiles } from './helpers.mjs';
+
+const spyToast = (f) => f.evaluate(() => {
+  window.__toasts = [];
+  const orig = window.toast;
+  window.toast = function (msg, type) { window.__toasts.push(String(msg)); return orig.apply(this, arguments); };
+});
+const toasts = (f) => f.evaluate(() => window.__toasts.slice());
+const pause = (f, ms) => f.waitForTimeout(ms);
+const txtFile = (name, text) => ({ name, mimeType: 'text/plain', buffer: Buffer.from(text, 'utf8') });
+const PRJ_A = 'Herr Thomas Müller, max@firma.de wohnt in Berlin.';
+const PRJ_B = 'Frau Anna Weber schreibt an anna.weber@beispiel.de. Herr Thomas Müller antwortet.';
+const keysIn = (f) => f.evaluate(() => Array.from(document.querySelectorAll('#FUNDELIST li[data-key]')).map((x) => x.dataset.key));
+
+async function startPrj() {
+  const a = await launchApp({ offline: true });
+  const f = await toolFrame(a.win);
+  await f.evaluate(() => { window.confirm = () => true; window.alert = () => {}; startApp(); setAIMode('off'); });
+  await spyToast(f);
+  await setFiles(f, [txtFile('eins.txt', PRJ_A), txtFile('zwei.txt', PRJ_B)]);
+  await f.waitForFunction(() => document.querySelectorAll('#PRJPANEL button.prj-item').length === 2, null, { timeout: 20000 });
+  await f.click('#PRJRUN');
+  await f.waitForFunction(() => {
+    const els = Array.from(document.querySelectorAll('#PRJPANEL button.prj-item'));
+    return els.length === 2 && els.every((e) => /fertig/i.test(e.textContent));
+  }, null, { timeout: 60000 });
+  return { a, f };
+}
+const prjItem = (f, i) => f.locator('#PRJPANEL button.prj-item').nth(i);
+
+test('N1 clearAll bei geschlossener Leiste: released leer, Liste ohne Eintraege, Abzeichen leer', async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_ANTON);
+    await oeffneFunde(f);
+    await f.click(li('NAME|' + ANTON) + ' button.fund-toggle');
+    await warteAT(f, (v) => document.getElementById('AT').value.includes(v), ANTON);
+    assert.match(await f.textContent('#FUNDECNT'), /1/, 'Voraussetzung: Abzeichen zeigt die Zahl der Funde');
+    await f.evaluate(() => toggleFunde(false));
+    await f.evaluate(() => clearAll());
+    assert.equal(await f.evaluate(() => released.length), 0, 'released nach clearAll nicht leer');
+    assert.equal(await f.locator('#FUNDELIST li[data-key]').count(), 0, 'Liste zeigt nach clearAll noch Funde (Originalwerte bleiben im DOM)');
+    assert.ok(!(await f.textContent('#FUNDELIST')).includes(ANTON), 'Originalwert nach clearAll noch im DOM');
+    const badge = ((await f.textContent('#FUNDECNT')) || '').trim();
+    assert.ok(badge === '' || badge === '0', 'Abzeichen nach clearAll nicht leer: ' + JSON.stringify(badge));
+  });
+});
+
+test('N2a Freigabe klicken und sofort zuruecksetzen: kein Fehler-Toast "Kein Text vorhanden"', async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_ANTON);
+    await oeffneFunde(f);
+    await spyToast(f);
+    await f.evaluate(() => { document.querySelector('#FUNDELIST li[data-key="NAME|Anton Beispiel"] button.fund-toggle').click(); clearAll(); });
+    await pause(f, 900);
+    const t = await toasts(f);
+    assert.ok(!t.some((m) => /Kein Text vorhanden/.test(m)), 'Fehler-Toast nach Zuruecksetzen: ' + JSON.stringify(t));
+  });
+});
+
+test('N2b Freigabe klicken, sofort zuruecksetzen, neuen Text einfuegen: keine automatische Anonymisierung', async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_ANTON);
+    await oeffneFunde(f);
+    await f.evaluate(() => {
+      document.querySelector('#FUNDELIST li[data-key="NAME|Anton Beispiel"] button.fund-toggle').click();
+      clearAll();
+      document.getElementById('IT').value = 'Neuer Text mit Frau Berta Muster.';
+    });
+    await pause(f, 900);
+    assert.equal(await at(f), '', 'nach Zuruecksetzen wurde der neue Text ohne Nutzeraktion anonymisiert: ' + (await at(f)));
+  });
+});
+
+test('N3a Projektmodus: Leiste zeigt nach Dokumentwechsel die Funde des aktuellen Dokuments', async () => {
+  const { a, f } = await startPrj();
+  try {
+    await prjItem(f, 0).click();
+    await f.evaluate(() => toggleFunde(true));
+    await f.waitForSelector('#FUNDELIST li[data-key]', { timeout: 8000 });
+    let k = await keysIn(f);
+    assert.ok(k.includes('EMAIL|max@firma.de') && !k.includes('EMAIL|anna.weber@beispiel.de'), 'Dokument 1: ' + JSON.stringify(k));
+    await prjItem(f, 1).click();
+    await pause(f, 700);
+    k = await keysIn(f);
+    assert.ok(k.includes('EMAIL|anna.weber@beispiel.de'), 'Dokument 2 fehlt in der Liste: ' + JSON.stringify(k));
+    assert.ok(!k.includes('EMAIL|max@firma.de'), 'Liste zeigt noch die Funde des vorherigen Dokuments: ' + JSON.stringify(k));
+    await prjItem(f, 0).click();
+    await pause(f, 700);
+    k = await keysIn(f);
+    assert.ok(k.includes('EMAIL|max@firma.de') && !k.includes('EMAIL|anna.weber@beispiel.de'), 'Rueckwechsel zu Dokument 1: ' + JSON.stringify(k));
+  } finally { await a.close(); }
+});
+
+test('N3b Projektmodus: Freigabe gilt in beiden Dokumenten', async () => {
+  const { a, f } = await startPrj();
+  try {
+    await prjItem(f, 0).click();
+    await f.evaluate(() => toggleFunde(true));
+    await f.waitForSelector(li('NAME|Thomas Müller'), { timeout: 8000 });
+    await f.click(li('NAME|Thomas Müller') + ' button.fund-toggle');
+    await pause(f, 900);
+    await f.waitForFunction(() => !anonBusy && !prjBusy, null, { timeout: 20000 });
+    assert.equal(await f.evaluate(() => released.some((r) => r.pfx === 'NAME' && r.value === 'Thomas Müller')), true, 'released fehlt');
+    // Ergebnisse muessen die Freigabe widerspiegeln: entweder automatisch neu gerechnet oder nach erneutem Lauf
+    if (await f.evaluate(() => prjStale)) { await f.click('#PRJRUN'); }
+    await f.waitForFunction(() => {
+      const els = Array.from(document.querySelectorAll('#PRJPANEL button.prj-item'));
+      return !prjBusy && els.length === 2 && els.every((e) => /fertig/i.test(e.textContent));
+    }, null, { timeout: 60000 });
+    for (const i of [0, 1]) {
+      await prjItem(f, i).click();
+      await pause(f, 300);
+      const out = await at(f);
+      assert.ok(out.includes('Thomas Müller'), 'Dokument ' + (i + 1) + ': Freigabe wirkt nicht: ' + out);
+    }
+  } finally { await a.close(); }
+});
+
+test('N4 fund-jump nach manuellem Bearbeiten von #IT (Text davor eingefuegt): Auswahl trifft weiter den Wert', async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_ANTON);
+    await oeffneFunde(f);
+    await f.fill('#IT', 'Vorspann, der nachtraeglich eingefuegt wurde. ' + TEXT_ANTON);
+    await pause(f, 800);
+    await f.click(li('NAME|' + ANTON) + ' button.fund-jump');
+    const sel = await f.evaluate(() => { const e = document.getElementById('IT'); return e.value.slice(e.selectionStart, e.selectionEnd); });
+    assert.equal(sel, ANTON, 'Auswahl trifft nicht den Wert: ' + JSON.stringify(sel));
+  });
+});
+
+test('N5 Liste ist nach Konfigurationsaenderung aktuell: ausgeschaltete Entitaet verschwindet nach Schliessen und Oeffnen', async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_GRUPPE);
+    await oeffneFunde(f);
+    assert.ok((await keysIn(f)).includes('EMAIL|anton@beispiel-firma.de'), 'Voraussetzung: EMAIL-Eintrag vorhanden');
+    await f.evaluate(() => { ENTS.find((e) => e.id === 'email').on = false; curProf = 'custom'; });
+    await f.evaluate(() => toggleFunde(false));
+    await f.evaluate(() => toggleFunde(true));
+    await pause(f, 300);
+    const k = await keysIn(f);
+    assert.ok(!k.some((x) => x.startsWith('EMAIL|')), 'ausgeschaltete Entitaet noch in der Liste: ' + JSON.stringify(k));
+    assert.ok(k.includes('NAME|' + ANTON), 'andere Eintraege muessen bleiben');
+  });
+});
+
+test('N6a Entscheidung waehrend ZIP-Erstellung markiert Projektergebnisse als veraltet', async () => {
+  const { a, f } = await startPrj();
+  try {
+    await prjItem(f, 0).click();
+    await f.evaluate(() => toggleFunde(true));
+    await f.waitForSelector(li('NAME|Thomas Müller'), { timeout: 8000 });
+    await f.evaluate(() => { prjZipBusy = true; });
+    await f.click(li('NAME|Thomas Müller') + ' button.fund-toggle');
+    await pause(f, 700);
+    const s = await f.evaluate(() => ({ stale: prjStale, sum: document.getElementById('PRJSUM').textContent }));
+    await f.evaluate(() => { prjZipBusy = false; });
+    assert.ok(s.stale || /veraltet/i.test(s.sum), 'Ergebnisse nicht als veraltet markiert: ' + JSON.stringify(s));
+  } finally { await a.close(); }
+});
+
+test('N6b Entscheidung waehrend laufendem Projektlauf: Ergebnisse veraltet oder erneuter Lauf vorgemerkt', async () => {
+  const { a, f } = await startPrj();
+  try {
+    await prjItem(f, 0).click();
+    await f.evaluate(() => toggleFunde(true));
+    await f.waitForSelector(li('NAME|Thomas Müller'), { timeout: 8000 });
+    await f.evaluate(() => { prjBusy = true; });
+    await f.click(li('NAME|Thomas Müller') + ' button.fund-toggle');
+    await pause(f, 700);
+    const s = await f.evaluate(() => ({ stale: prjStale, again: prjAgain }));
+    await f.evaluate(() => { prjBusy = false; });
+    assert.ok(s.stale || s.again, 'weder veraltet noch erneuter Lauf vorgemerkt: ' + JSON.stringify(s));
+  } finally { await a.close(); }
+});
+
+test('N7 Freigabe ohne vorherige Anonymisierung (#AT leer) startet keine Anonymisierung', async () => {
+  await mitApp(async (f) => {
+    await f.evaluate((t) => { document.getElementById('IT').value = t; aiCache = { key: null, spans: [] }; }, TEXT_ANTON);
+    await oeffneFunde(f);
+    assert.equal(await at(f), '', 'Voraussetzung: noch nicht anonymisiert');
+    await f.click(li('NAME|' + ANTON) + ' button.fund-toggle');
+    await pause(f, 900);
+    assert.equal(await at(f), '', 'Freigabe hat ungefragt eine Anonymisierung gestartet: ' + (await at(f)));
+    assert.equal(await f.evaluate(() => getComputedStyle(document.getElementById('resultArea')).display), 'none', 'Ergebnisbereich wurde geoeffnet');
+  });
+});
+
+test('N8 Sicherheit: Fundwert mit HTML und Anfuehrungszeichen erzeugt kein Element und zerstoert data-key nicht', async () => {
+  await mitApp(async (f) => {
+    const v = '<img src=x onerror="window.__pwn=1">';
+    await f.evaluate((x) => { window.__pwn = undefined; PSLib.marks.add(manualMarks, { value: x, pfx: 'NAME' }); PSLib.marks.add(manualMarks, { value: 'Zwiebelbaum', pfx: 'NAME' }); }, v);
+    await lade(f, 'Danke ' + v + ' und Zwiebelbaum.');
+    await oeffneFunde(f);
+    await pause(f, 400);
+    assert.equal(await f.locator('#FUNDE img').count(), 0, 'img-Element im DOM der Seitenleiste');
+    assert.equal(await f.evaluate(() => window.__pwn), undefined, 'Skript aus dem Fundwert wurde ausgefuehrt');
+    const k = await keysIn(f);
+    assert.deepEqual(k.slice().sort(), ['NAME|' + v, 'NAME|Zwiebelbaum'].sort(), 'data-key unvollstaendig oder zerstoert: ' + JSON.stringify(k));
+    assert.equal(await f.locator('#FUNDELIST li[data-key]').count(), 2);
+    const vollerWert = await f.evaluate(() => Array.from(document.querySelectorAll('#FUNDELIST .fund-jump')).map((b) => b.textContent));
+    assert.ok(vollerWert.includes(v), 'Wert wird nicht als Text angezeigt: ' + JSON.stringify(vollerWert));
+  });
+});
+
+test('N9a Gross-/Kleinschreibung: Freigabe von "Zwiebelbaum" gibt "zwiebelbaum" nicht frei', async () => {
+  await mitApp(async (f) => {
+    await f.evaluate(() => { PSLib.marks.add(manualMarks, { value: 'Zwiebelbaum', pfx: 'NAME' }); PSLib.marks.add(manualMarks, { value: 'zwiebelbaum', pfx: 'NAME' }); });
+    await lade(f, 'Zwiebelbaum trifft zwiebelbaum.');
+    await oeffneFunde(f);
+    assert.deepEqual((await keysIn(f)).sort(), ['NAME|Zwiebelbaum', 'NAME|zwiebelbaum']);
+    await f.click(li('NAME|Zwiebelbaum') + ' button.fund-toggle');
+    await warteAT(f, () => document.getElementById('AT').value.includes('Zwiebelbaum'));
+    const out = await at(f);
+    assert.ok(!out.includes('zwiebelbaum'), 'Kleinschreibung wurde mitfreigegeben: ' + out);
+    assert.match(out, /\{\{NAME_\d+\}\}/);
+  });
+});
+
+test('N9b Typbindung: Freigabe { ORG, Berlin } gibt den ORT "Berlin" nicht frei', async () => {
+  await mitApp(async (f) => {
+    await f.evaluate(() => { released.push({ pfx: 'ORG', value: 'Berlin' }); });
+    await lade(f, TEXT_BERLIN);
+    assert.ok(!(await at(f)).includes('Berlin'), 'Freigabe eines anderen Typs wirkt auf ORT: ' + (await at(f)));
+    await oeffneFunde(f);
+    await f.click(li('ORT|Berlin') + ' button.fund-toggle');
+    await warteAT(f, () => document.getElementById('AT').value.includes('wohne in Berlin und arbeite in Berlin.'));
+    assert.equal(await f.evaluate(() => released.filter((r) => r.value === 'Berlin').length), 2, 'ORG- und ORT-Freigabe sind getrennte Eintraege');
+  });
+});
+
+test('N10a Tastatur: Enter und Leertaste am fund-toggle schalten, Fokus bleibt am selben Eintrag', async () => {
+  await mitApp(async (f, a) => {
+    await lade(f, TEXT_GRUPPE);
+    await oeffneFunde(f);
+    const sel = li('NAME|' + ANTON) + ' button.fund-toggle';
+    const fokus = () => f.evaluate(() => { const x = document.activeElement; const l = x && x.closest && x.closest('li[data-key]'); return { key: l && l.dataset.key, cls: x && x.className }; });
+    await f.focus(sel);
+    await a.win.keyboard.press('Enter');
+    await warteAT(f, (v) => document.getElementById('AT').value.includes(v), ANTON);
+    let fk = await fokus();
+    assert.equal(fk.key, 'NAME|' + ANTON, 'Fokus nach Enter nicht am Eintrag: ' + JSON.stringify(fk));
+    assert.match(String(fk.cls), /fund-toggle/, 'Fokus nach Enter nicht am Schalter');
+    await a.win.keyboard.press('Space');
+    await warteAT(f, (v) => !document.getElementById('AT').value.includes(v), ANTON);
+    fk = await fokus();
+    assert.equal(fk.key, 'NAME|' + ANTON, 'Fokus nach Leertaste nicht am Eintrag: ' + JSON.stringify(fk));
+  });
+});
+
+test('N10b aria: Gruppenschalter traegt ein aria-label mit dem Typ, #FUNDELIST ist keine aria-live-Region', async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_GRUPPE);
+    await oeffneFunde(f);
+    const r = await f.evaluate(() => {
+      const li0 = document.querySelector('#FUNDELIST li[data-key^="NAME|"]');
+      let b = null;
+      for (let el = li0.parentElement; el && el.id !== 'FUNDELIST' && !b; el = el.parentElement) b = Array.from(el.querySelectorAll('button')).find((x) => /alle dieses Typs/i.test(x.textContent));
+      const ent = ENTS.find((e) => e.pfx === 'NAME');
+      return { label: b && b.getAttribute('aria-label'), lbl: ent && ent.lbl, live: document.getElementById('FUNDELIST').getAttribute('aria-live') };
+    });
+    assert.ok(r.label, 'Gruppenschalter ohne aria-label');
+    assert.ok(/NAME/i.test(r.label) || (r.lbl && r.label.toLowerCase().includes(String(r.lbl).toLowerCase())), 'aria-label nennt den Typ nicht: ' + JSON.stringify(r));
+    assert.equal(r.live, null, '#FUNDELIST hat aria-live (jede Neuberechnung wuerde vorgelesen): ' + r.live);
+  });
+});
+
+test('N11 Originalwert steht weder in Toasts noch in der Diagnose-Kopie noch in Dateinamen von Downloads', async () => {
+  await mitApp(async (f) => {
+    await spyToast(f);
+    await captureDownloads(f);
+    await lade(f, TEXT_ANTON);
+    await oeffneFunde(f);
+    await f.click(li('NAME|' + ANTON) + ' button.fund-toggle');
+    await warteAT(f, (v) => document.getElementById('AT').value.includes(v), ANTON);
+    await f.click(li('NAME|' + ANTON) + ' button.fund-toggle');
+    await warteAT(f, (v) => !document.getElementById('AT').value.includes(v), ANTON);
+    await f.evaluate(() => { try { expMap(); } catch (e) { /* ignorieren */ } try { saveReport(); } catch (e) { /* ignorieren */ } });
+    await pause(f, 600);
+    const t = await toasts(f);
+    assert.ok(!t.some((m) => /Anton|Beispiel/.test(m)), 'Originalwert im Toast: ' + JSON.stringify(t));
+    const diag = await f.evaluate(() => aiErrorDetailsText());
+    assert.ok(!/Anton|Beispiel/.test(diag), 'Originalwert in der Diagnose-Kopie');
+    const names = (await getDownloads(f)).map((d) => d.name);
+    assert.ok(names.length > 0, 'Voraussetzung: Downloads ausgeloest');
+    assert.ok(!names.some((n) => /Anton|Beispiel/i.test(n)), 'Originalwert im Dateinamen: ' + JSON.stringify(names));
+    const tt = await f.evaluate(() => document.title + '|' + document.getElementById('TT').textContent);
+    assert.ok(!/Anton|Beispiel/.test(tt), 'Originalwert in Titel oder Toast-Text');
+  });
+});
+
+test('N12 Persistenz: localStorage und sessionStorage enthalten schon VOR dem Reload keinen Fundwert', async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_ANTON);
+    await oeffneFunde(f);
+    await f.click(li('NAME|' + ANTON) + ' button.fund-toggle');
+    await warteAT(f, (v) => document.getElementById('AT').value.includes(v), ANTON);
+    await f.click(li('NAME|' + ANTON) + ' button.fund-jump');
+    await pause(f, 600);
+    const ablage = await f.evaluate(() => JSON.stringify([Object.entries(localStorage), Object.entries(sessionStorage)]));
+    assert.ok(!/Anton|Beispiel/.test(ablage), 'Fundwert in der Browserablage: ' + ablage);
+  });
+});
