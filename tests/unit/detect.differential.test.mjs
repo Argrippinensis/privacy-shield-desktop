@@ -7,15 +7,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { loadLib, ROOT } from './_load.mjs';
 import { buildInputs, sha256, MODES } from '../eval/dump-reference.mjs';
+import { compareItems } from '../eval/diff-reference.mjs';
 
 const reference = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests', 'golden', 'reference-v1.8.json'), 'utf8'));
 const inputs = await buildInputs();
 const byKey = new Map(inputs.map((i) => [i.key, i]));
 const itemsOf = (mode) => reference.items.filter((it) => it.mode === mode);
-// Erklaerte Abweichungen (tests/golden/reference-allow.json, je Eintrag mit Begruendung im Entscheidungsprotokoll), gleiche Regel wie tests/eval/diff-reference.mjs
+// Erklaerte Abweichungen (tests/golden/reference-allow.json, je Eintrag mit Begruendung und genehmigtem Stand): gleiche Regel wie
+// tests/eval/diff-reference.mjs, denn die Entscheidung laeuft ueber compareItems (Ausnahme nur bei exakt passenden Hashes und Anzahl)
 const ALLOW_FILE = path.join(ROOT, 'tests', 'golden', 'reference-allow.json');
 const allow = fs.existsSync(ALLOW_FILE) ? JSON.parse(fs.readFileSync(ALLOW_FILE, 'utf8')) : [];
-const isAllowed = (mode, key) => allow.some((a) => (a.mode === '*' || a.mode === mode) && (a.key === '*' || a.key === key) && typeof a.reason === 'string' && a.reason.length > 0);
 
 // Optionen je Modus (Spezifikation F1, Schritt 1)
 function optsFor(item) {
@@ -33,11 +34,8 @@ function runMode(mode) {
     if (!inp) { abweichungen.push(`${mode}/${item.key}: Eingabe fehlt`); continue; }
     if (sha256(inp.text) !== item.inputSha256) { abweichungen.push(`${mode}/${item.key}: Eingabe driftet`); continue; }
     const r = PSDetect.anonymize(inp.text, optsFor(item));
-    const a = [];
-    if (sha256(r.text) !== item.outSha256) a.push('text');
-    if (sha256(JSON.stringify(r.state.store)) !== item.storeSha256) a.push('zuordnung');
-    if (Object.keys(r.state.store).length !== item.entities) a.push('anzahl');
-    if (a.length && !isAllowed(mode, item.key)) abweichungen.push(`${mode}/${item.key}: ${a.join('+')} abweichend`);
+    const cur = { mode, key: item.key, inputSha256: item.inputSha256, outSha256: sha256(r.text), storeSha256: sha256(JSON.stringify(r.state.store)), entities: Object.keys(r.state.store).length };
+    for (const d of compareItems([item], [cur], allow).deviations) abweichungen.push(d.line);
   }
   return abweichungen;
 }
