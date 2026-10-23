@@ -2140,6 +2140,9 @@
       const ENTS = PSDetect.ENTS;
       const PROFILES = PSDetect.PROFILES;
       let mapSaved = false;
+      // K4.fix: Zustandsrevision; jede Aenderung an Ergebnissen/Zuordnung/Dokumentbestand macht die Zuordnung wieder ungespeichert
+      let stateRev = 0;
+      function stateTouch() { stateRev++; mapSaved = false; }
       let store = {},
         cnt = {},
         cvars = [],
@@ -2689,6 +2692,7 @@
       function prjDel(id) {
         if (prjBusy || prjZipBusy || !prj) return;
         const i = prj.docs.findIndex((d) => d.id === id);
+        stateTouch();
         PSLib.project.remove(prj, id);
         const ran = prjRes.size > 0;
         prjRes.delete(id); prjSize.delete(id);
@@ -2725,7 +2729,7 @@
         if (prjZipBusy) return toast("ZIP wird erstellt, bitte warten", "e");
         if (anonBusy) return toast("Analyse läuft bereits...", "s");
         prjBusy = anonBusy = true;
-        mapSaved = false;
+        stateTouch();
         prjAborted = false;
         prjAc = new AbortController();
         prjRes.clear();
@@ -2765,7 +2769,7 @@
           });
           prjAborted = out.aborted;
           prjDur = Date.now() - prjStart.getTime();
-          if (out.state) { store = out.state.store; cnt = out.state.cnt; renderMap(); }
+          if (out.state) { store = out.state.store; cnt = out.state.cnt; stateTouch(); renderMap(); }
         } catch (err) {
           toast("Fehler: " + err.message, "e");
         } finally {
@@ -2839,6 +2843,7 @@
         const keep = document.getElementById("PRJKEEP").checked;
         prjZipBusy = true;
         prjRender();
+        const rev = stateRev;
         try {
           let mapBytes = null;
           if (withMap) {
@@ -2877,10 +2882,13 @@
             else if (e.kind === "map") z.file(e.path, mapBytes);
           }
           const out = await z.generateAsync({ type: "uint8array", compression: "DEFLATE" });
-          dl("anonymisiert.zip", out, "application/zip");
-          // mapSaved nur, wenn die Datei den ganzen store enthält
-          if (mapBytes && Object.keys(prjScope().store).length === Object.keys(store).length) mapSaved = true;
-          toast(items.length + (items.length === 1 ? " Dokument" : " Dokumente") + " als ZIP gespeichert", "s");
+          // mapSaved nur, wenn die Datei den ganzen store enthält, nach bestätigtem Schreiben und unverändertem Zustand
+          const full = !!mapBytes && Object.keys(prjScope().store).length === Object.keys(store).length;
+          dl("anonymisiert.zip", out, "application/zip").then((ok) => {
+            if (!ok) return toast("ZIP nicht gespeichert", "e");
+            if (full && rev === stateRev) mapSaved = true;
+            toast(items.length + (items.length === 1 ? " Dokument" : " Dokumente") + " als ZIP gespeichert", "s");
+          });
         } catch (err) {
           toast("ZIP konnte nicht erstellt werden", "e");
         } finally {
@@ -3484,7 +3492,7 @@
         // K1.fix: im Projektmodus gemeinsamer Zustand, daher immer das ganze Projekt neu rechnen (kein veralteter Altstand)
         if (prj && prjRes.size) return prjRun();
         anonBusy = true;
-        mapSaved = false;
+        stateTouch();
         repStart = new Date(); repDur = 0;
         lcIgnored = new Set();
         const btn = document.getElementById("ANONBTN");
@@ -3551,6 +3559,7 @@
             state: { store, cnt },
           });
           store = r.state.store; cnt = r.state.cnt;
+          stateTouch();
           const txt = r.text;
           document.getElementById("AT").value = txt;
           renderMap();
@@ -3740,13 +3749,13 @@
               docs.push({ index: 1, name: fn.trim(), chars: it.length, sha256: [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("") });
             }
             // Grenze: state.reserved (woertliche Platzhalter des Originals) wird nicht gespeichert, nur store und cnt
+            const rev = stateRev;
             const bytes = await PSLib.psmap.encrypt({ v: 1, created: new Date().toISOString(), state: zipMode ? prjScope() : { store: store, cnt: cnt }, docs: docs }, pw);
             if (tok !== psPwTok) return;
             if (zipMode) { const cb = psPwZipCb; psPwZipCb = null; psPwDocs = null; psPwClose(); cb(bytes); return; }
-            dl("zuordnung.psmap", bytes, "application/octet-stream");
-            mapSaved = true;
+            if (rev !== stateRev) { psPwClose(); toast("Zuordnung hat sich geändert, nicht gespeichert. Bitte erneut speichern.", "e"); return; }
             psPwClose();
-            toast("Zuordnung verschlüsselt gespeichert", "s");
+            mapAfterSave(dl("zuordnung.psmap", bytes, "application/x-privacyshield-psmap"), rev, "Zuordnung verschlüsselt gespeichert", "Zuordnung nicht gespeichert");
           } else {
             const p = await PSLib.psmap.decrypt(psPwBytes, pw);
             if (tok !== psPwTok) return;
@@ -3763,6 +3772,7 @@
               renderMap();
               throw { code: "CORRUPT" };
             }
+            stateRev++;
             mapSaved = true;
             psPwClose();
             toast(Object.keys(store).length + " Einträge geladen", "s");
@@ -3782,6 +3792,7 @@
         if (!confirm("Mapping löschen? Rückführung danach nicht mehr möglich.")) return;
         store = {};
         cnt = {};
+        stateTouch();
         renderMap();
         toast("Mapping gelöscht", "s");
       }
@@ -3795,9 +3806,7 @@
         const csv =
           "Variable,Originalwert,Typ,Methode\n" +
           e.map(([t, d]) => '"' + t + '","' + d.v.replace(/"/g, '""') + '","' + d.t + '","' + d.m + '"').join("\n");
-        dl("privacyshield_mapping.csv", csv, "text/csv");
-        mapSaved = true;
-        toast("Mapping exportiert", "s");
+        mapAfterSave(dl("privacyshield_mapping.csv", csv, "text/csv"), stateRev, "Mapping exportiert", "Mapping nicht gespeichert");
       }
       function cpAnon() {
         const t = document.getElementById("AT").value;
@@ -3815,15 +3824,38 @@
         }
         dl("privacyshield_ergebnis.txt", t, "text/plain");
       }
+      // K4.fix: dl liefert ein Versprechen (true = geschrieben). Der Hauptprozess meldet Start/Ende des Downloads (psDlEvent).
+      // Bleibt die Startmeldung aus (kein Hauptprozess, z. B. Browser), gilt wie bisher: ausgelöst = gespeichert.
+      const dlPending = new Map();
+      function psDlEvent(url, state) {
+        const p = dlPending.get(url);
+        if (!p) return;
+        clearTimeout(p.t);
+        if (state === "start") return;
+        dlPending.delete(url);
+        p.res(state === "completed");
+      }
+      function mapAfterSave(p, rev, okMsg, failMsg) {
+        p.then((ok) => {
+          if (!ok) return toast(failMsg, "e");
+          if (rev !== stateRev) return toast("Gespeichert, aber die Zuordnung hat sich inzwischen geändert. Bitte erneut speichern.", "e");
+          mapSaved = true;
+          toast(okMsg, "s");
+        });
+      }
       function dl(name, c, type) {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([c], { type: type }));
         a.download = name;
+        const url = a.href;
+        const result = new Promise((res) => {
+          dlPending.set(url, { res: res, t: setTimeout(() => { dlPending.delete(url); res(true); }, 1500) });
+        });
         a.click();
         // URL nach Frist freigeben (Tests: window.__PS_REVOKE_MS)
-        const url = a.href;
         const REVOKE_MS = typeof window.__PS_REVOKE_MS === "number" ? window.__PS_REVOKE_MS : 10000;
         setTimeout(() => URL.revokeObjectURL(url), REVOKE_MS);
+        return result;
       }
       function clearAll() {
         if (prjBusy || prjZipBusy) return toast(prjBusy ? "Projektlauf läuft, bitte zuerst abbrechen" : "ZIP wird erstellt, bitte warten", "e");
@@ -3831,6 +3863,7 @@
         ["IT", "AT", "AR", "RT"].forEach((id) => (document.getElementById(id).value = ""));
         store = {};
         cnt = {};
+        stateTouch();
         // S2/D23: Projekt, manuelle Markierungen, letzte Leckpruefung und KI-Zwischenspeicher leeren
         hidePrj(); prjAgain = false; prjStale = false;
         manualMarks = PSLib.marks.create(); lcIgnored = new Set(); lcLast = null;
@@ -4299,6 +4332,7 @@
           });
           renderMap();
           input.value = "";
+          stateRev++; // laufendes Speichern gilt nicht fuer den neuen Stand
           if (wasSaved && imported > 0) mapSaved = true;
           toast(imported + " Einträge importiert (unverschlüsselte CSV)", "s");
         };
