@@ -1,7 +1,10 @@
 // A3.w: Zuordnung speichern/laden als verschluesselte .psmap (Knoepfe btn-map-save, btn-map-load, Dateifeld inp-map-load)
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { launchApp, toolFrame, captureDownloads, getDownloads, runAnon } from './helpers.mjs';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { launchApp, toolFrame, captureDownloads, getDownloads, runAnon, setFiles, sleep, stubSaves, setSaveMode, saveLog, waitSaveEnd } from './helpers.mjs';
 import { createRequire } from 'node:module';
 import { generateDocs } from './eval/generate.mjs';
 
@@ -253,4 +256,257 @@ test('A3.w Pruefer: Abbrechen direkt nach OK ersetzt store nicht', async () => {
     await new Promise((r) => setTimeout(r, 4000));
     assert.deepEqual(await storeOf(f), before);
   } finally { await a.close(); }
+});
+
+// ---------------------------------------------------------------------------
+// K4.fix (rot bis zur Umsetzung): "Zuordnung gespeichert" erst nach BESTAETIGTEM Schreiben.
+// Der Ausgang des Speicherns wird im Hauptprozess festgelegt (helpers.stubSaves: Abbruch, Schreibfehler, Erfolg), und
+// zwar fuer beide denkbaren Wege (Blob-Download und Kanal save-file); die Seite wird dabei nicht veraendert und
+// captureDownloads wird NICHT benutzt (sonst gaebe es nie ein echtes Schreiben). Nur synthetische Werte.
+// ---------------------------------------------------------------------------
+const K4_D1 = 'Kontakt: anna.beispiel@example.invalid.';
+const K4_D2 = 'Kontakt: ben.beispiel@example.invalid.';
+const K4_TEXT2 = 'Kontakt: carla.beispiel@example.invalid, Tel 030 7654321.';
+const txtFile = (name, text) => ({ name, mimeType: 'text/plain', buffer: Buffer.from(text, 'utf8') });
+const toastOf = (f) => f.evaluate(() => document.getElementById('TT').textContent);
+const unsavedOf = (f) => f.evaluate(() => [mapSaved, psMapUnsaved()]);
+
+async function k4Mit(mode, fn, opts = {}) {
+  const a = await launchApp({ offline: true });
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-k4-'));
+  fs.writeFileSync(dir + '.blocker', 'x'); // Zielpfade unterhalb einer Datei: Schreibfehler (Modus 'error')
+  try {
+    const f = await toolFrame(a.win);
+    await f.evaluate(() => startApp());
+    await stubSaves(a.app, { mode, dir, ...opts });
+    await fn({ a, f, dir });
+  } finally {
+    await a.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+// wartet auf den naechsten beendeten Speichervorgang (zaehlt bereits beendete mit)
+const k4Ended = async (a) => (await saveLog(a.app)).filter((x) => x.state !== 'waiting').length;
+const filesIn = (dir) => fs.readdirSync(dir).sort();
+
+// .psmap ueber den echten Speicherweg (kein captureDownloads)
+async function k4SavePsmap(f, a, { pw = PW, wait = true } = {}) {
+  await f.evaluate(() => psMapSave());
+  await f.waitForSelector('#PWDLG', { state: 'visible', timeout: 5000 });
+  await f.fill('#PWD1', pw);
+  await f.fill('#PWD2', pw);
+  const had = await k4Ended(a);
+  await f.click('#PWOK', T);
+  if (wait) { await waitSaveEnd(a.app, had + 1); await sleep(1200); }
+}
+// Projekt mit zwei Dokumenten laden und anonymisieren
+async function k4Projekt(f) {
+  await setFiles(f, [txtFile('a.txt', K4_D1), txtFile('b.txt', K4_D2)]);
+  await f.waitForFunction(() => document.querySelectorAll('#PRJPANEL button.prj-item').length === 2, null, { timeout: 20000 });
+  await f.click('#PRJRUN');
+  await f.waitForFunction(() => [...document.querySelectorAll('#PRJPANEL button.prj-item')].every((e) => /fertig/i.test(e.textContent)) && !prjBusy, null, { timeout: 60000 });
+}
+async function k4SaveZip(f, a, { mitZuordnung = true, pw = PW } = {}) {
+  if (!mitZuordnung) {
+    await f.evaluate(() => { document.getElementById('PRJMAP').checked = false; prjZip(); });
+  } else {
+    await f.evaluate(() => { document.getElementById('PRJMAP').checked = true; prjZip(); });
+    await f.waitForSelector('#PWDLG', { state: 'visible', timeout: 10000 });
+    await f.fill('#PWD1', pw);
+    await f.fill('#PWD2', pw);
+    await f.click('#PWOK', T);
+  }
+  await waitSaveEnd(a.app, 1, 30000);
+  await sleep(1200);
+}
+async function k4Csv(f, a) {
+  const had = await k4Ended(a);
+  await f.evaluate(() => { window.confirm = () => true; expMap(); });
+  await waitSaveEnd(a.app, had + 1);
+  await sleep(1200);
+}
+function k4NichtGespeichert(t, unsaved) {
+  assert.match(t, /nicht gespeichert/i, 'Toast muss "nicht gespeichert" melden, war: ' + JSON.stringify(t));
+  assert.doesNotMatch(t, /verschlüsselt gespeichert|als ZIP gespeichert|exportiert/i, 'Erfolgsmeldung trotz Fehlschlag: ' + JSON.stringify(t));
+  assert.deepEqual(unsaved, [false, true], 'mapSaved/psMapUnsaved() muessen false/true bleiben');
+}
+
+test('K4.fix: .psmap, Download abgebrochen: Toast "nicht gespeichert", mapSaved bleibt falsch', async () => {
+  await k4Mit('cancel', async ({ a, f, dir }) => {
+    await runAnon(f, K4_D1);
+    assert.deepEqual(await unsavedOf(f), [false, true]);
+    await k4SavePsmap(f, a);
+    assert.equal((await saveLog(a.app))[0].state, 'cancelled', 'Testaufbau: Speichern muss abgebrochen sein');
+    assert.deepEqual(filesIn(dir), []);
+    k4NichtGespeichert(await toastOf(f), await unsavedOf(f));
+  });
+});
+
+test('K4.fix: .psmap, Schreibfehler (Ziel nicht beschreibbar): Toast "nicht gespeichert", mapSaved bleibt falsch', async () => {
+  await k4Mit('error', async ({ a, f, dir }) => {
+    await runAnon(f, K4_D1);
+    await k4SavePsmap(f, a);
+    assert.equal((await saveLog(a.app))[0].state, 'failed', 'Testaufbau: Schreiben muss scheitern');
+    assert.deepEqual(filesIn(dir), []);
+    k4NichtGespeichert(await toastOf(f), await unsavedOf(f));
+  });
+});
+
+test('K4.fix: .psmap, bestaetigtes Schreiben (Kontrolle): Datei liegt vor, Passwort oeffnet sie, gespeichert', async () => {
+  await k4Mit('ok', async ({ a, f, dir }) => {
+    const { store: before } = await runAnon(f, K4_D1);
+    await k4SavePsmap(f, a);
+    assert.deepEqual(filesIn(dir), ['zuordnung.psmap']);
+    const bytes = fs.readFileSync(path.join(dir, 'zuordnung.psmap'));
+    assert.equal(bytes.subarray(0, 4).toString('latin1'), 'PSM1');
+    const p = await psmap.decrypt(new Uint8Array(bytes), PW);
+    assert.deepEqual(p.state.store, before);
+    const t = await toastOf(f);
+    assert.match(t, /gespeichert/i);
+    assert.doesNotMatch(t, /nicht gespeichert/i);
+    assert.deepEqual(await unsavedOf(f), [true, false]);
+  });
+});
+
+test('K4.fix: .psmap, erst abgebrochen, dann erfolgreich erneut gespeichert: danach gespeichert', async () => {
+  await k4Mit('cancel', async ({ a, f, dir }) => {
+    await runAnon(f, K4_D1);
+    await k4SavePsmap(f, a);
+    assert.deepEqual(await unsavedOf(f), [false, true]);
+    await setSaveMode(a.app, 'ok');
+    await f.evaluate(() => { if (document.getElementById('PWDLG').style.display === 'flex') psPwClose(); });
+    await k4SavePsmap(f, a);
+    assert.deepEqual(filesIn(dir), ['zuordnung.psmap']);
+    assert.deepEqual(await unsavedOf(f), [true, false]);
+  });
+});
+
+test('K4.fix: ZIP mit Zuordnung, Download abgebrochen: Toast "nicht gespeichert", Zuordnung bleibt ungespeichert', async () => {
+  await k4Mit('cancel', async ({ a, f, dir }) => {
+    await k4Projekt(f);
+    await k4SaveZip(f, a);
+    assert.equal((await saveLog(a.app))[0].state, 'cancelled', 'Testaufbau: Speichern muss abgebrochen sein');
+    assert.deepEqual(filesIn(dir), []);
+    k4NichtGespeichert(await toastOf(f), await unsavedOf(f));
+  });
+});
+
+test('K4.fix: ZIP mit Zuordnung, Schreibfehler: Toast "nicht gespeichert", Zuordnung bleibt ungespeichert', async () => {
+  await k4Mit('error', async ({ a, f }) => {
+    await k4Projekt(f);
+    await k4SaveZip(f, a);
+    assert.equal((await saveLog(a.app))[0].state, 'failed', 'Testaufbau: Schreiben muss scheitern');
+    k4NichtGespeichert(await toastOf(f), await unsavedOf(f));
+  });
+});
+
+test('K4.fix: ZIP ohne Zuordnung, Download abgebrochen: Toast "nicht gespeichert" statt "als ZIP gespeichert"', async () => {
+  await k4Mit('cancel', async ({ a, f }) => {
+    await k4Projekt(f);
+    await k4SaveZip(f, a, { mitZuordnung: false });
+    const t = await toastOf(f);
+    assert.match(t, /nicht gespeichert/i, 'war: ' + JSON.stringify(t));
+    assert.doesNotMatch(t, /als ZIP gespeichert/i);
+    assert.equal(await f.evaluate(() => psMapUnsaved()), true);
+  });
+});
+
+test('K4.fix: ZIP mit Zuordnung, bestaetigtes Schreiben (Kontrolle): ZIP liegt vor, Zuordnung gilt als gespeichert', async () => {
+  await k4Mit('ok', async ({ a, f, dir }) => {
+    await k4Projekt(f);
+    await k4SaveZip(f, a);
+    assert.deepEqual(filesIn(dir), ['anonymisiert.zip']);
+    assert.equal(fs.readFileSync(path.join(dir, 'anonymisiert.zip')).subarray(0, 2).toString('latin1'), 'PK');
+    const t = await toastOf(f);
+    assert.match(t, /ZIP gespeichert/i);
+    assert.doesNotMatch(t, /nicht gespeichert/i);
+    assert.deepEqual(await unsavedOf(f), [true, false]);
+  });
+});
+
+test('K4.fix: CSV, Download abgebrochen: Toast "nicht gespeichert", mapSaved bleibt falsch', async () => {
+  await k4Mit('cancel', async ({ a, f, dir }) => {
+    await runAnon(f, K4_D1);
+    await k4Csv(f, a);
+    assert.equal((await saveLog(a.app))[0].state, 'cancelled', 'Testaufbau: Speichern muss abgebrochen sein');
+    assert.deepEqual(filesIn(dir), []);
+    k4NichtGespeichert(await toastOf(f), await unsavedOf(f));
+  });
+});
+
+test('K4.fix: CSV, Schreibfehler: Toast "nicht gespeichert", mapSaved bleibt falsch', async () => {
+  await k4Mit('error', async ({ a, f }) => {
+    await runAnon(f, K4_D1);
+    await k4Csv(f, a);
+    assert.equal((await saveLog(a.app))[0].state, 'failed', 'Testaufbau: Schreiben muss scheitern');
+    k4NichtGespeichert(await toastOf(f), await unsavedOf(f));
+  });
+});
+
+test('K4.fix: CSV, bestaetigtes Schreiben (Kontrolle): Datei liegt vor, gespeichert', async () => {
+  await k4Mit('ok', async ({ a, f, dir }) => {
+    await runAnon(f, K4_D1);
+    await k4Csv(f, a);
+    assert.deepEqual(filesIn(dir), ['privacyshield_mapping.csv']);
+    assert.match(fs.readFileSync(path.join(dir, 'privacyshield_mapping.csv'), 'utf8'), /^Variable,Originalwert,Typ,Methode\n/);
+    const t = await toastOf(f);
+    assert.match(t, /exportiert/i);
+    assert.doesNotMatch(t, /nicht gespeichert/i);
+    assert.deepEqual(await unsavedOf(f), [true, false]);
+  });
+});
+
+// --- Merker an die Zustandsrevision binden (aus K1.fix: Ergebnisse/Zuordnung aendern sich -> wieder ungespeichert) ---
+
+test('K4.fix: Aenderung der Ergebnisse waehrend der Verschluesselung: bestaetigtes Schreiben markiert die neue Zuordnung nicht als gespeichert', async () => {
+  await k4Mit('ok', async ({ a, f }) => {
+    await runAnon(f, K4_D1);
+    // Schluesselableitung verlangsamen, damit der neue Lauf sicher VOR dem Schreiben liegt
+    await f.evaluate(() => {
+      const orig = crypto.subtle.deriveKey.bind(crypto.subtle);
+      crypto.subtle.deriveKey = async (...x) => { await new Promise((r) => setTimeout(r, 2500)); return orig(...x); };
+    });
+    await k4SavePsmap(f, a, { wait: false });
+    await sleep(300);
+    await runAnon(f, K4_TEXT2); // Zuordnung aendert sich, die Datei enthaelt noch den alten Stand
+    await waitSaveEnd(a.app, 1, 12000).catch(() => {}); // eine Umsetzung darf das Schreiben auch ganz abbrechen
+    await sleep(1500);
+    assert.equal(await f.evaluate(() => psMapUnsaved()), true, 'neuer Stand der Zuordnung gilt als gespeichert');
+  });
+});
+
+test('K4.fix: Aenderung der Ergebnisse waehrend das Schreiben noch aussteht: Merker bleibt falsch', async () => {
+  await k4Mit('ok', async ({ a, f }) => {
+    await runAnon(f, K4_D1);
+    await k4SavePsmap(f, a, { wait: false });
+    // wartet, bis der Speichervorgang begonnen hat (Dialog-Weg: Zustand 'waiting'; Download-Weg: sofort fertig)
+    const t0 = Date.now();
+    while ((await saveLog(a.app)).length < 1 && Date.now() - t0 < 20000) await sleep(100);
+    await runAnon(f, K4_TEXT2);
+    await waitSaveEnd(a.app, 1, 12000).catch(() => {});
+    await sleep(2500);
+    assert.equal(await f.evaluate(() => psMapUnsaved()), true, 'neuer Stand der Zuordnung gilt als gespeichert');
+  }, { delayMs: 2000 });
+});
+
+test('K4.fix: nach bestaetigtem Speichern ein Dokument aus dem Projekt entfernen: Zuordnung gilt wieder als ungespeichert', async () => {
+  await k4Mit('ok', async ({ a, f }) => {
+    await k4Projekt(f);
+    await k4SavePsmap(f, a);
+    assert.deepEqual(await unsavedOf(f), [true, false], 'Testaufbau: erst gespeichert');
+    await f.evaluate(() => prjDel(prj.docs[1].id));
+    await sleep(500);
+    assert.equal(await f.evaluate(() => psMapUnsaved()), true, 'Zuordnung hat sich geaendert, gilt aber als gespeichert');
+  });
+});
+
+test('K4.fix: nach bestaetigtem Speichern neuer Projektlauf: Zuordnung gilt wieder als ungespeichert', async () => {
+  await k4Mit('ok', async ({ a, f }) => {
+    await k4Projekt(f);
+    await k4SavePsmap(f, a);
+    assert.deepEqual(await unsavedOf(f), [true, false], 'Testaufbau: erst gespeichert');
+    await f.click('#PRJRUN');
+    await f.waitForFunction(() => !prjBusy && [...document.querySelectorAll('#PRJPANEL button.prj-item')].every((e) => /fertig/i.test(e.textContent)), null, { timeout: 60000 });
+    assert.equal(await f.evaluate(() => psMapUnsaved()), true);
+  });
 });

@@ -5,6 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { launchApp, toolFrame, ROOT } from './helpers.mjs';
 
 const CHANNELS = [
@@ -312,4 +313,82 @@ test('Werkzeug sendet die Update-Anfrage an app://ps statt *', async () => {
     });
     assert.equal(target, 'app://ps');
   } finally { await a.close(); }
+});
+
+// ---------------------------------------------------------------------------
+// K4.fix (rot bis zur Umsetzung): save-file als bestaetigter Speicherweg fuer ZIP und CSV, Rueckgabe sagt die Wahrheit.
+// Setzt den Kanal save-file als Weg voraus (Paketvorschlag K4.fix im Bericht K1/S2/K4). Das .psmap-Format ist hier nicht
+// geprueft, weil sein MIME-Typ eine Umsetzungsentscheidung ist; es ist ueber die Oberflaeche in tests/psmap.test.mjs abgedeckt.
+// ---------------------------------------------------------------------------
+// ziel: 'datei' (schreibt nach dir/<Name>), 'abbruch', 'fehler' (Pfad unterhalb einer Datei)
+async function saveFileMit(ziel, args) {
+  const a = await launchApp({ offline: true, env: { PS_TEST_HOOKS: '1' } });
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-k4i-'));
+  fs.writeFileSync(dir + '.blocker', 'x');
+  try {
+    const r = await a.app.evaluate(async ({ dialog }, { ziel, dir, args, trusted }) => {
+      globalThis.__dlgOpts = [];
+      dialog.showSaveDialog = async (...x) => {
+        const o = x.find((y) => y && typeof y === 'object' && 'defaultPath' in y) || {};
+        globalThis.__dlgOpts.push(JSON.parse(JSON.stringify(o)));
+        if (ziel === 'abbruch') return { canceled: true };
+        const name = String(o.defaultPath).split(/[\\/]/).pop();
+        return { canceled: false, filePath: (ziel === 'fehler' ? dir + '.blocker/' : dir + '/') + name };
+      };
+      try {
+        const res = await globalThis.__psIpc.invoke('save-file', { senderFrame: { url: trusted } }, ...args);
+        return { ok: true, result: JSON.parse(JSON.stringify(res)), opts: globalThis.__dlgOpts };
+      } catch (e) { return { ok: false, err: String(e && e.message || e), opts: globalThis.__dlgOpts }; }
+    }, { ziel, dir, args, trusted: TRUSTED });
+    r.files = fs.readdirSync(dir).sort();
+    r.read = (n) => fs.readFileSync(path.join(dir, n));
+    return r;
+  } finally { await a.close(); fs.rmSync(dir, { recursive: true, force: true }); fs.rmSync(dir + '.blocker', { force: true }); }
+}
+const B64 = Buffer.from('PK-synthetisch-123').toString('base64');
+
+test('K4.fix: save-file nimmt application/zip an, schreibt die Bytes und meldet success true', async () => {
+  const r = await saveFileMit('datei', [{ defaultName: 'anonymisiert.zip', data: B64, mimeType: 'application/zip' }]);
+  assert.equal(r.ok, true, r.err);
+  assert.equal(r.result.success, true);
+  assert.deepEqual(r.files, ['anonymisiert.zip']);
+  assert.equal(r.read('anonymisiert.zip').toString(), 'PK-synthetisch-123');
+  assert.deepEqual(r.opts[0].filters.map((x) => x.extensions).flat(), ['zip']);
+});
+
+test('K4.fix: save-file nimmt text/csv an, schreibt die Bytes und meldet success true', async () => {
+  const csv = 'Variable,Originalwert,Typ,Methode\n';
+  const r = await saveFileMit('datei', [{ defaultName: 'privacyshield_mapping.csv', data: Buffer.from(csv).toString('base64'), mimeType: 'text/csv' }]);
+  assert.equal(r.ok, true, r.err);
+  assert.equal(r.result.success, true);
+  assert.deepEqual(r.files, ['privacyshield_mapping.csv']);
+  assert.equal(r.read('privacyshield_mapping.csv').toString(), csv);
+  assert.deepEqual(r.opts[0].filters.map((x) => x.extensions).flat(), ['csv']);
+});
+
+test('K4.fix: save-file bei abgebrochenem Speichern-Dialog meldet success false und schreibt nichts (ZIP)', async () => {
+  const r = await saveFileMit('abbruch', [{ defaultName: 'anonymisiert.zip', data: B64, mimeType: 'application/zip' }]);
+  assert.equal(r.ok, true, r.err);
+  assert.equal(r.result.success, false);
+  assert.deepEqual(r.files, []);
+});
+
+test('K4.fix: save-file bei Schreibfehler meldet nie success true (Fehler oder success false), ZIP', async () => {
+  const r = await saveFileMit('fehler', [{ defaultName: 'anonymisiert.zip', data: B64, mimeType: 'application/zip' }]);
+  if (!r.ok) assert.doesNotMatch(r.err, /invalid argument/, 'ZIP muss als Typ angenommen werden; Fehlschlag soll vom Schreiben kommen');
+  const gescheitert = r.ok ? r.result.success === false : true;
+  assert.equal(gescheitert, true, 'Schreibfehler als Erfolg gemeldet: ' + JSON.stringify(r));
+});
+
+test('K4.fix: save-file bei Schreibfehler meldet nie success true (Fehler oder success false), Text (Kontrolle)', async () => {
+  const r = await saveFileMit('fehler', [{ defaultName: 'x.txt', data: B64, mimeType: 'text/plain' }]);
+  const gescheitert = r.ok ? r.result.success === false : true;
+  assert.equal(gescheitert, true, 'Schreibfehler als Erfolg gemeldet: ' + JSON.stringify(r));
+});
+
+test('K4.fix: save-file lehnt weiterhin Typen ausserhalb der festen Liste ab (application/x-msdownload)', async () => {
+  const r = await saveFileMit('datei', [{ defaultName: 'x.exe', data: B64, mimeType: 'application/x-msdownload' }]);
+  assert.equal(r.ok, false);
+  assert.match(r.err, /invalid argument/);
+  assert.deepEqual(r.files, []);
 });
