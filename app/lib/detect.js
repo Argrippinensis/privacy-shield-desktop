@@ -1923,7 +1923,7 @@
       }
       let lastP1 = { text: null, sig: null, res: null };
       function computePass1(text) {
-        const sig = ENTS.map((e) => (activeEnts.has(e.id) ? 1 : 0)).join("") + "|" + cvars.map((c) => c.n + "\u0001" + c.p).join("\u0002") + "|" + JSON.stringify(extraSpans);
+        const sig = ENTS.map((e) => (activeEnts.has(e.id) ? 1 : 0)).join("") + "|" + cvars.map((c) => c.n + "\u0001" + c.p + "\u0001" + (c.f || "") + "\u0001" + (c.m || "")).join("\u0002") + "|" + JSON.stringify(extraSpans);
         if (!(lastP1.text === text && lastP1.sig === sig)) lastP1 = { text: text, sig: sig, res: computePass1Uncached(text) };
         // Kopie liefern: postProcessSpans veraendert die Treffer (start/end), das darf spaetere Aufrufe nicht beeinflussen.
         return { p1: lastP1.res.p1.map((x) => Object.assign({}, x)), maskedText: lastP1.res.maskedText };
@@ -1932,10 +1932,11 @@
         const pass1 = [];
         for (const cv of cvars) {
           let rx;
+          const fl = "g" + (cv.f === "i" ? "i" : "");
           try {
-            rx = new RegExp(cv.p, "g");
+            rx = new RegExp(cv.p, fl);
           } catch (e) {
-            rx = new RegExp(cv.p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+            rx = new RegExp(cv.p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), fl);
           }
           let m;
           while ((m = rx.exec(text)) !== null) {
@@ -1948,7 +1949,7 @@
               col: "#ff3b30",
               id: "custom",
               prio: 0,
-              meth: "Eigene Regel",
+              meth: cv.m || "Eigene Regel",
             });
           }
         }
@@ -2295,6 +2296,8 @@
             }
           }
           if (s.pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val) && !isValidIBANFormat(val)) return false;
+          // Ausdrueckliche Nutzermarkierung: keine Plausibilitaetsfilter (Namensform, Ueberschrift)
+          if (s.meth === "Manuelle Markierung") return true;
           if (s.pfx === "NAME" && !okName(val)) return false;
           if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(val)) return false;
           if (s.pfx === "ORT" && SW.has(val)) return false;
@@ -2401,7 +2404,8 @@
 
   // Kontext des Aufrufs setzen (gemeinsam fuer detect und maskHard); det = normalisierter Text
   function setContext(o, det) {
-    cvars = Array.isArray(o.cvars) ? o.cvars : [];
+    // Muster wie der Text normalisieren (laengengleich, Positionen bleiben gueltig)
+    cvars = (Array.isArray(o.cvars) ? o.cvars : []).map((c) => (c && typeof c.p === "string" ? Object.assign({}, c, { p: normalizeForDetection(c.p) }) : c));
     whitelist = Array.isArray(o.whitelist) ? o.whitelist : [];
     activeEnts = new Set(activeIds(o));
     wordlistsOn = o.wordlists !== false;

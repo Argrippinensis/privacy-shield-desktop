@@ -3466,6 +3466,27 @@
           if (pe) pe.textContent = "";
         }
       }
+      // Je Markierung die Fundstellen im normalisierten Text und deren Abdeckung durch die Spans; null ohne Markierungen
+      function markTreffer(det, spans) {
+        const cv = PSLib.marks.toCvars(manualMarks);
+        if (!cv.length) return null;
+        let treffer = 0, ohne = 0;
+        cv.forEach((c) => {
+          let n = 0;
+          try {
+            const rx = new RegExp(PSDetect.normalizeForDetection(c.p), "g" + (c.f || ""));
+            let m;
+            while ((m = rx.exec(det)) !== null) {
+              if (m[0].length === 0) { rx.lastIndex++; continue; }
+              const a = m.index, e = a + m[0].length;
+              if (spans.some((sp) => sp.start <= a && sp.end >= e)) n++;
+            }
+          } catch (err) { /* ungueltiges Muster: zaehlt als ohne Treffer */ }
+          treffer += n;
+          if (!n) ohne++;
+        });
+        return { treffer: treffer, ohne: ohne };
+      }
       async function anonCore() {
         const input = document.getElementById("IT").value;
         if (!input.trim()) {
@@ -3501,7 +3522,12 @@
           document.getElementById("resultArea").style.display = "flex";
           document.getElementById("REANON").style.display = "inline-flex";
           updTokenCount();
-          toast(Object.keys(store).length + " Entitäten anonymisiert", "s");
+          // Trefferpruefung je Markierung ueber die Abdeckung: Fundstelle zaehlt, wenn ein Span sie ganz umschliesst (auch ein laengerer Treffer)
+          const mt = markTreffer(det, r.spans);
+          toast(
+            Object.keys(store).length + " Entitäten anonymisiert" + (mt ? ". Markierungen: " + mt.treffer + " Treffer" + (mt.ohne ? ", " + mt.ohne + " ohne Treffer" : "") : ""),
+            mt && mt.ohne ? "e" : "s",
+          );
           runLeakCheck();
         } catch (err) {
           repStart = null;
