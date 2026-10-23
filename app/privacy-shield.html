@@ -2157,6 +2157,7 @@
             c.classList.add("sel");
             curProf = p.id;
             if (p.id !== "custom") ENTS.forEach((e) => (e.on = p.ents.includes(e.id)));
+            prjMarkStale();
           };
           pg.appendChild(c);
         });
@@ -2282,6 +2283,7 @@
             e.on = !e.on;
             r.classList.toggle("on", e.on);
             curProf = "custom";
+            prjMarkStale();
           };
           el.appendChild(r);
         });
@@ -2290,6 +2292,7 @@
         const any = ENTS.some((e) => e.on);
         ENTS.forEach((e) => (e.on = !any));
         initEL();
+        prjMarkStale();
       }
       // Eigene Regeln (policy.json): Zustand, Speicherung nur der Regeln unter ps_policy_v1
       let policy = { version: 1, name: "Eigene Regeln", rules: [] };
@@ -2336,6 +2339,7 @@
         policyChanged();
       }
       function policyChanged() {
+        prjMarkStale();
         aiCache = { key: null, spans: [] };
         policySave();
         policyRender();
@@ -2564,7 +2568,15 @@
       function prjRefresh() {
         if (!prj) return;
         if (prjBusy) { prjAgain = true; return; }
+        if (prjZipBusy) { prjMarkStale(); return toast("ZIP wird erstellt: Ergebnisse danach erneut anonymisieren", "e"); }
         if (prjRes.size) prjRun();
+      }
+      // K1.fix: Einstellung (Profil, Entitaeten, Richtlinie, KI-Modus) geaendert: Ergebnisse gelten als veraltet, ZIP gesperrt bis zum naechsten Lauf
+      let prjStale = false, prjCfg = null;
+      function prjMarkStale() {
+        if (!prj || !(prjRes.size || prjBusy)) return;
+        prjStale = true;
+        prjRender();
       }
       function prjCheckFiles(files) {
         const multi = files.length > 1, ok = [], msgs = [], bad = [];
@@ -2668,10 +2680,11 @@
           const err = items.filter((x) => x.status === "fehler").length;
           sum = total + (total === 1 ? " Dokument" : " Dokumente") + ", " + rest + " mit möglichen Resten" + (err ? ", " + err + " mit Fehler" : "");
         } else if (done) sum = done + " von " + total + " Dokumenten fertig" + (prjAborted ? ", abgebrochen" : "");
+        if (prjStale && !prjBusy) sum = "Einstellungen geändert: Ergebnisse veraltet, bitte erneut anonymisieren.";
         document.getElementById("PRJSUM").textContent = sum;
         document.getElementById("PRJRUN").disabled = prjBusy || !total;
         document.getElementById("PRJCANCEL").disabled = !prjBusy || !prjAc;
-        document.getElementById("PRJZIP").disabled = prjBusy || prjZipBusy || !items.some((x) => x.status === "fertig" && prjRes.has(x.id));
+        document.getElementById("PRJZIP").disabled = prjBusy || prjZipBusy || prjStale || !items.some((x) => x.status === "fertig" && prjRes.has(x.id));
       }
       function prjDel(id) {
         if (prjBusy || prjZipBusy || !prj) return;
@@ -2709,12 +2722,14 @@
       function prjCancel() { if (prjAc) prjAc.abort(); }
       async function prjRun() {
         if (prjBusy || !prj || !prj.docs.length) return;
+        if (prjZipBusy) return toast("ZIP wird erstellt, bitte warten", "e");
         if (anonBusy) return toast("Analyse läuft bereits...", "s");
         prjBusy = anonBusy = true;
         mapSaved = false;
         prjAborted = false;
         prjAc = new AbortController();
         prjRes.clear();
+        prjStale = false; prjCfg = { p: curProf, a: aiMode() }; // Bericht nennt Profil und KI-Modus des Laufs
         prjStart = new Date(); prjDur = 0;
         const btn = document.getElementById("ANONBTN");
         if (btn) btn.disabled = true;
@@ -2761,6 +2776,7 @@
           scheduleAIIdleUnload();
           const pe = document.getElementById("aiRunProgress");
           if (pe) pe.textContent = "";
+          if (prjAgain && prjAborted) prjStale = true; // Abbruch trotz offener Aenderung: Ergebnisse veraltet
           prjRender();
           if (prjSel !== null && prjRes.has(prjSel)) prjShow(prjSel);
           if (prjAgain && !prjAborted && prj) { prjAgain = false; prjRun(); }
@@ -2816,6 +2832,7 @@
       }
       async function prjZip(noMap) {
         if (prjBusy || prjZipBusy || !prj) return;
+        if (prjStale) return toast("Ergebnisse veraltet, bitte erneut anonymisieren", "e");
         const items = PSLib.project.index(prj).filter((x) => x.status === "fertig" && prjRes.has(x.id));
         if (!items.length) return toast("Kein fertiges Dokument zum Speichern", "e");
         const withMap = noMap !== true && document.getElementById("PRJMAP").checked;
@@ -2848,7 +2865,7 @@
           }
           const rep = PSLib.report.build({
             appVersion: APP_VERSION, startedAt: (prjStart || new Date()).toISOString(), localTime: new Date().toLocaleString("de-DE"),
-            durationMs: prjDur, profileId: curProf, aiMode: aiMode(),
+            durationMs: prjDur, profileId: prjCfg ? prjCfg.p : curProf, aiMode: prjCfg ? prjCfg.a : aiMode(),
             modelId: nerPipeline ? AI_MODEL_ID : undefined,
             whitelistSize: whitelist.length, customRuleCount: cvars.length + policyRuleCount(), documents: documents,
           });
@@ -3135,6 +3152,7 @@
       }
       function setAIMode(mode) {
         localStorage.setItem(AI_MODE_KEY, mode);
+        prjMarkStale();
         if (mode === "off") unloadAIModel(true);
         aiRefreshUI();
       }
@@ -3808,13 +3826,13 @@
         setTimeout(() => URL.revokeObjectURL(url), REVOKE_MS);
       }
       function clearAll() {
-        if (prjBusy) return toast("Projektlauf läuft, bitte zuerst abbrechen", "e");
+        if (prjBusy || prjZipBusy) return toast(prjBusy ? "Projektlauf läuft, bitte zuerst abbrechen" : "ZIP wird erstellt, bitte warten", "e");
         if (!confirm("Alles zurücksetzen?")) return;
         ["IT", "AT", "AR", "RT"].forEach((id) => (document.getElementById(id).value = ""));
         store = {};
         cnt = {};
         // S2/D23: Projekt, manuelle Markierungen, letzte Leckpruefung und KI-Zwischenspeicher leeren
-        hidePrj(); prjAgain = false;
+        hidePrj(); prjAgain = false; prjStale = false;
         manualMarks = PSLib.marks.create(); lcIgnored = new Set(); lcLast = null;
         aiCache = { key: null, spans: [] };
         const lb = document.getElementById("LCBAND"), ll = document.getElementById("LCLIST");
@@ -4197,6 +4215,7 @@
         });
         if (medProfile) {
           applyProfile(medProfile);
+          prjMarkStale();
           document.querySelectorAll(".profile-card").forEach(function (c) {
             c.classList.toggle("sel", c.dataset.pid === medProfile.id);
           });
