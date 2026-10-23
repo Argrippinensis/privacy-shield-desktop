@@ -347,3 +347,88 @@ test('run-eval.mjs startet beim Import keinen Lauf und exportiert summarize', as
   assert.equal(typeof m.summarize, 'function');
   assert.ok(Date.now() - t0 < 20000, 'Import dauerte zu lange (Lauf gestartet?)');
 });
+
+// ---- Nachtests nach Pruefung (Q2.fix): Allgemeinwoerter, Schwelle, Wortgrenzen, OCR-Editierabstand ----
+
+test('Anrede allein ist kein Teilrest: "Herr {{NAME_1}}" fuer das Fragment "Herr Beispielmann"', async () => {
+  const { measureDoc } = await M();
+  const d = doc('Herr Beispielmann', [{ type: 'NAME', frags: ['Herr Beispielmann'] }]);
+  assert.equal(measureDoc(d, 'Herr {{NAME_1}}').leaked, 0);
+  assert.equal(measureDoc(d, 'Frau Dr. {{NAME_1}}').leaked, 0);
+});
+
+test('Anrede plus Namensstamm ist weiter ein Teilrest: "Herr Beispiel{{NAME_1}}"', async () => {
+  const { measureDoc } = await M();
+  const d = doc('Herr Beispielmann', [{ type: 'NAME', frags: ['Herr Beispielmann'] }]);
+  const r = measureDoc(d, 'Herr Beispiel{{NAME_1}}');
+  assert.equal(r.leaked, 1);
+  assert.equal(r.hits[0].kind, 'kopf');
+});
+
+test('Strassenart allein ist kein Teilrest: "calle {{ADRESSE_1}}" fuer "calle Mayor 5"', async () => {
+  const { measureDoc } = await M();
+  const d = doc('calle Mayor 5, 28013 Madrid', [{ type: 'ADR', frags: ['calle Mayor 5'] }]);
+  assert.equal(measureDoc(d, 'calle {{ADRESSE_1}}, 28013 {{ORT_1}}').leaked, 0);
+});
+
+test('Strassenart plus Stamm ist weiter ein Teilrest: "calle Mayor {{ADRESSE_1}}"', async () => {
+  const { measureDoc } = await M();
+  const d = doc('calle Mayor 5, 28013 Madrid', [{ type: 'ADR', frags: ['calle Mayor 5'] }]);
+  assert.equal(measureDoc(d, 'calle Mayor {{ADRESSE_1}}').leaked, 1);
+});
+
+test('Allgemeinwort am Ende nach dem Platzhalter ist kein Teilrest: "{{NAME_1}}Strasse" fuer "Mueller Strasse"', async () => {
+  const { measureDoc } = await M();
+  const d = doc('Mueller Strasse', [{ type: 'ADR', frags: ['Mueller Strasse'] }]);
+  assert.equal(measureDoc(d, '{{ADRESSE_1}}Strasse').leaked, 0);
+  assert.equal(measureDoc(d, 'Mueller{{ADRESSE_1}}').leaked, 1); // Stamm steht davor
+});
+
+test('MIN_PART ist 4: drei Zeichen vor/nach dem Platzhalter sind kein Teilrest, vier sind einer', async () => {
+  const m = await M();
+  assert.equal(m.MIN_PART, 4);
+  const d = doc('Herr Beispielmann', [{ type: 'NAME', frags: ['Beispielmann'] }]);
+  assert.equal(m.measureDoc(d, 'Bei{{NAME_1}}').leaked, 0);
+  assert.equal(m.measureDoc(d, 'Beis{{NAME_1}}').leaked, 1);
+  assert.equal(m.measureDoc(d, '{{NAME_1}}ann').leaked, 0);
+  assert.equal(m.measureDoc(d, '{{NAME_1}}mann').leaked, 1);
+});
+
+test('Wortgrenze links: "xBeispiel{{NAME_1}}" ist kein Teilrest, "x Beispiel{{NAME_1}}" schon', async () => {
+  const { measureDoc } = await M();
+  const d = doc('Herr Beispielmann', [{ type: 'NAME', frags: ['Beispielmann'] }]);
+  assert.equal(measureDoc(d, 'xBeispiel{{NAME_1}}').leaked, 0);
+  assert.equal(measureDoc(d, 'x Beispiel{{NAME_1}}').leaked, 1);
+});
+
+test('Wortgrenze rechts: "{{NAME_1}}manns" ist kein Teilrest, "{{NAME_1}}mann." schon', async () => {
+  const { measureDoc } = await M();
+  const d = doc('Herr Beispielmann', [{ type: 'NAME', frags: ['Beispielmann'] }]);
+  assert.equal(measureDoc(d, '{{NAME_1}}manns').leaked, 0);
+  assert.equal(measureDoc(d, '{{NAME_1}}mann.').leaked, 1);
+});
+
+test('OCR-Variante mit Einfuegung (Editierabstand 1) steht unmaskiert in der Ausgabe -> ocrChanged', async () => {
+  const { measureDoc, MAX_EDIT } = await M();
+  assert.equal(MAX_EDIT, 1);
+  const truth = [{ type: 'NAME', frags: ['Beispielmann'] }];
+  const r = measureDoc({ truth }, 'Herr Beispielmaann', { input: 'Herr Beispielmaann' });
+  assert.equal(r.lost, 1);
+  assert.equal(r.ocrChanged, 1);
+});
+
+test('OCR-Variante mit Loeschung (Editierabstand 1) steht unmaskiert in der Ausgabe -> ocrChanged', async () => {
+  const { measureDoc } = await M();
+  const truth = [{ type: 'NAME', frags: ['Beispielmann'] }];
+  const r = measureDoc({ truth }, 'Herr Beispielman', { input: 'Herr Beispielman' });
+  assert.equal(r.lost, 1);
+  assert.equal(r.ocrChanged, 1);
+});
+
+test('OCR-Variante mit Editierabstand 2 zaehlt nicht als ocrChanged', async () => {
+  const { measureDoc } = await M();
+  const truth = [{ type: 'NAME', frags: ['Beispielmann'] }];
+  const r = measureDoc({ truth }, 'Herr Beispieimaan', { input: 'Herr Beispieimaan' });
+  assert.equal(r.lost, 1);
+  assert.equal(r.ocrChanged, 0);
+});
