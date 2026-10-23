@@ -14,6 +14,26 @@
 
   const norm = (s) => s.normalize('NFC').toLowerCase();
 
+  // Gegenhinweise (C2.fix, K3): gleicher Nachname ist nicht gleiche Person. Starker Hinweis auf eine andere Person: personKey null.
+  const ANREDE = { herr: 'M', herrn: 'M', 'hr.': 'M', 'hrn.': 'M', frau: 'F', 'fr.': 'F', 'frl.': 'F' };
+  const BEZIEHUNG = /^(ehemann|ehefrau|ehepartner|ehepartnerin|gatte|gattin|bruder|schwester|vater|mutter|sohn|tochter)$/;
+  const ZUSATZ = /^\s+(junior|jun\.|senior|sen\.)(?![\p{L}])/iu;
+  const ANREDE_DAVOR = /(?<![\p{L}])(herrn?|hr\.|hrn\.|frau|fr\.|frl\.)\s+(?:(?:dr|prof)\.?\s+)*$/iu;
+
+  // Anrede des Spans: erstes Wort im Span, sonst das Wort unmittelbar davor (Titel dazwischen erlaubt)
+  function anredeOf(str, before) {
+    const first = str.trim().split(/\s+/)[0] || '';
+    if (ANREDE[first.toLowerCase()]) return ANREDE[first.toLowerCase()];
+    const m = ANREDE_DAVOR.exec(before);
+    return m ? ANREDE[m[1].toLowerCase()] : null;
+  }
+
+  // Beziehungswort in den bis zu drei Woertern vor dem Span, nicht ueber ein Satzende hinweg
+  function beziehungDavor(before) {
+    const ws = before.split(/[.!?;:]\s/).pop().split(/[\s,]+/).filter(Boolean).slice(-3);
+    return ws.some((w) => BEZIEHUNG.test(w.toLowerCase()));
+  }
+
   // Zerlegung in { toks: Vornamen-Woerter samt Initialen, parts: Bindestrichteile, given: ausgeschriebene Vornamen, surname }
   function parse(str) {
     const words = str.normalize('NFC').split(/\s+/).filter(Boolean);
@@ -35,18 +55,18 @@
   }
 
   function link(spans, text) {
-    const infos = spans.map((s) => {
-      if (!s || s.pfx !== 'NAME') return null;
-      const t = typeof text === 'string' && s.end > s.start ? text.slice(s.start, s.end) : '';
-      return parse(t);
-    });
+    if (typeof text !== 'string') text = '';
+    const raw = spans.map((s) => (!s || s.pfx !== 'NAME' || !(s.end > s.start) ? '' : text.slice(s.start, s.end)));
+    const infos = spans.map((s, i) => (!s || s.pfx !== 'NAME' ? null : parse(raw[i])));
+    const anrede = spans.map((s, i) => (infos[i] ? anredeOf(raw[i], text.slice(0, s.start)) : null));
 
     // VOLL-Personen: mindestens ein ausgeschriebener Vorname plus Nachname (Mittelinitialen zaehlen zum Schluessel)
     const persons = new Map();
-    infos.forEach((p) => {
+    infos.forEach((p, i) => {
       if (p && p.given.length) {
         const key = p.toks.join(' ') + '|' + p.surname;
-        if (!persons.has(key)) persons.set(key, { key, given: p.given, parts: p.parts, surname: p.surname });
+        if (!persons.has(key)) persons.set(key, { key, given: p.given, parts: p.parts, surname: p.surname, anrede: new Set() });
+        if (anrede[i]) persons.get(key).anrede.add(anrede[i]);
       }
     });
     const list = [...persons.values()];
@@ -86,6 +106,12 @@
           form = 'VORNAME';
           personKey = uniq(gv);
         }
+      }
+      if (personKey && form !== 'VOLL') {
+        // Gegenhinweis nur fuer diesen Span: Anrede-Konflikt, Beziehungswort davor oder Generationszusatz danach
+        const pe = persons.get(personKey);
+        const konflikt = anrede[idx] && pe.anrede.size && !pe.anrede.has(anrede[idx]);
+        if (konflikt || beziehungDavor(text.slice(0, s.start)) || ZUSATZ.test(text.slice(s.end))) personKey = null;
       }
       return Object.assign({}, s, { personKey, form });
     });
