@@ -9,7 +9,8 @@ const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 test('Keine Emojis in Oberflaeche, Code und Dokumentation', () => {
   const emoji = /[\p{Emoji_Presentation}️]/u;
-  for (const f of ['app/index.html', 'app/privacy-shield.html', 'main.js', 'preload.js', 'README.md', 'CHANGELOG.md', 'THIRD_PARTY_NOTICES.md']) {
+  const docs = fs.existsSync(path.join(ROOT, 'docs')) ? fs.readdirSync(path.join(ROOT, 'docs'), { recursive: true }).filter((f) => f.endsWith('.md')).map((f) => 'docs/' + String(f).split(path.sep).join('/')) : [];
+  for (const f of ['app/index.html', 'app/privacy-shield.html', 'app/cli.html', 'main.js', 'preload.js', 'README.md', 'CHANGELOG.md', 'THIRD_PARTY_NOTICES.md', ...docs]) {
     if (!fs.existsSync(path.join(ROOT, f))) continue;
     const m = read(f).match(emoji);
     assert.equal(m, null, `${f} enthaelt ein Emoji (${m && m[0]}); stattdessen SVG oder Text verwenden`);

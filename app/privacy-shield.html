@@ -520,6 +520,9 @@
         background: #fff0ee;
         color: #ff3b30;
       }
+      /* S3.fix: Symbole fest im Markup, nur umgeschaltet (kein neues SVG pro Meldung) */
+      .toast-icon svg { display: none; }
+      .toast.s .ti-s, .toast.e .ti-e { display: block; }
       .file-tag {
         display: none;
         align-items: center;
@@ -533,6 +536,35 @@
       .file-tag.on {
         display: flex;
       }
+      /* Projektliste (mehrere Dokumente) */
+      .prj-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; margin-bottom: 12px; }
+      .prj-row { display: flex; align-items: stretch; gap: 4px; }
+      .prj-item { flex: 1; min-width: 0; display: grid; grid-template-columns: 24px 1fr; column-gap: 8px; align-items: center; text-align: left; font: inherit; padding: 7px 9px; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+      .prj-item:hover { background: #f0f4f8; }
+      .prj-item.sel { background: #e8f0fe; border-color: #1a3a5c; }
+      .prj-num { grid-row: 1 / span 2; width: 22px; height: 22px; border-radius: 50%; background: #1a3a5c; color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+      .prj-name { font-size: 12px; font-weight: 500; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .prj-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; min-width: 0; }
+      .prj-st { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+      .prj-st.wartet { color: #666; }
+      .prj-st.laeuft { color: #1a3a5c; }
+      .prj-st.fertig { color: #047857; }
+      .prj-st.rest { color: #92400e; }
+      .prj-st.fehler { color: #b91c1c; }
+      .prj-st.laeuft svg { animation: prjspin 1s linear infinite; }
+      @keyframes prjspin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .prj-st.laeuft svg { animation: none; } }
+      .prj-del { flex: 0 0 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid transparent; border-radius: 8px; color: #999; cursor: pointer; transition: color 0.15s, background 0.15s; }
+      .prj-del:hover:not(:disabled) { color: #b91c1c; background: #fff0ee; }
+      .prj-del:disabled { opacity: 0.4; cursor: default; }
+      .prj-item:focus-visible, .prj-del:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
+      .prj-track { height: 4px; background: #e5e5e5; border-radius: 2px; overflow: hidden; margin-top: 5px; }
+      .prj-fill { height: 100%; width: 0; background: #1a3a5c; transition: width 0.2s; }
+      .prj-out { margin-top: 14px; padding-top: 12px; border-top: 1px solid #e5e5e5; }
+      .prj-opt { display: flex; align-items: center; gap: 8px; min-height: 28px; font-size: 12px; color: #111; cursor: pointer; }
+      .prj-opt input { width: 15px; height: 15px; margin: 0; accent-color: #1a3a5c; cursor: pointer; }
+      .prj-opt input:focus-visible, #PRJZIP:focus-visible, #PRJASK button:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
+      .prj-hint { margin: 0 0 8px 23px; font-size: 11px; line-height: 1.4; color: #666; }
       .progress-bar {
         height: 3px;
         background: #e5e5e5;
@@ -551,6 +583,9 @@
         transition: width 0.3s;
         width: 0%;
       }
+      #policy-preview mark { background: #dbe7f3; color: #1a3a5c; border-radius: 3px; padding: 0 2px; }
+      #policy-rules input[type=checkbox] { flex-shrink: 0; accent-color: #1a3a5c; }
+      #policy-rules .custom-var-name { max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .custom-var-row {
         display: flex;
         align-items: center;
@@ -626,6 +661,49 @@
         font-family: monospace;
         color: #111;
       }
+      /* D1.w1: Seitenleiste "Funde" */
+      #FUNDEBTN {
+        position: fixed; right: 0; top: 140px; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 8px;
+        padding: 14px 8px 12px; background: #1a3a5c; color: #fff; border: 0; border-radius: 8px 0 0 8px; cursor: pointer;
+        font: 600 12px/1 "Plus Jakarta Sans", system-ui, sans-serif; letter-spacing: 0.02em; box-shadow: -1px 1px 4px rgba(0, 0, 0, 0.12);
+      }
+      #FUNDEBTN .funde-t { writing-mode: vertical-rl; }
+      #FUNDEBTN .funde-n { font-size: 10px; font-weight: 600; background: #fff; color: #1a3a5c; border-radius: 100px; padding: 2px 6px; min-width: 18px; text-align: center; }
+      #FUNDEBTN .funde-n:empty { display: none; }
+      #FUNDEBTN:focus-visible, #FUNDE button:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
+      #FUNDEBTN:focus-visible { outline-color: #fff; outline-offset: -4px; }
+      body.funde-open #FUNDEBTN { right: 360px; }
+      #FUNDE {
+        display: none; position: fixed; top: 0; right: 0; bottom: 0; width: 360px; max-width: 100vw; z-index: 55; flex-direction: column;
+        background: #fff; border-left: 1px solid #e5e5e5; box-shadow: -6px 0 24px rgba(0, 0, 0, 0.06); font-size: 12px; color: #111;
+      }
+      #FUNDE.on { display: flex; }
+      @media (min-width: 1100px) { body.funde-open { padding-right: 360px; } }
+      @media (max-width: 1099px) { #FUNDE { width: 320px; } body.funde-open #FUNDEBTN { right: 320px; } }
+      @media (max-width: 480px) { #FUNDE { width: 100vw; } body.funde-open #FUNDEBTN { right: 0; top: 8px; } }
+      .funde-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px 10px; border-bottom: 1px solid #e5e5e5; }
+      .funde-head h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; color: #1a3a5c; }
+      .funde-close { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #e5e5e5; border-radius: 6px; color: #666; cursor: pointer; }
+      .funde-close:hover { background: #f5f5f5; color: #111; }
+      .funde-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+      .funde-hint { padding: 8px 16px; font-size: 11px; line-height: 1.5; color: #666; border-bottom: 1px solid #e5e5e5; background: #fafafa; }
+      #FUNDELIST { flex: 1; overflow-y: auto; padding: 0 0 24px; }
+      #FUNDELIST .fg-h { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: #fff; border-bottom: 1px solid #e5e5e5; }
+      #FUNDELIST .fg-t { font-weight: 600; font-size: 12px; color: #1a3a5c; white-space: nowrap; }
+      #FUNDELIST .fg-n { font-size: 11px; color: #666; flex: 1; white-space: nowrap; }
+      #FUNDELIST .fg-all { font: 500 11px "Plus Jakarta Sans", system-ui, sans-serif; color: #1a3a5c; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 4px 9px; cursor: pointer; white-space: nowrap; }
+      #FUNDELIST .fg-all:hover, #FUNDELIST .fund-toggle:hover:not(:disabled) { background: #f5f5f5; }
+      #FUNDELIST ul { list-style: none; margin: 0; padding: 0; }
+      #FUNDELIST li[data-key] { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; padding: 8px 16px 8px 13px; border-bottom: 1px solid #f0f0f0; border-left: 3px solid #1a3a5c; }
+      #FUNDELIST li.frei { border-left-color: #e5e5e5; background: #fafafa; }
+      #FUNDELIST .fund-jump { grid-column: 1; text-align: left; background: none; border: 0; padding: 2px 0; font: 600 13px/1.35 "Plus Jakarta Sans", system-ui, sans-serif; color: #111; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+      #FUNDELIST .fund-jump:hover { color: #1a3a5c; text-decoration: underline; }
+      #FUNDELIST li.frei .fund-jump { color: #666; font-weight: 500; }
+      #FUNDELIST .fund-cnt { grid-column: 2; font-size: 11px; color: #666; text-align: right; }
+      #FUNDELIST .fund-ph { grid-column: 1; font: 11px monospace; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #FUNDELIST .fund-toggle { grid-column: 2; font: 500 11px "Plus Jakarta Sans", system-ui, sans-serif; color: #1a3a5c; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+      #FUNDELIST .fund-toggle:disabled { color: #999; cursor: default; background: #f5f5f5; }
+      #FUNDELIST .funde-empty { padding: 28px 16px; color: #666; line-height: 1.6; text-align: center; }
       .pill {
         display: inline-block;
         padding: 2px 7px;
@@ -1034,7 +1112,7 @@
                 Bestehendes Mapping importieren
               </p>
               <p style="font-size: 10px; color: #999; margin-bottom: 8px">
-                CSV aus vorheriger Sitzung laden, um dieselben Variablen wiederzuverwenden.
+                Zuordnung (.psmap, oder unverschlüsselte .csv) aus vorheriger Sitzung laden, um dieselben Variablen wiederzuverwenden.
               </p>
               <label
                 class="btn btn-ghost"
@@ -1051,7 +1129,7 @@
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                CSV importieren <input type="file" accept=".csv" style="display: none" onchange="impMap(this)"
+                Zuordnung laden <input type="file" accept=".psmap,.csv" style="display: none" onchange="impMap(this)"
               /></label>
             </div>
             <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5e5; text-align: left">
@@ -1215,7 +1293,7 @@
               </div>
               <div class="tool-panel-body">
                 <div class="drop-zone" id="DZ">
-                  <input type="file" id="FI" accept=".txt,.pdf,.docx,.doc,.csv,.md,.json,.rtf" multiple="multiple" />
+                  <input type="file" id="FI" accept=".txt,.pdf,.docx,.doc,.csv,.md,.json,.rtf,.xlsx,.ods,.odt,.odp,.pptx,.eml,.html,.htm" multiple="multiple" />
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
                     <polyline points="16 16 12 12 8 16" />
                     <line x1="12" y1="12" x2="12" y2="21" />
@@ -1261,6 +1339,31 @@
                   </button>
                 </div>
                 <div class="progress-bar" id="FP"><div class="progress-fill" id="FPB"></div></div>
+              </div>
+            </div>
+            <div class="tool-panel" id="PRJPANEL" style="display: none">
+              <div class="tool-panel-header">
+                <span style="font-size: 12px; font-weight: 600">Dokumente</span>
+                <span style="font-size: 11px; color: #999" id="PRJCOUNT"></span>
+              </div>
+              <div class="tool-panel-body">
+                <div class="prj-list" id="PRJLIST" role="list" aria-label="Dokumente im Projekt"></div>
+                <div id="PRJPROG" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" style="font-size: 11px; color: #666">
+                  <span id="PRJPROGT">0 von 0</span>
+                  <div class="prj-track"><div class="prj-fill" id="PRJFILL"></div></div>
+                </div>
+                <div id="PRJSUM" role="status" aria-live="polite" style="font-size: 12px; color: #111; margin-top: 8px; min-height: 16px"></div>
+                <div style="display: flex; gap: 8px; margin-top: 10px">
+                  <button type="button" id="PRJRUN" class="btn-accent" style="flex: 1; font-size: 12px; padding: 9px 12px" onclick="prjRun()">Alle anonymisieren</button>
+                  <button type="button" id="PRJCANCEL" class="btn btn-ghost" style="font-size: 12px" onclick="prjCancel()" disabled>Abbrechen</button>
+                </div>
+                <div class="prj-out">
+                  <label class="prj-opt" for="PRJMAP"><input type="checkbox" id="PRJMAP" checked />Zuordnung einschließen</label>
+                  <p class="prj-hint" id="PRJMAPHINT">Verschlüsselte Datei, mit der sich Antworten zurückübersetzen lassen. Das Passwort wird beim Speichern abgefragt.</p>
+                  <label class="prj-opt" for="PRJKEEP"><input type="checkbox" id="PRJKEEP" aria-describedby="PRJKEEPHINT" />Originalnamen verwenden</label>
+                  <p class="prj-hint" id="PRJKEEPHINT">Dateinamen enthalten oft Namen. Standard sind neutrale Namen wie anonymisiert_001.txt.</p>
+                  <button type="button" id="PRJZIP" class="btn btn-ghost" style="width: 100%; font-size: 12px; padding: 9px 12px" onclick="prjZip()" disabled>Alles als ZIP speichern</button>
+                </div>
               </div>
             </div>
             <div style="text-align: center; padding: 4px 0 2px">
@@ -1414,25 +1517,6 @@
                 </button>
               </div>
               <div class="tool-panel-body"><div id="EL"></div></div>
-            </div>
-            <div class="tool-panel">
-              <div class="tool-panel-header"><span style="font-size: 12px; font-weight: 600">Eigene Muster</span></div>
-              <div class="tool-panel-body">
-                <div id="CVL"></div>
-                <div class="mb-2">
-                  <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px"
-                    >Variablenname</label
-                  >
-                  <input class="input-field" id="VN" type="text" placeholder="z. B. VERTRAGSNR" />
-                </div>
-                <div class="mb-2">
-                  <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px"
-                    >Muster (Regex oder exakter Text)</label
-                  >
-                  <input class="input-field" id="VP" type="text" placeholder="z. B. VTR-\d{6}" />
-                </div>
-                <button class="btn btn-ghost w-full" onclick="addCV()">+ Eigene Regel hinzufügen</button>
-              </div>
             </div>
             <div class="tool-panel">
               <div class="tool-panel-header">
@@ -1622,11 +1706,16 @@
                     <button class="btn btn-ghost" style="font-size: 11px; padding: 3px 10px" onclick="cpAnon()">
                       Kopieren
                     </button>
+                    <button class="btn btn-ghost" id="btn-report" style="font-size: 11px; padding: 3px 10px" onclick="saveReport()">
+                      Bericht speichern
+                    </button>
                     <button class="btn btn-ghost" style="font-size: 11px; padding: 3px 10px" onclick="showDeanonStep()">
                       KI-Antwort einf&uuml;gen
                     </button>
                   </div>
                 </div>
+                <button type="button" id="LCBAND" role="status" aria-live="polite" aria-controls="LCLIST" aria-expanded="false" onclick="toggleLCList()" style="display: none; align-items: center; gap: 8px; width: 100%; border: 0; border-bottom: 1px solid #e5e5e5; padding: 8px 14px; font: inherit; font-size: 12px; font-weight: 600; text-align: left"></button>
+                <div id="LCLIST" style="display: none; border-bottom: 1px solid #e5e5e5; background: #fffbeb; padding: 6px 14px"></div>
                 <div class="tool-panel-body" style="padding: 12px">
                   <textarea
                     id="AT"
@@ -1839,24 +1928,95 @@
                     <tbody id="MT">
                       <tr>
                         <td colspan="4" style="text-align: center; color: #999; padding: 22px; font-size: 12px">
-                          Noch keine Anonymisierung durchgeführt — CSV importieren oder Text anonymisieren
+                          Noch keine Anonymisierung durchgeführt — Zuordnung laden oder Text anonymisieren
                         </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
                 <div style="display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap">
+                  <button id="btn-map-save" class="btn btn-primary" style="font-size: 11px" onclick="psMapSave()">Zuordnung speichern</button>
+                  <button id="btn-map-load" class="btn btn-ghost" style="font-size: 11px" onclick="document.getElementById('inp-map-load').click()">Zuordnung laden</button>
+                  <input id="inp-map-load" type="file" accept=".psmap,.csv" style="display: none" onchange="impMap(this)" />
                   <button class="btn btn-danger" style="font-size: 11px" onclick="clrMap()">Mapping löschen</button>
-                  <button class="btn btn-ghost" style="font-size: 11px" onclick="expMap()">Als CSV exportieren</button>
-                  <label class="btn btn-ghost" style="font-size: 11px; cursor: pointer"
-                    >CSV importieren<input type="file" accept=".csv" style="display: none" onchange="impMap(this)"
-                  /></label>
+                  <details id="MAPMORE" style="font-size: 11px; align-self: center">
+                    <summary style="cursor: pointer; color: #666">Weitere Optionen</summary>
+                    <button class="btn btn-ghost" style="font-size: 11px; margin-top: 6px" onclick="expMap()">Als CSV exportieren</button>
+                  </details>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <section class="max-w-container mx-auto px-6" id="policy-section" aria-label="Eigene Regeln" style="margin-top: 32px">
+        <details open>
+          <summary style="cursor: pointer; font-size: 13px; font-weight: 600; color: #1a3a5c; margin-bottom: 10px">Eigene Regeln für Kennungen und Begriffe Ihrer Organisation</summary>
+          <div style="max-width: 520px">
+            <div class="tool-panel" id="policy-panel">
+              <div class="tool-panel-header">
+                <span style="font-size: 12px; font-weight: 600"
+                  >Eigene Regeln <span id="policy-count" style="font-size: 12px; color: #595959; font-weight: 400"></span
+                ></span>
+                <div style="display: flex; gap: 4px">
+                  <button id="policy-import-btn" type="button" class="btn btn-ghost" style="padding: 5px 10px; font-size: 12px; min-height: 28px" title="Regeldatei policy.json laden" onclick="document.getElementById('policy-file').click()">Importieren</button>
+                  <input id="policy-file" type="file" accept=".json,application/json" style="display: none" tabindex="-1" aria-label="Regeldatei policy.json importieren" onchange="policyImport(this)" />
+                  <button id="policy-export" class="btn btn-ghost" style="padding: 5px 10px; font-size: 12px; min-height: 28px" onclick="policyExport()" title="Regeln als policy.json speichern">Export</button>
+                </div>
+              </div>
+              <div class="tool-panel-body">
+                <p id="policy-hint" class="text-xs text-secondary" style="margin: 0 0 8px">
+                  Eigene Regeln bleiben auf diesem Gerät. Gespeichert werden nur die Regeln, nie Ihre Dokumente.
+                </p>
+                <div id="policy-rules" role="group" aria-label="Eigene Regeln, einzeln ein- und ausschaltbar" style="margin-bottom: 10px"></div>
+                <div class="mb-2">
+                  <label class="text-xs font-medium text-secondary" for="policy-terms" style="display: block; margin-bottom: 3px"
+                    >Begriffe (ein Begriff pro Zeile)</label
+                  >
+                  <textarea class="input-field" id="policy-terms" rows="3" placeholder="z. B. Projekt Falke"></textarea>
+                </div>
+                <button id="policy-add-terms" class="btn btn-ghost w-full" style="margin-bottom: 12px" onclick="policyAddTerms()">+ Begriffe hinzufügen</button>
+                <div class="mb-2">
+                  <label class="text-xs font-medium text-secondary" for="policy-pattern" style="display: block; margin-bottom: 3px"
+                    >Eigenes Suchmuster</label
+                  >
+                  <input class="input-field" id="policy-pattern" type="text" autocomplete="off" spellcheck="false" placeholder="z. B. K-\d{6}" oninput="policyTest()" aria-describedby="policy-error" />
+                </div>
+                <div class="mb-2">
+                  <label class="text-xs font-medium text-secondary" for="policy-sample" style="display: block; margin-bottom: 3px"
+                    >Beispieltext, Treffer werden markiert</label
+                  >
+                  <textarea class="input-field" id="policy-sample" rows="2" oninput="policyTest()"></textarea>
+                </div>
+                <div id="policy-preview" aria-live="polite" class="text-xs" style="white-space: pre-wrap; word-break: break-word; margin-bottom: 6px"></div>
+                <div id="policy-error" role="alert" class="text-xs" style="color: #b42318; margin-bottom: 6px"></div>
+                <button id="policy-discard" type="button" class="btn btn-ghost w-full" style="display: none; margin-bottom: 8px" onclick="policyDiscard()">Gespeicherte Regeln verwerfen</button>
+                <button id="policy-add-pattern" class="btn btn-ghost w-full" onclick="policyAddPattern()">+ Muster hinzufügen</button>
+              </div>
+            </div>
+            <div style="height: 14px"></div>
+            <div class="tool-panel">
+              <div class="tool-panel-header"><span style="font-size: 12px; font-weight: 600">Eigene Muster</span></div>
+              <div class="tool-panel-body">
+                <div id="CVL"></div>
+                <div class="mb-2">
+                  <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px"
+                    for="VN">Variablenname, z. B. VERTRAGSNR</label
+                  >
+                  <input class="input-field" id="VN" type="text" />
+                </div>
+                <div class="mb-2">
+                  <label class="text-xs font-medium text-secondary" style="display: block; margin-bottom: 3px" for="VP"
+                    >Muster (Regex oder exakter Text)</label
+                  >
+                  <input class="input-field" id="VP" type="text" placeholder="Muster, z. B. VTR-\d{4,8}" />
+                </div>
+                <button class="btn btn-ghost w-full" onclick="addCV()">+ Eigene Regel hinzufügen</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
       <footer class="py-12 border-t border-[#e5e5e5]" style="margin-top: 60px">
         <div class="max-w-container mx-auto px-6 text-center">
           <p class="text-sm font-medium text-ink mb-3">
@@ -1886,7 +2046,7 @@
       </footer>
     </div>
     <div class="toast" id="TOAST">
-      <div class="toast-icon" id="TI"></div>
+      <div class="toast-icon" id="TI"><svg class="ti-s" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg class="ti-e" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="14"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
       <span id="TT"></span>
     </div>
     <div
@@ -1985,1341 +2145,69 @@
       </div>
       <div id="AMPERROR" style="display: none; margin-top: 6px; font-size: 11px; color: #ff3b30"></div>
     </div>
+    <button id="FUNDEBTN" type="button" onclick="toggleFunde()" aria-controls="FUNDE" aria-expanded="false" title="Liste aller Funde anzeigen">
+      <span class="funde-t">Funde</span><span class="funde-n" id="FUNDECNT"></span>
+    </button>
+    <aside id="FUNDE" aria-label="Funde">
+      <div class="funde-head">
+        <h2>Funde</h2>
+        <button type="button" class="funde-close" onclick="toggleFunde(false)" aria-label="Funde schließen">
+          <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="funde-hint">Die Originalwerte sind nur hier sichtbar. Freigegebene Werte bleiben im Ergebnis im Klartext. Nichts wird gespeichert.</div>
+      <div id="FUNDELIST"></div>
+      <div id="FUNDESTATUS" class="funde-sr" role="status"></div>
+    </aside>
     <script src="vendor/pdfjs/pdf.min.js"></script>
     <script src="vendor/mammoth/mammoth.browser.min.js"></script>
     <script src="vendor/tesseract/tesseract.min.js"></script>
     <script src="vendor/jspdf/jspdf.umd.min.js"></script>
     <script src="vendor/jszip/jszip.min.js"></script>
+    <script src="lib/placeholder.js"></script><script src="lib/coref.js"></script><script src="lib/leakcheck.js"></script><script src="lib/marks.js"></script><script src="lib/report.js"></script><script src="lib/policy.js"></script>
+    <script src="lib/detect.js"></script>
+    <div id="PWDLG" role="dialog" aria-modal="true" aria-labelledby="PWTITLE" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(26, 58, 92, 0.45); align-items: center; justify-content: center">
+      <form onsubmit="psPwOk(); return false" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 24px; width: min(420px, 92vw); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); text-align: left">
+        <h2 id="PWTITLE" style="font-size: 15px; font-weight: 700; color: #1a3a5c; margin: 0 0 6px">Passwort</h2>
+        <p id="PWINFO" style="font-size: 12px; color: #666; margin: 0 0 14px">Ohne dieses Passwort kann die Zuordnung nicht wiederhergestellt werden.</p>
+        <label for="PWD1" style="display: block; font-size: 11px; font-weight: 600; color: #333; margin-bottom: 3px">Passwort</label>
+        <input id="PWD1" type="password" autocomplete="current-password" aria-describedby="PWINFO PWSTR" oninput="psPwStrength()" style="width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 9px; font-size: 13px" />
+        <div id="PWROW2" style="margin-top: 10px">
+          <label for="PWD2" style="display: block; font-size: 11px; font-weight: 600; color: #333; margin-bottom: 3px">Passwort wiederholen</label>
+          <input id="PWD2" type="password" autocomplete="new-password" aria-describedby="PWINFO" style="width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; padding: 7px 9px; font-size: 13px" />
+        </div>
+        <p id="PWSTR" aria-live="polite" style="font-size: 11px; color: #666; margin: 8px 0 0; min-height: 15px"></p>
+        <p id="PWERR" role="alert" style="font-size: 12px; color: #b91c1c; margin: 8px 0 0; min-height: 16px"></p>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px">
+          <button id="PWCANCEL" type="button" class="btn btn-ghost" onclick="psPwClose()">Abbrechen</button>
+          <button id="PWOK" type="submit" class="btn btn-primary">OK</button>
+        </div>
+      </form>
+    </div>
+    <div id="PRJASK" role="dialog" aria-modal="true" aria-labelledby="PRJASKT" aria-describedby="PRJASKD" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(26, 58, 92, 0.45); align-items: center; justify-content: center">
+      <div style="background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 24px; width: min(420px, 92vw); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); text-align: left">
+        <h2 id="PRJASKT" style="font-size: 15px; font-weight: 700; color: #1a3a5c; margin: 0 0 6px">Ohne Zuordnung kann nicht zurückübersetzt werden</h2>
+        <p id="PRJASKD" style="font-size: 12px; color: #666; margin: 0 0 14px">Das ZIP enthält dann nur die anonymisierten Texte und den Bericht. Antworten einer KI lassen sich später nicht mit den Originalwerten zusammenführen.</p>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap">
+          <button type="button" class="btn btn-ghost" onclick="prjAskClose()">Abbrechen</button>
+          <button type="button" id="PRJASKPW" class="btn btn-ghost" onclick="prjAskClose(); prjZip()">Passwort eingeben</button>
+          <button type="button" class="btn btn-primary" onclick="prjAskClose(); prjZip(true)">Ohne Zuordnung fortfahren</button>
+        </div>
+      </div>
+    </div>
+    <script src="lib/review.js"></script><script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script><script src="lib/formats.js"></script><script src="lib/officefmt.js"></script>
     <script>
-      // Begriffslisten fuer besondere Kategorien (Art. 9 und 10 DSGVO). Ein Begriff verraet die Eigenschaft einer Person
-      // (Krankheit, Religion, Gewerkschaft, Strafdaten ...). Wortlisten koennen auch in unverfaenglichen Texten treffen;
-      // deshalb nur in den Profilen "Medizin" und "Maximal" aktiv. Wortanfang muss stimmen, Endungen sind erlaubt.
-      const SENSITIVE_WORDS = [
-        // Gesundheit: Krankheiten und Zustaende
-        "Diabetes", "Krebs", "Karzinom", "Tumor", "Leukämie", "Lymphom", "Melanom", "Metastase", "Multiple Sklerose", "Parkinson",
-        "Alzheimer", "Demenz", "Epilepsie", "Depression", "Burnout", "Angststörung", "Panikattacke", "Schizophreni", "Psychose",
-        "Posttraumatische", "Autismus", "Hepatitis", "Tuberkulose", "Herzinfarkt", "Schlaganfall", "Herzinsuffizienz", "Bluthochdruck",
-        "Asthma", "Rheuma", "Arthrose", "Bandscheibenvorfall", "Osteoporose", "Migräne", "Chemotherapie", "Strahlentherapie",
-        "Dialyse", "Fehlgeburt", "Abtreibung", "Schwangerschaftsabbruch", "Unfruchtbarkeit", "Alkoholismus", "Alkoholabhängigkeit",
-        "Drogenabhängigkeit", "Suchterkrankung", "Suizid", "Selbstmord", "Essstörung", "Anorexie", "Bulimie", "Schwerbehinderung",
-        "Pflegegrad", "Arbeitsunfähigkeit", "arbeitsunfähig", "Krankschreibung", "Neurodermitis", "Endometriose", "Mukoviszidose",
-        "Hämophilie", "Morbus", "schwanger", "Schwangerschaft",
-        // Gesundheit: Wirkstoffe und Praeparate (Auswahl)
-        "Metformin", "Insulin", "Ramipril", "Sertralin", "Citalopram", "Escitalopram", "Fluoxetin", "Venlafaxin", "Duloxetin",
-        "Amitriptylin", "Mirtazapin", "Quetiapin", "Olanzapin", "Risperidon", "Aripiprazol", "Clozapin", "Haloperidol", "Lithium",
-        "Methylphenidat", "Ritalin", "Lorazepam", "Diazepam", "Tavor", "Valium", "Zolpidem", "Oxycodon", "Morphin", "Fentanyl",
-        "Methadon", "Tramadol", "Levothyroxin", "Bisoprolol", "Metoprolol", "Amlodipin", "Simvastatin", "Atorvastatin", "Pantoprazol",
-        "Omeprazol", "Marcumar", "Phenprocoumon", "Xarelto", "Rivaroxaban", "Eliquis", "Apixaban", "Prednisolon", "Cortison",
-        "Humira", "Adalimumab", "Ocrelizumab", "Interferon", "Truvada", "Biktarvy", "Tamoxifen", "Letrozol", "Cisplatin",
-        "Methotrexat", "Gabapentin", "Pregabalin", "Levodopa", "Donepezil", "Lamotrigin", "Valproat", "Carbamazepin",
-        "Levetiracetam", "Naltrexon", "Buprenorphin",
-        // Religion und Weltanschauung
-        "katholisch", "evangelisch", "evangelisch-lutherisch", "ev.-luth.", "muslimisch", "Muslim", "islamisch", "jüdisch",
-        "Judentum", "buddhistisch", "hinduistisch", "Zeugen Jehovas", "Mormonen", "Freikirche", "Konfession", "Kirchenaustritt",
-        "Kirchenmitglied", "Atheist", "konfessionslos",
-        // Politik und Gewerkschaft
-        "Die Linke", "Die Grünen", "Bündnis 90", "Freie Wähler", "Piratenpartei", "Parteimitglied", "Parteieintritt", "ver.di",
-        "IG Metall", "IG BCE", "IG BAU", "Gewerkschaftsmitglied", "Gewerkschaftszugehörigkeit",
-        // Herkunft
-        "kurdisch", "türkischstämmig", "Migrationshintergrund", "Hautfarbe", "Asylbewerber", "Spätaussiedler", "Sinti",
-        // Sexualleben
-        "homosexuell", "schwul", "lesbisch", "bisexuell", "transgender", "transsexuell", "gleichgeschlechtlich", "Sexualleben",
-        "sexuelle Orientierung", "intersexuell",
-        // Strafdaten
-        "verurteilt", "Verurteilung", "vorbestraft", "Vorstrafe", "Straftat", "Ermittlungsverfahren", "Strafverfahren",
-        "Strafbefehl", "Haftstrafe", "Freiheitsstrafe", "Bewährung", "Untersuchungshaft", "Inhaftierung", "Strafanzeige",
-        "Betrug", "Diebstahl", "Körperverletzung", "Unterschlagung", "Steuerhinterziehung", "Bußgeldbescheid", "Führungszeugnis",
-        "Strafregister",
-        // Biometrie und Genetik
-        "Fingerabdruck", "Gentest", "genetisch", "Iris-Scan", "Gesichtserkennung", "Stimmprofil", "biometrisch",
-      ];
-      // Kurzformen: nur exakt (Grossschreibung), ohne Endungen
-      const SENSITIVE_EXACT = ["HIV", "AIDS", "ADHS", "PTBS", "COPD", "DNA", "CDU", "CSU", "SPD", "FDP", "AfD", "BSW", "GEW", "EVG", "NGG", "DGB", "GdP"];
-      const SENSITIVE_RX = [
-        new RegExp(
-          "(?<![A-Za-z0-9_\\u00C0-\\u024F])(?:" +
-            SENSITIVE_WORDS.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "[ \\t]+")).join("|") +
-            ")[A-Za-zäöüß]*",
-          "gi",
-        ),
-        new RegExp("(?<![A-Za-z0-9_\\u00C0-\\u024F])(?:" + SENSITIVE_EXACT.join("|") + ")(?![A-Za-z0-9_\\u00C0-\\u024F])", "g"),
-        /\bGdB[ \t]?\d{2,3}\b/g,
-        /\b\d{1,2}\.[ \t]?SSW\b/g,
-        /\b\d{1,2}[ \t]+Punkte?[ \t]+in[ \t]+Flensburg\b/gi,
-      ];
-      const ENTS = [
-        {
-          id: "email",
-          lbl: "E-Mail-Adressen",
-          desc: "Alle Formate",
-          col: "#06b6d4",
-          on: true,
-          pfx: "EMAIL",
-          rx: [
-            /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g,
-            /([a-zA-Z0-9._%+\-]+[ \t]*(?:\(at\)|\[at\]|\{at\}|\(ät\)|\[ät\])[ \t]*[a-zA-Z0-9\-]+(?:[ \t]*(?:\(dot\)|\[dot\]|\(punkt\)|\.)[ \t]*[a-zA-Z0-9\-]+)*[ \t]*(?:\(dot\)|\[dot\]|\(punkt\)|\.)[ \t]*[a-zA-Z]{2,})/g,
-          ],
-        },
-        {
-          id: "iban",
-          lbl: "IBAN / Bankdaten",
-          desc: "IBAN, Kontonummer, BLZ",
-          col: "#10b981",
-          on: true,
-          pfx: "IBAN",
-          rx: [
-            /\b([A-Za-z]{2}\d{2}[ \t]{1,3}[A-Za-z0-9]{4}(?![A-Za-z0-9])(?:[ \t]{1,3}(?=[A-Za-z0-9]{0,3}\d)[A-Za-z0-9]{4}(?![A-Za-z0-9])){1,6}(?:[ \t]{1,3}[\dO]{1,4}(?![A-Za-z0-9]))?)/g,
-            /\b([A-Za-z]{2}\d{2}[A-Za-z0-9]{11,30})\b/g,
-            /(Konto(?:nummer|nr\.?)?[\s:]+[\d\s]{6,18}\d)/gi,
-            /((?:BLZ|Bankleitzahl)[\s:]+\d{8})/gi,
-          ],
-        },
-        {
-          id: "card",
-          lbl: "Kreditkartennummern",
-          desc: "Visa, Mastercard, Amex u. a. (Prüfziffer wird geprüft)",
-          col: "#059669",
-          on: true,
-          pfx: "KARTE",
-          rx: [/\b((?:\d{4}[ \-]){3}\d{1,7}|\d{4}[ \-]\d{6}[ \-]\d{5}|\d{13,19})\b/g],
-        },
-        {
-          id: "device",
-          lbl: "Geräte-Kennungen",
-          desc: "MAC-Adresse, IMEI, UUID, Seriennummern",
-          col: "#475569",
-          on: true,
-          pfx: "GERAET",
-          rx: [
-            /(?<![0-9A-Fa-f:\-])((?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2})(?![0-9A-Fa-f:\-])/g,
-            /(?<![\d\-])(\d{2}[ \-]?\d{6}[ \-]?\d{6}[ \-]?\d)(?![\d\-])/g,
-            /\b([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\b/g,
-            /(?<=(?:Seriennummer|Serien-?Nr\.?|Gerät(?:e)?-?ID|Device-?ID|Geräte-?Nr\.?|IMEI|Chassis-?Nr\.?)[ \t:#]*)([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/g,
-          ],
-        },
-        {
-          id: "account",
-          lbl: "Benutzerkonten & Zugangsdaten",
-          desc: "Benutzernamen, @-Handles, Passwörter, API-Schlüssel, Token",
-          col: "#dc2626",
-          on: true,
-          pfx: "KONTO",
-          rx: [
-            /(?<![\w@.\/])(@[A-Za-z0-9_]{3,30})(?![\w@])/g,
-            /(?<![\w@.\/-])((?:t\.me|wa\.me|linkedin\.com\/in|instagram\.com|facebook\.com|x\.com|twitter\.com|xing\.com\/profile|tiktok\.com\/@)\/[A-Za-z0-9_.\-\/]{2,60})/gi,
-            /(?<=(?:Benutzer(?:name)?|User(?:name)?|Login|Nutzername|Account|Kennung)[ \t]*[:=][ \t]*)([A-Za-z0-9._\-@]{3,40})/g,
-            /(?<=(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer)[ \t]*[:=]?[ \t]*)(\S{4,64})/gi,
-            /\b((?:sk|pk|rk|api|key|tok|secret|ghp|gho|xox[abp])[-_][A-Za-z0-9_\-]{12,64})\b/g,
-            /\b(eyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,})\b/g,
-            /\b([0-9a-fA-F]{32}|[0-9a-fA-F]{40}|[0-9a-fA-F]{64})\b/g,
-          ],
-        },
-        {
-          id: "geo",
-          lbl: "Standortdaten",
-          desc: "GPS-Koordinaten (Dezimalgrad, Grad/Minuten/Sekunden)",
-          col: "#0d9488",
-          on: true,
-          pfx: "STANDORT",
-          rx: [
-            /(?<![\d.])(-?\d{1,2}\.\d{4,8}[ \t]*[,;][ \t]*-?\d{1,3}\.\d{4,8})(?![\d.])/g,
-            /(\d{1,3}°[ \t]?\d{1,2}['′][ \t]?\d{1,2}(?:[.,]\d+)?["″]?[ \t]?[NSOEW][ \t,;]*\d{1,3}°[ \t]?\d{1,2}['′][ \t]?\d{1,2}(?:[.,]\d+)?["″]?[ \t]?[NSOEW])/g,
-          ],
-        },
-        {
-          id: "intlid",
-          lbl: "Ausländische Kennungen",
-          desc: "Codice fiscale, PESEL, DNI/NIE, UK National Insurance, AHV, Postleitzahlen (UK, PL, NL)",
-          col: "#7c3aed",
-          on: true,
-          pfx: "KENNNR",
-          rx: [
-            /\b([A-Z]{6}\d{2}[A-EHLMPR-T]\d{2}[A-Z]\d{3}[A-Z])\b/g,
-            /(?<=PESEL[ \t:]*)(\d{11})\b/gi,
-            /\b(\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-HJ-NP-TV-Z])\b/g,
-            /\b([A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z][ ]?\d{2}[ ]?\d{2}[ ]?\d{2}[ ]?[A-D])\b/g,
-            /\b(756\.\d{4}\.\d{4}\.\d{2})\b/g,
-            /\b([A-Z]{1,2}\d[A-Z\d]?[ ]?\d[A-Z]{2})\b/g,
-            /(?<=(?:NIE|DNI|NIF|BSN|Burgerservicenummer|AHV-?Nr\.?|Sozialversicherungsnummer)[ \t:]*)([A-Z0-9][A-Z0-9.\- ]{6,16})/g,
-          ],
-        },
-        {
-          id: "bic",
-          lbl: "BIC / SWIFT-Codes",
-          desc: "Bankidentifikationscodes (8–11 Zeichen)",
-          col: "#0ea5e9",
-          on: true,
-          pfx: "BIC",
-          rx: [
-            /(?<=\b(?:BIC|SWIFT(?:-?Code)?|Bankkennung|Bankidentifikationscode)\s*[:\-]?\s*)([A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/g,
-            /\b([A-Z]{4}(?:AD|AE|AT|AU|BE|BG|BR|CA|CH|CY|CZ|DE|DK|EE|EG|ES|FI|FR|GB|GR|HR|HU|ID|IE|IL|IN|IS|IT|JP|KR|LI|LT|LU|LV|MT|MX|MY|NL|NO|NZ|PL|PT|RO|RS|RU|SA|SE|SG|SI|SK|TH|TR|TW|UA|US|ZA)[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/g,
-          ],
-        },
-        {
-          id: "phone",
-          lbl: "Telefonnummern",
-          desc: "Tel., Fax, Mobil — alle deutschen Formate",
-          col: "#f97316",
-          on: true,
-          pfx: "TEL",
-          rx: [
-            /((?:Tel(?:efon)?\.?(?:[ \-]?(?:Nr|Nummer)\.?)?|Fon|Fax|Mobil(?:e|funk)?|Handy|Rufnummer|Durchwahl|Zentrale)[\s:\.]*(?:\+|00)?\d[\d\s\-\(\)\/\.]{6,24})/gi,
-            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\(?\d{1,5}\)?(?:[ \t\-\.\/]?\d{2,8}){1,3})(?!\d)/g,
-            /(?<![\d\/\-\.])(\(?0[1-9]\d{1,4}\)?[ \t\/\-\.]?\d{2,10}(?:[ \t\-\.]\d{1,6}){0,3})(?!\d)/g,
-            /\b((?:(?:null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun)[ ,\-]+){6,}(?:null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun))\b/gi,
-          ],
-        },
-        {
-          id: "money",
-          lbl: "Geldbeträge",
-          desc: "EUR, USD, CHF, GBP",
-          col: "#14b8a6",
-          on: true,
-          pfx: "BETRAG",
-          rx: [
-            /(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?\s*(?:EUR|Euro|€|USD|\$|CHF|GBP|£))/g,
-            /((?:EUR|€|USD|\$|CHF|GBP|£)\s*\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/g,
-          ],
-        },
-        {
-          id: "date",
-          lbl: "Geburts- & Vertragsdaten",
-          desc: "Geburtstag, Vertragsdatum, Fristen",
-          col: "#ec4899",
-          on: true,
-          pfx: "DATUM",
-          rx: [
-            /((?:geb(?:oren)?\.?|Geburtsdatum|geboren am|geb\. am)[\s:]*\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{2,4})/gi,
-            /\b(\d{1,2}\.\d{1,2}\.(?:19|20)\d{2})\b/g,
-            /\b(\d{4}-\d{2}-\d{2})\b/g,
-            /\b(\d{1,2}\/\d{1,2}\/(?:19|20)\d{2})\b/g,
-            /\b(\d{1,2}\.?[ \t]+(?:Januar|Februar|März|Maerz|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|Jan\.|Feb\.|Mär\.|Apr\.|Jun\.|Jul\.|Aug\.|Sept?\.|Okt\.|Nov\.|Dez\.|January|February|March|May|June|July|October|December)[ \t]+(?:19|20)\d{2})\b/g,
-          ],
-        },
-        {
-          id: "taxid",
-          lbl: "Steuer-, Ausweis- & Wertpapiernummern",
-          desc: "StNr, USt-ID, WKN, ISIN, Aktenzeichen, HR",
-          col: "#84cc16",
-          on: true,
-          pfx: "KENNNR",
-          rx: [
-            /((?:Steuer(?:nummer|-?nr\.?|-?id(?:nr\.?)?|liche[rn]?[ \t]+Identifikationsnummer)|Identifikationsnummer|IdNr\.?|StNr\.?|St\.-?Nr\.?|TIN)[ \t:]*[\d \t\/\-]{8,18})/gi,
-            /((?:USt\.?-?Id(?:Nr\.?)?|Umsatzsteuer-?ID|VAT)[\s:]*[A-Z]{0,2}\d{7,12})/gi,
-            /((?:Personalausweis(?:nummer)?|Reisepass(?:nummer)?|Ausweis(?:nummer)?|Pass-?Nr\.?|Führerschein(?:nummer)?|FS-?Nr\.?|Aufenthaltstitel(?:-?Nr\.?)?)[ \t:]*[A-Z0-9]{6,14})/gi,
-            /(?<=(?:Kunden|Vertrags|Mitarbeiter|Personal|Matrikel|Versicherungs|Policen|Mandanten|Patienten|Fall|Antrags|Referenz|Bestell|Konto|Teilnehmer|Mitglieds|Lizenz|Buchungs|Sendungs|Ticket)-?(?:nummer|nr\.?|no\.?|id)[ \t:#]*)([A-Za-z0-9][A-Za-z0-9\-\/\.]{3,24})/gi,
-            /(HR[AB]\s*(?:Nr\.?\s*)?\d{3,8})/g,
-            /((?:Aktenzeichen|Az\.?)[\s:]+(?:\d{1,4}\s+[A-Z]{1,5}\s+)?[\w\/\.\-]{2,30})/g,
-            /\b(\d{1,3}\s+[A-Z]{1,5}\s+\d{3,6}\/\d{2,4})\b/g,
-            /\b(\d{1,3}[ \t]?(?:Js|Ds|Cs|Gs|Ls|Ns|OWi|StVK|KLs|VRs)[ \t]?\d{1,6}\/\d{2})\b/g,
-            /\b((?:Js|Ds)[ \t]?\d{1,6}\/\d{2})\b/g,
-            /((?:Sozialversicherungs(?:nummer|nr\.?)?|SV-?(?:Nr|Nummer)\.?|Rentenversicherungs(?:nummer|nr\.?)|RVNR|SVNR)[ \t:]*\d{2}[ \t\-]?\d{6}[ \t\-]?[A-Z][ \t]?\d{3})/gi,
-            /((?:ISIN|WKN)[\s:]+[A-Z0-9]{6,12})/gi,
-            /(Steuerberater(?:-?Nr\.?|nummer)[\s:]*[\d\/\-]{5,15})/gi,
-            /(PZN[ \t:]*\d{7,8})/gi,
-            /((?:Versicherten(?:nummer|-Nr\.?)|Versicherten-?Nr\.?|Mitglieds-?Nr\.?|KV-Karte-Nr\.?|Betriebsstätten-?Nr\.?)[ \t:]*[A-Z0-9\-]{5,20})/gi,
-            /\b(SN-\d{4}-\d{4,5})\b/g,
-            /\b([A-Z]{3,4}-\d{4,5}-\d{4,5})\b/g,
-            /\b([A-Z]{2,4}-[A-Z]{2}-\d{5}-\d{4})\b/g,
-          ],
-        },
-        {
-          id: "org",
-          lbl: "Firmen & Organisationen",
-          desc: "GmbH, AG, KG, Kanzleien, Praxen",
-          col: "#8b5cf6",
-          on: true,
-          pfx: "ORG",
-          rx: [
-            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖ][A-Za-züäöÄÖÜß&\.\-]{1,30}(?:[ \t]+[A-Za-züäöÄÖÜß&\.\-]{1,30}){0,4}[ \t]+(?:GmbH(?:[ \t]*&[ \t]*Co\.?[ \t]*KG)?|AG|KGaA|KG|OHG|GbR|UG(?:[ \t]*\(haftungsbeschränkt\))?|e\.V\.|eG|SE|Stiftung|Ltd\.?|Inc\.?|Corp\.?|PartG|PartGmbB|Partnerschaft))\b/g,
-            /((?:Kanzlei|Rechtsanwaltskanzlei|Steuerberatung|Wirtschaftsprüfung|Notariat|Notarkanzlei|Praxis|Arztpraxis)[ \t]+[A-ZÜÄÖ][A-Za-züäöß &\.\-]{2,50})/g,
-            /((?:Amtsgericht|Landgericht|Oberlandesgericht|Bundesgerichtshof|Verwaltungsgericht|Finanzgericht|Sozialgericht|Arbeitsgericht)[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,35})/g,
-            /((?:Finanzamt|Bundesministerium|Bundesamt|Landesamt|Stadtverwaltung)[ \t]+(?:der|des|für|von)?[ \t]*[A-ZÜÄÖ][A-Za-züäöß \-]{2,40})/g,
-            /((?:Universität|Fachhochschule|Klinikum|Krankenhaus|Stadtsparkasse|Kreissparkasse|Sparkasse|Volksbank|Raiffeisenbank|IHK|Rechtsanwaltskammer|Ärztekammer|Reha-Klinik|Apotheke|Sanitätshaus)[ \t]+[A-ZÜÄÖ][A-Za-züäöß \-]{3,40})/g,
-          ],
-        },
-        {
-          id: "addr",
-          lbl: "Adressen",
-          desc: "Straße, Hausnummer, PLZ, Ort",
-          col: "#3b82f6",
-          on: true,
-          pfx: "ADRESSE",
-          rx: [
-            /(?<=(?:Geburtsort|Wohnort|Standort|Einsatzort|Tatort)[ \t]*[:=][ \t]*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ.\- ]{2,40}?)(?=[,;\n]|$)/g,
-            /(\b\d{1,4}[a-z]?,?[ \t]+(?:rue|avenue|boulevard|av\.|bd|impasse|chemin)[ \t]+(?:de[ \t]+(?:la[ \t]+)?|du[ \t]+|des[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30})/g,
-            /(\b(?:via|viale|piazza|corso|vicolo)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
-            /(\b(?:calle|avenida|paseo|plaza|c\/)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4})/g,
-            /(\bul\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
-            /(\b\d{1,4}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?[ \t]+(?:Street|Road|Lane|Avenue|Drive|Way|Close|Square|Gardens)\b)/g,
-            /(\b\d{2}-\d{3}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}|(?<=,[ \t]*)\d{5}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?=[ \t]*(?:\.|$)))/g,
-            /([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*(?:[A-Z]{1,2}-)?\d{4,5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
-            /([A-ZÜÄÖ][a-züäöß \-]+(?:stra(?:ß|ss)e|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
-            /(\b\d{5}[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,28})\b/g,
-            /(\b[A-Z]{1,2}-\d{4}[ \t]+[A-ZÜÄÖ][a-züäöß\-]{2,25})\b/g,
-          ],
-        },
-        {
-          id: "vehicle",
-          lbl: "Kfz-Kennzeichen & Fahrgestellnummern",
-          desc: "Amtliche Kennzeichen, FIN/VIN",
-          col: "#64748b",
-          on: true,
-          pfx: "KFZ",
-          rx: [
-            /(?<=(?:Kennzeichen|Kfz-Kennzeichen|Fahrzeug|Pkw|PKW|Lkw|LKW)[ \t:]*)([A-ZÄÖÜ]{1,3}[ \t\-]{1,2}[A-Z]{1,2}[ \t\-]?\d{1,4}[EH]?)\b/g,
-            /\b((?!DIN|ISO|ENV|SAE|TÜV|ICD|ITU|RFC|BGB|SGB|StGB|ZPO|HGB|AEO|EN)[A-ZÄÖÜ]{1,3}-[A-Z]{1,2}[ \t]?\d{1,4}[EH]?)\b/g,
-            /(?<=(?:Fahrgestellnummer|FIN|VIN)[ \t:\.]*)([A-HJ-NPR-Z0-9]{17})\b/g,
-            /\b([A-HJ-NPR-Z][A-HJ-NPR-Z0-9]{10}\d{6})\b/g,
-          ],
-        },
-        {
-          id: "name",
-          lbl: "Personen-Namen",
-          desc: "Vor-/Nachname, Titel, Anrede",
-          col: "#f59e0b",
-          on: true,
-          pfx: "NAME",
-          rx: [
-            /(?:Herr|Frau|Hr\.|Fr\.)[ \t]+((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Phys|Math|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|M\.A\.|BSc|B\.Sc\.|BA|B\.A\.|PhD|MD|RA|RAin|StB|WP|Notar(?:in)?)\.?[ \t]+)*(?:(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,3})/g,
-            /((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Math|Phys|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|PhD|MD)\.?[ \t]+){1,3}[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:[ \t]+[A-Z]\.)?(?:(?:[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?)?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,2})/g,
-            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}[ \t]+[A-Z]\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})(?![A-Za-z0-9_À-ɏ])/g,
-            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
-            /(?:(?:von|bei|durch|für|an|mit|als|gezeichnet|unterzeichnet|unterschrieben|verantwortlich|zuständig|bearbeitet|gesendet|erstellt|geprüft|genehmigt|kontaktiere(?:n|n Sie)?)\s+)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})/g,
-            /(?:(?:Mit freundlichen Grüßen|Mit freundlichem Gruß|Hochachtungsvoll|Viele Grüße|Liebe Grüße|Beste Grüße|Herzliche Grüße|Freundliche Grüße|Mit besten Grüßen|MfG|LG|VG|Best regards|Sincerely|Yours sincerely)\s*\n*\s*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})/g,
-            /(?:Sehr geehrte(?:r)?\s+(?:Herr|Frau|Hr\.|Fr\.)\s+(?:(?:Dr|Prof|Ing|Mag)\.?\s+)*([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+(?:[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})){0,2}))/g,
-            /(?<=[^\n\s][ \t])((?:[A-HJ-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
-            /(?:^|\n)[ \t]*((?:[J-UWYZ]\.[ \t]?){1,2}[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/g,
-            /(?<![A-Za-z0-9_À-ɏ])([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?[ \t]+[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,}(?:-[A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
-            /(?<=\b(?:Vorname|Nachname|Familienname|Geburtsname|Mädchenname|Rufname|Künstlername|Name|Namen|Unterzeichner|Antragsteller(?:in)?|Patient(?:in)?|Versicherte[rn]?)[ \t]*[:=][ \t]*)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})?)/g,
-            /(?<=\b(?:geboren|geb\.)[ \t]+)([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![\w.])/g,
-            /(?:i\.(?:A|V)\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2})|ppa\.?\s+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}){0,2}))/g,
-            /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
-          ],
-        },
-        {
-          id: "paragraf",
-          lbl: "§-Paragraphen & Gesetze",
-          desc: "Gesetzliche Referenzen: § 288 BGB, § 14 RVG",
-          col: "#6366f1",
-          on: false,
-          pfx: "PARAGRAF",
-          rx: [/(§+[ \t]*\d+[a-z]?(?:[ \t]+Abs\.?[ \t]*\d+)?(?:[ \t]+[A-Z][A-Za-z]{1,15}\.?){0,3})/g],
-        },
-        {
-          id: "role",
-          lbl: "Funktionen & Rollen",
-          desc: "Vorstand, Geschäftsführer, Abteilungen",
-          col: "#a855f7",
-          on: false,
-          pfx: "ROLLE",
-          rx: [
-            /((?:Vorstand(?:svorsitzende[rm]?)?|Geschäftsführer(?:in)?|GF|Abteilungsleiter(?:in)?|Bereichsleiter(?:in)?|Teamleiter(?:in)?|Prokurist(?:in)?|Direktor(?:in)?|Präsident(?:in)?|Justiziar(?:in)?|Syndikusanwalt|Rechtsanwalt|Rechtsanwältin|Fachanwalt|Fachanwältin|Notar|Notarin|Richter(?:in)?|Staatsanwalt(?:in)?|Bevollmächtigte[rm]?|Inhaber(?:in)?|Eigentümer(?:in)?|Gesellschafter(?:in)?|Managing Director|CEO|CFO|COO|CTO|Head of)[ \t]+(?:der|des|von)?[ \t]*[A-ZÜÄÖ][a-züäöß\-]{2,}(?:[ \t]+[A-ZÜÄÖ][a-züäöß\-]{2,})?)/g,
-            /((?:Abteilung|Bereich|Referat|Stabsstelle|Geschäftsbereich|Fachbereich|Sachgebiet|Team|Büro|Sekretariat)[ \t]+[A-ZÜÄÖ][A-Za-züäöß \-\.]{3,50})/g,
-          ],
-        },
-        {
-          id: "ip",
-          lbl: "IP-Adressen & Weblinks",
-          desc: "IPv4, IPv6, Weblinks mit Pfad oder Parametern",
-          col: "#6366f1",
-          on: false,
-          pfx: "IP",
-          rx: [
-            /(?<![\d.])(?<!(?:Version|Ver\.|Build|Release|Rev\.?|v|V)[ \t]*)((?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?!\d|\.\d)/g,
-            /(?<![\w:])((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:(?:[0-9a-fA-F]{1,4})?|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})(?![\w:])/g,
-            /(https?:\/\/[^\s<>"{}|\\^`\[\]\)\(,;]{4,}[^\s<>"{}|\\^`\[\]\)\(,;.:!?])/g,
-            /(?<![\w@.\/-])(www\.[a-z0-9\-]+(?:\.[a-z0-9\-]+)+(?:\/[^\s<>"{}|\\^`\[\]\)\(,;]*[^\s<>"{}|\\^`\[\]\)\(,;.:!?])?)/gi,
-          ],
-        },
-        {
-          id: "sensitive",
-          lbl: "Besondere Kategorien (Art. 9/10 DSGVO)",
-          desc: "Gesundheit, Medikamente, Religion, Gewerkschaft, Partei, Herkunft, Sexualleben, Strafdaten (Begriffslisten)",
-          col: "#be123c",
-          on: false,
-          pfx: "SENSIBEL",
-          rx: SENSITIVE_RX,
-        },
-        {
-          id: "med",
-          lbl: "Medizinische Daten",
-          desc: "Diagnosen, ICD-Codes, Patientendaten",
-          col: "#f43f5e",
-          on: false,
-          pfx: "MEDIZIN",
-          rx: [
-            /((?:Diagnose|Befund|ICD-1[01]|Erkrankung|Symptom|Medikation|Therapie)[\s:][^\n]{5,80})/gi,
-            /\b([A-Z]\d{2}(?:\.\d{1,2})?)\b/g,
-            /((?:Patient(?:in)?|Pat\.?)[ \t:]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]+){0,3})/g,
-          ],
-        },
-      ];
-      const SW = new Set([
-        "Millionen",
-        "Milliarden",
-        "Euro",
-        "Prozent",
-        "Deutschland",
-        "Deutschlands",
-        "Österreich",
-        "Schweiz",
-        "Europa",
-        "Zentrale",
-        "Die",
-        "Der",
-        "Das",
-        "Ein",
-        "Eine",
-        "Und",
-        "Oder",
-        "Aber",
-        "Mit",
-        "Bei",
-        "Von",
-        "Zu",
-        "Zur",
-        "Zum",
-        "Sehr",
-        "Gerne",
-        "Bitte",
-        "Danke",
-        "Herr",
-        "Frau",
-        "Liebe",
-        "Lieber",
-        "Geehrte",
-        "Geehrter",
-        "Hiermit",
-        "Bezug",
-        "Anlage",
-        "Betreff",
-        "Datum",
-        "Ort",
-        "Ihre",
-        "Ihrer",
-        "Ihrem",
-        "Ihren",
-        "Nach",
-        "Vor",
-        "Auf",
-        "Aus",
-        "Sie",
-        "Wir",
-        "Ich",
-        "Er",
-        "Es",
-        "An",
-        "Im",
-        "In",
-        "Am",
-        "Bis",
-        "Dem",
-        "Den",
-        "Des",
-        "Wert",
-        "Tag",
-        "Monat",
-        "GmbH",
-        "AG",
-        "KG",
-        "OHG",
-        "UG",
-        "eV",
-        "SE",
-        "Inc",
-        "Ltd",
-        "Corp",
-        "Seite",
-        "Anlage",
-        "Hochachtungsvoll",
-        "Freundlichen",
-        "Sehr",
-        "Guten",
-        "Januar",
-        "Februar",
-        "März",
-        "April",
-        "Juni",
-        "Juli",
-        "August",
-        "September",
-        "Oktober",
-        "November",
-        "Dezember",
-        "Montag",
-        "Dienstag",
-        "Mittwoch",
-        "Donnerstag",
-        "Freitag",
-        "Samstag",
-        "Sonntag",
-        "Diese",
-        "Dieser",
-        "Dieses",
-        "Diesem",
-        "Diesen",
-        "Solche",
-        "Solcher",
-        "Solches",
-        "Welche",
-        "Welcher",
-        "Welches",
-        "Alle",
-        "Alles",
-        "Allen",
-        "Aller",
-        "Beide",
-        "Kein",
-        "Keine",
-        "Keiner",
-        "Keines",
-        "Keinem",
-        "Keinen",
-        "Mein",
-        "Meine",
-        "Meiner",
-        "Meines",
-        "Dein",
-        "Deine",
-        "Sein",
-        "Seine",
-        "Ihr",
-        "Ihnen",
-        "Unser",
-        "Unsere",
-        "Schon",
-        "Noch",
-        "Nur",
-        "Auch",
-        "Immer",
-        "Nie",
-        "Niemals",
-        "Jeder",
-        "Jedes",
-        "Jeden",
-        "Jede",
-        "Dies",
-        "Sage",
-        "Sagen",
-        "Erste",
-        "Zweite",
-        "Dritte",
-        "Vierte",
-        "Fünfte",
-        "Sechste",
-        "Siebte",
-        "Achte",
-        "Neunte",
-        "Zehnte",
-        "Etwas",
-        "Nichts",
-        "Viel",
-        "Wenig",
-        "Viele",
-        "Wenige",
-        "Manche",
-        "Mancher",
-        "Manches",
-        "Finden",
-        "Suchen",
-        "Haben",
-        "Sein",
-        "Werden",
-        "Können",
-        "Müssen",
-        "Wollen",
-        "Dürfen",
-        "Sollen",
-        "Mögen",
-        "Tun",
-        "Machen",
-        "Weil",
-        "Denn",
-        "Obwohl",
-        "Während",
-        "Seitdem",
-        "Sobald",
-        "Solange",
-        "Bevor",
-        "Nachdem",
-        "Sodass",
-        "Weiter",
-        "Weitere",
-        "Weiterer",
-        "Weiteres",
-        "Folgende",
-        "Folgender",
-        "Folgendes",
-        "Folgen",
-        "Nachfolgend",
-        "Durch",
-        "Gegen",
-        "Ohne",
-        "Um",
-        "Entlang",
-        "Laut",
-        "Wegen",
-        "Trotz",
-        "Statt",
-        "Innerhalb",
-        "Außerhalb",
-        "Oben",
-        "Unten",
-        "Links",
-        "Rechts",
-        "Hinten",
-        "Vorn",
-        "Vorne",
-        "Mitte",
-        "Neben",
-        "Zwischen",
-        "Hinter",
-        "Über",
-        "Unter",
-        "Gut",
-        "Gute",
-        "Guter",
-        "Gutes",
-        "Schlecht",
-        "Schlechte",
-        "Groß",
-        "Große",
-        "Klein",
-        "Kleine",
-        "Hoch",
-        "Hohe",
-        "Niedrig",
-        "Niedrige",
-        "Neu",
-        "Neue",
-        "Neuer",
-        "Neues",
-        "Alt",
-        "Alte",
-        "Alter",
-        "Jung",
-        "Junge",
-        "Junger",
-        "Aktuell",
-        "Aktuelle",
-        "Wichtig",
-        "Wichtige",
-        "Wichtiger",
-        "Möglich",
-        "Mögliche",
-        "Möglicher",
-        "Verschieden",
-        "Verschiedene",
-        "Sowie",
-        "Einschließlich",
-        "Exklusive",
-        "Inklusive",
-        "Beispielsweise",
-        "Zusätzlich",
-        "Grundsätzlich",
-        "Insbesondere",
-        "Hinsichtlich",
-        "Bezüglich",
-        "Betreffend",
-        "Stand",
-        "Gemäß",
-        "Anhand",
-        "Mithilfe",
-        "Zugunsten",
-        "Zulasten",
-        "Mittels",
-        "Kraft",
-        "Mangels",
-        "Seitens",
-        "Seit",
-        "Ab",
-        "Außer",
-        "Zahlung",
-        "Leistung",
-        "Lieferung",
-        "Rechnung",
-        "Auftrag",
-        "Bestellung",
-        "Vertrag",
-        "Vereinbarung",
-        "Firma",
-        "Unternehmen",
-        "Abteilung",
-        "Bereich",
-        "Projekt",
-        "Kunde",
-        "Kunden",
-        "Lieferant",
-        "Partner",
-        "Mitarbeiter",
-        "Sollte",
-        "Könnte",
-        "Würde",
-        "Hätte",
-        "Müsste",
-        "Dürfte",
-        "Bereits",
-        "Bisher",
-        "Bislang",
-        "Zuvor",
-        "Danach",
-        "Darauf",
-        "Davor",
-        "Seither",
-        "Fortan",
-        "Künftig",
-        "Deshalb",
-        "Deswegen",
-        "Daher",
-        "Folglich",
-        "Somit",
-        "Also",
-        "Nämlich",
-        "Schließlich",
-        "Letztlich",
-        "Zwar",
-        "Allerdings",
-        "Jedoch",
-        "Dennoch",
-        "Trotzdem",
-        "Gleichwohl",
-        "Indessen",
-        "Eher",
-        "Eben",
-        "Genau",
-        "Gerade",
-        "Ausdrücklich",
-        "Explizit",
-        "Implizit",
-        "Ergebnis",
-        "Ergebnisse",
-        "Zusammenfassung",
-        "Fazit",
-        "Resümee",
-        "Ziel",
-        "Ziele",
-        "Mindestens",
-        "Maximal",
-        "Circa",
-        "Etwa",
-        "Rund",
-        "Knapp",
-        "Bitte",
-        "Danke",
-        "Vielen",
-        "Dank",
-        "Gruß",
-        "Grüße",
-        "Telefon",
-        "Telefonisch",
-        "Mündlich",
-        "Schriftlich",
-        "Persönlich",
-        "Elektronisch",
-        "Digital",
-        "Bank",
-        "Konto",
-        "Kredit",
-        "Darlehen",
-        "Hypothek",
-        "Sparplan",
-        "Investition",
-        "Portfolio",
-        "Produkt",
-        "Dienstleistung",
-        "Service",
-        "Support",
-        "Hilfe",
-        "Kontakt",
-        "Adresse",
-        "Woche",
-        "Monat",
-        "Jahr",
-        "Jahre",
-        "Jahren",
-        "Heute",
-        "Morgen",
-        "Gestern",
-        "Übermorgen",
-        "Vorgestern",
-        "Nächste",
-        "Nächster",
-        "Nächstes",
-        "Letzte",
-        "Letzter",
-        "Letztes",
-        "Menge",
-        "Summe",
-        "Gesamt",
-        "Teil",
-        "Teilbetrag",
-        "Raten",
-        "Rate",
-        "Zins",
-        "Zinsen",
-        "Tilgung",
-        "Bekannt",
-        "Bekannte",
-        "Bekannter",
-        "Öffentlich",
-        "Privat",
-        "Vertraulich",
-        "Geheim",
-        "Intern",
-        "Technische",
-        "Technischer",
-        "Technisches",
-        "Rechtliche",
-        "Rechtlicher",
-        "Rechtliches",
-        "Steuerliche",
-        "Steuerlicher",
-        "Gegenstand",
-        "Umfang",
-        "Dauer",
-        "Laufzeit",
-        "Beginn",
-        "Ende",
-        "Frist",
-        "Fristen",
-        "Termin",
-        "Termine",
-        "Kosten",
-        "Preis",
-        "Preise",
-        "Gebühr",
-        "Gebühren",
-        "Honorar",
-        "Vergütung",
-        "Entgelt",
-        "Sachverhalt",
-        "Schreiben",
-        "Partei",
-        "Parteien",
-        "Person",
-        "Personen",
-        "Vorstand",
-        "Compliance",
-        "Global",
-        "Mandant",
-        "Mandantin",
-        "Geburtsdatum",
-        "Kapitalanlage",
-        "Kapitalanlagen",
-        "Wertpapierabrechnung",
-        "Steuerbescheinigung",
-        "Korrespondenz",
-        "Vermögensverwaltung",
-        "Investment",
-        "Fachanwalt",
-        "Fachanwältin",
-        "Vertraulichkeitshinweis",
-        "Vertraulichkeit",
-        "Sachbearbeiter",
-        "Sachbearbeiterin",
-        "Prozessvertreter",
-        "Zeuge",
-        "Zeugin",
-        "Rahmen",
-        "Höhe",
-        "Aussicht",
-        "Folgenden",
-        "Vertragsschluss",
-        "Rahm",
-        "Umstand",
-        "Umstände",
-        "Hinsicht",
-        "Grundlage",
-        "Grundlagen",
-        "Anlass",
-        "Zusammenhang",
-        "Zusammenhänge",
-        "Name",
-        "Namen",
-        "Nummer",
-        "Nummern",
-        "Bezeichnung",
-        "Funktion",
-        "Funktionen",
-        "Klasse",
-        "Klassen",
-        "Wert",
-        "Werte",
-        "Status",
-        "Einheit",
-        "Einheiten",
-        "Beschreibung",
-        "Kategorie",
-        "Kategorien",
-        "Bemerkung",
-        "Bemerkungen",
-        "Position",
-        "Positionen",
-        "Summe",
-        "Betrag",
-        "Beträge",
-        "Antrag",
-        "Anträge",
-        "Klage",
-        "Klagen",
-        "Recht",
-        "Rechte",
-        "Pflicht",
-        "Pflichten",
-        "Anspruch",
-        "Ansprüche",
-        "Vereinbarung",
-        "Vereinbarungen",
-        "Regelung",
-        "Regelungen",
-        "Bestimmung",
-        "Bestimmungen",
-        "Verpflichtung",
-        "Verpflichtungen",
-        "Leistungspflicht",
-        "Leistung",
-        "Leistungen",
-        "Schadensersatz",
-        "Schadenersatz",
-        "Schaden",
-        "Schäden",
-        "Haftung",
-        "Haftungen",
-        "Verfahren",
-        "Verfahrens",
-        "Verhandlung",
-        "Verhandlungen",
-        "Urteil",
-        "Urteile",
-        "Beschluss",
-        "Beschlüsse",
-        "Entscheidung",
-        "Entscheidungen",
-        "Bescheid",
-        "Bescheide",
-        "Einspruch",
-        "Einsprüche",
-        "Widerspruch",
-        "Widersprüche",
-        "Berufung",
-        "Revision",
-        "Kläger",
-        "Klägerin",
-        "Beklagte",
-        "Beklagter",
-        "Klägerseite",
-        "Beklagtenseite",
-        "Erstattung",
-        "Erstattungen",
-        "Rückzahlung",
-        "Rückzahlungen",
-        "Rückforderung",
-        "Abrechnung",
-        "Abrechnungen",
-        "Aufstellung",
-        "Aufstellungen",
-        "Vollmacht",
-        "Vollmachten",
-        "Bestellung",
-        "Bestellungen",
-        "Auftrag",
-        "Aufträge",
-        "Geschäftsjahr",
-        "Geschäftsjahre",
-        "Haushaltsjahr",
-        "Wirtschaftsjahr",
-        "Gesellschaft",
-        "Gesellschaften",
-        "Gesellschafter",
-        "Gesellschafterin",
-        "Kapital",
-        "Kapitalerhöhung",
-        "Kapitalherabsetzung",
-        "Stammkapital",
-        "Grundkapital",
-        "Gewinn",
-        "Verlust",
-        "Dividende",
-        "Ausschüttung",
-        "Rücklage",
-        "Rücklagen",
-        "Protokoll",
-        "Protokolle",
-        "Bericht",
-        "Berichte",
-        "Gutachten",
-        "Stellungnahme",
-        "Rechtsanwalt",
-        "Rechtsanwältin",
-        "Notar",
-        "Notarin",
-        "Richter",
-        "Richterin",
-        "Kanzlei",
-        "Sozietät",
-        "Praxis",
-        "Institut",
-        "Verein",
-        "Verband",
-        "Verbände",
-        "Bundesrepublik",
-        "Freistaat",
-        "Bundesland",
-        "Bundesrat",
-        "Bundestag",
-        "Sitz",
-        "Gesellschaftsrecht",
-        "Kapitalmarktrecht",
-        "Steuerrecht",
-        "Arbeitsrecht",
-        "Familienrecht",
-        "Erbrecht",
-        "Mietrecht",
-        "Strafrecht",
-        "Handelsrecht",
-        "Verwaltungsrecht",
-        "Sozialrecht",
-        "Insolvenzrecht",
-        "Baurecht",
-        "Medizinrecht",
-        "Versicherungsrecht",
-        "Wettbewerbsrecht",
-        "Urheberrecht",
-        "Markenrecht",
-        "Patentrecht",
-        "Vergaberecht",
-        "Datenschutzrecht",
-        "Wirtschaftsrecht",
-        "Bankrecht",
-        "Vertragsrecht",
-        "Zivilrecht",
-        "Prozessrecht",
-        "Station",
-        "Zimmer",
-        "Hauptdiagnose",
-        "Nebendiagnose",
-        "Nebendiagnosen",
-        "Diagnose",
-        "Diagnosen",
-        "Allergien",
-        "Allergie",
-        "Medikation",
-        "Entlassung",
-        "Aufnahme",
-        "Befund",
-        "Befunde",
-        "Epikrise",
-        "Anamnese",
-        "Sozialanamnese",
-        "Pflegebericht",
-        "Pflegegrad",
-        "Verteiler",
-        "Original",
-        "Kopie",
-        "Laborwerte",
-        "Referenzbereich",
-        "Parameter",
-        "Blutgruppe",
-        "Rhesus",
-        "Verschluss",
-        "Stenose",
-        "Implantation",
-        "Echokardiographie",
-        "Sinusrhythmus",
-        "Empfehlung",
-        "Überweisung",
-        "Kontrolle",
-        "Patient",
-        "Patientin",
-        "Hausarzt",
-        "Hausärztin",
-        "Oberarzt",
-        "Oberärztin",
-        "Chefarzt",
-        "Chefärztin",
-        "Notarzt",
-        "Notärztin",
-        "Facharzt",
-        "Fachärztin",
-        "Internist",
-        "Internistin",
-        "Kardiologie",
-        "Psychosomatik",
-        "Diätassistentin",
-        "Diätassistent",
-        "Pflegefachkraft",
-        "Ehefrau",
-        "Ehemann",
-        "Arterielle",
-        "Reaktive",
-        "Sofortige",
-        "Regionale",
-        "Leichte",
-        "Selbstständiger",
-        "Selbstständige",
-        "Behandelnder",
-        "Behandelnde",
-        "Patienteneigene",
-        "Verschriebene",
-        "Kontinuierliches",
-        "Kontinuierliche",
-        "Psychokardiologische",
-        "Kardiologische",
-        "Diabetologische",
-        "Fiktives",
-        "Fiktive",
-        "Innere",
-        "Anaphylaktischer",
-        "Anaphylaktische",
-        "Übelkeit",
-        "Todesangst",
-        "Körperpflege",
-        "Hypertonie",
-        "Mitralinsuffizienz",
-        "Anpassungsstörung",
-        "Wandbewegungsstörung",
-        "Glukosemonitoring",
-        "Schwerpunktpraxis",
-        "Hausarztpraxis",
-        "Gemeinschaftspraxis",
-        "Bankverbindung",
-        "Schock",
-        "Ödem",
-        "Infarkt",
-        "Stenose",
-        "Insuffizienz",
-        "Störung",
-        "Rhythmus",
-        "Fibrillation",
-        "Monitoring",
-        "Implantation",
-        "Kontrolle",
-        "Überwachung",
-        "Untersuchung",
-        "Behandlung",
-        "Medizin",
-        "Chirurgie",
-        "Neurologie",
-        "Orthopädie",
-        "Radiologie",
-        "Pädiatrie",
-        "Geriatrie",
-        "Urologie",
-        "Onkologie",
-        "Hämatologie",
-        "Gastroenterologie",
-        "Pneumologie",
-        "Nephrologie",
-        "Rehabilitation",
-        "Intensivstation",
-        "Notaufnahme",
-        "Ambulanz",
-        "Physiotherapie",
-        "Allergie",
-        "Allergien",
-        "Acetylsalicylsäure",
-        "Penicillin",
-        "Kontrastmittel",
-        "Urtikaria",
-        "Dyspnoe",
-        "Tachykardie",
-        "Bradykardie",
-        "Palpitation",
-        "Demodokument",
-        "Testdokument",
-        "Pflege",
-        "Klinik",
-        "Bayern",
-        "Arzt",
-        "Ärztin",
-        "Arztbrief",
-        "Entlassungsbericht",
-        "Epikrise",
-        "Angst",
-        "Befund",
-        "Zugang",
-        "Leiste",
-        "Zustand",
-        "Wunde",
-        "Narbe",
-        "Steuerberater",
-        "Steuerberaterin",
-        "Steuerberatungsgesellschaft",
-        "Berufsunfähigkeit",
-        "Berufsunfähigkeitsversicherung",
-        "Psychischer",
-        "Psychische",
-        "Psychisches",
-        "Psychischen",
-        "Mitbetreuung",
-        "Hilfsmittel",
-        "Geräte",
-        "Kompressionsstrümpfe",
-        "Kompressionsstrümpfen",
-        "Verlaufskontrolle",
-        "Wundkontrolle",
-        "Labor",
-        "Kontrolle",
-        "Kontrollen",
-        "Medtronic",
-        "Dexcom",
-        "Insulinpumpe",
-        "Schrittmacher",
-        "Senior",
-        "Junior",
-        "Trainee",
-        "Praktikant",
-        "Praktikantin",
-        "Werkstudent",
-        "Werkstudentin",
-        "Geschäftsführer",
-        "Geschäftsführerin",
-        "Prokurist",
-        "Prokuristin",
-        "Aufsichtsrat",
-        "Beirat",
-        "Filialleiter",
-        "Filialleiterin",
-        "Abteilungsleiter",
-        "Abteilungsleiterin",
-        "Personalleiter",
-        "Personalleiterin",
-        "Niederlassungsleiter",
-        "Niederlassungsleiterin",
-        "Teamleiter",
-        "Teamleiterin",
-        "Projektleiter",
-        "Projektleiterin",
-        "Gruppenleiter",
-        "Gruppenleiterin",
-        "Betriebsrat",
-        "Gewerkschaft",
-        "Tarifvertrag",
-        "Arbeitstage",
-        "Arbeitstag",
-        "Urlaubstage",
-        "Urlaubstag",
-        "Abmahnung",
-        "Kündigung",
-        "Entlassung",
-        "Probezeit",
-        "Elternzeit",
-        "Mutterschutz",
-        "Kurzarbeit",
-        "Juckreiz",
-        "Pruritus",
-        "Schwindel",
-        "Müdigkeit",
-        "Erschöpfung",
-        "Schlafstörung",
-        "Kopfschmerz",
-        "Kopfschmerzen",
-        "Rückenschmerz",
-        "Rückenschmerzen",
-        "Bauchschmerz",
-        "Bauchschmerzen",
-        "Appetitlosigkeit",
-        "Gewichtsabnahme",
-        "Gewichtszunahme",
-        "Erbrechen",
-        "Verstopfung",
-        "Durchfall",
-        "Inkontinenz",
-        "Blasenschwäche",
-        "Blutdruck",
-        "Blutzucker",
-        "Blutwert",
-        "Blutbild",
-        "Entzündung",
-        "Entzündungswerte",
-        "Herzrasen",
-        "Herzstolpern",
-        "Brustschmerz",
-        "Brustschmerzen",
-        "Atemnot",
-        "Luftnot",
-        "Klinikum",
-        "Krankenhaus",
-        "Universitätsklinikum",
-        "Kreiskrankenhaus",
-        "Rehabilitationszentrum",
-      ]);
-      // GROSSGESCHRIEBENE Personennamen ("HANS MEIER"): nur wenn Vor- oder Nachname in den Wortlisten steht,
-      // damit Ueberschriften ("KAUFVERTRAG ZWISCHEN") nicht als Name gelten.
-      function isCapsPersonName(val) {
-        const words = val.trim().split(/[ \t]+/);
-        if (words.length < 2 || words.length > 3) return false;
-        if (!words.every((w) => /^[A-ZÄÖÜ][A-ZÄÖÜ\-]+$/.test(w))) return false;
-        const tc = (w) => w.charAt(0) + w.slice(1).toLowerCase();
-        return LOCAL_NAMES.has(tc(words[0])) || words.some((w) => w.split("-").some((p) => LOCAL_SURNAMES.has(tc(p))));
-      }
-      function okName(s) {
-        const tt = s.trim();
-        if (tt === tt.toUpperCase() && /[A-ZÄÖÜ]{2}/.test(tt)) return isCapsPersonName(tt);
-        return s
-          .trim()
-          .split(/\s+/)
-          .every((p, i) => {
-            if (/^[A-ZÄÖÜ]\.$/.test(p)) return true; // Initiale
-            const c = p.replace(/[^A-Za-züäöüÄÖÜß]/g, "");
-            if (c.length < 2 || /^\d+$/.test(c)) return false;
-            if (i === 0 && (SW.has(p) || SW.has(c))) return false;
-            return true;
-          });
-      }
-      const PROFILES = [
-        {
-          id: "standard",
-          lbl: "Standard",
-          badge: "Empfohlen",
-          desc: "Für die meisten Anwendungsfälle. Erkennt persönliche Daten, Kontaktdaten, Finanzdaten und Identifikationsnummern.",
-          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "device", "account", "geo", "intlid", "org", "name", "ip"],
-          tags: ["Namen", "Adressen", "IBAN", "Karten", "BIC", "Telefon", "E-Mail", "Daten", "Steuer-IDs", "Beträge", "Kfz", "IP/Links"],
-          note: "",
-        },
-        {
-          id: "finance",
-          lbl: "Finanzen & Recht",
-          badge: "",
-          desc: "Für Anwaltskanzleien, Steuerberatung und Banken. Wie Standard — zusätzlich mit Aktenzeichen, Handelsregisternummern und Sozialversicherungsnummern.",
-          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "device", "account", "geo", "intlid", "org", "name", "ip"],
-          tags: ["+ Aktenzeichen", "+ HR-Nummern", "+ SV-Nummern", "Alle Standardfelder"],
-          note: "Gleiche Kategorien wie Standard, jedoch mit erweiterten Mustern für rechtliche und steuerliche Dokumente.",
-        },
-        {
-          id: "medical",
-          lbl: "Medizin & Pflege",
-          badge: "",
-          desc: "Für Kliniken, Praxen und Pflegedienste. Enthält zusätzlich ICD-Codes, Diagnosen und Patientendaten. Finanzdaten (IBAN, Beträge) werden nicht erkannt.",
-          ents: ["email", "phone", "date", "taxid", "addr", "name", "med", "sensitive", "paragraf", "ip", "device", "account", "geo", "intlid"],
-          tags: ["+ ICD-Codes", "+ Diagnosen", "+ Patientendaten", "Ohne IBAN & Beträge"],
-          note: "",
-        },
-        {
-          id: "strict",
-          lbl: "Maximal",
-          badge: "",
-          desc: "Alle Kategorien aktiv, auch besondere Kategorien (Art. 9/10 DSGVO), Funktionen und Paragraphen. Kann mehr maskieren als nötig; das Ergebnis bitte prüfen.",
-          ents: ENTS.map((e) => e.id),
-          tags: ["Alle Kategorien", "Art. 9/10 DSGVO", "Maximaler Schutz"],
-          note: "",
-        },
-        {
-          id: "custom",
-          lbl: "Eigene Auswahl",
-          badge: "",
-          desc: "Alle Kategorien manuell ein- oder ausschalten. Für spezifische Anforderungen oder besondere Dokumenttypen.",
-          ents: [],
-          tags: ["Vollständige Kontrolle", "Eigene Regex-Muster"],
-          note: "",
-        },
-      ];
+      const ENTS = PSDetect.ENTS;
+      const PROFILES = PSDetect.PROFILES;
+      let mapSaved = false;
+      // K4.fix: Zustandsrevision; jede Aenderung an Ergebnissen/Zuordnung/Dokumentbestand macht die Zuordnung wieder ungespeichert
+      let stateRev = 0;
+      function stateTouch() { stateRev++; mapSaved = false; }
       let store = {},
         cnt = {},
         cvars = [],
         curProf = "standard",
-        whitelist = [];
+        whitelist = [], released = [], manualMarks = PSLib.marks.create(), lcIgnored = new Set(), lcLast = null;
       (function boot() {
         const pg = document.getElementById("PG");
         PROFILES.forEach((p) => {
@@ -3332,48 +2220,25 @@
             c.classList.add("sel");
             curProf = p.id;
             if (p.id !== "custom") ENTS.forEach((e) => (e.on = p.ents.includes(e.id)));
+            prjMarkStale();
           };
           pg.appendChild(c);
         });
         applyProfile(PROFILES[0]);
-        document.getElementById("FI").addEventListener("change", async function (e) {
-          const files = Array.from(e.target.files);
+        // Gemeinsamer Handler fuer Dateiauswahl (#FI) und Drop (#DZ)
+        async function handleFiles(files) {
           if (!files.length) return;
-          if (files.length === 1) {
-            await loadF(files[0]);
+          if (prjBusy) return toast("Ein Lauf ist noch aktiv", "e");
+          const ok = prjCheckFiles(files);
+          if (!ok.length) return;
+          if (ok.length === 1 && files.length === 1 && !(prj && prj.docs.length)) {
+            hidePrj();
+            await loadF(ok[0]);
             return;
           }
-          const results = [];
-          for (let idx = 0; idx < files.length; idx++) {
-            toast("Datei " + (idx + 1) + "/" + files.length + ": " + files[idx].name, "s");
-            try {
-              await loadF(files[idx]);
-              await anon();
-              results.push({
-                name: files[idx].name.replace(/\.[^.]+$/, "") + "_anonymisiert.txt",
-                content: document.getElementById("AT").value,
-              });
-            } catch (err) {
-              toast("Fehler bei " + files[idx].name + ": " + err.message, "e");
-            }
-          }
-          if (results.length > 1 && typeof JSZip !== "undefined") {
-            const zip = new JSZip();
-            results.forEach(function (r) {
-              zip.file(r.name, r.content);
-            });
-            const blob = await zip.generateAsync({ type: "blob" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "anonymisiert.zip";
-            a.click();
-            setTimeout(function () {
-              URL.revokeObjectURL(url);
-            }, 5e3);
-            toast(results.length + " Dateien als ZIP exportiert", "s");
-          }
-        });
+          await prjAddFiles(ok, files.length > 1);
+        }
+        document.getElementById("FI").addEventListener("change", (e) => handleFiles(Array.from(e.target.files)));
         const dz = document.getElementById("DZ");
         dz.addEventListener("dragover", (e) => {
           e.preventDefault();
@@ -3383,7 +2248,7 @@
         dz.addEventListener("drop", async (e) => {
           e.preventDefault();
           dz.classList.remove("drag");
-          if (e.dataTransfer.files[0]) await loadF(e.dataTransfer.files[0]);
+          await handleFiles(Array.from(e.dataTransfer.files));
         });
         document.getElementById("FC").onclick = () => {
           document.getElementById("FT").classList.remove("on");
@@ -3397,6 +2262,7 @@
           updIC();
           setStep(1);
           scheduleHighlight();
+          fundeTextChanged();
         });
         document.getElementById("IT").addEventListener("scroll", syncMirrorScroll);
         document.getElementById("IT").addEventListener("paste", function () {
@@ -3481,6 +2347,7 @@
             e.on = !e.on;
             r.classList.toggle("on", e.on);
             curProf = "custom";
+            prjMarkStale();
           };
           el.appendChild(r);
         });
@@ -3489,7 +2356,224 @@
         const any = ENTS.some((e) => e.on);
         ENTS.forEach((e) => (e.on = !any));
         initEL();
+        prjMarkStale();
       }
+      // Eigene Regeln (policy.json): Zustand, Speicherung nur der Regeln unter ps_policy_v1
+      let policy = { version: 1, name: "Eigene Regeln", rules: [] };
+      function policyIsActive(r) {
+        return r.enabled !== false;
+      }
+      function policySave() {
+        try {
+          localStorage.setItem("ps_policy_v1", JSON.stringify(policy));
+        } catch (e) {}
+      }
+      // Fehlerzustand: solange gesetzt, wird nicht anonymisiert (keine Anonymisierung ohne die eigene Regel)
+      let policyFault = null;
+      function policyShowError(msg) {
+        document.getElementById("policy-error").textContent = msg || policyFault || "";
+        document.getElementById("policy-discard").style.display = policyFault ? "" : "none";
+      }
+      function policySetFault(msg) {
+        policyFault = msg;
+        policyShowError();
+        toast(msg, "e");
+      }
+      function policyLoad() {
+        let raw = null;
+        try {
+          raw = localStorage.getItem("ps_policy_v1");
+        } catch (e) {
+          policyFault = "Die gespeicherten eigenen Regeln konnten nicht gelesen werden. Anonymisieren ist gesperrt, bis Sie eine Regeldatei importieren oder die Regeln verwerfen.";
+          return;
+        }
+        if (!raw) return;
+        let res;
+        try {
+          res = PSLib.policy.parse(raw);
+        } catch (e) {
+          res = { ok: false, errors: ["Unerwarteter Fehler beim Prüfen."] };
+        }
+        if (res.ok) policy = JSON.parse(JSON.stringify(res.policy));
+        else policyFault = "Die gespeicherten eigenen Regeln sind nicht ladbar: " + res.errors.slice(0, 3).join(" ") + " Anonymisieren ist gesperrt, bis Sie eine Regeldatei importieren oder die Regeln verwerfen.";
+      }
+      function policyDiscard() {
+        policyFault = null;
+        policy = { version: 1, name: "Eigene Regeln", rules: [] };
+        policyChanged();
+      }
+      function policyChanged() {
+        prjMarkStale();
+        aiCache = { key: null, spans: [] };
+        policySave();
+        policyRender();
+        policyShowError();
+      }
+      // Spans der eigenen Regeln fuer einen Text (Kern nimmt sie als extraSpans); bei Fehler Abbruch
+      function policySpans(text) {
+        if (policyFault) {
+          toast("Eigene Regeln fehlerhaft: Anonymisieren abgebrochen", "e");
+          throw new Error(policyFault);
+        }
+        if (!policy.rules.some(policyIsActive)) return [];
+        try {
+          return PSLib.policy.toSpans(policy, PSDetect.normalizeForDetection(text), curProf);
+        } catch (e) {
+          const msg = "Eigene Regeln konnten nicht angewendet werden (" + String((e && e.message) || "Fehler").slice(0, 200) + "). Anonymisieren ist abgebrochen.";
+          policySetFault(msg);
+          throw new Error(msg);
+        }
+      }
+      function policyRuleCount() {
+        return policy.rules.filter(policyIsActive).length;
+      }
+      function policyRender() {
+        const box = document.getElementById("policy-rules");
+        box.innerHTML = "";
+        document.getElementById("policy-count").textContent = policy.rules.length ? "(" + policy.rules.length + ")" : "";
+        if (!policy.rules.length) {
+          const e = document.createElement("div");
+          e.className = "text-xs text-secondary";
+          e.textContent = "Noch keine eigenen Regeln. Datei importieren oder unten Begriffe und Muster hinzufügen.";
+          box.appendChild(e);
+          return;
+        }
+        policy.rules.forEach((r, i) => {
+          const row = document.createElement("div");
+          row.className = "custom-var-row";
+          row.style.marginBottom = "4px";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = policyIsActive(r);
+          cb.id = "policy-rule-" + i;
+          cb.onchange = () => {
+            policy.rules[i].enabled = cb.checked;
+            policyChanged();
+          };
+          const lab = document.createElement("label");
+          lab.htmlFor = cb.id;
+          lab.className = "custom-var-name";
+          lab.style.cursor = "pointer";
+          lab.textContent = r.label;
+          const det = document.createElement("span");
+          det.className = "custom-var-pattern";
+          det.textContent = r.type === "list" ? r.terms.length + " Begriffe" : r.pattern;
+          const del = document.createElement("button");
+          del.className = "custom-var-del";
+          del.type = "button";
+          del.textContent = "×";
+          del.setAttribute("aria-label", "Regel " + r.label + " entfernen");
+          del.onclick = () => {
+            policy.rules.splice(i, 1);
+            policyChanged();
+          };
+          row.append(cb, lab, det, del);
+          box.appendChild(row);
+        });
+      }
+      function policyNewId(base) {
+        let n = 1;
+        while (policy.rules.some((r) => r.id === base + "-" + n)) n++;
+        return base + "-" + n;
+      }
+      // Neue Regel nur aufnehmen, wenn die ganze Richtlinie gueltig bleibt
+      function policyAdd(rule) {
+        if (policyFault) {
+          policyShowError();
+          toast("Bitte zuerst eine Regeldatei importieren oder die gespeicherten Regeln verwerfen", "e");
+          return false;
+        }
+        const next = { version: 1, name: policy.name, rules: policy.rules.concat([rule]) };
+        const res = PSLib.policy.parse(JSON.stringify(next));
+        if (!res.ok) {
+          policyShowError(res.errors[0]);
+          toast(res.errors[0], "e");
+          return false;
+        }
+        policy = next;
+        policyChanged();
+        return true;
+      }
+      function policyAddTerms() {
+        const ta = document.getElementById("policy-terms");
+        const terms = ta.value.split(/\r?\n/).map((t) => t.trim()).filter(Boolean);
+        if (!terms.length) return toast("Bitte mindestens einen Begriff eingeben", "e");
+        if (policyAdd({ id: policyNewId("begriffe"), label: "Begriffe", type: "list", terms: terms, caseSensitive: false, category: "EIGEN", profiles: ["*"] })) {
+          ta.value = "";
+          toast(terms.length + " Begriffe hinzugefügt", "s");
+        }
+      }
+      function policyTest() {
+        const pat = document.getElementById("policy-pattern").value;
+        const sample = document.getElementById("policy-sample").value;
+        const prev = document.getElementById("policy-preview");
+        policyShowError();
+        prev.textContent = "";
+        if (!pat) return true;
+        const chk = PSLib.policy.checkPattern(pat, "");
+        if (!chk.ok) {
+          policyShowError(chk.error);
+          return false;
+        }
+        if (!sample) return true;
+        // Das Muster ist geprueft (lineare Laufzeit), der Beispieltext ist begrenzt
+        const re = new RegExp(pat, "g");
+        const txt = sample.slice(0, 20000);
+        let last = 0, m;
+        while ((m = re.exec(txt)) !== null) {
+          if (m[0] === "") { re.lastIndex++; continue; }
+          prev.appendChild(document.createTextNode(txt.slice(last, m.index)));
+          const mk = document.createElement("mark");
+          mk.textContent = m[0];
+          prev.appendChild(mk);
+          last = m.index + m[0].length;
+        }
+        prev.appendChild(document.createTextNode(txt.slice(last)));
+        return true;
+      }
+      function policyAddPattern() {
+        const pat = document.getElementById("policy-pattern").value;
+        if (!pat.trim()) return toast("Bitte ein Muster eingeben", "e");
+        if (!policyTest()) return;
+        if (policyAdd({ id: policyNewId("muster"), label: "Muster", type: "regex", pattern: pat, flags: "", category: "EIGEN", profiles: ["*"] })) {
+          document.getElementById("policy-pattern").value = "";
+          policyTest();
+          toast("Muster hinzugefügt", "s");
+        }
+      }
+      function policyImport(inp) {
+        const file = inp.files && inp.files[0];
+        inp.value = "";
+        if (!file) return;
+        if (file.size > 1024 * 1024) {
+          policyShowError("Die Datei ist größer als 1 MiB.");
+          return toast("Die Datei ist größer als 1 MiB", "e");
+        }
+        const rd = new FileReader();
+        rd.onload = () => {
+          const res = PSLib.policy.parse(String(rd.result));
+          if (!res.ok) {
+            policyShowError("Regeldatei abgelehnt: " + res.errors.slice(0, 3).join(" "));
+            return toast("Regeldatei abgelehnt: " + res.errors[0], "e");
+          }
+          const vorher = policy.rules.length;
+          policyFault = null;
+          policy = JSON.parse(JSON.stringify(res.policy));
+          policyChanged();
+          toast("Regeldatei geladen: " + policy.rules.length + " Regeln" + (vorher ? " (ersetzt " + vorher + " Regeln)" : ""), "s");
+        };
+        rd.onerror = () => {
+          policyShowError("Die Datei konnte nicht gelesen werden.");
+          toast("Datei konnte nicht gelesen werden", "e");
+        };
+        rd.readAsText(file);
+      }
+      function policyExport() {
+        dl("policy.json", JSON.stringify(policy, null, 2), "application/json");
+      }
+      policyLoad();
+      policyRender();
+      policyShowError();
       function addCV() {
         const n = document.getElementById("VN").value.trim().toUpperCase().replace(/\s+/g, "_");
         const p = document.getElementById("VP").value.trim();
@@ -3497,37 +2581,449 @@
           toast("Name und Muster benötigt", "e");
           return;
         }
+        // S3.fix: strenge Namensregel wie Regel-Kategorien und Markierungen, Ablehnen statt Bereinigen
+        if (!/^[A-Z][A-Z0-9_]{1,19}$/.test(n)) {
+          toast("Name: 2 bis 20 Zeichen, nur A-Z, 0-9 und _, am Anfang ein Buchstabe", "e");
+          return;
+        }
+        const chk = PSLib.policy.checkPattern(p, "");
+        if (!chk.ok) {
+          toast(chk.error, "e");
+          return;
+        }
         cvars.push({ n: n, p: p });
         document.getElementById("VN").value = "";
         document.getElementById("VP").value = "";
         renderCV();
         toast("Variable {{" + n + "_N}} hinzugefügt", "s");
+        prjRefresh();
       }
       function removeCV(i) {
         cvars.splice(i, 1);
         renderCV();
+        prjRefresh();
       }
       function renderCV() {
         const l = document.getElementById("CVL");
-        l.innerHTML = "";
+        l.textContent = "";
+        // S3.fix: Zeilen per DOM-Aufbau, Namen und Muster nur als Text
         cvars.forEach((v, i) => {
           const d = document.createElement("div");
           d.className = "custom-var-row";
-          d.innerHTML =
-            '<span class="custom-var-name">{{' +
-            v.n +
-            '}}</span><span class="custom-var-pattern" title="' +
-            v.p.replace(/"/g, "&quot;") +
-            '">' +
-            esc(v.p) +
-            '</span><button class="custom-var-del" onclick="removeCV(' +
-            i +
-            ')">×</button>';
+          const nm = document.createElement("span");
+          nm.className = "custom-var-name";
+          nm.textContent = "{{" + v.n + "}}";
+          const pt = document.createElement("span");
+          pt.className = "custom-var-pattern";
+          pt.title = v.p;
+          pt.textContent = v.p;
+          const b = document.createElement("button");
+          b.className = "custom-var-del";
+          b.textContent = "×";
+          b.addEventListener("click", () => removeCV(i));
+          d.append(nm, pt, b);
           l.appendChild(d);
         });
       }
+      // Projektliste: mehrere Dokumente mit gemeinsamen Platzhaltern (PSLib.project)
+      const PRJ_EXT = ["txt", "pdf", "docx", "csv", "md", "json", "rtf", "xlsx", "ods", "odt", "odp", "pptx", "eml", "html", "htm", "doc", "xls", "ppt"];
+      const PRJ_ICON = {
+        wartet: '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 4.8V8l2.2 1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+        laeuft: '<path d="M8 2a6 6 0 1 0 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+        fertig: '<path d="M3 8.5l3.2 3.2L13 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+        fehler: '<path d="M8 2l6.5 11.5h-13z M8 6.5v3 M8 11.6v.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+      };
+      let prj = null, prjBusy = false, prjAc = null, prjSel = null, prjAborted = false, prjZipBusy = false, prjStart = null, prjDur = 0;
+      const prjRes = new Map(), prjSize = new Map();
+      let prjAgain = false; // K1.fix: Aenderung (Whitelist/Regel) waehrend des Laufs, danach neu rechnen
+      // K1.fix: Ergebnisse nach Whitelist-/Regeländerung aktuell halten
+      function prjRefresh() {
+        if (!prj) return;
+        if (prjBusy) { prjAgain = true; return; }
+        if (prjZipBusy) { prjMarkStale(); return toast("ZIP wird erstellt: Ergebnisse danach erneut anonymisieren", "e"); }
+        if (prjRes.size) prjRun();
+      }
+      // K1.fix: Einstellung (Profil, Entitaeten, Richtlinie, KI-Modus) geaendert: Ergebnisse gelten als veraltet, ZIP gesperrt bis zum naechsten Lauf
+      let prjStale = false, prjCfg = null;
+      function prjMarkStale() {
+        if (!prj || !(prjRes.size || prjBusy)) return;
+        prjStale = true;
+        prjRender();
+      }
+      function prjCheckFiles(files) {
+        const multi = files.length > 1, ok = [], msgs = [], bad = [];
+        let oldDoc = false;
+        for (const [fi, f] of files.entries()) {
+          const e = f.name.includes(".") ? f.name.split(".").pop().toLowerCase() : "";
+          const pre = multi ? "Datei " + (fi + 1) + ": " : "";
+          if (e === "doc" && multi) oldDoc = true; // einzeln erklaert loadF das alte Format
+          else if (!PRJ_EXT.includes(e)) { if (!bad.includes(e)) bad.push(e); }
+          else if (f.size === 0) msgs.push(pre + "Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.");
+          else if (f.size > 30 * 1024 * 1024) msgs.push(pre + "Datei zu groß (max 30 MB)");
+          else ok.push(f);
+        }
+        if (bad.length) msgs.unshift("Dateityp nicht unterstützt: " + bad.map((e) => (e ? "." + e : "(ohne Endung)")).join(", "));
+        if (oldDoc) msgs.unshift("Dateien im alten .doc-Format werden nicht unterstützt. Bitte in Word als .docx speichern.");
+        if (msgs.length) toast(msgs.join(" "), "e");
+        return ok;
+      }
+      async function prjAddFiles(list) {
+        if (!prj) prj = PSLib.project.create();
+        const msgs = [];
+        prjBusy = true;
+        document.getElementById("PRJPANEL").style.display = "block";
+        prjRender();
+        try {
+          for (const [li, f] of list.entries()) {
+            const pre = "Datei " + (li + 1) + ": ";
+            let text;
+            try { text = await readTextOf(f); } catch (err) { msgs.push(pre + (err && err.fixed ? err.message : "konnte nicht gelesen werden")); continue; }
+            if (!text.trim()) { msgs.push(pre + "kein Text gefunden"); continue; }
+            try {
+              prjSize.set(PSLib.project.add(prj, { name: f.name, text: text }), f.size);
+            } catch (err) {
+              msgs.push(err && err.code === "LIMIT" ? "Grenze erreicht: höchstens " + prj.limits.docs + " Dokumente und " + Math.round(prj.limits.totalChars / 1048576) + " MB Text je Projekt." : pre + "nicht aufgenommen");
+              if (err && err.code === "LIMIT") break;
+            }
+            prjRender();
+          }
+        } finally { prjBusy = false; }
+        if (!prj.docs.length) hidePrj(); else prjRender();
+        if (msgs.length) toast(msgs.join(" "), "e");
+      }
+      function hidePrj() {
+        prj = null; prjSel = null;
+        prjRes.clear(); prjSize.clear();
+        document.getElementById("PRJLIST").textContent = ""; // Dokumentliste leeren (S2)
+        document.getElementById("PRJPANEL").style.display = "none";
+      }
+      function prjRender() {
+        if (!prj) return;
+        const list = document.getElementById("PRJLIST");
+        const act = document.activeElement;
+        const keep = act && list.contains(act) ? { c: act.classList.contains("prj-del") ? "prj-del" : "prj-item", id: act.dataset.id } : null;
+        const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+        const items = PSLib.project.index(prj);
+        list.textContent = "";
+        let done = 0;
+        for (const it of items) {
+          if (it.status === "fertig" || it.status === "fehler") done++;
+          const res = prjRes.get(it.id);
+          const leak = it.status === "fertig" && res ? res.leak : 0;
+          const cls = it.status === "fertig" && leak !== 0 ? (leak === null ? "fehler" : "rest") : it.status;
+          const lbl = { wartet: "wartet", laeuft: "läuft", fertig: "fertig", fehler: "Fehler" }[it.status] + (it.status !== "fertig" || leak === 0 ? "" : leak === null ? ", Gegenprüfung nicht möglich" : leak === 1 ? ", 1 möglicher Rest" : ", " + leak + " mögliche Reste");
+          const row = mk("div", "prj-row");
+          row.setAttribute("role", "listitem");
+          const b = mk("button", "prj-item" + (it.id === prjSel ? " sel" : ""));
+          b.type = "button";
+          b.dataset.id = it.id;
+          if (it.id === prjSel) b.setAttribute("aria-current", "true");
+          b.onclick = () => prjShow(it.id);
+          const st = mk("span", "prj-st " + cls);
+          st.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">' + PRJ_ICON[cls === "rest" ? "fehler" : cls] + "</svg>";
+          st.appendChild(mk("span", "", lbl));
+          const meta = mk("span", "prj-meta");
+          meta.append(mk("span", "", fmtSz(prjSize.get(it.id) || 0)), st);
+          const nm = mk("span", "prj-name", it.name);
+          nm.title = it.name;
+          b.append(mk("span", "prj-num", String(it.index)), nm, meta);
+          const del = mk("button", "prj-del");
+          del.type = "button";
+          del.dataset.id = it.id;
+          del.disabled = prjBusy;
+          del.setAttribute("aria-label", "Dokument " + it.index + " entfernen");
+          del.title = "Entfernen";
+          del.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>';
+          del.onclick = () => prjDel(it.id);
+          row.append(b, del);
+          list.appendChild(row);
+        }
+        if (keep) { const n = list.querySelector("." + keep.c + '[data-id="' + keep.id + '"]'); if (n) n.focus(); }
+        const total = items.length, pg = document.getElementById("PRJPROG");
+        document.getElementById("PRJCOUNT").textContent = total + (total === 1 ? " Dokument" : " Dokumente");
+        pg.setAttribute("aria-valuemax", total);
+        pg.setAttribute("aria-valuenow", done);
+        document.getElementById("PRJPROGT").textContent = done + " von " + total;
+        document.getElementById("PRJFILL").style.width = (total ? (done / total) * 100 : 0) + "%";
+        let sum = "";
+        if (prjBusy) sum = "Läuft ...";
+        else if (total && done === total) {
+          const rest = items.filter((x) => { const r = prjRes.get(x.id); return x.status === "fertig" && r && r.leak !== 0; }).length;
+          const err = items.filter((x) => x.status === "fehler").length;
+          sum = total + (total === 1 ? " Dokument" : " Dokumente") + ", " + rest + " mit möglichen Resten" + (err ? ", " + err + " mit Fehler" : "");
+        } else if (done) sum = done + " von " + total + " Dokumenten fertig" + (prjAborted ? ", abgebrochen" : "");
+        if (prjStale && !prjBusy) sum = "Einstellungen geändert: Ergebnisse veraltet, bitte erneut anonymisieren.";
+        document.getElementById("PRJSUM").textContent = sum;
+        document.getElementById("PRJRUN").disabled = prjBusy || !total;
+        document.getElementById("PRJCANCEL").disabled = !prjBusy || !prjAc;
+        document.getElementById("PRJZIP").disabled = prjBusy || prjZipBusy || prjStale || !items.some((x) => x.status === "fertig" && prjRes.has(x.id));
+      }
+      function prjDel(id) {
+        if (prjBusy || prjZipBusy || !prj) return;
+        const i = prj.docs.findIndex((d) => d.id === id);
+        stateTouch();
+        PSLib.project.remove(prj, id);
+        const ran = prjRes.size > 0;
+        prjRes.delete(id); prjSize.delete(id);
+        if (prjSel === id) prjSel = null;
+        if (!prj.docs.length) { store = {}; cnt = {}; renderMap(); hidePrj(); return; }
+        // S2: Zuordnung auf die verbliebenen Ergebnisse beschraenken (Tabelle, .psmap, CSV ohne Werte entfernter Dokumente)
+        if (ran) { const sc = prjScope(); store = sc.store; cnt = sc.cnt; renderMap(); }
+        prjRender();
+        const nx = prj.docs[Math.min(i, prj.docs.length - 1)];
+        const n = document.querySelector('#PRJLIST .prj-item[data-id="' + nx.id + '"]');
+        if (n) n.focus();
+      }
+      function prjShow(id) {
+        const d = prj && prj.docs.find((x) => x.id === id);
+        if (!d) return;
+        prjSel = id;
+        const res = prjRes.get(id);
+        document.getElementById("IT").value = d.text;
+        document.getElementById("AT").value = res ? res.text : "";
+        updIC();
+        scheduleHighlight();
+        fundeDirty = true; refreshFunde();
+        document.getElementById("resultArea").style.display = res ? "flex" : "none";
+        if (res) {
+          document.getElementById("REANON").style.display = "none";
+          runLeakCheck();
+          updTokenCount();
+        }
+        setStep(res ? 2 : 1);
+        prjRender();
+      }
+      function prjCancel() { if (prjAc) prjAc.abort(); }
+      async function prjRun() {
+        if (prjBusy || !prj || !prj.docs.length) return;
+        if (prjZipBusy) return toast("ZIP wird erstellt, bitte warten", "e");
+        if (anonBusy) return toast("Analyse läuft bereits...", "s");
+        prjBusy = anonBusy = true;
+        stateTouch();
+        prjAborted = false;
+        prjAc = new AbortController();
+        prjRes.clear();
+        prjStale = false; prjCfg = { p: curProf, a: aiMode() }; // Bericht nennt Profil und KI-Modus des Laufs
+        prjStart = new Date(); prjDur = 0;
+        const btn = document.getElementById("ANONBTN");
+        if (btn) btn.disabled = true;
+        const order = prj.docs.slice();
+        let k = 0;
+        prjRender();
+        try {
+          await ensureAIReady();
+          const out = await PSLib.project.run(prj, {
+            signal: prjAc.signal,
+            profile: curProf,
+            onProgress: () => prjRender(),
+            anonymize: async (text, o) => {
+              const d = order[k++];
+              prjRender();
+              const det = PSDetect.normalizeForDetection(text);
+              if (nerPipeline && aiCache.key !== det) await ensureAISpans(det);
+              const r = PSDetect.anonymize(text, {
+                ents: activeEntIds(),
+                cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+                extraSpans: policySpans(text),
+                whitelist: whitelist,
+                released: released,
+                wordlists: localAIMode,
+                aiSpans: aiCache.key === det ? aiCache.spans : null,
+                state: o.state,
+                reserved: o.reserved,
+              });
+              let leak = null;
+              try { const lr = leakScan(r.text); leak = lr.error ? null : lr.count; } catch (e) {}
+              prjRes.set(d.id, { text: r.text, leak: leak });
+              return r;
+            },
+          });
+          prjAborted = out.aborted;
+          prjDur = Date.now() - prjStart.getTime();
+          if (out.state) { store = out.state.store; cnt = out.state.cnt; stateTouch(); renderMap(); fundeAfterAnon(); }
+        } catch (err) {
+          toast("Fehler: " + err.message, "e");
+        } finally {
+          prj.docs.forEach((d) => { if (d.status === "laeuft") d.status = "wartet"; });
+          prjBusy = anonBusy = false;
+          prjAc = null;
+          if (btn) btn.disabled = false;
+          scheduleAIIdleUnload();
+          const pe = document.getElementById("aiRunProgress");
+          if (pe) pe.textContent = "";
+          if (prjAgain && prjAborted) prjStale = true; // Abbruch trotz offener Aenderung: Ergebnisse veraltet
+          prjRender();
+          if (prjSel !== null && prjRes.has(prjSel)) prjShow(prjSel);
+          if (prjAgain && !prjAborted && prj) { prjAgain = false; prjRun(); }
+          prjAgain = false;
+        }
+      }
+      // Zuordnung nur für Platzhalter, die in den aktuellen fertigen Ergebnissen vorkommen (D32); store und cnt bleiben unverändert
+      function prjScope() {
+        const keys = new Set(), out = {}, oc = {};
+        for (const d of prj.docs) {
+          const r = prjRes.get(d.id);
+          if (r && d.status === "fertig") (r.text.match(/\{\{[^{}]+\}\}/g) || []).forEach((k) => keys.add(k));
+        }
+        keys.forEach((k) => { if (Object.hasOwn(store, k)) out[k] = store[k]; });
+        const types = new Set(Object.values(out).map((d) => d.t));
+        Object.keys(cnt).forEach((t) => { if (types.has(t)) oc[t] = cnt[t]; });
+        return { store: out, cnt: oc };
+      }
+      async function shaHex(s) {
+        const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+        return Array.from(new Uint8Array(h), (b) => b.toString(16).padStart(2, "0")).join("");
+      }
+      // Zähler je Dokument aus den Platzhaltern des Ergebnistextes (PSDetect liefert keine Zähler)
+      function prjCounts(text) {
+        const c = {};
+        for (const k of text.match(/\{\{[^{}]+\}\}/g) || []) {
+          if (Object.hasOwn(store, k) && store[k].m === "wortlich") continue; // K2.fix: woertlicher Platzhalter, keine Entitaet
+          let t = Object.hasOwn(store, k) && store[k].t ? String(store[k].t).toUpperCase().replace(/[^A-Z0-9_]/g, "_").slice(0, 20) : "";
+          if (!/^[A-Z][A-Z0-9_]{1,19}$/.test(t)) t = "SONSTIGE";
+          c[t] = (c[t] || 0) + 1;
+        }
+        return c;
+      }
+      function prjAskClose() {
+        document.getElementById("PRJASK").style.display = "none";
+        const z = document.getElementById("PRJZIP");
+        if (z && !z.disabled) z.focus();
+      }
+      document.addEventListener("keydown", function (e) {
+        const d = document.getElementById("PRJASK");
+        if (!d || d.style.display === "none") return;
+        if (e.key === "Escape") { e.preventDefault(); prjAskClose(); }
+        else if (e.key === "Tab") {
+          const f = [...d.querySelectorAll("button")];
+          const i = f.indexOf(document.activeElement);
+          if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+          else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+        }
+      });
+      function prjAsk() {
+        document.getElementById("PRJASK").style.display = "flex";
+        document.getElementById("PRJASKPW").focus();
+      }
+      async function prjZip(noMap) {
+        if (prjBusy || prjZipBusy || !prj) return;
+        if (prjStale) return toast("Ergebnisse veraltet, bitte erneut anonymisieren", "e");
+        const items = PSLib.project.index(prj).filter((x) => x.status === "fertig" && prjRes.has(x.id));
+        if (!items.length) return toast("Kein fertiges Dokument zum Speichern", "e");
+        const withMap = noMap !== true && document.getElementById("PRJMAP").checked;
+        const keep = document.getElementById("PRJKEEP").checked;
+        prjZipBusy = true;
+        prjRender();
+        const rev = stateRev;
+        try {
+          let mapBytes = null;
+          if (withMap) {
+            const docs = [];
+            for (const it of items) {
+              const d = prj.docs.find((x) => x.id === it.id);
+              docs.push({ index: it.index, name: d.name, chars: d.text.length, sha256: await shaHex(d.text) });
+            }
+            mapBytes = await new Promise((res) => psPwZip(docs, res));
+            if (!mapBytes) { prjAsk(); return; }
+          }
+          const names = new Map(prj.docs.map((d) => [d.id, d.name]));
+          const plan = PSLib.project.zipPlan(items.map((x) => ({ id: x.id, index: x.index, status: "fertig" })), {
+            report: true, map: !!mapBytes,
+            nameFor: (r) => PSLib.hygiene.safeName(names.get(r.id), r.index, { keepName: keep }),
+          });
+          const documents = [];
+          for (const it of items) {
+            const t = prjRes.get(it.id).text;
+            const lr = leakScan(t);
+            if (lr.error) return toast("Gegenprüfung nicht möglich, ZIP nicht erstellt", "e");
+            const sev = (k) => lr.findings.filter((f) => f.severity === k).length;
+            documents.push({ index: it.index, chars: t.length, counts: prjCounts(t), resultSha256: await shaHex(t), leak: { count: lr.findings.length, hoch: sev("hoch"), mittel: sev("mittel") } });
+          }
+          const rep = PSLib.report.build({
+            appVersion: APP_VERSION, startedAt: (prjStart || new Date()).toISOString(), localTime: new Date().toLocaleString("de-DE"),
+            durationMs: prjDur, profileId: prjCfg ? prjCfg.p : curProf, aiMode: prjCfg ? prjCfg.a : aiMode(),
+            modelId: nerPipeline ? AI_MODEL_ID : undefined,
+            whitelistSize: whitelist.length, customRuleCount: cvars.length + policyRuleCount(), documents: documents,
+          });
+          const z = new JSZip();
+          for (const e of plan) {
+            if (e.kind === "result") z.file(e.path, prjRes.get(e.id).text);
+            else if (e.kind === "report-text") z.file(e.path, PSLib.report.toText(rep));
+            else if (e.kind === "report-json") z.file(e.path, PSLib.report.toJson(rep));
+            else if (e.kind === "map") z.file(e.path, mapBytes);
+          }
+          const out = await z.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+          // mapSaved nur, wenn die Datei den ganzen store enthält, nach bestätigtem Schreiben und unverändertem Zustand
+          const full = !!mapBytes && Object.keys(prjScope().store).length === Object.keys(store).length;
+          dl("anonymisiert.zip", out, "application/zip").then((ok) => {
+            if (!ok) return toast("ZIP nicht gespeichert", "e");
+            if (full && rev === stateRev) mapSaved = true;
+            toast(items.length + (items.length === 1 ? " Dokument" : " Dokumente") + " als ZIP gespeichert", "s");
+          });
+        } catch (err) {
+          toast("ZIP konnte nicht erstellt werden", "e");
+        } finally {
+          prjZipBusy = false;
+          prjRender();
+        }
+      }
+      // Liest nur das Zentralverzeichnis (ohne Entpacken) in die Form, die PSLib.formats.guard erwartet
+      function zipDirOf(b) {
+        const v = new DataView(b.buffer, b.byteOffset, b.byteLength), files = {};
+        let e = b.length - 22;
+        while (e >= 0 && e > b.length - 65558 && v.getUint32(e, true) !== 0x06054b50) e--;
+        if (e < 0 || v.getUint32(e, true) !== 0x06054b50) return { files };
+        let n = v.getUint16(e + 10, true), p = v.getUint32(e + 16, true);
+        for (let i = 0; i < n && p + 46 <= b.length && v.getUint32(p, true) === 0x02014b50; i++) {
+          files["e" + i] = { _data: { compressedSize: v.getUint32(p + 20, true), uncompressedSize: v.getUint32(p + 24, true) } };
+          p += 46 + v.getUint16(p + 28, true) + v.getUint16(p + 30, true) + v.getUint16(p + 32, true);
+        }
+        return { files };
+      }
+      // Format erkennen und passend auslesen (Fehler mit fester Meldung, nie Rohtext)
+      async function readTextOf(file) {
+        const F = PSLib.formats, O = PSLib.officefmt;
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const kind = F.detect(file.name, bytes.slice(0, 512));
+        const fix = (m) => Object.assign(new Error(m), { fixed: true });
+        if (kind === "doc" || kind === "xls" || kind === "ppt")
+          throw fix("Dateien im alten ." + kind + "-Format werden nicht unterstützt. Bitte in Word/Excel/PowerPoint als .docx/.xlsx/.pptx speichern.");
+        if (kind === "unknown") throw fix("Dateityp nicht erkannt oder Datei beschädigt.");
+        try {
+          if (kind === "pdf") return await exPDF(file);
+          if (["docx", "xlsx", "pptx", "odt", "ods", "odp"].includes(kind)) {
+            F.guard(zipDirOf(bytes)); // vor dem Entpacken: gefaelschte Groessen im Zentralverzeichnis abfangen
+            const zip = await JSZip.loadAsync(bytes);
+            F.guard(zip);
+            if (kind === "docx") {
+              // Trockenlauf: Mammoth oeffnet das Archiv mit eigener JSZip-Kopie ohne Grenze, daher vorher zaehlend entpacken
+              const bud = { used: 0, max: F.MAX_TOTAL };
+              // nur Textteile (.xml, .rels): Medien liest Mammoth nicht, sie zaehlen nicht
+              for (const nm of Object.keys(zip.files))
+                if (!zip.files[nm].dir && /\.(xml|rels)$/i.test(nm)) await F.boundedRead(zip, nm, { budget: bud, as: "count" });
+              const base = await exDOCX(file);
+              const extra = await O.extractDocxExtras(zip);
+              return extra.text ? base + "\n\n" + extra.text : base;
+            }
+            if (kind === "xlsx") return (await O.extractXlsx(zip)).text;
+            if (kind === "pptx") return (await O.extractPptx(zip)).text;
+            return (await O.extractOdf(zip)).text;
+          }
+          if (kind === "eml") return F.extractEml(bytes).text;
+          const txt = F.decodeText(bytes).text;
+          if (kind === "html") return F.extractHtml(txt).text;
+          if (kind === "rtf") return F.extractRtf(txt).text;
+          return txt;
+        } catch (err) {
+          if (err && err.fixed) throw err;
+          if (err instanceof F.PSFormatError) {
+            const m = { TOO_BIG: "Archiv zu groß", TOO_MANY: "Archiv hat zu viele Einträge", RATIO: "Archiv ist verdächtig stark komprimiert" };
+            throw fix(m[err.code] || "Dateityp nicht erkannt oder Datei beschädigt.");
+          }
+          throw fix("Dateityp nicht erkannt oder Datei beschädigt."); // nie err.message roh
+        }
+      }
       async function loadF(file) {
-        const ext = file.name.split(".").pop().toLowerCase();
         if (file.size === 0) {
           toast("Die Datei ist leer (0 Bytes). Liegt sie nur online in OneDrive oder SharePoint? Bitte zuerst auf dem Gerät speichern (Rechtsklick: Immer auf diesem Gerät behalten) und erneut wählen.", "e");
           return;
@@ -3541,16 +3037,16 @@
         document.getElementById("FT").classList.add("on");
         setP(10);
         try {
-          let txt = "";
-          if (ext === "pdf") txt = await exPDF(file);
-          else if (ext === "docx" || ext === "doc") txt = await exDOCX(file);
-          else txt = await file.text();
+          const txt = await readTextOf(file);
           setP(100);
           document.getElementById("IT").value = txt;
           updIC();
           toast('"' + file.name + '" geladen', "s");
           setStep(1);
         } catch (err) {
+          document.getElementById("IT").value = ""; // abgelehnte Datei: kein Text der vorigen Datei stehen lassen
+          updIC();
+          scheduleHighlight();
           toast("Fehler: " + err.message, "e");
         }
       }
@@ -3672,308 +3168,8 @@
         const r = await mammoth.extractRawText({ arrayBuffer: buf });
         return r.value;
       }
-      let localAIMode = false;
-      const LOCAL_NAMES = new Set([
-        "Alexander",
-        "Andreas",
-        "Anna",
-        "Anne",
-        "Anja",
-        "Bernd",
-        "Brigitte",
-        "Christian",
-        "Christoph",
-        "Claudia",
-        "Daniel",
-        "Dirk",
-        "Elisabeth",
-        "Frank",
-        "Gabriele",
-        "Gisela",
-        "Hans",
-        "Heike",
-        "Heinz",
-        "Helga",
-        "Herbert",
-        "Hermann",
-        "Ingrid",
-        "Jens",
-        "Jessica",
-        "Joachim",
-        "Johann",
-        "Johannes",
-        "Josef",
-        "Julia",
-        "Jürgen",
-        "Karin",
-        "Karl",
-        "Karsten",
-        "Katharina",
-        "Klaus",
-        "Kurt",
-        "Lars",
-        "Laura",
-        "Lena",
-        "Lisa",
-        "Lukas",
-        "Manfred",
-        "Maria",
-        "Marina",
-        "Mario",
-        "Markus",
-        "Martin",
-        "Matthias",
-        "Michael",
-        "Monika",
-        "Nina",
-        "Oliver",
-        "Patrick",
-        "Paul",
-        "Peter",
-        "Petra",
-        "Philipp",
-        "Renate",
-        "Robert",
-        "Rolf",
-        "Rüdiger",
-        "Sabine",
-        "Sandra",
-        "Sarah",
-        "Silke",
-        "Simon",
-        "Stefan",
-        "Stefanie",
-        "Susanne",
-        "Thomas",
-        "Thorsten",
-        "Ute",
-        "Uwe",
-        "Veronika",
-        "Walter",
-        "Werner",
-        "Wilhelm",
-        "Wolfgang",
-        "Alex",
-        "Max",
-        "Tom",
-        "Tim",
-        "Leon",
-        "Felix",
-        "Luca",
-        "Jonas",
-        "Niklas",
-        "Miriam",
-        "Sophie",
-        "Emma",
-        "Mia",
-        "Hannah",
-        "Lea",
-      ]);
-      const LOCAL_SURNAMES = new Set([
-        "Müller",
-        "Schmidt",
-        "Schneider",
-        "Fischer",
-        "Weber",
-        "Wagner",
-        "Becker",
-        "Schulz",
-        "Hoffmann",
-        "Schäfer",
-        "Koch",
-        "Bauer",
-        "Richter",
-        "Klein",
-        "Wolf",
-        "Schröder",
-        "Neumann",
-        "Schwarz",
-        "Zimmermann",
-        "Braun",
-        "Krüger",
-        "Hofmann",
-        "Hartmann",
-        "Lange",
-        "Weiß",
-        "Schmitt",
-        "Werner",
-        "Schmitz",
-        "Krause",
-        "Meier",
-        "Lehmann",
-        "Schmid",
-        "Schulze",
-        "Maier",
-        "Köhler",
-        "Herrmann",
-        "König",
-        "Meyer",
-        "Huber",
-        "Kaiser",
-        "Fuchs",
-        "Peters",
-        "Lang",
-        "Scholz",
-        "Jung",
-        "Möller",
-        "Weiß",
-        "Hahn",
-        "Schubert",
-        "Vogel",
-        "Friedrich",
-        "Günther",
-        "Frank",
-        "Berger",
-        "Winkler",
-        "Roth",
-        "Beck",
-        "Gruber",
-        "Lorenz",
-        "Baumann",
-        "Franke",
-        "Albrecht",
-        "Sauer",
-        "Böhm",
-        "Simon",
-        "Winter",
-        "Link",
-        "Reuter",
-        "Krebs",
-        "Schilling",
-        "Seidel",
-        "Maas",
-        "Uhlig",
-        "Schröter",
-        "Buchholz",
-        "Grimm",
-        "Arnold",
-        "Jakob",
-        "Engel",
-        "Ziegler",
-        "Kern",
-        "Seifert",
-        "Riedel",
-        "Menzel",
-        "Schindler",
-        "Hammer",
-        "Oswald",
-        "Krug",
-        "Büttner",
-        "Kopp",
-        "Bischoff",
-        "Noll",
-        "Fritz",
-        "Dittrich",
-        "Moritz",
-        "Schuster",
-        "Förster",
-        "Hagen",
-        "Hermann",
-        "Rupp",
-        "Barth",
-        "Schumann",
-        "Dietrich",
-        "Benz",
-        "Voigt",
-        "Rohde",
-        "Jost",
-        "Kuhn",
-        "Schwab",
-        "Bock",
-        "Ludwig",
-        "Busch",
-        "Sander",
-        "Arcangeli",
-        "Rossi",
-        "Ferrari",
-        "Bianchi",
-        "Romano",
-        "Colombo",
-        "Ricci",
-        "Marino",
-        "Greco",
-        "Bruno",
-        "Gallo",
-        "Conti",
-        "Costa",
-        "Mancini",
-        "Esposito",
-      ]);
-      const LOCAL_ORG_KEYWORDS = [
-        /\b(GmbH|AG|e\.V\.|KG|OHG|UG|SE|Inc\.|Corp\.|LLC|Ltd\.|PLC|GmbH & Co\. KG|GmbH & Co\.)/gi,
-        /(?:der|die|das)\s+([A-ZÄÖÜ][a-zäöü]+(?:[\s-][A-ZÄÖÜ][a-zäöü]+){0,3})\s+(?:GmbH|AG|e\.V\.|KG|UG|SE|Corp\.|Inc\.|Ltd\.)/g,
-        /\b(Universität|Hochschule|Institut|Klinikum|Krankenhaus|Behörde|Amt|Ministerium|Stadt|Gemeinde|Landkreis|Sparkasse|Bank|Versicherung|Kanzlei|Praxis|Apotheke|Supermarkt|Bäckerei|Metzgerei|Restaurant|Café|Hotel|Schule|Kindergarten|Verein|Stiftung|Verband|Gewerkschaft|Kammer|Agentur|Redaktion|Verlag)\b/gi,
-        /\b([A-ZÄÖÜ][a-zäöü]+(?:sstraße|sweg|splatz|sallee|shof|sberg|sturm|sbrücke|shaus|spark|sbad|sgalerie|szentrum))\b/g,
-      ];
-      const LOCAL_LOC_KEYWORDS = [
-        /\b(in|nach|aus|bei|von|zu|im|am|zum|zur)\s+([A-ZÄÖÜ][a-zäöüß]+(?:(?:[-\s][A-ZÄÖÜ][a-zäöüß]+)?(?:[-\s][A-ZÄÖÜ][a-zäöüß]+)?))\b/g,
-        /\b(Straße|Gasse|Weg|Platz|Allee|Ring|Damm|Ufer|Berg|Tal|Hof|Mühle|Schloss|Burg|Kirche|Kapelle|Brücke|Turm|Bad|Hafen|Flughafen|Bahnhof|Haltestelle)\b/gi,
-        /\b(München|Berlin|Hamburg|Köln|Frankfurt|Stuttgart|Düsseldorf|Leipzig|Dresden|Hannover|Nürnberg|Bremen|Bonn|Münster|Karlsruhe|Mannheim|Augsburg|Wiesbaden|Freiburg|Aachen|Regensburg|Kiel|Erfurt|Mainz|Koblenz|Trier|Ulm|Heidelberg|Potsdam|Darmstadt|Bamberg|Passau|Bremen|Lübeck|Rostock|Chemnitz|Magdeburg|Saarbrücken|Würzburg|Ingolstadt|Flensburg|Cottbus|Gera|Bochum|Duisburg|Essen|Oberhausen|Leverkusen|Solingen|Wuppertal|Bielefeld|Dortmund|Gelsenkirchen|Krefeld|Mönchengladbach|Mülheim|Neuss|Paderborn|Remscheid|Siegen|Witten|Hagen|Herne|Iserlohn|Lüdenscheid|Moers|Ratingen|Velbert|Willich)\b/g,
-      ];
-      function detectLocalEntities(text) {
-        var results = [];
-        var seen = new Set();
-        var nameRx = /\b([A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[\- \t][A-ZÄÖÜÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-zäöüßàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)\b/g;
-        var match;
-        while ((match = nameRx.exec(text)) !== null) {
-          var name = match[0].trim();
-          if (name.length < 2 || seen.has(name)) continue;
-          seen.add(name);
-          var parts = name.split(/[\s-]/);
-          var isName =
-            parts.some(function (p) {
-              return LOCAL_NAMES.has(p);
-            }) ||
-            parts.some(function (p) {
-              return LOCAL_SURNAMES.has(p);
-            });
-          if (isName) {
-            results.push({
-              entity_group: "PER",
-              score: 0.85,
-              word: name,
-              start: match.index,
-              end: match.index + name.length,
-            });
-          }
-        }
-        for (var i = 0; i < LOCAL_ORG_KEYWORDS.length; i++) {
-          var rx = LOCAL_ORG_KEYWORDS[i];
-          rx.lastIndex = 0;
-          while ((match = rx.exec(text)) !== null) {
-            var org = (match[1] || match[2] || match[0]).trim();
-            if (org.length < 3 || seen.has("org:" + org)) continue;
-            seen.add("org:" + org);
-            results.push({
-              entity_group: "ORG",
-              score: 0.75,
-              word: match[0].trim(),
-              start: match.index,
-              end: match.index + match[0].length,
-            });
-          }
-        }
-        for (var j = 0; j < LOCAL_LOC_KEYWORDS.length; j++) {
-          var rx2 = LOCAL_LOC_KEYWORDS[j];
-          rx2.lastIndex = 0;
-          while ((match = rx2.exec(text)) !== null) {
-            var loc = (match[2] || match[1] || match[0]).trim();
-            if (loc.length < 3 || seen.has("loc:" + loc)) continue;
-            seen.add("loc:" + loc);
-            var cityRx =
-              /\b(München|Berlin|Hamburg|Köln|Frankfurt|Stuttgart|Düsseldorf|Leipzig|Dresden|Hannover|Nürnberg|Bremen|Bonn|Münster|Karlsruhe|Mannheim|Augsburg|Wiesbaden|Freiburg|Aachen|Regensburg|Kiel|Erfurt|Mainz|Koblenz|Trier|Ulm|Heidelberg|Potsdam|Darmstadt|Bamberg|Passau|Bremen|Lübeck|Rostock|Chemnitz|Magdeburg|Saarbrücken|Würzburg|Ingolstadt)\b/i;
-            var score = loc.match(cityRx) ? 0.9 : 0.6;
-            results.push({
-              entity_group: "LOC",
-              score: score,
-              word: loc,
-              start: match.index + (match[2] ? match.indexOf(loc) : 0),
-              end: match.index + match[0].length,
-            });
-          }
-        }
-        return results;
-      }
+      // Wortlisten-Erkennung ist der Normalfall ohne KI-Treffer (auch bei ausgeschalteter KI); false nur fuer Diagnosen (Harness)
+      let localAIMode = true;
       const AI_MODEL_ID = "Xenova/distilbert-base-multilingual-cased-ner-hrl";
       let nerPipeline = null;
       let aiCache = { key: null, spans: [] };
@@ -4043,6 +3239,7 @@
       }
       function setAIMode(mode) {
         localStorage.setItem(AI_MODE_KEY, mode);
+        prjMarkStale();
         if (mode === "off") unloadAIModel(true);
         aiRefreshUI();
       }
@@ -4283,7 +3480,7 @@
           ORG: { pfx: "ORG", col: "#8b5cf6" },
           LOC: { pfx: "ORT", col: "#3b82f6" },
         };
-        const plain = computePass1(text).maskedText.replace(/\x00/g, " ");
+        const plain = PSDetect.maskHard(text, { ents: activeEntIds(), cvars: cvars, extraSpans: policySpans(text) }).replace(/\x00/g, " ");
         const spans = [];
         const chunks = chunkTextForNER(plain, 1e3);
         const progEl = document.getElementById("aiRunProgress");
@@ -4298,500 +3495,94 @@
             if (!loc) continue;
             cursor = loc.end;
             const entityText = chunks[ci].str.slice(loc.start, loc.end).trim();
-            if (entityText.indexOf(" ") === -1 && (SW.has(entityText) || SW.has(entityText.toLowerCase()))) continue;
+            if (entityText.indexOf(" ") === -1 && (PSDetect.isStopword(entityText) || PSDetect.isStopword(entityText.toLowerCase()))) continue;
             spans.push({ start: chunks[ci].off + loc.start, end: chunks[ci].off + loc.end, pfx: t.pfx, col: t.col });
           }
         }
         aiCache = { key: text, spans: spans };
       }
-      const ENT_PRIO = {
-        EMAIL: 1,
-        IBAN: 1,
-        BIC: 1,
-        IP: 1,
-        KARTE: 1,
-        KFZ: 2,
-        SENSIBEL: 2,
-        GERAET: 1,
-        KONTO: 1,
-        STANDORT: 2,
-        TEL: 2,
-        BETRAG: 2,
-        DATUM: 2,
-        KENNNR: 2,
-        PARAGRAF: 2,
-        MEDIZIN: 2,
-        ADRESSE: 3,
-        ORG: 4,
-        ROLLE: 4,
-        NAME: 5,
-        ORT: 5,
-      };
-      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip", "card", "vehicle", "device", "account", "geo", "intlid"]);
-      const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med", "sensitive"]);
-      function isWhitelisted(v) {
-        return whitelist.some(function (w) {
-          return w && v.toLowerCase().includes(w.toLowerCase());
-        });
+      function activeEntIds() {
+        return ENTS.filter((e) => e.on).map((e) => e.id);
       }
-      const ORG_LEGAL_ONLY =
-        /^(GmbH(?:\s*&\s*Co\.?\s*KG)?|AG|KGaA|KG|OHG|GbR|UG|e\.V\.|eG|SE|Ltd\.?|Inc\.?|Corp\.?|Stiftung|BIC|IBAN|SWIFT|BLZ|HRB|HRA|WKN|ISIN|PZN|ICD)$/;
-      const ORG_LEAD =
-        /^(?:(?:Vorstand|Geschäftsführer(?:in)?|Prokurist(?:in)?|Direktor(?:in)?|Inhaber(?:in)?|Gesellschafter(?:in)?|Mitarbeiter(?:in)?|Mandant(?:in)?|Aufsichtsrat|Beirat|Anteilseigner)\s+|(?:der|die|das|des|dem|den|bei|von|im|in|an|am|für|durch|mit|als|und|oder|einer?|eines|ist|sind|war|waren|bleibt|wird)\s+)+/;
-      function isValidCard(raw) {
-        const d = raw.replace(/\D/g, "");
-        if (d.length < 13 || d.length > 19 || !/^[2-6]/.test(d)) return false;
-        let sum = 0;
-        for (let i = 0; i < d.length; i++) {
-          let n = Number(d[d.length - 1 - i]);
-          if (i % 2 === 1) {
-            n *= 2;
-            if (n > 9) n -= 9;
-          }
-          sum += n;
-        }
-        return sum % 10 === 0;
-      }
-      // Wertpruefung fuer harte Treffer. Muss schon beim Sammeln laufen: ein unplausibler Treffer
-      // (z. B. PLZ 05331 als Telefonnummer) wuerde sonst die spaetere Adress-Erkennung verdraengen.
-      function luhnOk(d) {
-        let sum = 0;
-        for (let i = 0; i < d.length; i++) {
-          let n = Number(d[d.length - 1 - i]);
-          if (i % 2 === 1) {
-            n *= 2;
-            if (n > 9) n -= 9;
-          }
-          sum += n;
-        }
-        return sum % 10 === 0;
-      }
-      function validIntlId(val) {
-        const v = val.replace(/[ .\-]/g, "").toUpperCase();
-        if (/^\d{8}[A-Z]$/.test(v) || /^[XYZ]\d{7}[A-Z]$/.test(v)) {
-          // spanische DNI/NIE: Kontrollbuchstabe = Rest der Zahl durch 23
-          const num = Number((v[0] === "X" ? "0" : v[0] === "Y" ? "1" : v[0] === "Z" ? "2" : v[0]) + v.slice(1, 8));
-          return "TRWAGMYFPDXBNJZSQVHLCKE"[num % 23] === v[8];
-        }
-        if (/^\d{11}$/.test(v)) {
-          // polnische PESEL: Pruefsumme
-          const w = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
-          const sum = w.reduce((a, x, i) => a + x * Number(v[i]), 0);
-          return (10 - (sum % 10)) % 10 === Number(v[10]);
-        }
-        return true;
-      }
-      // Liefert den (ggf. gekuerzten) Wert oder null, wenn der Treffer unplausibel ist.
-      function hardValue(pfx, val, id) {
-        if (id === "device" && /^\d{2}[ \-]?\d{6}[ \-]?\d{6}[ \-]?\d$/.test(val)) return luhnOk(val.replace(/\D/g, "")) ? val : null;
-        if (id === "intlid" && !validIntlId(val)) return null;
-        if (pfx === "KARTE") return isValidCard(val) ? val : null;
-        if (pfx === "TEL") return /^[A-Za-zäöüß ,\-]+$/.test(val) || val.replace(/\D/g, "").length >= 7 ? val : null;
-        if (pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val)) {
-          const exp = IBAN_LEN[val.slice(0, 2).toUpperCase()];
-          if (exp) {
-            // Treffer, der ueber die IBAN hinausreicht (angrenzende Ziffern oder Woerter), auf die Landeslaenge kuerzen
-            let n = 0;
-            for (let i = 0; i < val.length; i++) {
-              if (/[A-Za-z0-9]/.test(val[i])) n++;
-              if (n === exp) {
-                val = val.slice(0, i + 1);
-                break;
-              }
-            }
-          }
-          // OCR-Verwechslung "O" statt "0" in der Kontonummer tolerieren (nur fuer die Pruefung)
-          return isValidIBANFormat(val.slice(0, 4) + val.slice(4).replace(/O/g, "0")) ? val : null;
-        }
-        return val;
-      }
-      function isValidBIC(code) {
-        return /^[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/.test(code);
-      }
-      const IBAN_LEN = {
-        DE: 22,
-        AT: 20,
-        CH: 21,
-        FR: 27,
-        GB: 22,
-        NL: 18,
-        IT: 27,
-        ES: 24,
-        BE: 16,
-        LU: 20,
-        PL: 28,
-        DK: 18,
-        SE: 24,
-        NO: 15,
-        FI: 18,
-        IE: 22,
-        PT: 25,
-        CZ: 24,
-        SK: 24,
-        HU: 28,
-        LI: 21,
-        GR: 27,
-        HR: 21,
-        SI: 19,
-        RO: 24,
-        BG: 22,
-        EE: 20,
-        LV: 21,
-        LT: 20,
-        MT: 31,
-        CY: 28,
-        IS: 26,
-        TR: 26,
-      };
-      function ibanMod97(c) {
-        let rem = 0;
-        const s = c.slice(4) + c.slice(0, 4);
-        for (const ch of s) {
-          const v = /\d/.test(ch) ? ch : String(ch.charCodeAt(0) - 55);
-          for (const d of v) rem = (rem * 10 + Number(d)) % 97;
-        }
-        return rem === 1;
-      }
-      // Bekanntes Land: Laenge muss stimmen (Tippfehler in der Pruefziffer bleiben maskiert).
-      // Unbekanntes Land: Laenge 15-34 und gueltige Pruefsumme (mod 97), sonst zu viele Zufallstreffer.
-      function isValidIBANFormat(raw) {
-        const c = raw.replace(/\s+/g, "").toUpperCase();
-        if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(c)) return false;
-        const exp = IBAN_LEN[c.slice(0, 2)];
-        if (exp) return c.length === exp;
-        return c.length >= 15 && c.length <= 34 && ibanMod97(c);
-      }
-      function isHeadingSpan(text, start, end) {
-        const ls = text.lastIndexOf("\n", start - 1) + 1;
-        let le = text.indexOf("\n", end);
-        if (le === -1) le = text.length;
-        const line = text.slice(ls, le).trim();
-        const val = text.slice(start, end).trim();
-        const numbered = line.match(/^(?:[IVXLC]+|\d+(?:\.\d+)*)[\.\)]\s+(.*)$/);
-        if (numbered && numbered[1].trim() === val) return true;
-        if (line === val && /[A-ZÄÖÜ]/.test(line) && line === line.toUpperCase() && !/\d{5}/.test(line))
-          return !isCapsPersonName(val);
-        return false;
-      }
-      let lastP1 = { text: null, sig: null, res: null };
-      function computePass1(text) {
-        const sig = ENTS.map((e) => (e.on ? 1 : 0)).join("") + "|" + cvars.map((c) => c.n + "\u0001" + c.p).join("\u0002");
-        if (!(lastP1.text === text && lastP1.sig === sig)) lastP1 = { text: text, sig: sig, res: computePass1Uncached(text) };
-        // Kopie liefern: postProcessSpans veraendert die Treffer (start/end), das darf spaetere Aufrufe nicht beeinflussen.
-        return { p1: lastP1.res.p1.map((x) => Object.assign({}, x)), maskedText: lastP1.res.maskedText };
-      }
-      function computePass1Uncached(text) {
-        const pass1 = [];
-        for (const cv of cvars) {
-          let rx;
-          try {
-            rx = new RegExp(cv.p, "g");
-          } catch (e) {
-            rx = new RegExp(cv.p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
-          }
-          let m;
-          while ((m = rx.exec(text)) !== null) {
-            if (m.index === rx.lastIndex) rx.lastIndex++;
-            if (!m[0].trim()) continue;
-            pass1.push({
-              start: m.index,
-              end: m.index + m[0].length,
-              pfx: cv.n,
-              col: "#ff3b30",
-              id: "custom",
-              prio: 0,
-              meth: "Eigene Regel",
-            });
-          }
-        }
-        for (const e of ENTS) {
-          if (!e.on || !HARD_ENT_IDS.has(e.id)) continue;
-          for (const srcRx of e.rx) {
-            const rx = new RegExp(srcRx.source, srcRx.flags.includes("g") ? srcRx.flags : srcRx.flags + "g");
-            let m;
-            while ((m = rx.exec(text)) !== null) {
-              if (m.index === rx.lastIndex) rx.lastIndex++;
-              let gval = null;
-              for (let gi = 1; gi < m.length; gi++)
-                if (m[gi] !== undefined) {
-                  gval = m[gi];
-                  break;
-                }
-              const raw = gval !== null ? gval : m[0];
-              let val = raw.trim();
-              if (!val || val.length < 2) continue;
-              val = hardValue(e.pfx, val, e.id);
-              if (!val) continue;
-              const off = (gval !== null ? m[0].indexOf(raw) : 0) + (raw.length - raw.replace(/^\s+/, "").length);
-              pass1.push({
-                start: m.index + off,
-                end: m.index + off + val.length,
-                pfx: e.pfx,
-                col: e.col,
-                id: e.id,
-                prio: ENT_PRIO[e.pfx] !== undefined ? ENT_PRIO[e.pfx] : 5,
-                meth: "Regex (Pass 1)",
-              });
-            }
-          }
-        }
-        const p1 = resolveSpanOverlaps(pass1);
-        let maskedText = text;
-        for (let i = p1.length - 1; i >= 0; i--) {
-          maskedText =
-            maskedText.slice(0, p1[i].start) + "\0".repeat(p1[i].end - p1[i].start) + maskedText.slice(p1[i].end);
-        }
-        return { p1: p1, maskedText: maskedText };
-      }
+      // Duenne Fassade: der Erkennungskern liegt in lib/detect.js (PSDetect)
       function collectEntities(text) {
-        const pass1Result = computePass1(text);
-        const p1 = pass1Result.p1;
-        const maskedText = pass1Result.maskedText;
-        const pass2 = [];
-        for (const e of ENTS) {
-          if (!e.on || !SOFT_ENT_IDS.has(e.id)) continue;
-          for (const srcRx of e.rx) {
-            const rx = new RegExp(srcRx.source, srcRx.flags.includes("g") ? srcRx.flags : srcRx.flags + "g");
-            let m;
-            while ((m = rx.exec(maskedText)) !== null) {
-              if (m.index === rx.lastIndex) rx.lastIndex++;
-              let gval = null;
-              for (let gi = 1; gi < m.length; gi++)
-                if (m[gi] !== undefined) {
-                  gval = m[gi];
-                  break;
-                }
-              const raw = gval !== null ? gval : m[0];
-              const val = raw.trim();
-              if (!val || val.length < 2 || val.includes("\0")) continue;
-              const off = (gval !== null ? m[0].indexOf(raw) : 0) + (raw.length - raw.replace(/^\s+/, "").length);
-              pass2.push({
-                start: m.index + off,
-                end: m.index + off + val.length,
-                pfx: e.pfx,
-                col: e.col,
-                id: e.id,
-                prio: ENT_PRIO[e.pfx] !== undefined ? ENT_PRIO[e.pfx] : 5,
-                meth: "Regex (Pass 2)",
-              });
-            }
-          }
-        }
-        if (aiCache.key === text) {
-          for (const s of aiCache.spans) {
-            const val = text.slice(s.start, s.end);
-            const vt = val.trim();
-            if (!vt || val.includes("\0")) continue;
-            if (vt.length < 3) continue;
-            const ls = text.lastIndexOf("\n", s.start - 1) + 1;
-            let le = text.indexOf("\n", s.end);
-            if (le === -1) le = text.length;
-            const headLine = text.slice(ls, le).trim();
-            if (
-              /[A-ZÄÖÜ]/.test(headLine) &&
-              headLine === headLine.toUpperCase() &&
-              !/\d{5}/.test(headLine) &&
-              !isCapsPersonName(vt)
-            )
-              continue;
-            if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(vt)) continue;
-            if (s.pfx === "ORG" && /^(?:AG|GmbH|KG|OHG|GbR|UG|SE|eG|Ltd\.?|Inc\.?|Corp\.?)[ \t]/.test(vt)) continue;
-            if (SW.has(vt) || SW.has(vt.replace(/[^A-Za-züäöÄÖÜß]/g, ""))) continue;
-            if (s.pfx === "NAME" && vt.split(/\s+/).every((w) => SW.has(w))) continue;
-            pass2.push({
-              start: s.start,
-              end: s.end,
-              pfx: s.pfx,
-              col: s.col,
-              id: "ai",
-              prio: 5,
-              meth: "KI (NER-Modell)",
-            });
-          }
-        } else if (localAIMode) {
-          try {
-            const aiMap = {
-              PER: { pfx: "NAME", col: "#f59e0b" },
-              ORG: { pfx: "ORG", col: "#8b5cf6" },
-              LOC: { pfx: "ORT", col: "#3b82f6" },
-            };
-            detectLocalEntities(maskedText).forEach(function (ent) {
-              const t = aiMap[ent.entity_group];
-              if (!t) return;
-              const val = (ent.word || "").trim();
-              if (!val || val.length < 3 || val.includes("\0")) return;
-              if (maskedText.slice(ent.start, ent.start + val.length) !== val) return;
-              if (ent.entity_group === "LOC" && ent.score < 0.85) return;
-              if (ent.entity_group === "ORG" && ORG_LEGAL_ONLY.test(val)) return;
-              if (SW.has(val)) return;
-              pass2.push({
-                start: ent.start,
-                end: ent.start + val.length,
-                pfx: t.pfx,
-                col: t.col,
-                id: "ai",
-                prio: 5,
-                meth: "KI-Erkennung (Wortlisten)",
-              });
-            });
-          } catch (err) {
-            console.error("Lokale KI-Erkennung (nicht fatal):", err);
-          }
-        }
-        return postProcessSpans(text, p1.concat(pass2));
+        return PSDetect.detect(text, {
+          ents: activeEntIds(),
+          cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+          extraSpans: policySpans(text),
+          whitelist: whitelist,
+          released: released,
+          wordlists: localAIMode,
+          aiSpans: aiCache.key === text ? aiCache.spans : null,
+        });
       }
-      function resolveSpanOverlaps(spans) {
-        const LABEL_TYPES = new Set(["NAME", "ORG", "ORT"]);
-        const working = spans.slice();
-        for (let i = 0; i < working.length; i++) {
-          const a = working[i];
-          if (!LABEL_TYPES.has(a.pfx)) continue;
-          for (let j = 0; j < working.length; j++) {
-            if (i === j) continue;
-            const b = working[j];
-            if (b.prio >= a.prio) continue;
-            if (a.start >= b.start && a.end <= b.end) {
-              a.start = b.start;
-              a.end = b.end;
-              a.prio = b.prio;
-              working.splice(j, 1);
-              if (j < i) i--;
-              break;
-            }
-          }
-        }
-        working.sort(function (a, b) {
-          return (a.prio || 5) - (b.prio || 5) || b.end - b.start - (a.end - a.start) || a.start - b.start;
-        });
-        // Akzeptierte Treffer sind ueberlappungsfrei und nach Start sortiert: es genuegt, die Nachbarn zu pruefen.
-        const accepted = [];
-        for (const s of working) {
-          let lo = 0,
-            hi = accepted.length;
-          while (lo < hi) {
-            const mid = (lo + hi) >> 1;
-            if (accepted[mid].start < s.start) lo = mid + 1;
-            else hi = mid;
-          }
-          const prev = accepted[lo - 1],
-            next = accepted[lo];
-          if (prev && prev.end > s.start) continue;
-          if (next && next.start < s.end) continue;
-          accepted.splice(lo, 0, s);
-        }
-        return accepted;
+      // Gegenpruefung: Erkennung ein zweites Mal ueber das Ergebnis (alle Typen, ohne Freigaben)
+      function leakScan(at) {
+        const mk = PSLib.marks.toCvars(manualMarks);
+        return PSLib.leakcheck.scan(at, { detect: (t) => PSDetect.detect(t, { ents: ENTS.map((e) => e.id), cvars: cvars.concat(mk), extraSpans: policySpans(t), whitelist: [], wordlists: localAIMode, aiSpans: null }), whitelist: whitelist, released: released });
       }
-      function postProcessSpans(text, cands) {
-        const ADDR_LEAD = /^(?:Sitz|Anschrift|Adresse|Geschäftssitz|Wohnsitz|Lieferadresse|Rechnungsadresse)[ \t]+/;
-        for (const s of cands) {
-          let m = null;
-          if (s.pfx === "ORG") m = text.slice(s.start, s.end).match(ORG_LEAD);
-          else if (s.pfx === "ADRESSE") m = text.slice(s.start, s.end).match(ADDR_LEAD);
-          if (m && m[0].length < s.end - s.start) s.start += m[0].length;
-        }
-        for (const s of cands) {
-          if (s.pfx !== "NAME") continue;
-          let m2;
-          while (
-            (m2 = text.slice(s.start, s.end).match(/^([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][A-Za-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]*)[ \t]+/)) &&
-            (SW.has(m2[1]) || SW.has(m2[1].replace(/[^A-Za-züäöÄÖÜß]/g, "")))
-          ) {
-            s.start += m2[0].length;
-          }
-          while (
-            (m2 = text.slice(s.end).match(/^[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)(?![\wäöüß])/)) &&
-            !SW.has(m2[1])
-          ) {
-            s.end += m2[0].length;
-          }
-        }
-        for (const s of cands) {
-          if (s.pfx !== "NAME") continue;
-          let mp;
-          while (
-            (mp = text.slice(s.end).match(/^[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/)) &&
-            !SW.has(mp[1])
-          )
-            s.end += mp[0].length;
-          const ml = text.slice(Math.max(0, s.start - 60), s.start).match(/([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+$/);
-          if (ml && !SW.has(ml[1])) s.start -= ml[0].length;
-        }
-        for (const s of cands) {
-          if (s.pfx !== "NAME") continue;
-          let mh;
-          while ((mh = text.slice(s.end).match(/^-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}/))) s.end += mh[0].length;
-          while ((mh = text.slice(Math.max(0, s.start - 40), s.start).match(/[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}-$/))) s.start -= mh[0].length;
-        }
-        const valid = cands.filter(function (s) {
-          const val = text.slice(s.start, s.end);
-          if (!val || val.length < 2) return false;
-          if (val.includes("{{") || val.includes("}}") || val.includes("\0")) return false;
-          if (isWhitelisted(val)) return false;
-          if (["NAME", "ORG", "ROLLE", "ORT"].includes(s.pfx)) {
-            if (s.end < text.length && /[\wäöüÄÖÜß]/.test(text[s.end])) return false;
-            if (s.start > 0 && /[\wäöüÄÖÜß]/.test(text[s.start - 1])) return false;
-          }
-          if (s.pfx === "KARTE" && !isValidCard(val)) return false;
-          if (s.pfx === "BIC") {
-            if (!isValidBIC(val)) return false;
-            if (!/\d/.test(val) && !/XXX$/.test(val)) {
-              const ls = text.lastIndexOf("\n", s.start - 1) + 1;
-              let le = text.indexOf("\n", s.end);
-              if (le === -1) le = text.length;
-              if (!/BIC|SWIFT|IBAN|Bank|BLZ|Konto/i.test(text.slice(ls, s.start) + text.slice(s.end, le))) return false;
-            }
-          }
-          if (s.pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val) && !isValidIBANFormat(val)) return false;
-          if (s.pfx === "NAME" && !okName(val)) return false;
-          if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(val)) return false;
-          if (s.pfx === "ORT" && SW.has(val)) return false;
-          if (["NAME", "ORG", "ORT", "ROLLE"].includes(s.pfx) && isHeadingSpan(text, s.start, s.end)) return false;
-          return true;
-        });
-        valid.sort(function (a, b) {
-          return a.start - b.start || b.end - a.end;
-        });
-        const MERGE_GAP = { ADRESSE: /^[,\s]{1,6}$/, NAME: /^\s$/, ORG: /^[\s&,]{1,3}$/ };
-        const mergedSpans = [];
-        for (const s of valid) {
-          const last = mergedSpans[mergedSpans.length - 1];
-          if (
-            last &&
-            last.pfx === s.pfx &&
-            MERGE_GAP[s.pfx] &&
-            s.start >= last.end &&
-            MERGE_GAP[s.pfx].test(text.slice(last.end, s.start))
-          ) {
-            last.end = Math.max(last.end, s.end);
-            continue;
-          }
-          mergedSpans.push({
-            start: s.start,
-            end: s.end,
-            pfx: s.pfx,
-            col: s.col,
-            id: s.id,
-            prio: s.prio,
-            meth: s.meth,
+      function runLeakCheck() { const at = document.getElementById("AT").value;
+        const r = leakScan(at);
+        r.findings = r.findings.filter((f) => !lcIgnored.has(f.type + "\u0000" + at.slice(f.start, f.end))); r.count = r.findings.length; r.clean = r.count === 0 && !r.error; lcLast = { at: at, res: r }; renderLeakCheck(); return r;
+      }
+      function renderLeakCheck() {
+        const band = document.getElementById("LCBAND"), list = document.getElementById("LCLIST"), r = lcLast.res, ok = r.clean;
+        const msg = r.error ? "nicht möglich" : ok ? "keine Auffälligkeiten" : r.count === 1 ? "1 möglicher Rest" : r.count + " mögliche Reste"; const ic = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="' + (ok ? "M3 8.5l3.2 3.2L13 4.5" : "M8 2l6.5 11.5h-13z M8 6.5v3 M8 11.6v.1") + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        band.style.cssText += ";display:flex;cursor:" + (r.count ? "pointer" : "default") + ";background:" + (ok ? "#ecfdf5;color:#047857" : "#fffbeb;color:#92400e");
+        band.innerHTML = ic + "<span>Gegenprüfung: " + msg + "</span>"; if (!r.count) list.style.display = "none";
+        band.setAttribute("aria-expanded", list.style.display === "none" ? "false" : "true"); const bt = (fn, i, t) => '<button type="button" class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="' + fn + "(" + i + ')">' + t + "</button>";
+        list.innerHTML = r.findings.map((f, i) => '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12px"><span class="pill" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d">' + esc(f.type) + '</span><code style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#444">' + esc(f.snippet) + "</code>" + bt("lcMask", i, "Maskieren") + bt("lcIgnore", i, "Ignorieren") + "</div>").join("");
+      }
+      function toggleLCList() { const list = document.getElementById("LCLIST"); if (!lcLast || !lcLast.res.count) return; list.style.display = list.style.display === "none" ? "block" : "none"; document.getElementById("LCBAND").setAttribute("aria-expanded", list.style.display === "none" ? "false" : "true"); }
+      async function lcMask(i) { const f = lcLast.res.findings[i], v = lcLast.at.slice(f.start, f.end); if (!PSLib.marks.add(manualMarks, { value: v, pfx: f.type })) return toast("Dieser Wert kann nicht markiert werden", "e"); await reanon(); }
+      function lcIgnore(i) { const f = lcLast.res.findings[i]; lcIgnored.add(f.type + "\u0000" + lcLast.at.slice(f.start, f.end)); runLeakCheck(); }
+      let anonBusy = false, repStart = null, repDur = 0;
+      const APP_VERSION = "1.8.0"; // muss mit package.json uebereinstimmen
+      // Bericht ohne personenbezogene Werte: nur Zaehler, Einstellungen und Pruefsumme
+      async function saveReport() {
+        const t = document.getElementById("AT").value;
+        if (!t || !repStart) return toast("Kein Text vorhanden", "e");
+        try {
+          const counts = {};
+          Object.values(store).forEach((d) => { counts[d.t] = (counts[d.t] || 0) + 1; });
+          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+          const sha = Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+          if (!lcLast || lcLast.at !== t || lcLast.res.error) runLeakCheck();
+          const lr = lcLast && lcLast.at === t && lcLast.res && !lcLast.res.error ? lcLast.res : null;
+          if (!lr) return toast("Gegenprüfung nicht möglich, Bericht nicht erstellt", "e");
+          const sev = (k) => (lr.findings.filter((f) => f.severity === k).length);
+          const rep = PSLib.report.build({
+            appVersion: APP_VERSION, startedAt: repStart.toISOString(), localTime: new Date().toLocaleString("de-DE"),
+            durationMs: repDur, profileId: curProf, aiMode: aiMode(),
+            modelId: nerPipeline ? AI_MODEL_ID : undefined,
+            whitelistSize: whitelist.length, customRuleCount: cvars.length + policyRuleCount(),
+            documents: [{ index: 1, chars: t.length, counts: counts, resultSha256: sha, leak: { count: lr.count, hoch: sev("hoch"), mittel: sev("mittel") } }],
           });
+          dl("bericht.txt", PSLib.report.toText(rep), "text/plain");
+          toast("Bericht gespeichert", "s");
+        } catch (err) {
+          toast("Bericht nicht möglich: " + err.message, "e");
         }
-        const final = resolveSpanOverlaps(mergedSpans);
-        final.forEach(function (s) {
-          s.val = text.slice(s.start, s.end);
-        });
-        return final;
       }
-      let anonBusy = false;
       async function anon() {
         if (anonBusy) {
           toast("Analyse läuft bereits...", "s");
           return;
         }
+        // K1.fix: im Projektmodus gemeinsamer Zustand, daher immer das ganze Projekt neu rechnen (kein veralteter Altstand)
+        if (prj && prjRes.size) return prjRun();
         anonBusy = true;
+        stateTouch();
+        repStart = new Date(); repDur = 0;
+        lcIgnored = new Set();
         const btn = document.getElementById("ANONBTN");
         if (btn) btn.disabled = true;
         try {
           await anonCore();
+          if (repStart) repDur = Date.now() - repStart.getTime();
+        } catch (e) {
+          repStart = null;
+          throw e;
         } finally {
           anonBusy = false;
           scheduleAIIdleUnload();
@@ -4800,81 +3591,76 @@
           if (pe) pe.textContent = "";
         }
       }
-      // Gleich lange Normalisierung fuer die Erkennung (Positionen bleiben gueltig): geschuetzte/schmale Leerzeichen
-      // und Vollbreiten-Ziffern/-Buchstaben werden zu gewoehnlichen Zeichen. Ausgegeben wird weiterhin der Originaltext.
-      function normalizeForDetection(t) {
-        return t
-          .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, " ")
-          .replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
+      // Je Markierung die Fundstellen im normalisierten Text und deren Abdeckung durch die Spans; null ohne Markierungen
+      function markTreffer(det, spans) {
+        const cv = PSLib.marks.toCvars(manualMarks);
+        if (!cv.length) return null;
+        let treffer = 0, ohne = 0;
+        cv.forEach((c) => {
+          let n = 0;
+          try {
+            const rx = new RegExp(PSDetect.normalizeForDetection(c.p), "g" + (c.f || ""));
+            let m;
+            while ((m = rx.exec(det)) !== null) {
+              if (m[0].length === 0) { rx.lastIndex++; continue; }
+              const a = m.index, e = a + m[0].length;
+              if (spans.some((sp) => sp.start <= a && sp.end >= e)) n++;
+            }
+          } catch (err) { /* ungueltiges Muster: zaehlt als ohne Treffer */ }
+          treffer += n;
+          if (!n) ohne++;
+        });
+        return { treffer: treffer, ohne: ohne };
       }
       async function anonCore() {
         const input = document.getElementById("IT").value;
         if (!input.trim()) {
+          repStart = null;
           toast("Bitte Text eingeben", "e");
           return;
         }
         store = {};
         cnt = {};
+        policySpans(input); // Regelfehler: Abbruch vor jeder Verarbeitung
         try {
           await ensureAIReady();
-          const det = normalizeForDetection(input);
+          const det = PSDetect.normalizeForDetection(input);
           if (nerPipeline && aiCache.key !== det) {
             toast("KI-Analyse läuft...", "s");
             await ensureAISpans(det);
           }
-          const spans = collectEntities(det);
-          spans.forEach((sp) => (sp.val = input.slice(sp.start, sp.end)));
-          // Token in unveraenderter Reihenfolge (von hinten) vergeben, Text aber in einem Durchgang zusammensetzen.
-          const parts = [];
-          let tail = input.length;
-          for (let i = spans.length - 1; i >= 0; i--) {
-            const s = spans[i];
-            parts.push(input.slice(s.end, tail), tok(s.val, s.pfx, s.col, s.meth));
-            tail = s.start;
-          }
-          parts.push(input.slice(0, tail));
-          const txt = parts.reverse().join("");
+          const r = PSDetect.anonymize(input, {
+            ents: activeEntIds(),
+            cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+            extraSpans: policySpans(input),
+            whitelist: whitelist,
+            released: released,
+            wordlists: localAIMode,
+            aiSpans: aiCache.key === det ? aiCache.spans : null,
+            state: { store, cnt },
+          });
+          store = r.state.store; cnt = r.state.cnt;
+          stateTouch();
+          const txt = r.text;
           document.getElementById("AT").value = txt;
           renderMap();
+          if (document.getElementById("WS").style.display === "none") { document.getElementById("OB").style.display = "none"; document.getElementById("WS").style.display = "block"; }
           setStep(2);
           document.getElementById("resultArea").style.display = "flex";
           document.getElementById("REANON").style.display = "inline-flex";
           updTokenCount();
-          toast(Object.keys(store).length + " Entitäten anonymisiert", "s");
+          // Trefferpruefung je Markierung ueber die Abdeckung: Fundstelle zaehlt, wenn ein Span sie ganz umschliesst (auch ein laengerer Treffer)
+          const mt = markTreffer(det, r.spans);
+          toast(
+            Object.values(store).filter((d) => d.m !== "wortlich").length + " Entitäten anonymisiert" + (mt ? ". Markierungen: " + mt.treffer + " Treffer" + (mt.ohne ? ", " + mt.ohne + " ohne Treffer" : "") : ""),
+            mt && mt.ohne ? "e" : "s",
+          );
+          runLeakCheck();
+          fundeAfterAnon();
         } catch (err) {
+          repStart = null;
           toast("Fehler: " + err.message, "e");
         }
-      }
-      function smartSuffix(val, pfx) {
-        cnt[pfx] = (cnt[pfx] || 0) + 1;
-        return String(cnt[pfx]);
-      }
-      // Rueckwaerts-Index Wert -> erstes Token. Wird neu aufgebaut, sobald `store` ein neues Objekt ist (Zuruecksetzen).
-      let storeIdx = new Map(),
-        storeIdxFor = null;
-      function storeIndex() {
-        if (storeIdxFor !== store) {
-          storeIdx = new Map();
-          for (const [t, d] of Object.entries(store)) if (!storeIdx.has(d.v)) storeIdx.set(d.v, t);
-          storeIdxFor = store;
-        }
-        return storeIdx;
-      }
-      function tok(val, pfx, col, meth) {
-        const cleanVal = val.replace(/\{\{[^}]*\}\}/g, "").trim();
-        if (!cleanVal || cleanVal.length < 2) return val;
-        const idx = storeIndex();
-        const known = idx.get(cleanVal);
-        if (known !== undefined) return known;
-        const suffix = smartSuffix(cleanVal, pfx);
-        let base = "{{" + pfx + "_" + suffix + "}}";
-        if (store[base] && store[base].v !== cleanVal) {
-          cnt[pfx] = (cnt[pfx] || 0) + 1;
-          base = "{{" + pfx + "_" + suffix + "_" + cnt[pfx] + "}}";
-        }
-        store[base] = { v: cleanVal, t: pfx, c: col, m: meth };
-        if (!idx.has(cleanVal)) idx.set(cleanVal, base);
-        return base;
       }
       function deanon() {
         const ai = document.getElementById("AR").value;
@@ -4886,10 +3672,7 @@
           toast("Kein Mapping vorhanden", "e");
           return;
         }
-        const tokens = Object.keys(store).sort((a, b) => b.length - a.length);
-        const r = tokens.length
-          ? ai.replace(new RegExp(tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g"), (m) => store[m].v)
-          : ai;
+        const r = PSDetect.deanonymize(ai, { store });
         document.getElementById("RT").value = r;
         setStep(4);
         toast("Originaldaten erfolgreich eingesetzt", "s");
@@ -4900,22 +3683,24 @@
         document.getElementById("MT").innerHTML = entries.length
           ? entries
               .map(
-                ([t, d]) =>
-                  '<tr><td class="token-cell">' +
+                ([t, d]) => {
+                  const c = d.c ? String(d.c) : "#666666"; // woertliche Eintraege (c:null) neutral
+                  return '<tr><td class="token-cell">' +
                   esc(t) +
                   '</td><td class="value-cell">' +
                   esc(d.v) +
                   '</td><td><span class="pill" style="background:' +
-                  d.c +
+                  esc(c) +
                   "18;color:" +
-                  d.c +
+                  esc(c) +
                   ";border:1px solid " +
-                  d.c +
+                  esc(c) +
                   '44">' +
                   esc(d.t) +
                   '</span></td><td style="color:#999">' +
                   esc(d.m) +
-                  "</td></tr>",
+                  "</td></tr>";
+                },
               )
               .join("")
           : '<tr><td colspan="4" style="text-align:center;color:#999;padding:22px;font-size:12px">Noch keine Anonymisierung durchgeführt</td></tr>';
@@ -4923,24 +3708,187 @@
       function esc(s) {
         return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       }
+      // Verschlüsselte Zuordnung (.psmap)
+      function psMapUnsaved() {
+        return Object.keys(store).length > 0 && !mapSaved;
+      }
+      let psPwMode = null, psPwBytes = null, psPwBusy = false, psPwOpener = null, psPwTok = 0, psPwZipCb = null, psPwDocs = null;
+      // Passwortdialog für die Zuordnung im Projekt-ZIP: cb(bytes) bei Erfolg, cb(null) bei Abbruch
+      function psPwZip(docs, cb) { psPwZipCb = cb; psPwDocs = docs; psPwOpen("zip"); }
+      // Eintraege bereinigen: nur {{...}}-Schluessel, Farbe als #rrggbb, Texte begrenzt
+      function psSanitize(st) {
+        if (!st || typeof st !== "object" || Array.isArray(st) || (st.v !== undefined && st.v !== 1) || !st.store || typeof st.store !== "object" || Array.isArray(st.store)) throw { code: "CORRUPT" };
+        const ns = Object.create(null), nc = {};
+        const keys = Object.keys(st.store);
+        if (keys.length > 200000) throw { code: "CORRUPT" };
+        for (const k of keys) {
+          const e = st.store[k];
+          if (!/^\{\{[^{}]{1,100}\}\}$/.test(k) || /^\{\{(__proto__|constructor|prototype)\}\}$/i.test(k)) throw { code: "CORRUPT" };
+          if (!e || typeof e !== "object" || typeof e.v !== "string" || typeof e.t !== "string" || typeof e.m !== "string") throw { code: "CORRUPT" };
+          if (e.v.length > 1000000 || e.t.length > 50 || e.m.length > 100) throw { code: "CORRUPT" };
+          ns[k] = { v: e.v, t: e.t, c: typeof e.c === "string" && /^#[0-9a-f]{6}$/i.test(e.c) ? e.c : "#8b5cf6", m: e.m };
+        }
+        const c = st.cnt;
+        if (c !== undefined && (!c || typeof c !== "object" || Array.isArray(c))) throw { code: "CORRUPT" };
+        for (const k of Object.keys(c || {})) {
+          if (k === "__proto__" || !Number.isFinite(c[k]) || c[k] < 0) throw { code: "CORRUPT" };
+          nc[k] = c[k];
+        }
+        return { store: Object.assign({}, ns), cnt: nc };
+      }
+      function psPwOpen(mode) {
+        psPwMode = mode;
+        const save = mode === "save" || mode === "zip";
+        document.getElementById("PWTITLE").textContent = save ? "Zuordnung mit Passwort schützen" : "Zuordnung entschlüsseln";
+        document.getElementById("PWINFO").style.display = save ? "" : "none";
+        document.getElementById("PWD1").autocomplete = save ? "new-password" : "current-password";
+        document.getElementById("PWROW2").style.display = save ? "" : "none";
+        ["PWD1", "PWD2"].forEach((id) => (document.getElementById(id).value = ""));
+        document.getElementById("PWERR").textContent = "";
+        psPwStrength();
+        psPwOpener = document.activeElement;
+        document.getElementById("PWDLG").style.display = "flex";
+        document.getElementById("PWD1").focus();
+      }
+      function psPwClose() {
+        if (psPwZipCb) { const cb = psPwZipCb; psPwZipCb = null; psPwDocs = null; cb(null); }
+        ["PWD1", "PWD2"].forEach((id) => (document.getElementById(id).value = ""));
+        document.getElementById("PWDLG").style.display = "none";
+        psPwTok++;
+        psPwBusy = false;
+        document.getElementById("PWOK").disabled = false;
+        psPwMode = null;
+        psPwBytes = null;
+        if (psPwOpener && psPwOpener.focus) psPwOpener.focus();
+      }
+      function psPwStrength() {
+        const n = [...document.getElementById("PWD1").value.normalize("NFC")].length;
+        document.getElementById("PWSTR").textContent =
+          psPwMode !== "save" && psPwMode !== "zip" ? "" : n === 0 ? "Mindestens 10 Zeichen." : n < 10 ? "Zu kurz: " + n + " von mindestens 10 Zeichen." : n < 16 ? "Länge ausreichend (" + n + " Zeichen)." : "Länge gut (" + n + " Zeichen).";
+      }
+      document.addEventListener("keydown", function (e) {
+        const d = document.getElementById("PWDLG");
+        if (!d || d.style.display === "none") return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          psPwClose();
+        } else if (e.key === "Tab") {
+          const f = [...d.querySelectorAll("input,button")].filter((x) => x.offsetParent !== null);
+          const i = f.indexOf(document.activeElement);
+          if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+          else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+        }
+      });
+      function psMapSave() {
+        if (!Object.keys(store).length) {
+          toast("Kein Mapping vorhanden", "e");
+          return;
+        }
+        psPwOpen("save");
+      }
+      function psMapLoad(file) {
+        const r = new FileReader();
+        r.onerror = function () {
+          toast("Die Datei konnte nicht gelesen werden.", "e");
+        };
+        r.onload = function () {
+          psPwOpen("load");
+          psPwBytes = new Uint8Array(r.result);
+        };
+        r.readAsArrayBuffer(file);
+      }
+      function psPwMsg(err) {
+        const c = err && err.code;
+        if (c === "WEAK_PASSWORD") return "Das Passwort muss mindestens 10 Zeichen lang sein.";
+        if (c === "WRONG_PASSWORD") return "Passwort falsch oder Datei beschädigt.";
+        if (c === "NOT_PSMAP") return "Das ist keine PrivacyShield-Zuordnung.";
+        if (c === "UNSUPPORTED_VERSION") return "Diese Zuordnung stammt aus einer neueren Programmversion.";
+        if (c === "CORRUPT") return "Die Datei ist beschädigt.";
+        return "Vorgang fehlgeschlagen.";
+      }
+      async function psPwOk() {
+        if (psPwBusy || !psPwMode) return;
+        const err = document.getElementById("PWERR");
+        const pw = document.getElementById("PWD1").value;
+        err.textContent = "";
+        psPwBusy = true;
+        const tok = psPwTok;
+        const okb = document.getElementById("PWOK");
+        okb.disabled = true;
+        try {
+          if (psPwMode === "save" || psPwMode === "zip") {
+            const zipMode = psPwMode === "zip";
+            if (pw !== document.getElementById("PWD2").value) {
+              err.textContent = "Die beiden Passwörter stimmen nicht überein.";
+              return;
+            }
+            const fn = (document.getElementById("FN") || {}).textContent || "";
+            const it = document.getElementById("IT").value;
+            const docs = zipMode ? psPwDocs : [];
+            if (!zipMode && (fn.trim() || it)) {
+              const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(it));
+              if (tok !== psPwTok) return;
+              docs.push({ index: 1, name: fn.trim(), chars: it.length, sha256: [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("") });
+            }
+            // Grenze: state.reserved (woertliche Platzhalter des Originals) wird nicht gespeichert, nur store und cnt
+            const rev = stateRev;
+            const bytes = await PSLib.psmap.encrypt({ v: 1, created: new Date().toISOString(), state: zipMode ? prjScope() : { store: store, cnt: cnt }, docs: docs }, pw);
+            if (tok !== psPwTok) return;
+            if (zipMode) { const cb = psPwZipCb; psPwZipCb = null; psPwDocs = null; psPwClose(); cb(bytes); return; }
+            if (rev !== stateRev) { psPwClose(); toast("Zuordnung hat sich geändert, nicht gespeichert. Bitte erneut speichern.", "e"); return; }
+            psPwClose();
+            mapAfterSave(dl("zuordnung.psmap", bytes, "application/x-privacyshield-psmap"), rev, "Zuordnung verschlüsselt gespeichert", "Zuordnung nicht gespeichert");
+          } else {
+            const p = await PSLib.psmap.decrypt(psPwBytes, pw);
+            if (tok !== psPwTok) return;
+            if (!p || typeof p !== "object" || p.v !== 1) throw { code: "CORRUPT" };
+            const clean = psSanitize(p.state);
+            const oldS = store, oldC = cnt;
+            try {
+              store = clean.store;
+              cnt = clean.cnt;
+              renderMap();
+            } catch (e2) {
+              store = oldS;
+              cnt = oldC;
+              renderMap();
+              throw { code: "CORRUPT" };
+            }
+            stateRev++;
+            mapSaved = true;
+            psPwClose();
+            toast(Object.keys(store).length + " Einträge geladen", "s");
+          }
+        } catch (e) {
+          err.textContent = psPwMsg(e);
+          if (e && e.code !== "WEAK_PASSWORD") document.getElementById("PWD1").select();
+        } finally {
+          if (tok === psPwTok) {
+            psPwBusy = false;
+            okb.disabled = false;
+          }
+          if (!psPwMode) document.getElementById("PWD1").value = "";
+        }
+      }
       function clrMap() {
         if (!confirm("Mapping löschen? Rückführung danach nicht mehr möglich.")) return;
         store = {};
         cnt = {};
+        stateTouch();
         renderMap();
         toast("Mapping gelöscht", "s");
       }
       function expMap() {
-        const e = Object.entries(store);
+        const e = Object.entries(store).filter(([, d]) => d.m !== "wortlich"); // woertliche Platzhalter sind keine Zuordnung
         if (!e.length) {
           toast("Kein Mapping vorhanden", "e");
           return;
         }
+        if (!confirm("Die Datei enthält alle Originalwerte im Klartext. Trotzdem als CSV exportieren?")) return;
         const csv =
           "Variable,Originalwert,Typ,Methode\n" +
           e.map(([t, d]) => '"' + t + '","' + d.v.replace(/"/g, '""') + '","' + d.t + '","' + d.m + '"').join("\n");
-        dl("privacyshield_mapping.csv", csv, "text/csv");
-        toast("Mapping exportiert", "s");
+        mapAfterSave(dl("privacyshield_mapping.csv", csv, "text/csv"), stateRev, "Mapping exportiert", "Mapping nicht gespeichert");
       }
       function cpAnon() {
         const t = document.getElementById("AT").value;
@@ -4958,17 +3906,53 @@
         }
         dl("privacyshield_ergebnis.txt", t, "text/plain");
       }
+      // K4.fix: dl liefert ein Versprechen (true = geschrieben). Der Hauptprozess meldet Start/Ende des Downloads (psDlEvent).
+      // Bleibt die Startmeldung aus (kein Hauptprozess, z. B. Browser), gilt wie bisher: ausgelöst = gespeichert.
+      const dlPending = new Map();
+      function psDlEvent(url, state) {
+        const p = dlPending.get(url);
+        if (!p) return;
+        clearTimeout(p.t);
+        if (state === "start") return;
+        dlPending.delete(url);
+        p.res(state === "completed");
+      }
+      function mapAfterSave(p, rev, okMsg, failMsg) {
+        p.then((ok) => {
+          if (!ok) return toast(failMsg, "e");
+          if (rev !== stateRev) return toast("Gespeichert, aber die Zuordnung hat sich inzwischen geändert. Bitte erneut speichern.", "e");
+          mapSaved = true;
+          toast(okMsg, "s");
+        });
+      }
       function dl(name, c, type) {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([c], { type: type }));
         a.download = name;
+        const url = a.href;
+        const result = new Promise((res) => {
+          dlPending.set(url, { res: res, t: setTimeout(() => { dlPending.delete(url); res(true); }, 1500) });
+        });
         a.click();
+        // URL nach Frist freigeben (Tests: window.__PS_REVOKE_MS)
+        const REVOKE_MS = typeof window.__PS_REVOKE_MS === "number" ? window.__PS_REVOKE_MS : 10000;
+        setTimeout(() => URL.revokeObjectURL(url), REVOKE_MS);
+        return result;
       }
       function clearAll() {
+        if (prjBusy || prjZipBusy) return toast(prjBusy ? "Projektlauf läuft, bitte zuerst abbrechen" : "ZIP wird erstellt, bitte warten", "e");
         if (!confirm("Alles zurücksetzen?")) return;
         ["IT", "AT", "AR", "RT"].forEach((id) => (document.getElementById(id).value = ""));
         store = {};
         cnt = {};
+        stateTouch();
+        // S2/D23: Projekt, manuelle Markierungen, letzte Leckpruefung und KI-Zwischenspeicher leeren
+        hidePrj(); prjAgain = false; prjStale = false;
+        manualMarks = PSLib.marks.create(); released = []; lcIgnored = new Set(); lcLast = null; fundeReset();
+        aiCache = { key: null, spans: [] };
+        const lb = document.getElementById("LCBAND"), ll = document.getElementById("LCLIST");
+        if (lb) lb.style.display = "none";
+        if (ll) ll.style.display = "none";
         renderMap();
         setStep(1);
         updIC();
@@ -4997,10 +3981,6 @@
       function toast(msg, type = "s") {
         const el = document.getElementById("TOAST");
         document.getElementById("TT").textContent = msg;
-        document.getElementById("TI").innerHTML =
-          type === "s"
-            ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
-            : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="14"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
         el.className = "toast on " + type;
         clearTimeout(el._t);
         el._t = setTimeout(() => el.classList.remove("on"), 3500);
@@ -5039,6 +4019,175 @@
           bar.style.display = "block";
         }
       }
+      // D1.w1: Seitenleiste "Funde" (Pruefansicht). Entscheidungen liegen nur im Speicher (released), nichts wird gespeichert.
+      let fundeOpen = false, fundeDirty = true, fundeKeep = false, fundeCache = null, fundeList = [], fundeFlash = null, _fundeDeb = null, _fundeFlashT = null, _fundeTxt = null, fundeSnap = "[]";
+      const FUNDE_FLASH = "rgba(26,58,92,0.28)";
+      function escA(v) { return esc(String(v)).replace(/"/g, "&quot;"); }
+      function fundeIsReleased(pfx, value) { return released.some((r) => r.pfx === pfx && r.value === value); }
+      function toggleFunde(open) {
+        fundeOpen = typeof open === "boolean" ? open : !fundeOpen;
+        document.getElementById("FUNDE").classList.toggle("on", fundeOpen);
+        document.body.classList.toggle("funde-open", fundeOpen);
+        const b = document.getElementById("FUNDEBTN");
+        b.setAttribute("aria-expanded", fundeOpen ? "true" : "false");
+        if (fundeOpen) { fundeDirty = true; refreshFunde(); }
+      }
+      // Funde aus dem Original (IT) berechnen, ohne Freigaben, damit freigegebene Werte sichtbar bleiben
+      // Kennung der Erkennungskonfiguration: Aenderung macht den Cache der Funde ungueltig
+      function fundeSig() {
+        let c = "";
+        try { c = JSON.stringify([activeEntIds(), curProf, cvars, PSLib.marks.toCvars(manualMarks), policyRuleCount(), localAIMode, aiCache.key ? aiCache.key.length : 0, aiCache.spans.length]); } catch (e) { c = String(Math.random()); }
+        return c;
+      }
+      function fundeTextChanged() {
+        fundeDirty = true;
+        if (!fundeOpen) return;
+        clearTimeout(_fundeTxt);
+        _fundeTxt = setTimeout(renderFunde, 500);
+      }
+      function fundeReset() {
+        clearTimeout(_fundeDeb); clearTimeout(_fundeTxt); clearTimeout(_fundeFlashT);
+        fundeFlash = null; fundeList = []; fundeCache = null; fundeDirty = true; fundeSnap = "[]";
+        renderFunde();
+      }
+      function fundeSpans(text) {
+        const sig = fundeSig();
+        if (fundeCache && !fundeDirty && fundeCache.text === text && fundeCache.sig === sig) return fundeCache.spans;
+        let spans = [];
+        try {
+          const det = PSDetect.normalizeForDetection(text);
+          spans = PSDetect.detect(text, {
+            ents: activeEntIds(),
+            cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
+            extraSpans: policySpans(text),
+            whitelist: [],
+            released: [],
+            wordlists: localAIMode,
+            aiSpans: aiCache.key === det ? aiCache.spans : null,
+          });
+        } catch (e) { spans = []; }
+        fundeCache = { text: text, sig: sig, spans: spans };
+        fundeDirty = false;
+        return spans;
+      }
+      function refreshFunde() {
+        if (!fundeOpen) { fundeDirty = true; return; }
+        renderFunde();
+      }
+      function fundeRelSig() { return JSON.stringify(released.map((r) => r.pfx + "\u0000" + r.value).sort()); }
+      function fundeAfterAnon() {
+        fundeSnap = fundeRelSig();
+        if (fundeKeep) { fundeKeep = false; renderFunde(); } else { fundeDirty = true; refreshFunde(); }
+      }
+      function fundeTokenOf() {
+        const idx = new Map();
+        for (const k in store) { const d = store[k]; if (d && d.m !== "wortlich" && !idx.has(d.t + "|" + d.v)) idx.set(d.t + "|" + d.v, k); }
+        return (v, pfx) => idx.get(pfx + "|" + v) || null;
+      }
+      function fundeLabel(pfx) { const e = ENTS.find((x) => x.pfx === pfx); return e ? e.lbl : pfx; }
+      function renderFunde() {
+        const box = document.getElementById("FUNDELIST");
+        const text = document.getElementById("IT").value;
+        const cnt = document.getElementById("FUNDECNT");
+        const keep = document.activeElement && box.contains(document.activeElement) ? { key: (document.activeElement.closest("li[data-key]") || {}).dataset ? document.activeElement.closest("li[data-key]").dataset.key : null, cls: document.activeElement.className, grp: document.activeElement.dataset ? document.activeElement.dataset.type : null } : null;
+        const top = box.scrollTop;
+        if (!text.trim()) { fundeList = []; fundeCache = null; cnt.textContent = ""; box.innerHTML = '<div class="funde-empty">Noch keine Funde. Text einfügen und auf „Anonymisieren“ klicken.</div>'; return; }
+        const list = PSLib.review.build(fundeSpans(text), text, { tokenOf: fundeTokenOf(), released: released, whitelist: whitelist });
+        fundeList = list;
+        cnt.textContent = list.length ? String(list.length) : "";
+        if (!list.length) { box.innerHTML = '<div class="funde-empty">Keine Funde im Text.</div>'; return; }
+        const groups = [];
+        for (const e of list) { const g = groups[groups.length - 1]; if (g && g.type === e.type) g.items.push(e); else groups.push({ type: e.type, items: [e] }); }
+        let h = "";
+        for (const [gi, g] of groups.entries()) {
+          const alle = g.items.every((e) => e.decision === "freigeben");
+          h += '<section class="fg" data-type="' + escA(g.type) + '" aria-labelledby="fgt' + gi + '"><div class="fg-h"><span class="fg-t" id="fgt' + gi + '">' + esc(fundeLabel(g.type)) + '</span><span class="fg-n" title="Anzahl verschiedener Werte">' + g.items.length + '</span>'
+            + '<button type="button" class="fg-all" data-type="' + escA(g.type) + '" data-act="' + (alle ? "maskieren" : "freigeben") + '" aria-label="alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + ": " + escA(fundeLabel(g.type)) + '">alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + "</button></div><ul>";
+          for (const e of g.items) {
+            const frei = e.decision === "freigeben", viaWL = frei && !fundeIsReleased(e.type, e.value);
+            const ph = frei ? (viaWL ? "freigegeben über die Whitelist" : "im Klartext") : (e.token || "wird maskiert");
+            h += '<li data-key="' + escA(e.key) + '" class="' + (frei ? "frei" : "") + '">'
+              + '<button type="button" class="fund-jump" title="Erste Fundstelle im Text markieren">' + esc(e.value) + "</button>"
+              + '<span class="fund-cnt">' + e.count + "×</span>"
+              + '<span class="fund-ph">' + esc(ph) + "</span>"
+              + '<button type="button" class="fund-toggle"' + (viaWL ? ' disabled title="Über die Whitelist freigegeben"' : "") + ' aria-label="' + escA(e.value) + (frei ? " maskieren" : " freigeben") + '">' + (frei ? "Maskieren" : "Freigeben") + "</button></li>";
+          }
+          h += "</ul></section>";
+        }
+        box.innerHTML = h;
+        box.scrollTop = top;
+        if (keep && (keep.key || keep.grp)) {
+          let el = null;
+          if (keep.key) { const li = Array.from(box.querySelectorAll("li[data-key]")).find((x) => x.dataset.key === keep.key); if (li) el = li.querySelector(keep.cls.indexOf("fund-jump") >= 0 ? ".fund-jump" : ".fund-toggle:not(:disabled)") || li.querySelector(".fund-jump"); }
+          else el = Array.from(box.querySelectorAll(".fg-all")).find((x) => x.dataset.type === keep.grp);
+          if (el) el.focus({ preventScroll: true });
+        }
+      }
+      function fundeDecide(entries, release) {
+        entries.forEach((e) => {
+          const i = released.findIndex((r) => r.pfx === e.type && r.value === e.value);
+          if (release && i < 0) released.push({ pfx: e.type, value: e.value });
+          if (!release && i >= 0) released.splice(i, 1);
+        });
+        renderFunde();
+        const st = document.getElementById("FUNDESTATUS");
+        if (st) st.textContent = (release ? "Freigegeben: " : "Maskiert: ") + entries.length + (entries.length === 1 ? " Wert" : " Werte");
+        clearTimeout(_fundeDeb);
+        _fundeDeb = setTimeout(fundeApply, 300);
+      }
+      async function fundeApply() {
+        if (fundeRelSig() === fundeSnap) return; // nichts geaendert
+        if (prj) { prjRefresh(); return; } // Projekt: wie nach Whitelist-Aenderung (laufend: vormerken, ZIP: veraltet)
+        if (!document.getElementById("AT").value.trim()) return; // noch nie anonymisiert: Entscheidung gilt beim ersten Lauf
+        if (anonBusy) { _fundeDeb = setTimeout(fundeApply, 300); return; }
+        fundeKeep = true;
+        try { await reanon(); } catch (e) { /* Fehler zeigt anon() selbst */ } finally { fundeKeep = false; }
+        scheduleHighlight();
+      }
+      function fundeScrollTo(ta, idx) {
+        if (!ta.clientWidth) return;
+        const cs = getComputedStyle(ta), d = document.createElement("div");
+        ["fontFamily", "fontSize", "fontWeight", "lineHeight", "letterSpacing", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft", "tabSize"].forEach((k) => { d.style[k] = cs[k]; });
+        d.style.cssText += ";position:absolute;left:-9999px;top:0;visibility:hidden;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:break-word;width:" + ta.clientWidth + "px";
+        d.textContent = ta.value.slice(0, idx);
+        const m = document.createElement("span"); m.textContent = "​"; d.appendChild(m);
+        document.body.appendChild(d);
+        const y = m.offsetTop; d.remove();
+        ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+        syncMirrorScroll();
+      }
+      function fundeJump(key) {
+        const ta = document.getElementById("IT");
+        let e = fundeList.find((x) => x.key === key);
+        if (!e) return;
+        if (ta.value.slice(e.firstStart, e.firstStart + e.value.length) !== e.value) { fundeDirty = true; renderFunde(); e = fundeList.find((x) => x.key === key); if (!e) return; }
+        const back = document.activeElement;
+        // war das Feld zuvor fokussiert, stellt Chromium die alte Auswahl wieder her: kurz fokussieren, auswaehlen, Fokus zurueckgeben
+        ta.focus({ preventScroll: true });
+        ta.setSelectionRange(e.firstStart, e.firstStart + e.value.length);
+        if (back && back !== ta && back.focus) back.focus({ preventScroll: true });
+        fundeScrollTo(ta, e.firstStart);
+        try { ta.scrollIntoView({ block: "nearest" }); } catch (x) { /* ignorieren */ }
+        fundeFlash = { start: e.firstStart, end: e.firstStart + e.value.length };
+        clearTimeout(_fundeFlashT);
+        _fundeFlashT = setTimeout(() => { fundeFlash = null; runHighlight(); }, 2500);
+        runHighlight();
+      }
+      document.addEventListener("click", function (ev) {
+        const box = document.getElementById("FUNDELIST");
+        if (!box || !box.contains(ev.target)) return;
+        const li = ev.target.closest("li[data-key]");
+        const all = ev.target.closest(".fg-all");
+        if (all) {
+          const items = fundeList.filter((e) => e.type === all.dataset.type);
+          fundeDecide(items.filter((e) => !(e.decision === "freigeben" && !fundeIsReleased(e.type, e.value))), all.dataset.act === "freigeben");
+          return;
+        }
+        if (!li) return;
+        const key = li.dataset.key, e = fundeList.find((x) => x.key === key);
+        if (ev.target.closest(".fund-toggle") && e) fundeDecide([e], e.decision !== "freigeben");
+        else if (ev.target.closest(".fund-jump")) fundeJump(key);
+      });
       async function reanon() {
         const at = document.getElementById("AT").value;
         if (!at.trim() && !document.getElementById("IT").value.trim()) {
@@ -5062,10 +4211,12 @@
         inp.value = "";
         renderWL();
         toast('"' + val + '" zur Whitelist hinzugefügt', "s");
+        prjRefresh();
       }
       function removeWL(i) {
         whitelist.splice(i, 1);
         renderWL();
+        prjRefresh();
       }
       function renderWL() {
         const l = document.getElementById("WLL");
@@ -5124,6 +4275,11 @@
         const merged2 = collectEntities(text).map(function (s) {
           return { start: s.start, end: s.end, color: HIGHLIGHT_COLORS[s.id] || "rgba(180,180,180,0.15)" };
         });
+        if (fundeFlash) {
+          let hit = false;
+          merged2.forEach((r) => { if (r.start < fundeFlash.end && r.end > fundeFlash.start) { r.color = FUNDE_FLASH; hit = true; } });
+          if (!hit) { merged2.push({ start: fundeFlash.start, end: fundeFlash.end, color: FUNDE_FLASH }); merged2.sort((x, y) => x.start - y.start); }
+        }
         let html = "";
         let pos = 0;
         for (const r of merged2) {
@@ -5191,7 +4347,7 @@
         const entities = collectEntities(text).map(function (s) {
           return { start: s.start, end: s.end, type: s.id, color: s.col, label: s.pfx, pfx: s.pfx };
         });
-        const tokenRx = /\{\{[A-Z]+_[A-Za-z0-9\-_]+\}\}/g;
+        const tokenRx = new RegExp(PSLib.placeholder.TOKEN_SOURCE, "g");
         let tMatch;
         while ((tMatch = tokenRx.exec(text)) !== null) {
           entities.push({
@@ -5220,7 +4376,7 @@
           const ent = merged.find(function (e) {
             return wStart >= e.start && wStart < e.end;
           });
-          const isToken = /^\{\{[A-Z]+_[A-Za-z0-9\-_]+\}\}$/.test(word);
+          const isToken = PSLib.placeholder.isToken(word);
           const span = document.createElement("span");
           span.style.cssText = "display:inline-block;padding:2px 4px;border-radius:4px;transition:all .15s;";
           span.textContent = word;
@@ -5274,12 +4430,7 @@
       }
       function tokenizeAnnotateWord(start, word, pfx, color) {
         if (word.startsWith("{{") && word.endsWith("}}")) return;
-        const token = tok(word, pfx, color, "Annotieren");
-        const ta = document.getElementById("IT");
-        ta.value = ta.value.substring(0, start) + token + ta.value.substring(start + word.length);
-        buildAnnotateOverlay();
-        renderMap();
-        toast("→ " + token, "s");
+        addManualMark(word, pfx);
       }
       function showAnnotatePopup(start, word) {
         closePopup();
@@ -5315,12 +4466,11 @@
         }
         closePopup();
         if (typeof start !== "number" || !word) return;
-        const token = tok(word, pfx, color, "Annotieren (manuell)");
-        const ta = document.getElementById("IT");
-        ta.value = ta.value.substring(0, start) + token + ta.value.substring(start + word.length);
-        buildAnnotateOverlay();
-        renderMap();
-        toast("→ " + token, "s");
+        addManualMark(word, pfx);
+      }
+      function addManualMark(word, pfx) {
+        const ok = PSLib.marks.add(manualMarks, { value: word, pfx: pfx }); if (ok) buildAnnotateOverlay();
+        toast(ok ? "Markiert als " + pfx + ": wird beim Anonymisieren ersetzt" : "Dieser Wert kann nicht markiert werden", ok ? "s" : "e");
       }
       function closePopup() {
         const popup = document.getElementById("AMP");
@@ -5350,6 +4500,7 @@
         });
         if (medProfile) {
           applyProfile(medProfile);
+          prjMarkStale();
           document.querySelectorAll(".profile-card").forEach(function (c) {
             c.classList.toggle("sel", c.dataset.pid === medProfile.id);
           });
@@ -5367,7 +4518,16 @@
         if (document.getElementById("WS") && document.getElementById("WS").style.display === "none") {
           startApp();
         }
+        if (/\.psmap$/i.test(file.name)) {
+          psMapLoad(file);
+          input.value = "";
+          return;
+        }
+        const wasSaved = !psMapUnsaved();
         const reader = new FileReader();
+        reader.onerror = function () {
+          toast("Die Datei konnte nicht gelesen werden.", "e");
+        };
         reader.onload = function (e) {
           const lines = e.target.result.split(/\r?\n/).filter((l) => l.trim());
           let imported = 0;
@@ -5418,14 +4578,15 @@
                 };
                 const col = colorMap[typStr] || "#8b5cf6";
                 store[token] = { v: origVal, t: typStr || "IMPORT", c: col, m: methStr };
-                if (!storeIndex().has(origVal)) storeIndex().set(origVal, token);
                 imported++;
               }
             }
           });
           renderMap();
           input.value = "";
-          toast(imported + " Einträge importiert", "s");
+          stateRev++; // laufendes Speichern gilt nicht fuer den neuen Stand
+          if (wasSaved && imported > 0) mapSaved = true;
+          toast(imported + " Einträge importiert (unverschlüsselte CSV)", "s");
         };
         reader.readAsText(file, "UTF-8");
       }
@@ -5442,6 +4603,8 @@
         try {
           const jsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
           const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+          // Keine Metadaten aus dem Original uebernehmen
+          doc.setProperties({ title: "Anonymisiertes Dokument", subject: "", author: "", keywords: "", creator: "PrivacyShield" });
           const margin = 20;
           const pageW = doc.internal.pageSize.getWidth();
           const usableW = pageW - margin * 2;
@@ -5538,7 +4701,7 @@
       if (localStorage.getItem("privacyShield_onboarding_done") === "true") startApp();
       function checkForUpdate() {
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: "check-for-updates" }, "*");
+          window.parent.postMessage({ type: "check-for-updates" }, "app://ps");
         } else {
           alert(
             "Update-Prüfung ist nur in der Desktop-App möglich. Besuchen Sie arcangeli.eu für die neueste Version.",

@@ -125,6 +125,29 @@ function lockDownNetwork() {
   );
 }
 
+// K4.fix: Start und Ende jedes Downloads dem Werkzeug melden (Zuordnung gilt erst nach bestaetigtem Schreiben als gespeichert).
+// Der Speichern-Dialog kommt weiterhin von Electron; Abbruch oder Schreibfehler zeigen sich als Endzustand != completed.
+function reportDownloads() {
+  session.defaultSession.on('will-download', (event, item, wc) => {
+    const url = item.getURL();
+    const melden = (state) => {
+      try {
+        const frame = wc && !wc.isDestroyed() && wc.mainFrame.frames.find((f) => f.url.includes('privacy-shield.html'));
+        if (frame) frame.executeJavaScript('typeof psDlEvent === "function" && psDlEvent(' + JSON.stringify(url) + ',' + JSON.stringify(state) + ')').catch(() => {});
+      } catch (e) { /* Fenster weg: nichts zu melden */ }
+    };
+    melden('start');
+    item.once('done', (ev, state) => melden(state));
+  });
+}
+
+// Berechtigungen: nur das Kopieren in die Zwischenablage; Kamera, Mikrofon, Standort usw. bleiben aus.
+function restrictPermissions() {
+  const ok = (permission) => permission === 'clipboard-sanitized-write';
+  session.defaultSession.setPermissionRequestHandler((wc, permission, cb) => cb(ok(permission)));
+  session.defaultSession.setPermissionCheckHandler((wc, permission) => ok(permission));
+}
+
 function sendToWindow(channel, ...args) {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, ...args);
 }
@@ -161,6 +184,11 @@ app.on('web-contents-created', (event, contents) => {
   contents.on('will-frame-navigate', (e) => guard(e, e.url));
 });
 
+// Freigabe-Merker fuers Schliessen. Ausdrueckliches Beenden (app.quit, auch Cmd-Q) und Update-Installation
+// werden nie vom Dialog blockiert; Cmd-Q umgeht die Warnung bewusst.
+let closeFreigegeben = false;
+app.on('before-quit', () => { closeFreigegeben = true; });
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -177,27 +205,110 @@ function createWindow() {
     }
   });
 
+  // Schliessen: bei ungespeicherter Zuordnung nachfragen
+  closeFreigegeben = false;
+  let closePruefung = false;
+  // Herunterfahren (Windows) nie blockieren
+  mainWindow.on('session-end', () => { closeFreigegeben = true; });
+  mainWindow.on('close', (event) => {
+    if (closeFreigegeben) return;
+    event.preventDefault();
+    if (closePruefung) return;
+    closePruefung = true;
+    const win = mainWindow;
+    const schliessen = () => {
+      closePruefung = false;
+      closeFreigegeben = true;
+      if (!win.isDestroyed()) win.close();
+    };
+    (async () => {
+      let ungespeichert = false, unbekannt = false;
+      try {
+        const frame = win.webContents.mainFrame.frames.find((f) => f.url.includes('privacy-shield.html'));
+        if (frame) {
+          // Haengt der Frame, nach 2,5 s ist der Stand unbekannt: wie ungespeichert warnen (D30)
+          const antwort = await Promise.race([
+            frame.executeJavaScript('typeof psMapUnsaved === "function" && psMapUnsaved()'),
+            new Promise((ok) => setTimeout(() => ok('unbekannt'), 2500))
+          ]);
+          ungespeichert = antwort === true;
+          unbekannt = antwort === 'unbekannt';
+        }
+      } catch (e) { ungespeichert = false; }
+      if (!ungespeichert && !unbekannt) return schliessen();
+      try {
+        const r = await dialog.showMessageBox(win, {
+          type: 'warning',
+          buttons: ['Abbrechen', 'Trotzdem schließen'],
+          defaultId: 0,
+          cancelId: 0,
+          message: unbekannt
+            ? 'Das Programm antwortet nicht; ob die Zuordnung gespeichert wurde, ist unklar. Später können Platzhalter evtl. nicht zurückübersetzt werden. Trotzdem schließen?'
+            : 'Die Zuordnung wurde nicht gespeichert. Später können Platzhalter nicht zurückübersetzt werden. Trotzdem schließen?'
+        });
+        if (r.response === 1) return schliessen();
+      } catch (e) { return schliessen(); }
+      closePruefung = false;
+    })();
+  });
+
   mainWindow.loadURL(APP_ORIGIN + 'index.html');
   Menu.setApplicationMenu(null);
 }
 
-ipcMain.handle('save-file', async (event, { defaultName, data, mimeType }) => {
-  const ext = mimeType === 'application/pdf' ? '.pdf' : '.png';
+// ---------------------------------------------------------------------------
+// Bruecke: jeder Kanal prueft den Absender, Argumente werden validiert.
+// ---------------------------------------------------------------------------
+const handlers = new Map();
+
+function assertTrusted(event) {
+  const f = event && event.senderFrame;
+  if (!(f && typeof f.url === 'string' && f.url.startsWith(APP_ORIGIN))) throw new Error('untrusted sender');
+}
+
+function invalidArg() { return new Error('invalid argument'); }
+
+// Einzige Stelle, an der Kanaele registriert werden.
+function handle(channel, fn) {
+  const wrapped = (event, ...args) => { assertTrusted(event); return fn(event, ...args); };
+  handlers.set(channel, wrapped);
+  ipcMain.handle(channel, wrapped);
+}
+
+// Nur fuer Tests: Kanaele direkt aufrufen (mit PS_TEST_HOOKS=1).
+if (process.env.PS_TEST_HOOKS === '1') {
+  globalThis.__psIpc = {
+    get channels() { return [...handlers.keys()]; },
+    invoke: (channel, fakeEvent, ...args) => handlers.get(channel)(fakeEvent, ...args)
+  };
+}
+
+const SAVE_TYPES = { 'application/pdf': '.pdf', 'image/png': '.png', 'image/jpeg': '.jpg', 'text/plain': '.txt', 'application/json': '.json', 'application/zip': '.zip', 'text/csv': '.csv', 'application/x-privacyshield-psmap': '.psmap' };
+const MAX_SAVE_B64 = 200 * 1024 * 1024;
+
+handle('save-file', async (event, opts) => {
+  if (!opts || typeof opts !== 'object') throw invalidArg();
+  const { defaultName, data, mimeType } = opts;
+  if (defaultName !== undefined && (typeof defaultName !== 'string' || defaultName.length > 120 || /[\\/]/.test(defaultName))) throw invalidArg();
+  if (typeof data !== 'string' || data.length > MAX_SAVE_B64) throw invalidArg();
+  if (typeof mimeType !== 'string' || !Object.prototype.hasOwnProperty.call(SAVE_TYPES, mimeType)) throw invalidArg();
+  const ext = SAVE_TYPES[mimeType];
   const result = await dialog.showSaveDialog(mainWindow, {
     defaultPath: defaultName || `document${ext}`,
     filters: [
-      { name: mimeType === 'application/pdf' ? 'PDF Datei' : 'PNG Bild', extensions: [ext.replace('.', '')] }
+      { name: ext.slice(1).toUpperCase() + '-Datei', extensions: [ext.slice(1)] }
     ]
   });
   if (!result.canceled && result.filePath) {
     const buffer = Buffer.from(data, 'base64');
-    fs.writeFileSync(result.filePath, buffer);
+    // K4.fix: Schreibfehler nie als Erfolg melden
+    try { fs.writeFileSync(result.filePath, buffer); } catch (e) { return { success: false, error: String(e && e.code || 'write') }; }
     return { success: true, path: result.filePath };
   }
   return { success: false };
 });
 
-ipcMain.handle('open-file', async () => {
+handle('open-file', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile'],
     filters: [
@@ -218,19 +329,7 @@ ipcMain.handle('open-file', async () => {
   return null;
 });
 
-ipcMain.handle('save-metadata', async (event, { data }) => {
-  const result = await dialog.showSaveDialog(mainWindow, {
-    defaultPath: 'metadata-export.json',
-    filters: [{ name: 'JSON Datei', extensions: ['json'] }]
-  });
-  if (!result.canceled && result.filePath) {
-    fs.writeFileSync(result.filePath, JSON.stringify(data, null, 2), 'utf-8');
-    return { success: true, path: result.filePath };
-  }
-  return { success: false };
-});
-
-ipcMain.handle('get-app-version', () => app.getVersion());
+handle('get-app-version', () => app.getVersion());
 
 // Speicher der gesamten App (Haupt-, Renderer-, GPU- und Hilfsprozesse) in MB.
 // process.memoryUsage() misst nur den Hauptprozess und zeigte so fast nichts an (ca. 7 MB statt ueber 1 GB).
@@ -243,7 +342,7 @@ function getAppMemoryMB() {
   }
 }
 
-ipcMain.handle("get-system-stats", () => {
+handle("get-system-stats", () => {
   const totalMem = os.totalmem();
   const freeMem = os.freemem();
   const usedMem = totalMem - freeMem;
@@ -259,7 +358,8 @@ ipcMain.handle("get-system-stats", () => {
   };
 });
 
-ipcMain.handle('dismiss-update', (event, version) => {
+handle('dismiss-update', (event, version) => {
+  if (typeof version !== 'string' || !/^\d+\.\d+\.\d+$/.test(version)) throw invalidArg();
   const state = getUpdateState();
   if (state.version !== version) {
     state.version = version;
@@ -271,8 +371,9 @@ ipcMain.handle('dismiss-update', (event, version) => {
 });
 
 // Kleine Textmengen in die Zwischenablage (Diagnose); Laenge begrenzt
-ipcMain.handle('copy-text', (event, text) => {
-  if (typeof text === 'string' && text.length <= 5000) clipboard.writeText(text);
+handle('copy-text', (event, text) => {
+  if (typeof text !== 'string' || text.length > 5000) throw invalidArg();
+  clipboard.writeText(text);
 });
 
 // Prueft die mitgelieferten Dateien (Modell, Bibliotheken) gegen app/vendor-manifest.json.
@@ -294,15 +395,18 @@ async function checkAssets(deep) {
   }
   return { manifest: true, ok: !missing.length && !wrongSize.length && !corrupt.length, missing, wrongSize, corrupt, appRoot: APP_ROOT };
 }
-ipcMain.handle('check-assets', (event, deep) => checkAssets(!!deep));
+handle('check-assets', (event, deep) => {
+  if (typeof deep !== 'boolean') throw invalidArg();
+  return checkAssets(deep);
+});
 
-ipcMain.handle('get-update-mode', () => ({ manual: MANUAL_UPDATE }));
+handle('get-update-mode', () => ({ manual: MANUAL_UPDATE }));
 
-ipcMain.handle('open-download-page', () => {
+handle('open-download-page', () => {
   openExternalSafe(DOWNLOAD_PAGE);
 });
 
-ipcMain.handle('start-download', async () => {
+handle('start-download', async () => {
   if (MANUAL_UPDATE) {
     openExternalSafe(DOWNLOAD_PAGE);
     return;
@@ -318,7 +422,7 @@ ipcMain.handle('start-download', async () => {
   }
 });
 
-ipcMain.handle('check-for-updates', () => {
+handle('check-for-updates', () => {
   return new Promise((resolve) => {
     let settled = false;
     const timeout = setTimeout(() => {
@@ -372,7 +476,7 @@ ipcMain.handle('check-for-updates', () => {
   });
 });
 
-ipcMain.handle('quit-app', () => {
+handle('quit-app', () => {
   app.quit();
 });
 
@@ -411,6 +515,7 @@ function setupAutoUpdater() {
       mainWindow.webContents.send('update-downloaded', info.version);
     }
     setTimeout(() => {
+      closeFreigegeben = true;
       autoUpdater.quitAndInstall(false, true);
     }, 2000);
   });
@@ -427,6 +532,8 @@ function setupAutoUpdater() {
 app.whenReady().then(() => {
   protocol.handle('app', appResponse);
   lockDownNetwork();
+  restrictPermissions();
+  reportDownloads();
   createWindow();
   setupAutoUpdater();
 });

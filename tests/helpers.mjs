@@ -14,8 +14,9 @@ export const MAC = process.platform === 'darwin';               // unsigniert: m
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const electronPath = require('electron');
 
-export async function launchApp({ offline = false, env = {}, appDir = ROOT, extraArgs = [], files = {} } = {}) {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-test-'));
+export async function launchApp({ offline = false, env = {}, appDir = ROOT, extraArgs = [], files = {}, userDataDir } = {}) {
+  // userDataDir: vorgegebener Ordner (bleibt beim close() erhalten); sonst neuer Temp-Ordner (wird geloescht)
+  const userData = userDataDir || fs.mkdtempSync(path.join(os.tmpdir(), 'ps-test-'));
   for (const [name, content] of Object.entries(files)) fs.writeFileSync(path.join(userData, name), content);
   // PS_PACKAGED_BIN=<Pfad zur gepackten Anwendung>: Tests gegen das fertige Paket statt gegen den Quellbaum.
   const packaged = process.env.PS_PACKAGED_BIN;
@@ -23,10 +24,30 @@ export async function launchApp({ offline = false, env = {}, appDir = ROOT, extr
   // Kein Netz: toter Proxy. Betrifft Chromium und electron-updater gleichermassen.
   if (offline) args.push('--proxy-server=http://127.0.0.1:9');
   const app = await _electron.launch({ executablePath: packaged || electronPath, args, env: { ...process.env, PS_BLOCK_EXTERNAL: '1', ...env } });
-  const win = await app.firstWindow();
-  // Playwright haengt sich bei schnellem Start erst nach dem Laden ein und kennt dann den Tool-Iframe nicht
-  // (frames() liefert nur den leeren Hauptframe). Ein Reload macht die Frame-Struktur sichtbar.
-  await win.reload({ waitUntil: 'load' });
+  let win;
+  try {
+    win = await app.firstWindow();
+    // Playwright haengt sich bei schnellem Start erst nach dem Laden ein und kennt dann den Tool-Iframe nicht
+    // (frames() liefert nur den leeren Hauptframe). Ein Reload macht die Frame-Struktur sichtbar.
+    // Mit neueren Electron-Versionen (unter Windows gemessen: etwa jeder dritte Start nach dem ersten in einer Sitzung)
+    // liefert firstWindow() die Seite, bevor sie aktiv angebunden ist; Page.reload meldet dann
+    // "Not attached to an active page". Ein erneuter Versuch kurz danach gelingt. Nur dieser Fehler wird wiederholt.
+    for (let versuch = 1; ; versuch++) {
+      try {
+        await win.reload({ waitUntil: 'load' });
+        break;
+      } catch (e) {
+        if (versuch >= 10 || !/Not attached to an active page/i.test(String(e && e.message))) throw e;
+        console.error(`launchApp: Reload-Versuch ${versuch} fehlgeschlagen (Seite noch nicht aktiv, url=${JSON.stringify(win.url())}); neuer Versuch`);
+        await sleep(300);
+      }
+    }
+  } catch (e) {
+    // Sonst bliebe der Electron-Prozess stehen und der Testlauf haengt bis zum Zeitlimit.
+    await app.close().catch(() => {});
+    if (!userDataDir) fs.rmSync(userData, { recursive: true, force: true });
+    throw e;
+  }
   const errors = [];
   const watch = (page) => {
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
@@ -41,7 +62,7 @@ export async function launchApp({ offline = false, env = {}, appDir = ROOT, extr
     app, win, errors, requests, userData,
     async close() {
       await app.close().catch(() => {});
-      fs.rmSync(userData, { recursive: true, force: true });
+      if (!userDataDir) fs.rmSync(userData, { recursive: true, force: true });
     },
   };
 }
@@ -58,6 +79,83 @@ export async function toolFrame(win, timeout = 15000) {
     await win.waitForTimeout(100);
   }
   throw new Error('Tool-Frame nicht gefunden; Frames: ' + JSON.stringify(win.frames().map((fr) => fr.url())));
+}
+
+// Downloads des Werkzeugs abfangen, ohne einen echten Download auszuloesen (Blob-Anker mit download-Attribut).
+export function captureDownloads(frame) {
+  return frame.evaluate(() => {
+    window.__dls = [];
+    const blobs = new Map();
+    const create = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = (b) => { const u = create(b); blobs.set(u, b); return u; };
+    HTMLAnchorElement.prototype.click = function () {
+      if (this.hasAttribute('download')) window.__dls.push({ name: this.getAttribute('download'), blob: blobs.get(this.href) });
+    };
+  });
+}
+
+// K4.fix: Ausgang des Speicherns im Hauptprozess festlegen, unabhaengig vom Weg (Blob-Download ueber will-download
+// oder Kanal save-file mit Speichern-Dialog). Gedacht fuer Tests, die Abbruch und Schreibfehler brauchen; die Seite
+// wird NICHT veraendert, ein Abbruch passiert wirklich im Hauptprozess.
+//   mode 'ok'     : Datei wird nach dir/<Name> geschrieben
+//   mode 'cancel' : Download wird abgebrochen bzw. der Dialog meldet "abgebrochen"
+//   mode 'error'  : Zielpfad liegt unterhalb einer gewoehnlichen Datei <dir>.blocker (Schreibfehler; die Datei legt der Test an;
+//                   ein fehlender Ordner reicht nicht, Electron legt ihn beim Download an)
+//   delayMs       : nur beim Dialog-Weg: Dialog antwortet erst nach der Frist (Zustand 'waiting' im Protokoll)
+// Protokoll (saveLog): [{ via: 'download'|'dialog', name, state: 'waiting'|'done'|'cancelled'|'failed' }]
+export function stubSaves(app, { mode = 'ok', dir, delayMs = 0 } = {}) {
+  return app.evaluate(({ dialog, session }, o) => {
+    const log = (globalThis.__psSaves = []);
+    globalThis.__psSaveMode = o.mode;
+    const target = (name) => (globalThis.__psSaveMode === 'error' ? o.dir + '.blocker/' + name : o.dir + '/' + name);
+    session.defaultSession.on('will-download', (e, item) => {
+      const rec = { via: 'download', name: item.getFilename(), state: 'waiting' };
+      log.push(rec);
+      if (globalThis.__psSaveMode === 'cancel') { item.cancel(); rec.state = 'cancelled'; return; }
+      item.setSavePath(target(rec.name));
+      item.once('done', (ev, st) => { rec.state = st === 'completed' ? 'done' : st === 'cancelled' ? 'cancelled' : 'failed'; });
+    });
+    dialog.showSaveDialog = async (...args) => {
+      const opts = args.find((x) => x && typeof x === 'object' && 'defaultPath' in x) || {};
+      const name = String(opts.defaultPath || 'datei').split(/[\\/]/).pop();
+      const rec = { via: 'dialog', name, state: 'waiting' };
+      log.push(rec);
+      if (o.delayMs) await new Promise((r) => setTimeout(r, o.delayMs));
+      if (globalThis.__psSaveMode === 'cancel') { rec.state = 'cancelled'; return { canceled: true }; }
+      rec.state = globalThis.__psSaveMode === 'error' ? 'failed' : 'done';
+      return { canceled: false, filePath: target(name) };
+    };
+  }, { mode, dir, delayMs });
+}
+// Ausgang fuer die naechsten Speichervorgaenge umschalten ('ok' | 'cancel' | 'error')
+export const setSaveMode = (app, mode) => app.evaluate((_, m) => { globalThis.__psSaveMode = m; }, mode);
+export const saveLog = (app) => app.evaluate(() => globalThis.__psSaves || []);
+// wartet, bis mindestens n Speichervorgaenge einen Endzustand haben (nicht 'waiting'); liefert das Protokoll
+export async function waitSaveEnd(app, n = 1, timeout = 20000) {
+  const t0 = Date.now();
+  let log = await saveLog(app);
+  while (log.filter((x) => x.state !== 'waiting').length < n && Date.now() - t0 < timeout) { await sleep(100); log = await saveLog(app); }
+  if (log.filter((x) => x.state !== 'waiting').length < n) throw new Error('kein Speichervorgang beendet: ' + JSON.stringify(log));
+  return log;
+}
+
+// -> [{ name, type, size, base64 }] in der Reihenfolge der Klicks
+export function getDownloads(frame) {
+  return frame.evaluate(async () => {
+    const out = [];
+    for (const d of window.__dls || []) {
+      const bytes = new Uint8Array(await d.blob.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      out.push({ name: d.name, type: d.blob.type, size: bytes.length, base64: btoa(bin) });
+    }
+    return out;
+  });
+}
+
+// Dateien wie ueber die Dateiauswahl des Werkzeugs laden: [{ name, mimeType, buffer }]
+export function setFiles(frame, files) {
+  return frame.setInputFiles('#FI', files);
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
