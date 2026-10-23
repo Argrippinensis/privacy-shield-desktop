@@ -10,6 +10,7 @@ import { launchApp, toolFrame } from '../helpers.mjs';
 import { CASES as CURATED } from './cases.mjs';
 import { GDPR } from './cases-gdpr.mjs';
 import { CASES_V2 } from './cases-v2.mjs';
+import { measureDoc, mergeResults } from './measure.mjs';
 import { generateDocs, generateDocs2, SYNTH_DOCS2 } from './generate.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -40,19 +41,26 @@ export function summarize(mode, caseRes, synthRes, docs, cases = CASES) {
   for (const [id, cat, , frags] of cases) {
     const r = caseRes.find((x) => x.key === id);
     const c = (byCat[cat] ||= { total: 0, leaked: 0, ids: [] });
-    if (cat === 'NEG') { c.total++; if (r.tokens > 0) { c.leaked++; c.ids.push(id); } }
-    else { c.total++; if (frags.some((f) => r.out.includes(f))) { c.leaked++; c.ids.push(id); } }
+    c.total++;
+    if (cat === 'NEG') { if (r.tokens > 0) { c.leaked++; c.ids.push(id); } }
+    // Handfaelle: Wert gilt als importiert (kein input); Teilreste vor/nach Platzhaltern zaehlen als undicht
+    else if (measureDoc({ truth: [{ type: cat, frags }] }, r.out).leaked) { c.leaked++; c.ids.push(id); }
   }
-  const syn = {}; let total = 0, leaked = 0;
+  const syn = {};
+  const all = [];
   docs.forEach((d, i) => {
     const out = synthRes[i].out;
     for (const t of d.truth) {
+      const r = measureDoc({ text: d.text, truth: [t] }, out);
+      all.push(r);
+      if (!r.imported) continue; // verlorene Werte stehen nicht im Nenner
       const k = (syn[t.type] ||= { total: 0, leaked: 0 });
-      k.total++; total++;
-      if (t.frags.some((f) => out.includes(f))) { k.leaked++; leaked++; }
+      k.total += r.imported; k.leaked += r.leaked;
     }
   });
-  return { mode, cases: byCat, synth: syn, synthTotal: total, synthLeaked: leaked };
+  const m = mergeResults(all);
+  const partial = m.hits.filter((h) => h.kind !== 'voll').length;
+  return { mode, cases: byCat, synth: syn, synthTotal: m.imported, synthLeaked: m.leaked, synthLost: m.lost, synthPartial: partial };
 }
 
 export async function runEval({ withAI, set = 'v1' }) {
@@ -88,7 +96,7 @@ export async function runEval({ withAI, set = 'v1' }) {
 
 function table(sum) {
   const cats = Object.keys(sum.cases).sort();
-  const lines = [`Modus ${sum.mode}: Handfaelle ${cats.filter((c) => c !== 'NEG').reduce((a, c) => a + sum.cases[c].leaked, 0)} undicht | Negativfaelle falsch maskiert ${sum.cases.NEG ? sum.cases.NEG.leaked : 0} | Synthetik ${sum.synthLeaked}/${sum.synthTotal} undicht`];
+  const lines = [`Modus ${sum.mode}: Handfaelle ${cats.filter((c) => c !== 'NEG').reduce((a, c) => a + sum.cases[c].leaked, 0)} undicht | Negativfaelle falsch maskiert ${sum.cases.NEG ? sum.cases.NEG.leaked : 0} | Synthetik ${sum.synthLeaked}/${sum.synthTotal} undicht (davon Teilreste ${sum.synthPartial}, Import verloren ${sum.synthLost})`];
   for (const c of cats) lines.push(`   ${c.padEnd(8)} ${String(sum.cases[c].leaked).padStart(2)}/${String(sum.cases[c].total).padEnd(3)} ${sum.cases[c].ids.join(' ')}`);
   lines.push('   Synthetik je Typ: ' + Object.entries(sum.synth).map(([k, v]) => `${k} ${v.leaked}/${v.total}`).join(', '));
   return lines.join('\n');
