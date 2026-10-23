@@ -321,3 +321,30 @@ test('K3 Positiv: Ihr Ehemann Paul Meier betrifft Frau Weber nicht, Frau Weber b
   assert.equal(r.text, 'Frau {{NAME_1}} kommt. Ihr Ehemann {{NAME_2}} wartet. Frau {{NAME_1.NACHNAME}} setzt sich.');
   assert.equal(r.back, t);
 });
+
+// ---- C2.fix, Nachtests nach Pruefung ----
+
+test('K3 Nach: Hans Weber senior und Hans Weber junior: keine Endungs-Platzhalter, Rundlauf exakt', () => {
+  const t = 'Hans Weber senior kommt. Hans Weber junior wartet. Herr Weber geht. Hans schweigt.';
+  const r = run(t);
+  assert.equal(r.back, t);
+  assert.ok(!ENDUNG_NAME.test(r.text), r.text);
+});
+
+test('K3 Nach: Herr Dr. Paul Weber, Herr Dr. Weber: weiter eine Person', () => {
+  const t = 'Herr Dr. Paul Weber kommt. Herr Dr. Weber wartet.';
+  const r = run(t);
+  assert.equal(r.back, t);
+  assert.match(r.text, /\{\{NAME_1\.NACHNAME\}\}/, r.text);
+});
+
+test('K3 Nach: Apposition Herr Weber, der Ehemann von Anna Weber: zwei Personen, Rundlauf exakt', () => {
+  zweiPersonen('Herr Weber, der Ehemann von Anna Weber, wartet.');
+});
+
+test('K3 Nach: Absatzumbruch trennt Beziehungswort und Nachname (Verknuepfung bleibt)', () => {
+  const t = 'Anna Weber kommt. Ihr Ehemann\n\nWeber wartet.';
+  const r = run(t);
+  assert.equal(r.back, t);
+  assert.match(r.text, /\{\{NAME_1\.NACHNAME\}\}/, r.text);
+});

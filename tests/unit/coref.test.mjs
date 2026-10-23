@@ -416,3 +416,91 @@ test('K3: ein Gegenhinweis trennt nur den betroffenen Span (Herr Weber ohne, Fra
   assert.equal(r[1].personKey, null);
   assert.equal(r[2].personKey, 'anna|weber');
 });
+
+// ---- C2.fix, Nachtests nach Pruefung ----
+
+test('K3 Nach: ausgeschriebene Namen mit unterschiedlichem Generationszusatz sind zwei Personen (kein Nachname-, kein Vorname-Link)', () => {
+  const text = 'Hans Weber senior kommt. Hans Weber junior wartet. Herr Weber geht. Hans schweigt.';
+  const r = coref.link(mk(text, ['Hans Weber', 'Hans Weber', 'Weber', 'Hans']), text);
+  assert.notEqual(r[0].personKey, r[1].personKey);
+  assert.equal(r[2].personKey, null);
+  assert.equal(r[3].personKey, null);
+});
+
+test('K3 Nach: gleicher Generationszusatz bei gleicher Vollform bleibt dieselbe Person', () => {
+  const text = 'Hans Weber senior kommt. Hans Weber senior wartet. Herr Weber geht.';
+  const r = coref.link(mk(text, ['Hans Weber', 'Hans Weber', 'Weber']), text);
+  assert.equal(r[0].personKey, r[1].personKey);
+  assert.ok(r[0].personKey);
+  assert.equal(r[2].personKey, r[0].personKey);
+});
+
+test('K3 Nach: Jr. und Sr. gelten als Generationszusatz', () => {
+  for (const zusatz of ['Jr.', 'Sr.']) {
+    const text = 'Paul Weber kommt. Weber ' + zusatz + ' wartet.';
+    const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+    assert.equal(r[1].personKey, null, zusatz);
+  }
+});
+
+test('K3 Nach: Zusatz gilt nicht ueber einen Zeilenumbruch hinweg (Weber / senior in der naechsten Zeile)', () => {
+  const text = 'Paul Weber kommt. Weber\nsenior wartet.';
+  const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'paul|weber');
+});
+
+test('K3 Nach: Weber Senior Partner (Berufsbezeichnung, grossgeschrieben) ist kein Generationszusatz', () => {
+  const text = 'Paul Weber kommt. Weber Senior Partner wartet.';
+  const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'paul|weber');
+});
+
+test('K3 Nach: Herr Dr. Weber neben Herr Dr. Paul Weber bleibt verknuepft (Titel nach der Anrede)', () => {
+  const text = 'Herr Dr. Paul Weber kommt. Herr Dr. Weber wartet.';
+  const r = coref.link(mk(text, ['Paul Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'paul|weber');
+});
+
+test('K3 Nach: Herr Dr. Weber steht gegen Frau Anna Weber (Anrede-Konflikt ueber den Titel hinweg)', () => {
+  const text = 'Frau Anna Weber kommt. Herr Dr. Weber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3 Nach: Ihr Ehemann Dr. Weber (Punkt am Titel ist keine Satzgrenze) trennt die Personen', () => {
+  const text = 'Anna Weber kommt. Ihr Ehemann Dr. Weber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, null);
+});
+
+test('K3 Nach: Absatzumbruch ist eine Satzgrenze fuer das Beziehungswort', () => {
+  const text = 'Anna Weber kommt. Ihr Ehemann\n\nWeber wartet.';
+  const r = coref.link(mk(text, ['Anna Weber', 'Weber']), text);
+  assert.equal(r[1].personKey, 'anna|weber');
+});
+
+test('K3 Nach: Apposition (Herr Weber, der Ehemann von Anna Weber) trennt Herr Weber von Anna Weber', () => {
+  const text = 'Herr Weber, der Ehemann von Anna Weber, wartet.';
+  const r = coref.link(mk(text, ['Weber', 'Anna Weber']), text);
+  assert.equal(r[0].personKey, null);
+  assert.equal(r[1].personKey, 'anna|weber');
+});
+
+test('K3 Nach: Apposition mit Ehefrau des (Frau Weber, die Ehefrau des Paul Weber)', () => {
+  const text = 'Frau Weber, die Ehefrau des Paul Weber, wartet.';
+  const r = coref.link(mk(text, ['Weber', 'Paul Weber']), text);
+  assert.equal(r[0].personKey, null);
+});
+
+test('K3 Nach: Laufzeit 10000 Spans bleibt unter 1500 ms (begrenztes Fenster statt Gesamttext)', () => {
+  const satz = 'Herr Weber sagt, dass der Vertrag gilt und Frau Weber zustimmt. Lorem ipsum dolor sit amet. ';
+  const n = 5000;
+  const text = 'Frau Anna Weber kommt. ' + satz.repeat(n);
+  const spans = mk(text, ['Anna Weber', ...Array.from({ length: 2 * n }, () => 'Weber')]);
+  assert.equal(spans.length, 10001);
+  const t0 = Date.now();
+  const r = coref.link(spans, text);
+  const ms = Date.now() - t0;
+  assert.equal(r.length, spans.length);
+  assert.ok(ms < 1500, 'Laufzeit ' + ms + ' ms');
+});
