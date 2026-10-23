@@ -94,6 +94,51 @@ export function captureDownloads(frame) {
   });
 }
 
+// K4.fix: Ausgang des Speicherns im Hauptprozess festlegen, unabhaengig vom Weg (Blob-Download ueber will-download
+// oder Kanal save-file mit Speichern-Dialog). Gedacht fuer Tests, die Abbruch und Schreibfehler brauchen; die Seite
+// wird NICHT veraendert, ein Abbruch passiert wirklich im Hauptprozess.
+//   mode 'ok'     : Datei wird nach dir/<Name> geschrieben
+//   mode 'cancel' : Download wird abgebrochen bzw. der Dialog meldet "abgebrochen"
+//   mode 'error'  : Zielpfad liegt unterhalb einer gewoehnlichen Datei <dir>.blocker (Schreibfehler; die Datei legt der Test an;
+//                   ein fehlender Ordner reicht nicht, Electron legt ihn beim Download an)
+//   delayMs       : nur beim Dialog-Weg: Dialog antwortet erst nach der Frist (Zustand 'waiting' im Protokoll)
+// Protokoll (saveLog): [{ via: 'download'|'dialog', name, state: 'waiting'|'done'|'cancelled'|'failed' }]
+export function stubSaves(app, { mode = 'ok', dir, delayMs = 0 } = {}) {
+  return app.evaluate(({ dialog, session }, o) => {
+    const log = (globalThis.__psSaves = []);
+    globalThis.__psSaveMode = o.mode;
+    const target = (name) => (globalThis.__psSaveMode === 'error' ? o.dir + '.blocker/' + name : o.dir + '/' + name);
+    session.defaultSession.on('will-download', (e, item) => {
+      const rec = { via: 'download', name: item.getFilename(), state: 'waiting' };
+      log.push(rec);
+      if (globalThis.__psSaveMode === 'cancel') { item.cancel(); rec.state = 'cancelled'; return; }
+      item.setSavePath(target(rec.name));
+      item.once('done', (ev, st) => { rec.state = st === 'completed' ? 'done' : st === 'cancelled' ? 'cancelled' : 'failed'; });
+    });
+    dialog.showSaveDialog = async (...args) => {
+      const opts = args.find((x) => x && typeof x === 'object' && 'defaultPath' in x) || {};
+      const name = String(opts.defaultPath || 'datei').split(/[\\/]/).pop();
+      const rec = { via: 'dialog', name, state: 'waiting' };
+      log.push(rec);
+      if (o.delayMs) await new Promise((r) => setTimeout(r, o.delayMs));
+      if (globalThis.__psSaveMode === 'cancel') { rec.state = 'cancelled'; return { canceled: true }; }
+      rec.state = globalThis.__psSaveMode === 'error' ? 'failed' : 'done';
+      return { canceled: false, filePath: target(name) };
+    };
+  }, { mode, dir, delayMs });
+}
+// Ausgang fuer die naechsten Speichervorgaenge umschalten ('ok' | 'cancel' | 'error')
+export const setSaveMode = (app, mode) => app.evaluate((_, m) => { globalThis.__psSaveMode = m; }, mode);
+export const saveLog = (app) => app.evaluate(() => globalThis.__psSaves || []);
+// wartet, bis mindestens n Speichervorgaenge einen Endzustand haben (nicht 'waiting'); liefert das Protokoll
+export async function waitSaveEnd(app, n = 1, timeout = 20000) {
+  const t0 = Date.now();
+  let log = await saveLog(app);
+  while (log.filter((x) => x.state !== 'waiting').length < n && Date.now() - t0 < timeout) { await sleep(100); log = await saveLog(app); }
+  if (log.filter((x) => x.state !== 'waiting').length < n) throw new Error('kein Speichervorgang beendet: ' + JSON.stringify(log));
+  return log;
+}
+
 // -> [{ name, type, size, base64 }] in der Reihenfolge der Klicks
 export function getDownloads(frame) {
   return frame.evaluate(async () => {

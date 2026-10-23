@@ -125,6 +125,22 @@ function lockDownNetwork() {
   );
 }
 
+// K4.fix: Start und Ende jedes Downloads dem Werkzeug melden (Zuordnung gilt erst nach bestaetigtem Schreiben als gespeichert).
+// Der Speichern-Dialog kommt weiterhin von Electron; Abbruch oder Schreibfehler zeigen sich als Endzustand != completed.
+function reportDownloads() {
+  session.defaultSession.on('will-download', (event, item, wc) => {
+    const url = item.getURL();
+    const melden = (state) => {
+      try {
+        const frame = wc && !wc.isDestroyed() && wc.mainFrame.frames.find((f) => f.url.includes('privacy-shield.html'));
+        if (frame) frame.executeJavaScript('typeof psDlEvent === "function" && psDlEvent(' + JSON.stringify(url) + ',' + JSON.stringify(state) + ')').catch(() => {});
+      } catch (e) { /* Fenster weg: nichts zu melden */ }
+    };
+    melden('start');
+    item.once('done', (ev, state) => melden(state));
+  });
+}
+
 // Berechtigungen: nur das Kopieren in die Zwischenablage; Kamera, Mikrofon, Standort usw. bleiben aus.
 function restrictPermissions() {
   const ok = (permission) => permission === 'clipboard-sanitized-write';
@@ -206,26 +222,29 @@ function createWindow() {
       if (!win.isDestroyed()) win.close();
     };
     (async () => {
-      let ungespeichert = false;
+      let ungespeichert = false, unbekannt = false;
       try {
         const frame = win.webContents.mainFrame.frames.find((f) => f.url.includes('privacy-shield.html'));
         if (frame) {
-          // Haengt der Frame, nach 2,5 s als gespeichert werten (Fenster schliesst)
+          // Haengt der Frame, nach 2,5 s ist der Stand unbekannt: wie ungespeichert warnen (D30)
           const antwort = await Promise.race([
             frame.executeJavaScript('typeof psMapUnsaved === "function" && psMapUnsaved()'),
-            new Promise((ok) => setTimeout(() => ok(false), 2500))
+            new Promise((ok) => setTimeout(() => ok('unbekannt'), 2500))
           ]);
           ungespeichert = antwort === true;
+          unbekannt = antwort === 'unbekannt';
         }
       } catch (e) { ungespeichert = false; }
-      if (!ungespeichert) return schliessen();
+      if (!ungespeichert && !unbekannt) return schliessen();
       try {
         const r = await dialog.showMessageBox(win, {
           type: 'warning',
           buttons: ['Abbrechen', 'Trotzdem schließen'],
           defaultId: 0,
           cancelId: 0,
-          message: 'Die Zuordnung wurde nicht gespeichert. Später können Platzhalter nicht zurückübersetzt werden. Trotzdem schließen?'
+          message: unbekannt
+            ? 'Das Programm antwortet nicht; ob die Zuordnung gespeichert wurde, ist unklar. Später können Platzhalter evtl. nicht zurückübersetzt werden. Trotzdem schließen?'
+            : 'Die Zuordnung wurde nicht gespeichert. Später können Platzhalter nicht zurückübersetzt werden. Trotzdem schließen?'
         });
         if (r.response === 1) return schliessen();
       } catch (e) { return schliessen(); }
@@ -264,7 +283,7 @@ if (process.env.PS_TEST_HOOKS === '1') {
   };
 }
 
-const SAVE_TYPES = { 'application/pdf': '.pdf', 'image/png': '.png', 'image/jpeg': '.jpg', 'text/plain': '.txt', 'application/json': '.json' };
+const SAVE_TYPES = { 'application/pdf': '.pdf', 'image/png': '.png', 'image/jpeg': '.jpg', 'text/plain': '.txt', 'application/json': '.json', 'application/zip': '.zip', 'text/csv': '.csv', 'application/x-privacyshield-psmap': '.psmap' };
 const MAX_SAVE_B64 = 200 * 1024 * 1024;
 
 handle('save-file', async (event, opts) => {
@@ -282,7 +301,8 @@ handle('save-file', async (event, opts) => {
   });
   if (!result.canceled && result.filePath) {
     const buffer = Buffer.from(data, 'base64');
-    fs.writeFileSync(result.filePath, buffer);
+    // K4.fix: Schreibfehler nie als Erfolg melden
+    try { fs.writeFileSync(result.filePath, buffer); } catch (e) { return { success: false, error: String(e && e.code || 'write') }; }
     return { success: true, path: result.filePath };
   }
   return { success: false };
@@ -513,6 +533,7 @@ app.whenReady().then(() => {
   protocol.handle('app', appResponse);
   lockDownNetwork();
   restrictPermissions();
+  reportDownloads();
   createWindow();
   setupAutoUpdater();
 });

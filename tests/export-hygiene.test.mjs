@@ -2,8 +2,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { launchApp, toolFrame, captureDownloads, getDownloads, setFiles, runAnon, ROOT, sleep } from './helpers.mjs';
+import { launchApp, toolFrame, captureDownloads, getDownloads, setFiles, runAnon, ROOT, sleep, stubSaves, waitSaveEnd } from './helpers.mjs';
 
 const HTML = fs.readFileSync(path.join(ROOT, 'app', 'privacy-shield.html'), 'utf8');
 
@@ -130,5 +131,85 @@ test('Schliessen nach Speichern der Zuordnung: ohne Dialog', async () => {
     const closed = a.app.waitForEvent('close', { timeout: 10000 }).then(() => true, () => false);
     await closeWin(a.app).catch(() => {});
     assert.equal(await closed, true, 'App/Fenster nicht geschlossen');
+  } finally { await a.close(); }
+});
+
+// ---------------------------------------------------------------------------
+// K4.fix (rot bis zur Umsetzung): Schliess-Warnung haengt am BESTAETIGTEN Speichern; haengender Renderer = "unbekannt" = warnen (D30).
+// ---------------------------------------------------------------------------
+// .psmap ueber den echten Speicherweg anstossen (Ausgang im Hauptprozess festgelegt, kein captureDownloads)
+async function k4Speichern(a, f, mode) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-k4c-'));
+  fs.writeFileSync(dir + '.blocker', 'x');
+  await stubSaves(a.app, { mode, dir });
+  await f.evaluate(() => psMapSave());
+  await f.waitForSelector('#PWDLG', { state: 'visible', timeout: 5000 });
+  await f.fill('#PWD1', 'korrektes Pferd Batterie');
+  await f.fill('#PWD2', 'korrektes Pferd Batterie');
+  await f.click('#PWOK', { timeout: 8000 });
+  await waitSaveEnd(a.app);
+  await sleep(1200);
+  return () => { fs.rmSync(dir, { recursive: true, force: true }); fs.rmSync(dir + '.blocker', { force: true }); };
+}
+
+for (const [mode, was] of [['cancel', 'abgebrochenem Download'], ['error', 'Schreibfehler']]) {
+  test(`K4.fix: Schliessen nach ${was} beim Speichern der Zuordnung: Warnung erscheint (genau einmal)`, async () => {
+    const { a, f } = await mitUngespeicherterZuordnung();
+    let aufraeumen = () => {};
+    try {
+      aufraeumen = await k4Speichern(a, f, mode);
+      await stubDialog(a.app, 0);
+      await closeWin(a.app);
+      assert.equal(await dlgSeen(a.app), 1, 'keine Warnung trotz nicht gespeicherter Zuordnung');
+      await sleep(2000);
+      assert.equal(await dlgCount(a.app), 1);
+      assert.equal(await winCount(a.app), 1, 'Fenster wurde trotz "Abbrechen" geschlossen');
+    } finally { await a.close(); aufraeumen(); }
+  });
+}
+
+test('K4.fix: Schliessen nach bestaetigtem Speichern der Zuordnung (echter Schreibweg): ohne Warnung', async () => {
+  const { a, f } = await mitUngespeicherterZuordnung();
+  let aufraeumen = () => {};
+  try {
+    aufraeumen = await k4Speichern(a, f, 'ok');
+    assert.equal(await f.evaluate(() => psMapUnsaved()), false, 'Testaufbau: bestaetigt gespeichert');
+    await stubDialog(a.app, 0);
+    const t0 = Date.now();
+    const closed = a.app.waitForEvent('close', { timeout: 10000 }).then(() => true, () => false);
+    await closeWin(a.app).catch(() => {});
+    assert.equal(await closed, true, 'App/Fenster nicht geschlossen');
+    // Die Dialog-Attrappe antwortet erst nach 1,5 s: schnelleres Schliessen heisst, es wurde nicht gewarnt
+    assert.ok(Date.now() - t0 < 1400, 'Schliessen dauerte ' + (Date.now() - t0) + ' ms: Warnung trotz bestaetigtem Speichern');
+  } finally { await a.close(); aufraeumen(); }
+});
+
+// D30: Der Renderer antwortet nach dem Zeitlimit (2,5 s) nicht (lange Berechnung). Das ist "unbekannt", nicht "gespeichert".
+const haengen = (f) => f.evaluate(() => { setTimeout(() => { const t = Date.now(); while (Date.now() - t < 8000); }, 0); }).catch(() => {});
+
+test('D30: haengender Renderer bei ungespeicherter Zuordnung, "Trotzdem schliessen": genau eine Warnung, dann schliesst das Fenster', async () => {
+  const { a, f } = await mitUngespeicherterZuordnung();
+  try {
+    await stubDialog(a.app, 1);
+    haengen(f);
+    await sleep(300);
+    const closed = a.app.waitForEvent('close', { timeout: 15000 }).then(() => true, () => false);
+    await closeWin(a.app).catch(() => {});
+    assert.equal(await dlgSeen(a.app, 8000), 1, 'Erwartet genau eine Warnung statt stillem Schliessen');
+    assert.equal(await closed, true, 'Fenster nicht geschlossen');
+  } finally { await a.close(); }
+});
+
+test('D30: haengender Renderer bei ungespeicherter Zuordnung, "Abbrechen": Fenster bleibt offen', async () => {
+  const { a, f } = await mitUngespeicherterZuordnung();
+  try {
+    await stubDialog(a.app, 0);
+    haengen(f);
+    await sleep(300);
+    await closeWin(a.app).catch(() => {});
+    assert.equal(await dlgSeen(a.app, 8000), 1, 'keine Warnung: haengender Renderer wurde als gespeichert behandelt');
+    await sleep(2500);
+    assert.equal(await winCount(a.app), 1, 'Fenster wurde trotz "Abbrechen" geschlossen');
+    assert.equal(await dlgCount(a.app), 1);
   } finally { await a.close(); }
 });
