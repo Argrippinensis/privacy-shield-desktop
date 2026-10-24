@@ -1323,10 +1323,12 @@
     "main.js",
     "preload.js",
     "tests/info.test.mjs",
+    "tests/ipc-security.test.mjs",
     "tests/helpers.mjs"
    ],
    "tests": [
-    "tests/info.test.mjs"
+    "tests/info.test.mjs",
+    "tests/ipc-security.test.mjs"
    ],
    "accept": [
     "xvfb-run -a node --test --test-concurrency=1 tests/info.test.mjs"
