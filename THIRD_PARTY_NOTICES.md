@@ -10,7 +10,7 @@ und werden mit der Installation ausgeliefert (keine Nachladung aus dem Internet)
 | Transformers.js (inkl. ONNX Runtime Web) | 3.5.2 | Apache-2.0 / MIT | https://github.com/huggingface/transformers.js |
 | pdf.js | 3.11.174 | Apache-2.0 | https://github.com/mozilla/pdf.js |
 | mammoth.js | 1.13.0 | BSD-2-Clause | https://github.com/mwilliamson/mammoth.js |
-| JSZip | 3.10.1 | MIT oder GPL-3.0-or-later (hier: MIT) | https://github.com/Stuk/jszip |
+| JSZip | 3.10.2 | MIT oder GPL-3.0-or-later (hier: MIT) | https://github.com/Stuk/jszip |
 | jsPDF | 2.5.1 | MIT | https://github.com/parallax/jsPDF |
 | Tesseract.js | 5.1.1 | Apache-2.0 | https://github.com/naptha/tesseract.js |
 | Tesseract.js Core | 5.1.1 | Apache-2.0 | https://github.com/naptha/tesseract.js-core |

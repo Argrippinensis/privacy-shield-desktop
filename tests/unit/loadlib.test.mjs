@@ -18,9 +18,9 @@ test('loadLib: unbekannter Name wirft', () => {
   assert.throws(() => loadLib('gibt-es-nicht-xyz'));
 });
 
-test('loadVendor: jszip hat Version 3.10.1 und loadAsync', () => {
+test('loadVendor: jszip hat Version 3.10.2 und loadAsync', () => {
   const z = loadVendor('jszip');
-  assert.equal(z.version, '3.10.1');
+  assert.equal(z.version, '3.10.2');
   assert.equal(typeof z.loadAsync, 'function');
 });
 

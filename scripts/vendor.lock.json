@@ -21,9 +21,9 @@
     },
     {
       "dest": "vendor/jszip/jszip.min.js",
-      "url": "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js",
-      "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e",
-      "size": 97630
+      "url": "https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js",
+      "sha256": "7f839b2d4688b845c105ebf5d2f9803075f91ea0fe72bdaac176c3a04dd3d2c1",
+      "size": 97781
     },
     {
       "dest": "vendor/jspdf/jspdf.umd.min.js",

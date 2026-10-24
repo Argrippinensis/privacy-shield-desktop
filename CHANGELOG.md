@@ -10,6 +10,7 @@ der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.
 
 ### Intern
 - mammoth.js 1.6.0 auf 1.13.0 (DOCX lesen; Browser-Datei 642.759 auf 405.060 Bytes, Lizenz unverändert BSD-2-Clause). Umlaute und Sonderzeichen im DOCX-Rundlauf unverändert, Differenztest 0 Abweichungen von 645.
+- JSZip 3.10.1 auf 3.10.2 (ZIP lesen und schreiben; Datei 97.630 auf 97.781 Bytes, Lizenz unverändert MIT; Korrekturen: Erkennung von Binärdaten aus anderem Kontext, Blob-Lesen ab Node 18). Die ZIP-Prüfung in `app/lib/formats.js` liest weiterhin `_data.uncompressedSize`; `formats.test` grün.
 
 ## [1.8.0] - 2026-10-20
 
