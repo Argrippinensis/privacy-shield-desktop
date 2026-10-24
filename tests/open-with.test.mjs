@@ -25,13 +25,13 @@ function tmp(prefix = 'ps-ow-') {
 after(() => { for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true }); });
 
 // Startet das Programm als eigenen Prozess (eigene Prozessgruppe). Liefert { code, signal, timedOut, all, ms }.
-function runProc(args, { env = {}, timeout = 30000 } = {}) {
+function runProc(args, { env = {}, timeout = 30000, cwd } = {}) {
   return new Promise((resolve) => {
     const argv = [...(PACKAGED ? [] : [ROOT]), '--no-sandbox', ...args];
     const childEnv = { ...process.env, PS_BLOCK_EXTERNAL: '1', ...env };
     delete childEnv.ELECTRON_RUN_AS_NODE;
     const t0 = Date.now();
-    const child = spawn(PACKAGED || electronPath, argv, { env: childEnv, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
+    const child = spawn(PACKAGED || electronPath, argv, { ...(cwd ? { cwd } : {}), env: childEnv, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
     let out = '', timedOut = false, done = false;
     child.stdout.on('data', (d) => { out += d; });
     child.stderr.on('data', (d) => { out += d; });
@@ -203,4 +203,124 @@ test('Kanal take-opened-files: in der Kanalliste, fremder Absender abgelehnt, ve
     const again = await invoke(a, 'take-opened-files', { url: TRUSTED }, [{ path: secret }]);
     assert.deepEqual(again.result, []);
   } finally { await a.close(); }
+});
+
+// ---------------------------------------------------------------- Pruefermaengel: relative Pfade, Lauf, Gesamtgroesse
+
+const waitCount = (f, n, timeout = 15000) => f.waitForFunction((k) => document.querySelectorAll('#PRJPANEL button.prj-item').length === k, n, { timeout });
+
+test('(a1) zweite Instanz mit RELATIVEM Argument und eigenem Arbeitsordner: Datei wird geoeffnet, auch wenn die erste App woanders laeuft', async () => {
+  const dirA = tmp(), dirB = tmp();
+  const userData = tmp('ps-ow-ud-');
+  const f1 = path.join(dirA, 'Datei1.txt');
+  fs.writeFileSync(f1, 'Herr Max Mustermann, Datei eins.');
+  fs.writeFileSync(path.join(dirB, 'Datei2.txt'), 'Frau Erika Beispiel, Datei zwei.');
+  const a = await launchApp({ offline: true, userDataDir: userData, cwd: dirA, extraArgs: [f1] });
+  try {
+    const f = await toolFrame(a.win);
+    await f.waitForFunction(() => /Datei eins/.test((document.getElementById('IT') || {}).value || ''), null, { timeout: 12000 });
+    const r = await runProc([`--user-data-dir=${userData}`, 'Datei2.txt'], { cwd: dirB, timeout: 20000 });
+    assert.equal(r.code, 0, 'Exit-Code der zweiten Instanz: ' + r.code + ' ' + r.all.slice(-300));
+    await waitCount(f, 2);
+    const list = (await items(f)).join(' | ');
+    assert.match(list, /Datei1/);
+    assert.match(list, /Datei2/);
+  } finally { await a.close(); }
+});
+
+test('(a2) relatives Startargument der ersten Instanz wird gegen deren Arbeitsordner aufgeloest', async () => {
+  const dir = tmp();
+  fs.writeFileSync(path.join(dir, 'Relativ.txt'), 'Frau Erika Beispiel, relativer Start.');
+  const a = await launchApp({ offline: true, cwd: dir, extraArgs: ['Relativ.txt'] });
+  try {
+    const f = await toolFrame(a.win);
+    await f.waitForFunction(() => /relativer Start/.test((document.getElementById('IT') || {}).value || ''), null, { timeout: 12000 });
+  } finally { await a.close(); }
+});
+
+test('(b) waehrend eines Projektlaufs uebergebene Dateien gehen nicht verloren: das Projekt bleibt im Lauf unveraendert, danach erscheint die Datei', async () => {
+  const dir = tmp();
+  const userData = tmp('ps-ow-ud-');
+  const f1 = path.join(dir, 'Datei1.txt'), f2 = path.join(dir, 'Datei2.txt'), f3 = path.join(dir, 'Datei3.txt');
+  fs.writeFileSync(f1, 'Herr Max Mustermann, Datei eins.');
+  fs.writeFileSync(f2, 'Frau Erika Beispiel, Datei zwei.');
+  fs.writeFileSync(f3, 'Herr Peter Probe, Datei drei.');
+  const a = await launchApp({ offline: true, userDataDir: userData, extraArgs: [f1] });
+  try {
+    const f = await toolFrame(a.win);
+    await f.waitForFunction(() => /Datei eins/.test((document.getElementById('IT') || {}).value || ''), null, { timeout: 12000 });
+    const r2 = await runProc([`--user-data-dir=${userData}`, f2], { timeout: 20000 });
+    assert.equal(r2.code, 0, r2.all.slice(-300));
+    await waitCount(f, 2);
+    await f.evaluate(() => startApp());
+    // Lauf anhalten: PSLib.project.run wartet auf ein Tor, bis der Test es oeffnet
+    await f.evaluate(() => {
+      const orig = PSLib.project.run;
+      window.__gate = new Promise((res) => { window.__openGate = res; });
+      PSLib.project.run = async function (p, o) { await window.__gate; return orig.call(this, p, o); };
+    });
+    await f.click('#PRJRUN');
+    await f.waitForFunction(() => prjBusy === true, null, { timeout: 10000 });
+    const r3 = await runProc([`--user-data-dir=${userData}`, f3], { timeout: 20000 });
+    assert.equal(r3.code, 0, r3.all.slice(-300));
+    await sleep(2000);
+    assert.equal(await f.evaluate(() => prjBusy), true, 'Lauf sollte noch angehalten sein');
+    assert.equal((await items(f)).length, 2, 'Projekt darf sich waehrend des Laufs nicht aendern: ' + (await items(f)).join(' | '));
+    await f.evaluate(() => window.__openGate());
+    await waitCount(f, 3, 40000);
+    assert.match((await items(f)).join(' | '), /Datei3/);
+  } finally { await a.close(); }
+});
+
+test('(c) Gesamtgroesse je Abruf von take-opened-files: hoechstens ca. 100 MB Rohdaten, der Rest folgt im naechsten Abruf, nichts geht verloren, nichts doppelt', async () => {
+  const dir = tmp();
+  const userData = tmp('ps-ow-ud-');
+  const names = [];
+  for (let i = 1; i <= 5; i++) {
+    const n = `Gross${i}.txt`;
+    names.push(n);
+    fs.writeFileSync(path.join(dir, n), Buffer.alloc(29 * 1024 * 1024, 0x60 + i));
+  }
+  const a = await launchApp({ offline: true, userDataDir: userData, env: { PS_TEST_HOOKS: '1' } });
+  try {
+    const f = await toolFrame(a.win);
+    // Die Seite soll die Dateien nicht selbst abholen: Weiterleitung der Huelle an den Tool-Frame stilllegen
+    await a.win.evaluate(() => { document.getElementById('tool-frame').contentWindow.postMessage = () => {}; });
+    const r = await runProc([`--user-data-dir=${userData}`, ...names.map((n) => path.join(dir, n))], { timeout: 30000 });
+    assert.equal(r.code, 0, r.all.slice(-300));
+    await sleep(500);
+    const summary = () => a.app.evaluate(async () => {
+      const list = await globalThis.__psIpc.invoke('take-opened-files', { senderFrame: { url: 'app://ps/index.html' } });
+      return list.map((x) => ({ name: x.name, raw: x.data ? Math.floor(x.data.length * 3 / 4) : 0 }));
+    });
+    const calls = [];
+    for (let i = 0; i < 8; i++) {
+      const s = await summary();
+      if (!s.length) break;
+      calls.push(s);
+    }
+    assert.ok(calls.length >= 2, 'alle fuenf Dateien in einem Abruf: ' + JSON.stringify(calls));
+    for (const c of calls) {
+      const sum = c.reduce((t, x) => t + x.raw, 0);
+      assert.ok(sum <= 105 * 1024 * 1024, 'ein Abruf lieferte ' + Math.round(sum / 1048576) + ' MB');
+    }
+    const got = calls.flat().map((x) => x.name).sort();
+    assert.deepEqual(got, names.slice().sort(), 'fehlende oder doppelte Dateien');
+    void f;
+  } finally { await a.close(); }
+});
+
+// ---------------------------------------------------------------- (d) statische Pruefung der zweiten Instanz und des Lesens
+
+test('(d) statisch: second-instance loest relative Pfade gegen cwd auf und merkt nur absolute Pfade; take-opened-files liest ueber ein Handle', () => {
+  const si = mainSrc.slice(mainSrc.indexOf("app.on('second-instance'"), mainSrc.indexOf("app.on('open-file'"));
+  assert.ok(si.length > 50, 'second-instance-Handler nicht gefunden');
+  assert.match(si, /path\.resolve\(\s*cwd/, 'second-instance muss path.resolve(cwd, ...) nutzen');
+  assert.match(si, /isAbsolute/, 'nur absolute Pfade merken');
+  assert.match(si, /Array\.isArray\(additionalData\.files\)/, 'Form von additionalData.files pruefen');
+  const start = mainSrc.indexOf("handle('take-opened-files'");
+  const take = mainSrc.slice(start, mainSrc.indexOf('app.whenReady()', start));
+  assert.match(take, /fs\.promises\.open/, 'take-opened-files muss ueber ein Handle lesen');
+  assert.match(take, /\.stat\(/, 'Groesse und Dateityp am Handle erneut pruefen (fstat)');
+  assert.match(take, /isFile\(\)/);
 });
