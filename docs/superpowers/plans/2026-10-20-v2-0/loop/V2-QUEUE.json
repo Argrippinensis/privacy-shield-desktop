@@ -1142,11 +1142,14 @@
     "xvfb-run -a npm run eval -- --set v2",
     "node tests/eval/diff-reference.mjs --node"
    ],
-   "status": "offen",
-   "attempts": 0,
+   "status": "laeuft",
+   "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": null,
+   "lease": {
+    "owner": "orch-20261024",
+    "ts": 1792867597067
+   },
    "notes": ""
   },
   {
