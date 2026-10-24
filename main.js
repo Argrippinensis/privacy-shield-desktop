@@ -5,6 +5,19 @@ const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 const { Readable } = require('stream');
 
+// Kommandozeilenmodus (E1.w): --cli schaltet den Stapelbetrieb ohne Oberflaeche ein. Die Argumente werden vor allem anderen gelesen.
+const CLIARGS = require('./app/lib/cliargs.js');
+const CLIPLAN = require('./app/lib/cliplan.js');
+const CLI = CLIARGS.parse(process.argv);
+const CLI_TMP_PREFIX = 'psc-run-';
+let cliTmp = null; // eigener temporaerer userData-Ordner, damit eine laufende Oberflaeche nicht gestoert wird (keine Einzelinstanz-Sperre)
+if (CLI.cli) {
+  app.disableHardwareAcceleration();
+  if (!CLI.errors.length) {
+    try { cliTmp = fs.mkdtempSync(path.join(os.tmpdir(), CLI_TMP_PREFIX)); app.setPath('userData', cliTmp); } catch (e) { cliTmp = null; }
+  }
+}
+
 // Nur fuer Tests: Updater auch ohne gepacktes Programm ausfuehren (liest dev-app-update.yml).
 if (process.env.PS_FORCE_DEV_UPDATE === '1') autoUpdater.forceDevUpdateConfig = true;
 
@@ -264,14 +277,24 @@ const handlers = new Map();
 function assertTrusted(event) {
   const f = event && event.senderFrame;
   if (!(f && typeof f.url === 'string' && f.url.startsWith(APP_ORIGIN))) throw new Error('untrusted sender');
+  // Im Kommandozeilenmodus braucht die versteckte Seite keinen der normalen Kanaele (Dialoge, Updates, Zwischenablage)
+  if (CLI.cli) throw new Error('not available in cli mode');
+}
+
+// Kanaele des Kommandozeilenmodus: nur im CLI-Modus registriert, nur fuer den Frame app://ps/cli.html des eigenen Fensters
+let cliWin = null;
+function assertCliSender(event) {
+  const f = event && event.senderFrame;
+  if (!(CLI.cli && cliWin && !cliWin.isDestroyed() && event.sender === cliWin.webContents && f && f.url === APP_ORIGIN + 'cli.html')) throw new Error('untrusted sender');
 }
 
 function invalidArg() { return new Error('invalid argument'); }
 
-// Einzige Stelle, an der Kanaele registriert werden.
-function handle(channel, fn) {
-  const wrapped = (event, ...args) => { assertTrusted(event); return fn(event, ...args); };
-  handlers.set(channel, wrapped);
+// Einzige Stelle, an der Kanaele registriert werden. opts.cli: Kanal des Kommandozeilenmodus (steht nicht in der Kanalliste der Oberflaeche).
+function handle(channel, fn, opts) {
+  const cli = !!(opts && opts.cli);
+  const wrapped = (event, ...args) => { (cli ? assertCliSender : assertTrusted)(event); return fn(event, ...args); };
+  if (!cli) handlers.set(channel, wrapped);
   ipcMain.handle(channel, wrapped);
 }
 
@@ -566,7 +589,329 @@ function setupAutoUpdater() {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Kommandozeilenmodus (E1.w): Stapel ohne Oberflaeche
+//  - Hauptprozess liest Dateien, schreibt Ergebnisse, Bericht und verschluesselte Zuordnung (Passwort nie auf der Seite)
+//  - eine versteckte Seite (app/cli.html) erkennt und anonymisiert mit denselben Modulen wie die Oberflaeche
+//  - Ausgaben nur auf Standardausgabe/-fehler und in --log; nie Dateinamen, Pfade, Inhalte oder Passwoerter
+//  - Rueckgabecodes: 0 Erfolg, 2 Argumente, 3 Eingabe, 4 Gegenpruefung, 5 KI nicht startbar, 6 sonstiger Fehler
+// ---------------------------------------------------------------------------
+let cliExiting = false;
+let cliWatch = null;
+const cliRun = { files: [], total: 0, next: 0, configSent: false, config: null, docs: new Map(), startedAt: 0, startedIso: '', password: null, policy: null, aiOk: false };
+
+function cliWriteFd(fd, text) {
+  const buf = Buffer.from(text, 'utf8');
+  let off = 0, tries = 0;
+  while (off < buf.length) {
+    try { off += fs.writeSync(fd, buf, off); }
+    catch (e) { if (e && e.code === 'EAGAIN' && tries++ < 5000) continue; return; } // kein Ausgabekanal (z. B. Fenster-Programm unter Windows): stillschweigend
+  }
+}
+
+// Meldung auf Standardausgabe (oder -fehler) und in die Protokolldatei
+function cliSay(line, err) {
+  cliWriteFd(err ? 2 : 1, line + '\n');
+  if (CLI.opts && CLI.opts.log) {
+    try { fs.appendFileSync(CLI.opts.log, new Date().toISOString() + ' ' + line + '\n'); } catch (e) { /* Protokoll nicht schreibbar: Lauf nicht abbrechen */ }
+  }
+}
+
+function cliExit(code) {
+  if (cliExiting) return;
+  cliExiting = true;
+  clearTimeout(cliWatch);
+  cliRun.password = null;
+  try { if (cliWin && !cliWin.isDestroyed()) cliWin.destroy(); } catch (e) { /* schon weg */ }
+  // Temporaeren userData-Ordner loeschen, nachdem Chromium die Seite abgebaut hat. Der Netzwerkdienst legt beim Beenden noch
+  // ein paar KB an: ein kurzer Hilfsprozess (nur fuer diesen Ordner) raeumt nach dem Ende des Programms nach.
+  setTimeout(() => {
+    const dir = cliTmp;
+    if (dir) {
+      try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 }); } catch (e) { /* bleibt liegen: unkritisch */ }
+      try {
+        const cp = require('child_process');
+        const h = process.platform === 'win32'
+          ? cp.spawn('cmd.exe', ['/c', 'ping -n 3 127.0.0.1 >nul & rmdir /s /q "' + dir + '"'], { detached: true, stdio: 'ignore', windowsHide: true })
+          : cp.spawn('/bin/sh', ['-c', 'sleep 1; rm -rf "$1"', 'sh', dir], { detached: true, stdio: 'ignore' });
+        h.on('error', () => {});
+        h.unref();
+      } catch (e) { /* Reste raeumt der naechste Lauf nach einem Tag auf */ }
+    }
+    process.exit(code);
+  }, 400);
+}
+
+function cliFail(code, msg) {
+  if (cliExiting) return;
+  cliSay(msg, true);
+  cliExit(code);
+}
+
+// Ohne Lebenszeichen der Seite (Lesen, KI-Abschnitt, Ergebnis) bricht der Lauf nach 15 Minuten mit Code 6 ab
+function cliTouch() {
+  clearTimeout(cliWatch);
+  cliWatch = setTimeout(() => cliFail(6, CLIPLAN.TEXT.runFail), 15 * 60 * 1000);
+}
+
+if (CLI.cli) {
+  process.on('uncaughtException', () => cliFail(6, CLIPLAN.TEXT.unexpected));
+  process.on('unhandledRejection', () => cliFail(6, CLIPLAN.TEXT.unexpected));
+}
+
+// Passwort: eine Zeile von der Standardeingabe
+function cliReadStdinLine() {
+  return new Promise((resolve) => {
+    let buf = '', done = false;
+    const fin = (v) => { if (done) return; done = true; try { process.stdin.pause(); } catch (e) { /* egal */ } resolve(v); };
+    try {
+      process.stdin.setEncoding('utf8');
+      process.stdin.on('data', (d) => { buf += d; const i = buf.indexOf('\n'); if (i >= 0) fin(buf.slice(0, i).replace(/\r$/, '')); });
+      process.stdin.on('end', () => fin(buf.replace(/\r?\n$/, '')));
+      process.stdin.on('error', () => fin(''));
+    } catch (e) { fin(''); }
+  });
+}
+
+// Pfad mit aufgeloesten Verknuepfungen, auch wenn das Ziel noch nicht existiert (nächster vorhandener Ordner)
+function cliRealish(p) {
+  let cur = path.resolve(p);
+  const rest = [];
+  for (;;) {
+    try { return path.join(fs.realpathSync.native(cur), ...rest.reverse()); }
+    catch (e) {
+      const up = path.dirname(cur);
+      if (up === cur) return path.resolve(p);
+      rest.push(path.basename(cur));
+      cur = up;
+    }
+  }
+}
+function cliInside(child, parent) {
+  const n = (x) => (process.platform === 'win32' || process.platform === 'darwin' ? x.toLowerCase() : x);
+  const c = n(cliRealish(child)), pa = n(cliRealish(parent));
+  return c === pa || c.startsWith(pa.endsWith(path.sep) ? pa : pa + path.sep);
+}
+
+// Eingabe einsammeln: Datei oder Ordner (mit --recursive auch Unterordner); Sortierung der relativen Pfade nach Codepunkten
+function cliCollect(inPath, recursive) {
+  let st;
+  try { st = fs.statSync(inPath); } catch (e) { return { err: CLIPLAN.TEXT.inMissing }; }
+  const files = [];
+  let skipped = 0;
+  if (st.isFile()) {
+    const base = path.basename(inPath);
+    if (!CLIPLAN.supportedName(base)) return { err: CLIPLAN.TEXT.inNone };
+    files.push({ abs: path.resolve(inPath), rel: base, size: st.size });
+    return { files, skipped, isDir: false };
+  }
+  if (!st.isDirectory()) return { err: CLIPLAN.TEXT.inMissing };
+  const walk = (dir, prefix) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const abs = path.join(dir, e.name), rel = prefix ? prefix + '/' + e.name : e.name;
+      let isDir = e.isDirectory(), isFile = e.isFile();
+      if (e.isSymbolicLink()) { try { isFile = fs.statSync(abs).isFile(); isDir = false; } catch (err) { continue; } } // verknuepfte Ordner werden nicht verfolgt
+      if (isDir) { if (recursive && !CLIPLAN.ignoredName(e.name)) walk(abs, rel); continue; }
+      if (!isFile) continue;
+      if (CLIPLAN.ignoredName(e.name) || !CLIPLAN.supportedName(e.name)) { skipped++; continue; }
+      files.push({ abs, rel, size: fs.statSync(abs).size });
+    }
+  };
+  try { walk(inPath, ''); } catch (e) { return { err: CLIPLAN.TEXT.inMissing }; }
+  files.sort((a, b) => CLIPLAN.compareCodepoints(a.rel, b.rel));
+  if (!files.length) return { err: CLIPLAN.TEXT.inNone };
+  return { files, skipped, isDir: true };
+}
+
+// Modell gefordert: Datei da und laut Manifest vollstaendig (ohne Pruefsumme; ein beschaedigtes Modell scheitert beim Start, ebenfalls Code 5)
+async function cliModelOk() {
+  const rel = path.join('models', ...CLIPLAN.MODEL_ID.split('/'), 'onnx', 'model_quantized.onnx');
+  try { if (!fs.statSync(path.join(APP_ROOT, rel)).isFile()) return false; } catch (e) { return false; }
+  const c = await checkAssets(false);
+  return !c.missing.concat(c.wrongSize.map((x) => x.path)).some((p) => p.startsWith('models/'));
+}
+
+function cliIsObj(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
+const cliInt = (v, max) => Number.isInteger(v) && v >= 0 && v <= max;
+
+async function cliMain() {
+  const o = CLI.opts;
+  if (o.log) { try { fs.mkdirSync(path.dirname(path.resolve(o.log)), { recursive: true }); } catch (e) { /* siehe cliSay */ } }
+  if (CLI.errors.length) {
+    for (const m of CLI.errors) cliSay(m, true);
+    cliSay(CLIPLAN.TEXT.hintDocs, true);
+    return cliExit(2);
+  }
+  if (!cliTmp) return cliFail(6, CLIPLAN.TEXT.unexpected);
+  // Chromium schreibt beim Beenden noch kleine Dateien in userData; Reste frueherer Laeufe (aelter als ein Tag) aufraeumen
+  try {
+    for (const e of fs.readdirSync(os.tmpdir())) {
+      const d = path.join(os.tmpdir(), e);
+      if (e.startsWith(CLI_TMP_PREFIX) && d !== cliTmp && Date.now() - fs.statSync(d).mtimeMs > 24 * 3600 * 1000) fs.rmSync(d, { recursive: true, force: true });
+    }
+  } catch (e) { /* Aufraeumen ist Nebensache */ }
+  protocol.handle('app', appResponse);
+  lockDownNetwork();
+  restrictPermissions();
+  cliTouch();
+  cliRun.startedAt = Date.now();
+  cliRun.startedIso = new Date(cliRun.startedAt).toISOString();
+
+  // Eingabe, Ausgabeort, Richtlinie
+  const col = cliCollect(o.in, o.recursive);
+  if (col.err) return cliFail(3, col.err);
+  if (col.files.length > CLIPLAN.MAX_DOCS) return cliFail(3, CLIPLAN.TEXT.inTooMany);
+  for (let i = 0; i < col.files.length; i++) {
+    const f = col.files[i];
+    if (f.size === 0) return cliFail(3, CLIPLAN.readMessage('EMPTY', i + 1, col.files.length));
+    if (f.size > CLIPLAN.MAX_FILE_BYTES) return cliFail(3, CLIPLAN.readMessage('TOO_LARGE_FILE', i + 1, col.files.length));
+  }
+  if (col.isDir && cliInside(o.out, o.in)) return cliFail(3, CLIPLAN.TEXT.outInside);
+  if (col.isDir && o.map && cliInside(o.map, o.in)) return cliFail(3, CLIPLAN.TEXT.mapInside);
+  if (o.policy) {
+    try {
+      if (fs.statSync(o.policy).size > 1024 * 1024) throw new Error('size');
+      const res = require('./app/lib/policy.js').parse(fs.readFileSync(o.policy, 'utf8'));
+      if (!res.ok) { cliSay(CLIPLAN.TEXT.policyBad, true); res.errors.slice(0, 3).forEach((m) => cliSay(m, true)); return cliExit(3); }
+      cliRun.policy = JSON.parse(JSON.stringify(res.policy));
+    } catch (e) { return cliFail(3, CLIPLAN.TEXT.policyBad); }
+  }
+
+  // Passwort fuer die Zuordnung: Umgebungsvariable oder Standardeingabe, nie Argument
+  if (o.map) {
+    const pw = o.passwordEnv !== undefined ? process.env[o.passwordEnv] : await cliReadStdinLine();
+    if (!pw) return cliFail(2, o.passwordEnv !== undefined ? CLIPLAN.TEXT.pwEnvEmpty : CLIPLAN.TEXT.pwStdinEmpty);
+    try { await require('./app/lib/psmap.js').encrypt({}, pw, { iterations: 1 }); } // prueft nur die Mindestlaenge
+    catch (e) { return cliFail(2, (e && e.code === 'WEAK_PASSWORD' && e.message) || CLIPLAN.TEXT.unexpected); }
+    cliRun.password = pw;
+  }
+
+  // KI gefordert (Standard): Modell muss vorhanden sein, kein stilles Zurueckfallen auf Wortlisten
+  if (o.ai === 'auto' && !(await cliModelOk())) return cliFail(5, CLIPLAN.TEXT.aiMissing);
+
+  // Testhaken: nur mit PS_TEST_HOOKS=1 schaltet PS_CLI_TEST_FIRST_PASS_OFF Regeln im Anonymisierungsdurchlauf aus (die Gegenpruefung behaelt sie)
+  const hook = process.env.PS_TEST_HOOKS === '1' && /^[a-z,]{1,100}$/.test(process.env.PS_CLI_TEST_FIRST_PASS_OFF || '') ? process.env.PS_CLI_TEST_FIRST_PASS_OFF.split(',') : [];
+
+  cliRun.files = col.files;
+  cliRun.total = col.files.length;
+  cliRun.skipped = col.skipped;
+  cliRun.config = { profile: o.profile, ai: o.ai, policy: cliRun.policy, firstPassOff: hook, modelId: CLIPLAN.MODEL_ID };
+  handle('cli-next-file', cliNextFile, { cli: true });
+  handle('cli-result', cliOnResult, { cli: true });
+
+  cliWin = new BrowserWindow({
+    show: false, width: 800, height: 600,
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, sandbox: true, backgroundThrottling: false }
+  });
+  cliWin.webContents.on('render-process-gone', () => cliFail(6, CLIPLAN.TEXT.unexpected));
+  cliWin.webContents.on('did-fail-load', () => cliFail(6, CLIPLAN.TEXT.noDisplay));
+  cliWin.loadURL(APP_ORIGIN + 'cli.html');
+}
+
+// cli-next-file: erster Aufruf liefert zusaetzlich die Einstellungen; danach je Aufruf die naechste Datei (Bytes), am Ende file: null
+async function cliNextFile() {
+  cliTouch();
+  const r = { total: cliRun.total };
+  if (!cliRun.configSent) { r.config = cliRun.config; cliRun.configSent = true; }
+  if (cliRun.next >= cliRun.files.length) { r.file = null; return r; }
+  const f = cliRun.files[cliRun.next];
+  let data;
+  try { data = await fs.promises.readFile(f.abs); } catch (e) { data = null; }
+  if (!data) { cliFail(3, CLIPLAN.readMessage('READ', cliRun.next + 1, cliRun.total)); return r; }
+  if (data.length > CLIPLAN.MAX_FILE_BYTES) { cliFail(3, CLIPLAN.readMessage('TOO_LARGE_FILE', cliRun.next + 1, cliRun.total)); return r; }
+  cliRun.next++;
+  r.file = { index: cliRun.next, name: path.basename(f.abs), data: new Uint8Array(data.buffer, data.byteOffset, data.length) };
+  return r;
+}
+
+// cli-result: Nachrichten der Seite; Form wird streng geprueft
+function cliOnResult(event, m) {
+  cliTouch();
+  if (!cliIsObj(m) || typeof m.type !== 'string') throw invalidArg();
+  const total = cliRun.total;
+  switch (m.type) {
+    case 'beat': return { ok: true };
+    case 'read-error':
+      if (!cliInt(m.index, total) || typeof m.code !== 'string' || m.code.length > 20) throw invalidArg();
+      cliFail(3, CLIPLAN.readMessage(m.code, m.index, total));
+      return { ok: true };
+    case 'ai-error': cliFail(5, CLIPLAN.TEXT.aiStart); return { ok: true };
+    case 'fail': cliFail(6, CLIPLAN.TEXT.runFail); return { ok: true };
+    case 'doc': {
+      const l = m.leak;
+      if (!cliInt(m.index, total) || m.index < 1 || typeof m.text !== 'string' || !cliIsObj(l) || !cliInt(l.count, 1e6) || !cliInt(l.hoch, 1e6) || !cliInt(l.mittel, 1e6) ||
+        !cliInt(m.srcChars, 2e9) || typeof m.srcSha256 !== 'string' || !/^[0-9a-f]{64}$/.test(m.srcSha256)) throw invalidArg();
+      cliRun.docs.set(m.index, { text: m.text, leak: { count: l.count, hoch: l.hoch, mittel: l.mittel }, srcChars: m.srcChars, srcSha256: m.srcSha256 });
+      if (!CLI.opts.quiet) cliSay(CLIPLAN.progressLine(cliRun.docs.size, total));
+      return { ok: true };
+    }
+    case 'done':
+      cliFinish(m).catch(() => cliFail(6, CLIPLAN.TEXT.unexpected));
+      return { ok: true };
+    default: throw invalidArg();
+  }
+}
+
+// Alles liegt vor: Bericht und Zuordnung bauen, erst dann schreiben (kein halbes Ergebnis bei Fehlern), Zusammenfassung, Rueckgabecode
+async function cliFinish(m) {
+  const o = CLI.opts, total = cliRun.total;
+  const st = m.state;
+  if (!cliIsObj(st) || !cliIsObj(st.store) || !cliIsObj(st.cnt) || cliRun.docs.size !== total) return cliFail(6, CLIPLAN.TEXT.runFail);
+  for (const e of Object.values(st.store)) if (!cliIsObj(e) || typeof e.v !== 'string') return cliFail(6, CLIPLAN.TEXT.runFail);
+  const state = { store: st.store, cnt: st.cnt };
+  const docs = [];
+  for (let i = 1; i <= total; i++) { const d = cliRun.docs.get(i); if (!d) return cliFail(6, CLIPLAN.TEXT.runFail); docs.push(d); }
+  const sha = (t) => require('crypto').createHash('sha256').update(t, 'utf8').digest('hex');
+  const documents = docs.map((d, i) => ({
+    index: i + 1, chars: d.text.length, counts: CLIPLAN.counts(d.text, state.store), resultSha256: sha(d.text), leak: d.leak,
+  }));
+  const finds = documents.reduce((s, d) => s + Object.values(d.counts).reduce((a, b) => a + b, 0), 0);
+  const leakFiles = docs.filter((d) => d.leak.count > 0).length;
+
+  const files = new Map(); // Dateiname im Ausgabeordner -> Inhalt
+  docs.forEach((d, i) => files.set('anonymisiert_' + String(i + 1).padStart(3, '0') + '.txt', d.text));
+  if (o.report) {
+    const REPORT = require('./app/lib/report.js');
+    const input = {
+      appVersion: app.getVersion(), startedAt: cliRun.startedIso, durationMs: Date.now() - cliRun.startedAt,
+      profileId: o.profile, aiMode: o.ai, whitelistSize: 0,
+      customRuleCount: cliRun.policy ? cliRun.policy.rules.filter((r) => r.enabled !== false).length : 0, documents,
+    };
+    const local = new Date().toLocaleString('de-DE');
+    if (/^[0-9A-Za-z:., +\-()]{1,40}$/.test(local)) input.localTime = local;
+    if (m.aiLoaded === true) input.modelId = CLIPLAN.MODEL_ID;
+    const rep = REPORT.build(input);
+    files.set('bericht.txt', REPORT.toText(rep));
+    files.set('bericht.json', REPORT.toJson(rep));
+  }
+  let mapBytes = null;
+  if (o.map) {
+    const payload = {
+      v: 1, created: new Date().toISOString(), state: CLIPLAN.scope(docs.map((d) => d.text), state),
+      docs: docs.map((d, i) => ({ index: i + 1, name: cliRun.files[i].rel, chars: d.srcChars, sha256: d.srcSha256 })),
+    };
+    mapBytes = await require('./app/lib/psmap.js').encrypt(payload, cliRun.password);
+  }
+  try {
+    fs.mkdirSync(o.out, { recursive: true });
+    for (const [name, content] of files) fs.writeFileSync(path.join(o.out, name), content, 'utf8');
+    if (mapBytes) {
+      fs.mkdirSync(path.dirname(path.resolve(o.map)), { recursive: true });
+      fs.writeFileSync(o.map, mapBytes);
+    }
+  } catch (e) { return cliFail(6, CLIPLAN.TEXT.writeFail); }
+
+  if (cliRun.skipped && !o.quiet) cliSay('Hinweis: ' + CLIPLAN.plural(cliRun.skipped, 'Datei', 'Dateien') + ' ohne unterstützte Endung oder versteckt übersprungen.');
+  cliSay(CLIPLAN.summaryLine(total, finds, leakFiles));
+  if (o.failOnFindings && leakFiles > 0) { cliSay(CLIPLAN.TEXT.failOnFindings, true); return cliExit(4); }
+  return cliExit(0);
+}
+
 app.whenReady().then(() => {
+  if (CLI.cli) {
+    cliMain().catch(() => cliFail(6, CLIPLAN.TEXT.unexpected));
+    return;
+  }
   protocol.handle('app', appResponse);
   lockDownNetwork();
   restrictPermissions();
@@ -576,6 +921,7 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  if (CLI.cli) return; // der Kommandozeilenmodus beendet sich selbst (cliExit)
   if (process.platform !== 'darwin') app.quit();
 });
 
