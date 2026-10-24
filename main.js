@@ -265,6 +265,7 @@ function createWindow() {
     })();
   });
 
+  mainWindow.webContents.on('did-finish-load', () => provideStartFiles());
   mainWindow.loadURL(APP_ORIGIN + 'index.html');
   Menu.setApplicationMenu(null);
 }
@@ -940,11 +941,79 @@ async function cliFinish(m) {
   return cliExit(0);
 }
 
+// ---------------------------------------------------------------------------
+// Oeffnen mit und Einzelinstanz (E2): Pfade bleiben im Hauptprozess, die Seite holt nur Name, Groesse und Bytes.
+// ---------------------------------------------------------------------------
+const OPEN_EXT = ['txt', 'pdf', 'docx', 'csv', 'md', 'json', 'rtf', 'xlsx', 'ods', 'odt', 'odp', 'pptx', 'eml', 'html', 'htm', 'doc', 'xls', 'ppt'];
+const OPEN_MAX_BYTES = 30 * 1024 * 1024;
+const OPEN_MAX_FILES = 50;
+let opened = [];          // wartende Dateien { path, name, size, ok }
+let startFiles = [];      // Startdateien: nach jedem Neuladen der Huelle erneut bereitgestellt
+const macOpenBuffer = []; // macOS open-file vor ready
+
+// Merkt Dateien vor; Ordner und Unlesbares werden uebergangen. ok=false (Endung oder Groesse): die Seite zeigt nur die Meldung.
+function queueOpened(paths, list) {
+  if (!Array.isArray(paths)) return 0;
+  let n = 0;
+  for (const p of paths.slice(0, OPEN_MAX_FILES)) {
+    if (typeof p !== 'string' || !p || p.length > 4096) continue;
+    let st;
+    try { st = fs.statSync(p); } catch (e) { continue; }
+    if (!st.isFile()) continue;
+    if (list.some((x) => x.path === p)) continue;
+    const ext = path.extname(p).slice(1).toLowerCase();
+    list.push({ path: p, name: path.basename(p), size: st.size, ok: OPEN_EXT.includes(ext) && st.size <= OPEN_MAX_BYTES });
+    n++;
+  }
+  return n;
+}
+
+// Nach jedem (Neu-)Laden der Huelle: Startdateien erneut vormerken, damit ein Neuladen sie nicht verliert
+function provideStartFiles() {
+  for (const f of startFiles) if (!opened.some((x) => x.path === f.path)) opened.push({ ...f });
+  if (opened.length) sendToWindow('files-opened');
+}
+
+if (!CLI.cli) {
+  const additional = { files: CLIARGS.fileArgs(process.argv, { appPath: app.getAppPath(), defaultApp: process.defaultApp }).slice(0, OPEN_MAX_FILES) };
+  if (!app.requestSingleInstanceLock(additional)) {
+    app.quit();
+  } else {
+    app.on('second-instance', (event, argv, cwd, additionalData) => {
+      const files = additionalData && Array.isArray(additionalData.files) && additionalData.files.length <= OPEN_MAX_FILES
+        && additionalData.files.every((f) => typeof f === 'string') ? additionalData.files : [];
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      }
+      if (queueOpened(files, opened)) sendToWindow('files-opened');
+    });
+    app.on('open-file', (event, p) => {
+      event.preventDefault();
+      if (app.isReady()) { if (queueOpened([p], opened)) sendToWindow('files-opened'); } else macOpenBuffer.push(p);
+    });
+    queueOpened(additional.files, startFiles);
+  }
+}
+
+handle('take-opened-files', async () => {
+  const batch = opened.splice(0, OPEN_MAX_FILES);
+  const out = [];
+  for (const f of batch) {
+    if (!f.ok) { out.push({ name: f.name, size: f.size, data: null }); continue; }
+    try { out.push({ name: f.name, size: f.size, data: (await fs.promises.readFile(f.path)).toString('base64') }); } catch (e) { /* verschwunden: uebergehen */ }
+  }
+  return out;
+});
+
 app.whenReady().then(() => {
   if (CLI.cli) {
     cliMain().catch(() => cliFail(6, CLIPLAN.TEXT.unexpected));
     return;
   }
+  if (!app.hasSingleInstanceLock()) return;
+  queueOpened(macOpenBuffer.splice(0), startFiles);
   protocol.handle('app', appResponse);
   lockDownNetwork();
   restrictPermissions();

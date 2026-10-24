@@ -405,6 +405,14 @@
       }
     });
 
+    // E2: neue "Oeffnen mit"-Dateien ans Werkzeug melden (es holt sie selbst ab)
+    if (window.electronAPI && window.electronAPI.onFilesOpened) {
+      window.electronAPI.onFilesOpened(function () {
+        const toolFrame = document.getElementById('tool-frame');
+        if (toolFrame && toolFrame.contentWindow) toolFrame.contentWindow.postMessage({ type: 'ps-files-opened' }, 'app://ps');
+      });
+    }
+
     function closeStatusDialog() {
       document.getElementById('update-status-overlay').style.display = 'none';
     }

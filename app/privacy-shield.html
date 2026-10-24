@@ -2239,6 +2239,31 @@
           await prjAddFiles(ok, files.length > 1);
         }
         document.getElementById("FI").addEventListener("change", (e) => handleFiles(Array.from(e.target.files)));
+        // E2: "Oeffnen mit" und zweite Instanz: Dateien beim Hauptprozess abholen (Pfade bleiben dort)
+        async function takeOpened() {
+          const api = window.parent !== window && window.parent.electronAPI;
+          if (!api || !api.takeOpenedFiles) return;
+          let list;
+          try { list = await api.takeOpenedFiles(); } catch (e) { return; }
+          if (!Array.isArray(list) || !list.length) return;
+          const files = list.map((o) => {
+            if (typeof o.data !== "string") return { name: o.name, size: o.size }; // abgelehnt: nur fuer die Meldung
+            const bin = atob(o.data), bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return new File([bytes], o.name);
+          });
+          // Ist schon eine Einzeldatei geladen, geht sie mit den neuen zusammen in die Projektliste
+          const cur = document.getElementById("IT").value;
+          if (files.some((f) => f instanceof File) && !(prj && prj.docs.length) && document.getElementById("FT").classList.contains("on") && cur.trim()) {
+            const nm = (document.getElementById("FN").textContent || "Datei").replace(/\.[^.]*$/, "") + ".txt";
+            await prjAddFiles([new File([cur], nm)]);
+          }
+          await handleFiles(files);
+        }
+        window.addEventListener("message", (e) => {
+          if (e.source === window.parent && e.origin === "app://ps" && e.data && e.data.type === "ps-files-opened") takeOpened();
+        });
+        takeOpened();
         const dz = document.getElementById("DZ");
         dz.addEventListener("dragover", (e) => {
           e.preventDefault();
