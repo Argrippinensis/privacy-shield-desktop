@@ -630,12 +630,20 @@ function cliExit(code) {
     if (dir) {
       try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 }); } catch (e) { /* bleibt liegen: unkritisch */ }
       try {
-        const cp = require('child_process');
-        const h = process.platform === 'win32'
-          ? cp.spawn('cmd.exe', ['/c', 'ping -n 3 127.0.0.1 >nul & rmdir /s /q "' + dir + '"'], { detached: true, stdio: 'ignore', windowsHide: true })
-          : cp.spawn('/bin/sh', ['-c', 'sleep 1; rm -rf "$1"', 'sh', dir], { detached: true, stdio: 'ignore' });
-        h.on('error', () => {});
-        h.unref();
+        // Hilfsprozess mit minimaler Umgebung (keine Passwoerter u. a.). Der Ordnername wird relativ zum Temp-Ordner uebergeben (cwd),
+        // damit unter Windows keine Anfuehrungszeichen in der cmd-Befehlszeile noetig sind; nur Namen, die mkdtemp erzeugt hat.
+        const base = path.basename(dir);
+        if (new RegExp('^' + CLI_TMP_PREFIX + '[A-Za-z0-9]+$').test(base)) {
+          const cp = require('child_process');
+          const parent = path.dirname(dir);
+          const h = process.platform === 'win32'
+            ? cp.spawn('cmd.exe', ['/d', '/s', '/c', 'ping -n 3 127.0.0.1 >nul & rmdir /s /q ' + base], {
+              cwd: parent, detached: true, stdio: 'ignore', windowsHide: true, windowsVerbatimArguments: true,
+              env: { SystemRoot: process.env.SystemRoot || 'C:\\Windows', ComSpec: process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe', PATH: (process.env.SystemRoot || 'C:\\Windows') + '\\System32' } })
+            : cp.spawn('/bin/sh', ['-c', 'sleep 1; rm -rf -- "$1"', 'sh', base], { cwd: parent, detached: true, stdio: 'ignore', env: { PATH: '/usr/bin:/bin' } });
+          h.on('error', () => {});
+          h.unref();
+        }
       } catch (e) { /* Reste raeumt der naechste Lauf nach einem Tag auf */ }
     }
     process.exit(code);
@@ -702,19 +710,19 @@ function cliCollect(inPath, recursive) {
   if (st.isFile()) {
     const base = path.basename(inPath);
     if (!CLIPLAN.supportedName(base)) return { err: CLIPLAN.TEXT.inNone };
-    files.push({ abs: path.resolve(inPath), rel: base, size: st.size });
+    files.push({ abs: path.resolve(inPath), rel: base, size: st.size, noFollow: false });
     return { files, skipped, isDir: false };
   }
   if (!st.isDirectory()) return { err: CLIPLAN.TEXT.inMissing };
   const walk = (dir, prefix) => {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
       const abs = path.join(dir, e.name), rel = prefix ? prefix + '/' + e.name : e.name;
-      let isDir = e.isDirectory(), isFile = e.isFile();
-      if (e.isSymbolicLink()) { try { isFile = fs.statSync(abs).isFile(); isDir = false; } catch (err) { continue; } } // verknuepfte Ordner werden nicht verfolgt
-      if (isDir) { if (recursive && !CLIPLAN.ignoredName(e.name)) walk(abs, rel); continue; }
-      if (!isFile) continue;
+      // Verknuepfungen (Ordner wie Dateien) werden weder verfolgt noch gelesen: sie koennten aus dem Eingabeordner herauszeigen
+      if (e.isSymbolicLink()) { skipped++; continue; }
+      if (e.isDirectory()) { if (recursive && !CLIPLAN.ignoredName(e.name)) walk(abs, rel); continue; }
+      if (!e.isFile()) continue;
       if (CLIPLAN.ignoredName(e.name) || !CLIPLAN.supportedName(e.name)) { skipped++; continue; }
-      files.push({ abs, rel, size: fs.statSync(abs).size });
+      files.push({ abs, rel, size: fs.lstatSync(abs).size, noFollow: true });
     }
   };
   try { walk(inPath, ''); } catch (e) { return { err: CLIPLAN.TEXT.inMissing }; }
@@ -734,8 +742,21 @@ async function cliModelOk() {
 function cliIsObj(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
 const cliInt = (v, max) => Number.isInteger(v) && v >= 0 && v <= max;
 
+// Ausgabeziele (--out, --map, --log) duerfen nicht die Eingabe sein und nicht im Eingabeordner liegen;
+// bei einer Einzeldatei gilt ihr Ordner als Eingabeordner.
+function cliTargetInInput(target, inPath) {
+  if (typeof target !== 'string' || typeof inPath !== 'string') return false;
+  let st;
+  try { st = fs.statSync(inPath); } catch (e) { return false; }
+  const root = st.isDirectory() ? inPath : path.dirname(path.resolve(inPath));
+  return cliInside(target, root) || cliInside(target, inPath);
+}
+
 async function cliMain() {
   const o = CLI.opts;
+  // Protokoll im Eingabeordner oder gleich der Eingabedatei: nie dorthin schreiben (auch nicht die Fehlermeldung); Code 3 folgt unten
+  const logBad = !!o.log && cliTargetInInput(o.log, o.in);
+  if (logBad) o.log = undefined;
   if (o.log) { try { fs.mkdirSync(path.dirname(path.resolve(o.log)), { recursive: true }); } catch (e) { /* siehe cliSay */ } }
   if (CLI.errors.length) {
     for (const m of CLI.errors) cliSay(m, true);
@@ -743,13 +764,19 @@ async function cliMain() {
     return cliExit(2);
   }
   if (!cliTmp) return cliFail(6, CLIPLAN.TEXT.unexpected);
-  // Chromium schreibt beim Beenden noch kleine Dateien in userData; Reste frueherer Laeufe (aelter als ein Tag) aufraeumen
-  try {
-    for (const e of fs.readdirSync(os.tmpdir())) {
+  // Chromium schreibt beim Beenden noch kleine Dateien in userData; Reste frueherer Laeufe (aelter als ein Tag) aufraeumen.
+  // Je Eintrag eigener Versuch; nur echte Ordner (keine Verknuepfungen, keine Dateien) mit unserem Praefix.
+  let leftovers = [];
+  try { leftovers = fs.readdirSync(os.tmpdir()); } catch (e) { /* Aufraeumen ist Nebensache */ }
+  for (const e of leftovers) {
+    if (!e.startsWith(CLI_TMP_PREFIX)) continue;
+    try {
       const d = path.join(os.tmpdir(), e);
-      if (e.startsWith(CLI_TMP_PREFIX) && d !== cliTmp && Date.now() - fs.statSync(d).mtimeMs > 24 * 3600 * 1000) fs.rmSync(d, { recursive: true, force: true });
-    }
-  } catch (e) { /* Aufraeumen ist Nebensache */ }
+      if (d === cliTmp) continue;
+      const st = fs.lstatSync(d);
+      if (st.isDirectory() && Date.now() - st.mtimeMs > 24 * 3600 * 1000) fs.rmSync(d, { recursive: true, force: true });
+    } catch (err) { /* dieser Eintrag nicht; die anderen weiter */ }
+  }
   protocol.handle('app', appResponse);
   lockDownNetwork();
   restrictPermissions();
@@ -766,8 +793,9 @@ async function cliMain() {
     if (f.size === 0) return cliFail(3, CLIPLAN.readMessage('EMPTY', i + 1, col.files.length));
     if (f.size > CLIPLAN.MAX_FILE_BYTES) return cliFail(3, CLIPLAN.readMessage('TOO_LARGE_FILE', i + 1, col.files.length));
   }
-  if (col.isDir && cliInside(o.out, o.in)) return cliFail(3, CLIPLAN.TEXT.outInside);
-  if (col.isDir && o.map && cliInside(o.map, o.in)) return cliFail(3, CLIPLAN.TEXT.mapInside);
+  if (logBad) return cliFail(3, CLIPLAN.TEXT.logInside);
+  if (cliTargetInInput(o.out, o.in)) return cliFail(3, CLIPLAN.TEXT.outInside);
+  if (o.map && cliTargetInInput(o.map, o.in)) return cliFail(3, CLIPLAN.TEXT.mapInside);
   if (o.policy) {
     try {
       if (fs.statSync(o.policy).size > 1024 * 1024) throw new Error('size');
@@ -779,7 +807,8 @@ async function cliMain() {
 
   // Passwort fuer die Zuordnung: Umgebungsvariable oder Standardeingabe, nie Argument
   if (o.map) {
-    const pw = o.passwordEnv !== undefined ? process.env[o.passwordEnv] : await cliReadStdinLine();
+    const envVal = o.passwordEnv !== undefined && Object.prototype.hasOwnProperty.call(process.env, o.passwordEnv) ? process.env[o.passwordEnv] : undefined;
+    const pw = o.passwordEnv !== undefined ? (typeof envVal === 'string' ? envVal : '') : await cliReadStdinLine();
     if (!pw) return cliFail(2, o.passwordEnv !== undefined ? CLIPLAN.TEXT.pwEnvEmpty : CLIPLAN.TEXT.pwStdinEmpty);
     try { await require('./app/lib/psmap.js').encrypt({}, pw, { iterations: 1 }); } // prueft nur die Mindestlaenge
     catch (e) { return cliFail(2, (e && e.code === 'WEAK_PASSWORD' && e.message) || CLIPLAN.TEXT.unexpected); }
@@ -816,7 +845,11 @@ async function cliNextFile() {
   if (cliRun.next >= cliRun.files.length) { r.file = null; return r; }
   const f = cliRun.files[cliRun.next];
   let data;
-  try { data = await fs.promises.readFile(f.abs); } catch (e) { data = null; }
+  try {
+    // Dateien aus einem Ordner nie ueber eine Verknuepfung oeffnen (auch nicht, wenn sie erst nach dem Einsammeln ersetzt wurde)
+    const fh = await fs.promises.open(f.abs, fs.constants.O_RDONLY | (f.noFollow ? (fs.constants.O_NOFOLLOW || 0) : 0));
+    try { data = await fh.readFile(); } finally { await fh.close(); }
+  } catch (e) { data = null; }
   if (!data) { cliFail(3, CLIPLAN.readMessage('READ', cliRun.next + 1, cliRun.total)); return r; }
   if (data.length > CLIPLAN.MAX_FILE_BYTES) { cliFail(3, CLIPLAN.readMessage('TOO_LARGE_FILE', cliRun.next + 1, cliRun.total)); return r; }
   cliRun.next++;
@@ -901,7 +934,7 @@ async function cliFinish(m) {
     }
   } catch (e) { return cliFail(6, CLIPLAN.TEXT.writeFail); }
 
-  if (cliRun.skipped && !o.quiet) cliSay('Hinweis: ' + CLIPLAN.plural(cliRun.skipped, 'Datei', 'Dateien') + ' ohne unterstützte Endung oder versteckt übersprungen.');
+  if (cliRun.skipped && !o.quiet) cliSay('Hinweis: ' + CLIPLAN.plural(cliRun.skipped, 'Datei', 'Dateien') + ' ohne unterstützte Endung, versteckt oder verknüpft übersprungen.');
   cliSay(CLIPLAN.summaryLine(total, finds, leakFiles));
   if (o.failOnFindings && leakFiles > 0) { cliSay(CLIPLAN.TEXT.failOnFindings, true); return cliExit(4); }
   return cliExit(0);

@@ -40,7 +40,7 @@
           catch (e) { return send({ type: 'read-error', index: f.index, code: (e && e.code) || 'CORRUPT' }); }
           if (!text.trim()) return send({ type: 'read-error', index: f.index, code: 'NO_TEXT' });
           try { PSLib.project.add(prj, { name: String(f.index), text: text }); }
-          catch (e) { return send({ type: 'read-error', index: f.index, code: e && e.code === 'LIMIT' ? 'LIMIT' : 'CORRUPT' }); }
+          catch (e) { return send({ type: 'read-error', index: f.index, code: e && e.code === 'LIMIT' ? (prj.docs.length >= PSLib.project.LIMITS.docs ? 'LIMIT' : 'LIMIT_CHARS') : 'CORRUPT' }); }
           src.push({ chars: text.length, sha: await shaHex(text) });
           send({ type: 'beat' });
           r = await api.nextFile();

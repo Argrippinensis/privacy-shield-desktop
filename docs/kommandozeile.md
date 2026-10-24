@@ -16,19 +16,19 @@ PrivacyShield --cli --in <Datei|Ordner> --out <Ordner>
 
 | Option | Bedeutung |
 |---|---|
-| `--in` | Eine Datei oder ein Ordner. In einem Ordner werden nur Dateien mit unterstützter Endung verarbeitet (mit `--recursive` auch Unterordner). Versteckte Dateien und Office-Sperrdateien (`~$...`) werden übergangen. |
-| `--out` | Ausgabeordner; wird angelegt. Vorhandene Dateien gleichen Namens werden überschrieben. Er darf nicht im Eingabeordner liegen. |
+| `--in` | Eine Datei oder ein Ordner. In einem Ordner werden nur Dateien mit unterstützter Endung verarbeitet (mit `--recursive` auch Unterordner). Versteckte Dateien, Office-Sperrdateien (`~$...`) und verknüpfte Dateien oder Ordner (Symlinks) werden übergangen und nicht gelesen. |
+| `--out` | Ausgabeordner; wird angelegt. Vorhandene Dateien gleichen Namens werden überschrieben. Er darf nicht im Eingabeordner liegen (bei einer einzelnen Datei als Eingabe: nicht in deren Ordner) und nicht die Eingabedatei sein. |
 | `--profile` | Erkennungsprofil, Standard `standard`. `maximal` ist ein anderer Name für `strict`. |
 | `--ai` | `auto` (Standard): KI-Erkennung nutzen. Ist das Modell nicht startbar, bricht der Lauf mit Code 5 ab; es gibt kein stilles Zurückfallen. `off`: nur Regeln und Wortlisten. |
 | `--policy` | Datei mit eigenen Regeln (gleiches Format wie in der Oberfläche). |
 | `--report` | Schreibt zusätzlich `bericht.txt` und `bericht.json` in den Ausgabeordner. |
-| `--map` | Schreibt die verschlüsselte Zuordnung (`.psmap`) genau an diesen Pfad; der Ordner wird angelegt. Braucht eine Passwortquelle. |
+| `--map` | Schreibt die verschlüsselte Zuordnung (`.psmap`) genau an diesen Pfad; der Ordner wird angelegt. Braucht eine Passwortquelle. Darf nicht die Eingabedatei sein und nicht im Eingabeordner liegen. |
 | `--password-env` | Name einer Umgebungsvariablen mit dem Passwort (mindestens 10 Zeichen). |
 | `--password-stdin` | Das Passwort wird als eine Zeile von der Standardeingabe gelesen. |
 | `--fail-on-findings` | Rückgabecode 4, wenn die Gegenprüfung in mindestens einem Dokument mögliche Reste meldet. |
 | `--recursive` | Auch Unterordner des Eingabeordners einlesen. |
 | `--quiet` | Keine Fortschrittsmeldungen (Fehler und Zusammenfassung bleiben). |
-| `--log` | Meldungen zusätzlich an diese Datei anhängen (UTF-8, mit Zeitstempel). |
+| `--log` | Meldungen zusätzlich an diese Datei anhängen (UTF-8, mit Zeitstempel). Darf nicht die Eingabedatei sein und nicht im Eingabeordner liegen (Code 3; dorthin wird auch keine Meldung geschrieben). |
 
 **Passwörter nie als Argument.** Ein Argument ist in Prozesslisten für alle sichtbar. `--password` (auch `--passwort`) wird deshalb mit Code 2 abgelehnt. Das Passwort gehört in eine Umgebungsvariable oder auf die Standardeingabe.
 
@@ -58,12 +58,14 @@ Fehler nennen nur die Nummer der Datei (die Reihenfolge wie oben). Die Ausgabe i
 |---|---|
 | 0 | Erfolg |
 | 2 | Falsche Argumente (zum Beispiel `--in` oder `--out` fehlt, ungültiges Profil, `--map` ohne genau eine Passwortquelle, Passwort zu kurz oder als Argument) |
-| 3 | Eingabefehler: Datei oder Ordner fehlt, kein unterstütztes Dokument, Format kaputt, Datei über 30 MB oder leer, gescanntes PDF ohne Text, ungültige `--policy`, `--out` oder `--map` im Eingabeordner, mehr als 200 Dokumente |
+| 3 | Eingabefehler: Datei oder Ordner fehlt, kein unterstütztes Dokument, Format kaputt, Datei über 30 MB oder leer, gescanntes PDF ohne Text, ungültige `--policy`, `--out`, `--map` oder `--log` ist die Eingabedatei oder liegt im Eingabeordner, mehr als 200 Dokumente |
 | 4 | Gegenprüfung meldet Reste und `--fail-on-findings` ist gesetzt (die Ergebnisse sind trotzdem geschrieben) |
 | 5 | KI verlangt (`--ai auto`), aber das Modell fehlt oder startet nicht |
 | 6 | Sonstiger Fehler (zum Beispiel Ausgabe nicht schreibbar) |
 
 Gescannte PDFs ohne Textebene lassen sich im Kommandozeilenmodus nicht verarbeiten (keine Texterkennung); sie führen zu Code 3. Dafür die Oberfläche verwenden.
+
+Die Ergebnisse werden erst am Ende geschrieben, wenn alle Dokumente gelesen und verarbeitet sind. Bei einem Lesefehler (Code 3) entstehen deshalb keine Teilergebnisse. Vorhandene Dateien im Ausgabeordner, die nicht überschrieben werden, bleiben unberührt: Lief früher ein größerer Stapel in denselben Ordner, bleiben dessen Dateien mit höherer Nummer (zum Beispiel `anonymisiert_004.txt`) stehen. Für einen sauberen Stand einen leeren oder neuen Ausgabeordner verwenden.
 
 ## Beispiele
 
