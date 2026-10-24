@@ -400,6 +400,43 @@ handle('check-assets', (event, deep) => {
   return checkAssets(deep);
 });
 
+// Info-Dialog: technische Angaben ohne Dokumentinhalte, Dateinamen und absolute Pfade.
+const MODEL_FILE_RE = /^models\/(.+)\/onnx\/model_quantized\.onnx$/;
+handle('get-app-info', () => {
+  let model = null;
+  try {
+    const manifest = JSON.parse(fs.readFileSync(path.join(APP_ROOT, 'vendor-manifest.json'), 'utf8'));
+    for (const f of manifest.files) {
+      const mm = MODEL_FILE_RE.exec(f.path);
+      if (mm && Number.isFinite(f.size)) { model = { id: mm[1], bytes: f.size }; break; }
+    }
+  } catch { model = null; }
+  return {
+    version: app.getVersion(),
+    electron: String(process.versions.electron || ''),
+    chrome: String(process.versions.chrome || ''),
+    node: String(process.versions.node || ''),
+    platform: process.platform,
+    arch: process.arch,
+    osRelease: os.release(),
+    model
+  };
+});
+
+// Lizenztexte: im gebauten Programm aus resourcesPath, im Quellbaum neben main.js; schreibgeschuetzt, hoechstens 1 MiB.
+const MAX_LICENSE_BYTES = 1024 * 1024;
+handle('get-licenses', () => {
+  const file = path.join(app.isPackaged ? process.resourcesPath : __dirname, 'THIRD_PARTY_NOTICES.md');
+  try {
+    const fd = fs.openSync(file, 'r');
+    try {
+      const buf = Buffer.alloc(MAX_LICENSE_BYTES);
+      const n = fs.readSync(fd, buf, 0, MAX_LICENSE_BYTES, 0);
+      return buf.subarray(0, n).toString('utf8');
+    } finally { fs.closeSync(fd); }
+  } catch { return ''; }
+});
+
 handle('get-update-mode', () => ({ manual: MANUAL_UPDATE }));
 
 handle('open-download-page', () => {

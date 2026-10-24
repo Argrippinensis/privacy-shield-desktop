@@ -12,6 +12,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getUpdateMode: () => ipcRenderer.invoke('get-update-mode'),
   openDownloadPage: () => ipcRenderer.invoke('open-download-page'),
   quitApp: () => ipcRenderer.invoke('quit-app'),
+  getAppInfo: () => ipcRenderer.invoke('get-app-info'),
+  getLicenses: () => ipcRenderer.invoke('get-licenses'),
+  getAppInfo: () => ipcRenderer.invoke('get-app-info'),
+  getLicenses: () => ipcRenderer.invoke('get-licenses'),
   getSystemStats: () => ipcRenderer.invoke("get-system-stats"),
   onUpdateAvailable: (callback) => {
     ipcRenderer.on('update-available', (event, data) => callback(data));
