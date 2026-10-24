@@ -947,6 +947,9 @@ async function cliFinish(m) {
 const OPEN_EXT = ['txt', 'pdf', 'docx', 'csv', 'md', 'json', 'rtf', 'xlsx', 'ods', 'odt', 'odp', 'pptx', 'eml', 'html', 'htm', 'doc', 'xls', 'ppt'];
 const OPEN_MAX_BYTES = 30 * 1024 * 1024;
 const OPEN_MAX_FILES = 50;
+const OPEN_MAX_LIST = 500;                      // Obergrenze der vorgemerkten Dateien; weitere werden verworfen (Hinweis an die Seite)
+const OPEN_BATCH_BYTES = 100 * 1024 * 1024;     // Rohdaten je Abruf von take-opened-files
+let openedDropped = 0;    // verworfene Dateien seit dem letzten Abruf
 let opened = [];          // wartende Dateien { path, name, size, ok }
 let startFiles = [];      // Startdateien: nach jedem Neuladen der Huelle erneut bereitgestellt
 const macOpenBuffer = []; // macOS open-file vor ready
@@ -961,6 +964,7 @@ function queueOpened(paths, list) {
     try { st = fs.statSync(p); } catch (e) { continue; }
     if (!st.isFile()) continue;
     if (list.some((x) => x.path === p)) continue;
+    if (list.length >= OPEN_MAX_LIST) { openedDropped++; continue; }
     const ext = path.extname(p).slice(1).toLowerCase();
     list.push({ path: p, name: path.basename(p), size: st.size, ok: OPEN_EXT.includes(ext) && st.size <= OPEN_MAX_BYTES });
     n++;
@@ -975,13 +979,17 @@ function provideStartFiles() {
 }
 
 if (!CLI.cli) {
-  const additional = { files: CLIARGS.fileArgs(process.argv, { appPath: app.getAppPath(), defaultApp: process.defaultApp }).slice(0, OPEN_MAX_FILES) };
+  // Eigene Startargumente gegen das eigene Arbeitsverzeichnis aufloesen (die zweite Instanz bekommt sie absolut)
+  const additional = { files: CLIARGS.fileArgs(process.argv, { appPath: app.getAppPath(), defaultApp: process.defaultApp }).slice(0, OPEN_MAX_FILES).map((f) => path.resolve(process.cwd(), f)) };
   if (!app.requestSingleInstanceLock(additional)) {
     app.quit();
   } else {
     app.on('second-instance', (event, argv, cwd, additionalData) => {
-      const files = additionalData && Array.isArray(additionalData.files) && additionalData.files.length <= OPEN_MAX_FILES
-        && additionalData.files.every((f) => typeof f === 'string') ? additionalData.files : [];
+      // Relative Pfade gehoeren zum Arbeitsordner der zweiten Instanz, nicht zu dem der laufenden App
+      if (typeof cwd !== 'string' || !path.isAbsolute(cwd)) cwd = process.cwd();
+      const files = (additionalData && Array.isArray(additionalData.files) && additionalData.files.length <= OPEN_MAX_FILES
+        && additionalData.files.every((f) => typeof f === 'string' && f.length <= 4096) ? additionalData.files : [])
+        .map((f) => path.resolve(cwd, f)).filter((f) => path.isAbsolute(f));
       if (mainWindow && !mainWindow.isDestroyed()) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.show();
@@ -991,21 +999,52 @@ if (!CLI.cli) {
     });
     app.on('open-file', (event, p) => {
       event.preventDefault();
-      if (app.isReady()) { if (queueOpened([p], opened)) sendToWindow('files-opened'); } else macOpenBuffer.push(p);
+      if (app.isReady()) { if (queueOpened([p], opened)) sendToWindow('files-opened'); }
+      else if (macOpenBuffer.length < OPEN_MAX_LIST) macOpenBuffer.push(p);
     });
     queueOpened(additional.files, startFiles);
   }
 }
 
 handle('take-opened-files', async () => {
-  const batch = opened.splice(0, OPEN_MAX_FILES);
   const out = [];
-  for (const f of batch) {
-    if (!f.ok) { out.push({ name: f.name, size: f.size, data: null }); continue; }
-    try { out.push({ name: f.name, size: f.size, data: (await fs.promises.readFile(f.path)).toString('base64') }); } catch (e) { /* verschwunden: uebergehen */ }
+  let raw = 0;
+  while (opened.length && out.length < OPEN_MAX_FILES) {
+    const f = opened[0];
+    if (!f.ok) { opened.shift(); out.push({ name: f.name, size: f.size, data: null }); continue; }
+    if (out.length && raw + f.size > OPEN_BATCH_BYTES) break; // Rest bleibt vorgemerkt
+    opened.shift(); // vor dem Lesen entnehmen: ein gleichzeitiger Abruf sieht die Datei nicht doppelt
+    const r = await readOpenedFile(f);
+    if (r && r.buf && out.length && raw + r.buf.length > OPEN_BATCH_BYTES) { opened.unshift(f); break; } // Datei war inzwischen gewachsen
+    if (!r) continue; // verschwunden: uebergehen
+    if (!r.buf) { out.push({ name: f.name, size: r.size, data: null }); continue; }
+    raw += r.buf.length;
+    out.push({ name: f.name, size: r.size, data: r.buf.toString('base64') });
   }
+  if (openedDropped) { out.push({ name: '', size: 0, data: null, dropped: openedDropped }); openedDropped = 0; }
+  if (opened.length) setImmediate(() => sendToWindow('files-opened')); // Rest: die Seite ruft erneut ab
   return out;
 });
+
+// Liest eine vorgemerkte Datei ueber ein Handle: Typ und Groesse werden am Handle erneut geprueft (kein Wettlauf zwischen Pruefung und Lesen).
+// Liefert { size, buf } (buf = null: zu gross), oder null (verschwunden, keine gewoehnliche Datei, unlesbar).
+async function readOpenedFile(f) {
+  let fh;
+  try {
+    fh = await fs.promises.open(f.path, fs.constants.O_RDONLY | (fs.constants.O_NONBLOCK || 0));
+    const st = await fh.stat();
+    if (!st.isFile()) return null;
+    if (st.size > OPEN_MAX_BYTES) return { size: st.size, buf: null };
+    const buf = Buffer.alloc(st.size);
+    let off = 0;
+    while (off < st.size) {
+      const { bytesRead } = await fh.read(buf, off, st.size - off, off);
+      if (!bytesRead) break;
+      off += bytesRead;
+    }
+    return { size: st.size, buf: off === st.size ? buf : buf.subarray(0, off) };
+  } catch (e) { return null; } finally { if (fh) await fh.close().catch(() => {}); }
+}
 
 app.whenReady().then(() => {
   if (CLI.cli) {

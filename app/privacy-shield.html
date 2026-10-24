@@ -2200,6 +2200,7 @@
       const ENTS = PSDetect.ENTS;
       const PROFILES = PSDetect.PROFILES;
       let mapSaved = false;
+      let openedResume = null; // E2: nach Ende eines Laufs bzw. Hinzufuegens zurueckgestellte "Oeffnen mit"-Dateien abholen
       // K4.fix: Zustandsrevision; jede Aenderung an Ergebnissen/Zuordnung/Dokumentbestand macht die Zuordnung wieder ungespeichert
       let stateRev = 0;
       function stateTouch() { stateRev++; mapSaved = false; }
@@ -2239,19 +2240,39 @@
           await prjAddFiles(ok, files.length > 1);
         }
         document.getElementById("FI").addEventListener("change", (e) => handleFiles(Array.from(e.target.files)));
-        // E2: "Oeffnen mit" und zweite Instanz: Dateien beim Hauptprozess abholen (Pfade bleiben dort)
+        // E2: "Oeffnen mit" und zweite Instanz: Dateien beim Hauptprozess abholen (Pfade bleiben dort).
+        // Waehrend eines Projektlaufs bleiben die Dateien im Hauptprozess vorgemerkt; nach Laufende holt takeOpened sie ab (openedResume).
+        let openedTaking = false, openedAgain = false;
+        const openedPending = [];
         async function takeOpened() {
           const api = window.parent !== window && window.parent.electronAPI;
           if (!api || !api.takeOpenedFiles) return;
-          let list;
-          try { list = await api.takeOpenedFiles(); } catch (e) { return; }
-          if (!Array.isArray(list) || !list.length) return;
-          const files = list.map((o) => {
+          if (openedTaking) { openedAgain = true; return; }
+          openedTaking = true;
+          try {
+            do {
+              openedAgain = false;
+              if (prjBusy) break; // Lauf aktiv: nichts am Projekt aendern, Laufende ruft erneut auf
+              let list;
+              try { list = await api.takeOpenedFiles(); } catch (e) { break; }
+              if (Array.isArray(list) && list.length) { openedPending.push(...list); openedAgain = true; } // evtl. Rest im Hauptprozess
+              if (prjBusy || !openedPending.length) continue; // ein Lauf hat inzwischen begonnen: Dateien bleiben hier vorgemerkt
+              await openedHandle(openedPending.splice(0));
+            } while (openedAgain);
+          } finally { openedTaking = false; }
+        }
+        async function openedHandle(list) {
+          const dropped = list.filter((o) => o && o.dropped).reduce((t, o) => t + (+o.dropped || 0), 0);
+          if (dropped) toast("Zu viele Dateien: " + dropped + " nicht übernommen", "e");
+          let files = list.filter((o) => o && !o.dropped && typeof o.name === "string").map((o) => {
             if (typeof o.data !== "string") return { name: o.name, size: o.size }; // abgelehnt: nur fuer die Meldung
             const bin = atob(o.data), bytes = new Uint8Array(bin.length);
             for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
             return new File([bytes], o.name);
           });
+          // Gleiche Datei (Name und Groesse) nicht doppelt in die Projektliste
+          if (prj && prj.docs.length) files = files.filter((f) => !(f instanceof File) || !prj.docs.some((d) => d.name === f.name && prjSize.get(d.id) === f.size));
+          if (!files.length) return;
           // Ist schon eine Einzeldatei geladen, geht sie mit den neuen zusammen in die Projektliste
           const cur = document.getElementById("IT").value;
           if (files.some((f) => f instanceof File) && !(prj && prj.docs.length) && document.getElementById("FT").classList.contains("on") && cur.trim()) {
@@ -2260,10 +2281,11 @@
           }
           await handleFiles(files);
         }
+        openedResume = takeOpened;
         window.addEventListener("message", (e) => {
           if (e.source === window.parent && e.origin === "app://ps" && e.data && e.data.type === "ps-files-opened") takeOpened();
         });
-        takeOpened();
+        setTimeout(takeOpened, 0); // erst nach dem Aufbau der Seite (prjBusy u. a. sind erst dann initialisiert)
         const dz = document.getElementById("DZ");
         dz.addEventListener("dragover", (e) => {
           e.preventDefault();
@@ -2715,6 +2737,7 @@
         } finally { prjBusy = false; }
         if (!prj.docs.length) hidePrj(); else prjRender();
         if (msgs.length) toast(msgs.join(" "), "e");
+        if (openedResume) setTimeout(openedResume, 0);
       }
       function hidePrj() {
         prj = null; prjSel = null;
@@ -2881,6 +2904,7 @@
           if (prjSel !== null && prjRes.has(prjSel)) prjShow(prjSel);
           if (prjAgain && !prjAborted && prj) { prjAgain = false; prjRun(); }
           prjAgain = false;
+          if (openedResume) setTimeout(openedResume, 0);
         }
       }
       // Zuordnung nur für Platzhalter, die in den aktuellen fertigen Ergebnissen vorkommen (D32); store und cnt bleiben unverändert
