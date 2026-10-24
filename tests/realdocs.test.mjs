@@ -14,17 +14,18 @@ const JSZip = loadVendor('jszip');
 const MAX_LEAK_TEXT = 0.02;   // DOCX, PDF mit Textebene, TXT, mit Modell
 const MAX_LEAK_OCR = 0.06;    // OCR: Zeichenverwechslung ist kein Erkennungsfehler
 const OCR_MIN_FRAG = 5;       // bei OCR werden nur Fragmente ab 5 Zeichen gemessen; kuerzere Werte stehen als unmeasured im Bericht
-// Ratsche: heute gemessener Stand (Anzahl undichter Werte), darf nicht steigen. Ziel C1.3 sind die Schwellen oben.
+// Ratsche: heute gemessener Stand (Anzahl undichter Werte), darf nicht steigen. Die Schwellen oben (Ziel C1) sind seit C1.2 erreicht
+// und gelten als Test (kein todo mehr).
 // Q2.fix: Messung verschaerft (Teilreste, Nenner nur importierte Werte); die Staende ki/fb sind mit der neuen Messung
 // unveraendert bestaetigt (keine Teilreste gefunden). Nenner OCR: 24 importierte Werte statt 27, 3 verloren, 1 ungemessen.
 // Weitere Ratschen je Format: lost (Werte, die den Import nicht ueberstanden), ocrChanged (verlorener Wert, dessen
 // leicht veraenderte Form unmaskiert in der Ausgabe steht, zaehlt wie ein Leck) und minImport (Mindest-Importquote).
 // Verlust darf die Leckquote nicht kaschieren: lost und ocrChanged duerfen nicht steigen, auch wenn leaked gleich bleibt.
 const RATCHET = {
-  TXT: { ki: 2, fb: 0, lost: 0, ocrChanged: 0, minImport: 1 },
-  DOCX: { ki: 2, fb: 0, lost: 0, ocrChanged: 0, minImport: 1 },
-  'PDF-Text': { ki: 3, fb: 1, lost: 0, ocrChanged: 0, minImport: 1 },
-  OCR: { ki: 5, fb: 4, lost: 3, ocrChanged: 0, minImport: 0.85 }, // Q2.fix: neuer Ausgangswert (heute 24/27 = 88,9 %)
+  TXT: { ki: 0, fb: 0, lost: 0, ocrChanged: 0, minImport: 1 },
+  DOCX: { ki: 0, fb: 0, lost: 0, ocrChanged: 0, minImport: 1 },
+  'PDF-Text': { ki: 0, fb: 0, lost: 0, ocrChanged: 0, minImport: 1 },
+  OCR: { ki: 1, fb: 0, lost: 3, ocrChanged: 0, minImport: 0.85 }, // Q2.fix: Importquote heute 24/27 = 88,9 %; C1.2: ein Leck (Nachname hinter Zeilenumbruch)
 };
 // Vorbedingung Import (Q2.fix): TXT, DOCX, PDF mit Textebene muessen alle Werte erhalten (assessImport, 100 %);
 // bei OCR ist Verlust erlaubt, wird aber als eigene Fehlerklasse 'ocr' ausgewiesen. Die Leckquote hat nur importierte Werte im Nenner.
@@ -172,7 +173,7 @@ for (const [key, F] of Object.entries(FORMATS)) {
     assert.ok(r.fb.leaked <= RATCHET[key].fb, `${key}: ${r.fb.leaked} Lecks im Modus fallback, Stand ${RATCHET[key].fb}`);
   });
 
-  test(`${F.title}: Ziel hoechstens ${F.max * 100} % undichte Werte mit Modell`, { timeout: 900000, todo: 'Ziel C1.3: hoechstens 2 % (OCR 6 %)' }, async () => {
+  test(`${F.title}: Ziel hoechstens ${F.max * 100} % undichte Werte mit Modell`, { timeout: 900000 }, async () => {
     const r = await measured(key, F.run);
     const q = rates(r.ki);
     assert.ok(q.leakRate <= F.max, `${key}: ${r.ki.leaked}/${r.ki.imported} undicht, erlaubt ${F.max * 100} %: ${hitList(r.ki)}`);
