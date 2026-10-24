@@ -524,3 +524,145 @@ test('zu kurzes Passwort fuer die Zuordnung ergibt einen Fehler (nicht 0) ohne P
   assert.notEqual(r.code, 0, 'zu kurzes Passwort darf nicht zum Erfolg fuehren: ' + r.all.slice(-300));
   assert.ok(!fs.existsSync(MAP), 'es darf keine Zuordnung mit schwachem Passwort entstehen');
 });
+
+// ---------------------------------------------------------------- Tests: Pruefermaengel (Reparaturzyklus E1.w)
+
+const DONT_RUN_ON_WIN = process.platform === 'win32' ? 'Verknuepfungen brauchen unter Windows besondere Rechte' : false;
+
+test('Standardfall --ai auto mit vorhandenem Modell: Exit 0 und der Personenname ist maskiert', { skip: PACKAGED ? 'Modellpfad im gepackten Programm nicht pruefbar' : (fs.existsSync(path.join(ROOT, 'app', 'models', 'Xenova')) ? false : 'Modell nicht im Arbeitsbaum') }, async () => {
+  const dir = path.join(tmp(), 'KI_Eingang');
+  fs.mkdirSync(dir);
+  fs.writeFileSync(path.join(dir, 'protokoll.txt'), 'notiz ki: Die Besprechung mit Thomas Müller aus Berlin findet morgen statt.');
+  const out = path.join(tmp(), 'Ausgang');
+  const r = await runCli(['--in', dir, '--out', out], { timeout: 240000 });
+  expectCode(r, 0, '--ai auto mit Modell');
+  assert.deepEqual(listDir(out), ['anonymisiert_001.txt']);
+  const txt = read(out, 'anonymisiert_001.txt');
+  assert.ok(txt.includes('notiz ki'), 'Text fehlt: ' + txt);
+  assert.ok(!txt.includes('Müller'), 'Name nicht maskiert: ' + txt);
+});
+
+test('Einzeldatei als --in mit --out im selben Ordner: Code 3, Eingabedatei bleibt unveraendert (auch bei Namen anonymisiert_001.txt)', async () => {
+  const dir = path.join(tmp(), 'Einzel');
+  fs.mkdirSync(dir);
+  const f = path.join(dir, 'anonymisiert_001.txt');
+  fs.writeFileSync(f, 'notiz original: Herr Thomas Müller meldet sich.');
+  const before = fs.readFileSync(f, 'utf8');
+  const r = await runCli(['--in', f, '--out', dir, '--ai', 'off']);
+  expectCode(r, 3, 'Einzeldatei, --out im Eingabeordner');
+  assert.equal(fs.readFileSync(f, 'utf8'), before, 'Eingabedatei wurde veraendert');
+  assert.deepEqual(listDir(dir), ['anonymisiert_001.txt'], 'im Eingabeordner darf nichts dazukommen');
+  const r2 = await runCli(['--in', f, '--out', path.join(dir, 'unter'), '--ai', 'off']);
+  expectCode(r2, 3, 'Einzeldatei, --out unterhalb des Eingabeordners');
+  assert.ok(!fs.existsSync(path.join(dir, 'unter')));
+});
+
+test('--map zeigt auf die Eingabedatei oder in den Eingabeordner: Code 3, Datei unveraendert', async () => {
+  const dir = path.join(tmp(), 'MapEin');
+  fs.mkdirSync(dir);
+  const f = path.join(dir, 'akte.txt');
+  fs.writeFileSync(f, 'notiz map: Herr Thomas Müller meldet sich.');
+  const before = fs.readFileSync(f, 'utf8');
+  const env = { [PW_ENV]: PASSWORD };
+  const r = await runCli(['--in', f, '--out', path.join(tmp(), 'Ausgang'), '--ai', 'off', '--map', f, '--password-env', PW_ENV], { env });
+  expectCode(r, 3, '--map gleich Eingabedatei');
+  assert.equal(fs.readFileSync(f, 'utf8'), before, 'Eingabedatei wurde ueberschrieben');
+  const r2 = await runCli(['--in', f, '--out', path.join(tmp(), 'Ausgang2'), '--ai', 'off', '--map', path.join(dir, 'z.psmap'), '--password-env', PW_ENV], { env });
+  expectCode(r2, 3, '--map im Ordner der Eingabedatei');
+  assert.ok(!fs.existsSync(path.join(dir, 'z.psmap')));
+  const r3 = await runCli(['--in', dir, '--out', path.join(tmp(), 'Ausgang3'), '--ai', 'off', '--map', f, '--password-env', PW_ENV], { env });
+  expectCode(r3, 3, '--map gleich Datei im Eingabeordner');
+  assert.equal(fs.readFileSync(f, 'utf8'), before, 'Datei im Eingabeordner wurde ueberschrieben');
+});
+
+test('--log gleich Eingabedatei oder im Eingabeordner: Code 3, nichts wird in den Eingabeordner geschrieben', async () => {
+  const dir = path.join(tmp(), 'LogEin');
+  fs.mkdirSync(dir);
+  const f = path.join(dir, 'akte.txt');
+  fs.writeFileSync(f, 'notiz log: Herr Thomas Müller meldet sich.');
+  const before = fs.readFileSync(f, 'utf8');
+  const r = await runCli(['--in', f, '--out', path.join(tmp(), 'Ausgang'), '--ai', 'off', '--log', f]);
+  expectCode(r, 3, '--log gleich Eingabedatei');
+  assert.equal(fs.readFileSync(f, 'utf8'), before, 'Eingabedatei wurde durch das Protokoll veraendert');
+  const r2 = await runCli(['--in', dir, '--out', path.join(tmp(), 'Ausgang2'), '--ai', 'off', '--log', path.join(dir, 'lauf.log')]);
+  expectCode(r2, 3, '--log im Eingabeordner');
+  assert.deepEqual(listDir(dir), ['akte.txt'], 'im Eingabeordner darf kein Protokoll entstehen');
+  const r3 = await runCli(['--in', f, '--out', path.join(tmp(), 'Ausgang3'), '--ai', 'off', '--log', path.join(dir, 'lauf.log')]);
+  expectCode(r3, 3, '--log im Ordner der Eingabedatei');
+  assert.deepEqual(listDir(dir), ['akte.txt']);
+});
+
+test('verknuepfte Datei im Eingabeordner, die aus dem Ordner herauszeigt, wird uebersprungen und nicht gelesen', { skip: DONT_RUN_ON_WIN }, async () => {
+  const base = tmp();
+  const outside = path.join(base, 'extern.txt');
+  fs.writeFileSync(outside, 'notiz extern: GEHEIMMARKE Herr Thomas Müller steht nur ausserhalb.');
+  const dir = path.join(base, 'MitLink');
+  fs.mkdirSync(dir);
+  fs.writeFileSync(path.join(dir, 'eigen.txt'), 'notiz eigen: Frau Anna Weber meldet sich.');
+  fs.symlinkSync(outside, path.join(dir, 'link.txt'));
+  const out = path.join(tmp(), 'Ausgang');
+  const r = await runCli(['--in', dir, '--out', out, '--ai', 'off']);
+  expectCode(r, 0, 'Ordner mit Verknuepfung');
+  assert.deepEqual(listDir(out), ['anonymisiert_001.txt'], 'die verknuepfte Datei darf nicht verarbeitet werden');
+  assert.ok(read(out, 'anonymisiert_001.txt').includes('notiz eigen'));
+  assert.ok(!r.all.includes('GEHEIMMARKE') && !read(out, 'anonymisiert_001.txt').includes('GEHEIMMARKE'));
+  const nur = path.join(base, 'NurLink');
+  fs.mkdirSync(nur);
+  fs.symlinkSync(outside, path.join(nur, 'link.txt'));
+  const r2 = await runCli(['--in', nur, '--out', path.join(tmp(), 'Ausgang2'), '--ai', 'off']);
+  expectCode(r2, 3, 'Ordner nur mit Verknuepfung');
+});
+
+test('Lesefehler mitten im Stapel (2. Datei kaputtes DOCX): Code 3 und keine anonymisiert_*-Dateien im Ausgabeordner', async () => {
+  const dir = path.join(tmp(), 'Halb');
+  fs.mkdirSync(dir);
+  fs.writeFileSync(path.join(dir, 'a_gut.txt'), 'notiz a: Herr Thomas Müller meldet sich.');
+  fs.writeFileSync(path.join(dir, 'b_kaputt.docx'), 'das ist kein zip-archiv');
+  fs.writeFileSync(path.join(dir, 'c_gut.txt'), 'notiz c: Frau Anna Weber meldet sich.');
+  const out = path.join(tmp(), 'Ausgang');
+  fs.mkdirSync(out);
+  const r = await runCli(['--in', dir, '--out', out, '--ai', 'off', '--report']);
+  expectCode(r, 3, 'Lesefehler mitten im Stapel');
+  assert.deepEqual(listDir(out).filter((n) => /^anonymisiert_/.test(n)), [], 'es duerfen keine Teilergebnisse stehen bleiben');
+});
+
+async function waitFor(cond, ms = 3000) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms) { if (cond()) return true; await new Promise((res) => setTimeout(res, 100)); }
+  return cond();
+}
+const runDirs = (d) => fs.readdirSync(d).filter((n) => n.startsWith('psc-run-'));
+const tmpEnv = (d) => ({ TMPDIR: d, TMP: d, TEMP: d });
+
+test('nach einem Lauf bleibt kein psc-run-*-Ordner im Temp-Ordner liegen', async () => {
+  const t = tmp('ps-cli-tmpdir-');
+  const dir = await makeInputDir();
+  const r = await runCli(['--in', path.join(dir, NAMES.txt), '--out', path.join(tmp(), 'Ausgang'), '--ai', 'off'], { env: tmpEnv(t) });
+  expectCode(r, 0, 'Lauf mit eigenem TMPDIR');
+  assert.ok(await waitFor(() => runDirs(t).length === 0), 'uebrig geblieben: ' + runDirs(t).join(', '));
+});
+
+test('Aufraeumen alter psc-run-*-Ordner: ein unlesbarer Eintrag stoppt das Aufraeumen der anderen nicht', { skip: DONT_RUN_ON_WIN }, async () => {
+  const t = tmp('ps-cli-tmpdir-');
+  const old = new Date(Date.now() - 3 * 24 * 3600 * 1000);
+  const olds = [];
+  for (let i = 0; i < 10; i++) {
+    const d = path.join(t, `psc-run-alt${i}`);
+    fs.mkdirSync(d);
+    fs.writeFileSync(path.join(d, 'x'), 'x');
+    fs.utimesSync(d, old, old);
+    olds.push(d);
+  }
+  for (let i = 0; i < 10; i++) fs.symlinkSync(path.join(t, 'gibt-es-nicht'), path.join(t, `psc-run-kaputt${i}`));
+  const dir = await makeInputDir();
+  const r = await runCli(['--in', path.join(dir, NAMES.txt), '--out', path.join(tmp(), 'Ausgang'), '--ai', 'off'], { env: tmpEnv(t) });
+  expectCode(r, 0, 'Lauf mit Altlasten');
+  assert.ok(await waitFor(() => olds.every((d) => !fs.existsSync(d))), 'alte Ordner blieben liegen: ' + olds.filter((d) => fs.existsSync(d)).length);
+});
+
+test('--password-env mit Namen aus der Objekt-Kette (constructor) gilt als nicht gesetzt: Code 2 mit klarer Meldung', async () => {
+  const dir = await makeRoundtripDir();
+  const r = await runCli(['--in', dir, '--out', path.join(tmp(), 'Ausgang'), '--ai', 'off', '--map', path.join(tmp(), 'z.psmap'), '--password-env', 'constructor']);
+  expectCode(r, 2, '--password-env constructor');
+  assert.match(r.all, /nicht gesetzt oder leer/);
+});
