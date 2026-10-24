@@ -14,7 +14,7 @@ export const MAC = process.platform === 'darwin';               // unsigniert: m
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const electronPath = require('electron');
 
-export async function launchApp({ offline = false, env = {}, appDir = ROOT, extraArgs = [], files = {}, userDataDir } = {}) {
+export async function launchApp({ offline = false, env = {}, appDir = ROOT, extraArgs = [], files = {}, userDataDir, cwd } = {}) {
   // userDataDir: vorgegebener Ordner (bleibt beim close() erhalten); sonst neuer Temp-Ordner (wird geloescht)
   const userData = userDataDir || fs.mkdtempSync(path.join(os.tmpdir(), 'ps-test-'));
   for (const [name, content] of Object.entries(files)) fs.writeFileSync(path.join(userData, name), content);
@@ -23,7 +23,7 @@ export async function launchApp({ offline = false, env = {}, appDir = ROOT, extr
   const args = [...(packaged ? [] : [appDir]), '--no-sandbox', `--user-data-dir=${userData}`, ...extraArgs];
   // Kein Netz: toter Proxy. Betrifft Chromium und electron-updater gleichermassen.
   if (offline) args.push('--proxy-server=http://127.0.0.1:9');
-  const app = await _electron.launch({ executablePath: packaged || electronPath, args, env: { ...process.env, PS_BLOCK_EXTERNAL: '1', ...env } });
+  const app = await _electron.launch({ executablePath: packaged || electronPath, args, ...(cwd ? { cwd } : {}), env: { ...process.env, PS_BLOCK_EXTERNAL: '1', ...env } });
   let win;
   try {
     win = await app.firstWindow();

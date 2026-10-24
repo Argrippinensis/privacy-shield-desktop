@@ -10,7 +10,7 @@ import { launchApp, toolFrame, ROOT } from './helpers.mjs';
 
 const CHANNELS = [
   'save-file', 'open-file', 'get-app-version', 'get-system-stats', 'dismiss-update', 'copy-text',
-  'check-assets', 'get-update-mode', 'open-download-page', 'start-download', 'check-for-updates', 'quit-app', 'get-app-info', 'get-licenses',
+  'check-assets', 'get-update-mode', 'open-download-page', 'start-download', 'check-for-updates', 'quit-app', 'get-app-info', 'get-licenses', 'take-opened-files',
 ];
 const TRUSTED = 'app://ps/index.html';
 const EVIL = 'https://evil.example/';
@@ -32,7 +32,7 @@ async function invoke(a, channel, senderFrame, args = []) {
   }, { channel, senderFrame, args });
 }
 
-test('Testhaken __psIpc existiert mit PS_TEST_HOOKS=1 und listet alle 14 Kanaele', async () => {
+test('Testhaken __psIpc existiert mit PS_TEST_HOOKS=1 und listet alle 15 Kanaele', async () => {
   const a = await launchApp({ offline: true, env: { PS_TEST_HOOKS: '1' } });
   try {
     const ch = await a.app.evaluate(() => globalThis.__psIpc ? [...globalThis.__psIpc.channels].sort() : null);
