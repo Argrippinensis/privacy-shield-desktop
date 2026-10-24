@@ -138,10 +138,10 @@
             /(?=[A-Za-z0-9._\-@])(?<=\b(?:Benutzer(?:name)?|User(?:name)?|Login|Nutzername|Account|Kennung)[ \t]{0,1000}[:=][ \t]{0,1000})(?!(?:Benutzer(?:name)?|User(?:name)?|Nutzer(?:name)?)\b)([A-Za-z0-9._\-@]{3,40})/g,
             /(?=[A-Za-z0-9._\-@])(?<=\b(?:Login|Anmeldung|Zugang)[ \t]{0,1000}[:=][ \t]{0,1000}(?:Benutzer(?:name)?|User(?:name)?|Nutzer(?:name)?)[ \t:=]{1,1000})([A-Za-z0-9._\-@]{3,40})/g,
             /(?=[A-Za-z0-9._\-@])(?<=\b(?:Anmeldename|Anmelde-Name|Loginname|Login-Name|Kontoname|Nickname|Benutzername|Nutzername|Username)(?:[ \t]{1,1000}(?:ist|lautet|war))?[ \t:]{1,1000})(?!(?:ist|lautet|war|sind)\b)(?=[A-Za-z0-9._\-@]{0,39}[._\-@0-9])([A-Za-z0-9._\-@]{3,40})/g,
-            /(?=\S)(?<=\b(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK|WLAN-?(?:Schlüssel|Passwort|Key|Kennwort)|WPA2?-?(?:Schlüssel|Key|Passwort)|Wi-?Fi-?(?:Passwort|Key|Password))[ \t]{0,1000}[:=][ \t]{0,1000})(\S{4,64})/gi,
-            /(?=\S)(?<=\b(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK|WLAN-?(?:Schlüssel|Passwort|Key|Kennwort)|WPA2?-?(?:Schlüssel|Key|Passwort)|Wi-?Fi-?(?:Passwort|Key|Password))[ \t]{1,1000})(?!(?:lautet|ist|war|sind|und|oder|für|der|des|die|das|zur|zum)\b)(?=\S{0,63}[^A-Za-zäöüÄÖÜß\s])(\S{4,64})/gi,
-            /(?=\S)(?<=\b(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK)[ \t]+(?:der|des|die|das|den|dem|für|zur|zum|von|bei|im|in|auf|zu)(?:[ \t]+[A-Za-zäöüÄÖÜß\-]{2,30}){1,3}[ \t]{0,1000}[:=][ \t]{0,1000})(\S{4,64})/gi,
-            /(?=\S)(?<=\b(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK)(?:[ \t]+(?:der|des|die|das|den|dem|für|zur|zum|von|bei|im|in|auf|zu)(?:[ \t]+[A-Za-zäöüÄÖÜß\-]{2,30}){1,3})?[ \t]+(?:ist|lautet|war|sind)[ \t:=]{0,1000})(?=\S{0,63}[^A-Za-zäöüÄÖÜß\s])(\S{4,64})/gi,
+            /(?=\S)(?<=(?:\b(?:PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK|WLAN-?(?:Schlüssel|Passwort|Key|Kennwort)|WPA2?-?(?:Schlüssel|Key|Passwort)|Wi-?Fi-?(?:Passwort|Key|Password))|(?:Passwort|Kennwort|Password|Passphrase))[ \t]{0,1000}[:=][ \t]{0,1000})(\S{4,64})/gi,
+            /(?=\S)(?<=(?:\b(?:PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK|WLAN-?(?:Schlüssel|Passwort|Key|Kennwort)|WPA2?-?(?:Schlüssel|Key|Passwort)|Wi-?Fi-?(?:Passwort|Key|Password))|(?:Passwort|Kennwort|Password|Passphrase))[ \t]{1,1000})(?!(?:lautet|ist|war|sind|und|oder|für|der|des|die|das|zur|zum)\b)(?=\S{0,63}[^A-Za-zäöüÄÖÜß\s])(\S{4,64})/gi,
+            /(?=\S)(?<=(?:\b(?:PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK)|(?:Passwort|Kennwort|Password|Passphrase))[ \t]+(?:der|des|die|das|den|dem|für|zur|zum|von|bei|im|in|auf|zu)(?:[ \t]+[A-Za-zäöüÄÖÜß\-]{2,30}){1,3}[ \t]{0,1000}[:=][ \t]{0,1000})(\S{4,64})/gi,
+            /(?=\S)(?<=(?:\b(?:PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK)|(?:Passwort|Kennwort|Password|Passphrase))(?:[ \t]+(?:der|des|die|das|den|dem|für|zur|zum|von|bei|im|in|auf|zu)(?:[ \t]+[A-Za-zäöüÄÖÜß\-]{2,30}){1,3})?[ \t]+(?:ist|lautet|war|sind)[ \t:=]{0,1000})(?=\S{0,63}[^A-Za-zäöüÄÖÜß\s])(\S{4,64})/gi,
             /(?=[A-Za-z0-9+\/])(?<=\b(?:[A-Za-z][A-Za-z0-9_]{0,40}[_\-])?(?:SECRET|TOKEN|PASSWORD|PASSWD|PWD|API_?KEY|ACCESS_?KEY|PRIVATE_?KEY|AUTH_?KEY)[A-Za-z0-9_]{0,20}[ \t]{0,100}[:=][ \t]{0,100}["']?)(?=[^\s"',;]*[0-9\/+=_])([^\s"',;]{8,128})/gi,
             /\b((?:sk|pk|rk|api|key|tok|secret|ghp|gho|xox[abp])[-_][A-Za-z0-9_\-]{12,64})\b/g,
             /\b(eyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,})\b/g,
@@ -1309,7 +1309,12 @@
       }
       // Gattungswort vor einem Eigennamen ("Berg Zugspitze", "Hotel Alpenblick"): kein Personenname
       const GENERIC_FIRST = /^(?:Berg|Hotel|Pension|Gasthof|Gasthaus|Restaurant|Museum|Hafen|Insel|Gipfel)$/;
-      function okName(s) {
+      // Steht direkt vor der Spanne eine Anrede (Herr/Frau/Herrn, ggf. mit Titeln)? Dann ist das erste Wort ein Nachname,
+      // auch wenn es wie ein Ortsadjektiv ("Wiener") oder ein Stoppwort ("Senf", "Salz") aussieht.
+      function hasAnredeBefore(text, start) {
+        return /(?:^|[^A-Za-zÄÖÜäöüß])(?:Herrn?|Frau|Hr\.|Fr\.)[ \t]+(?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl|MBA|MSc|PhD)[\w.\-]*[ \t]+)*$/.test(text.slice(Math.max(0, start - 60), start));
+      }
+      function okName(s, anrede) {
         const tt = s.trim();
         {
           const ws = tt.split(/[ \t]+/);
@@ -1327,10 +1332,10 @@
           .split(/\s+/)
           .every((p, i) => {
             // Ergebnis je Wort zwischenspeichern (lange Spannen wiederholen dieselben Woerter)
-            const key = (i === 0 ? "0" : "1") + p;
+            const key = (i === 0 ? (anrede ? "a" : "0") : "1") + p;
             let ok = wordOkCache.get(key);
             if (ok === undefined) {
-              ok = wordOk(p, i);
+              ok = wordOk(p, i, i === 0 && anrede);
               if (wordOkCache.size > 20000) wordOkCache.clear();
               wordOkCache.set(key, ok);
             }
@@ -1338,13 +1343,13 @@
           });
       }
       const wordOkCache = new Map();
-      function wordOk(p, i) {
+      function wordOk(p, i, anrede) {
         if (/^[A-ZÄÖÜ]\.$/.test(p)) return true; // Initiale
         const c = p.replace(/[^A-Za-züäöüÄÖÜß]/g, "");
         if (c.length < 2 || /^\d+$/.test(c)) return false;
-        if (i === 0 && (SW.has(p) || SW.has(c))) return false;
+        if (i === 0 && !anrede && (SW.has(p) || SW.has(c))) return false;
         // Ortsadjektiv auf -er ("Hamburger Hafen", "Wiener Saengerknaben"): kein Name
-        if (i === 0 && c.length > 5 && c.endsWith("er") && CITY_SET().has(c.slice(0, -2))) return false;
+        if (i === 0 && !anrede && c.length > 5 && c.endsWith("er") && CITY_SET().has(c.slice(0, -2))) return false;
         return true;
       }
       const PROFILES = [
@@ -2362,7 +2367,7 @@
           if (s.pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val) && !isValidIBANFormat(val)) return false;
           // Ausdrueckliche Nutzermarkierung: keine Plausibilitaetsfilter (Namensform, Ueberschrift)
           if (s.meth === "Manuelle Markierung") return true;
-          if (s.pfx === "NAME" && !okName(val)) return false;
+          if (s.pfx === "NAME" && !okName(val, hasAnredeBefore(text, s.start))) return false;
           if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(val)) return false;
           if (s.pfx === "ORT" && SW.has(val)) return false;
           if (["NAME", "ORG", "ORT", "ROLLE"].includes(s.pfx) && isHeadingSpan(text, s.start, s.end)) return false;

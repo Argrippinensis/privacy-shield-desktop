@@ -45,7 +45,7 @@
     "ids": []
    },
    "V2-PERSON": {
-    "total": 10,
+    "total": 17,
     "leaked": 3,
     "ids": [
      "v2a51",
@@ -78,7 +78,7 @@
     "ids": []
    },
    "V2-SECRET": {
-    "total": 14,
+    "total": 20,
     "leaked": 0,
     "ids": []
    },
@@ -946,6 +946,71 @@
      "tokens": 1
     },
     {
+     "key": "v2a159",
+     "out": "Das Initialpasswort: {{KONTO_1}} muss beim ersten Login geaendert werden.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a160",
+     "out": "Das Standardpasswort: {{KONTO_1}} gilt fuer alle neuen Konten.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a161",
+     "out": "Fuer das Gaeste-WLAN gilt das Netzwerkpasswort: {{KONTO_1}} bis Monatsende.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a162",
+     "out": "Das Mailpasswort: {{KONTO_1}} wurde gestern zurueckgesetzt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a163",
+     "out": "Das Zugangspasswort lautet {{KONTO_1}} und wird nur telefonisch genannt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a164",
+     "out": "Das Kontopasswort = {{KONTO_1}} steht in der alten Notiz.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a165",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a166",
+     "out": "Frau {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a167",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a168",
+     "out": "Frau {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a169",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a170",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a171",
+     "out": "Frau {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
      "key": "v2n01",
      "out": "Der Hamburger Hafen schlug im vergangenen Jahr rund 120 Millionen Tonnen um.",
      "tokens": 0
@@ -1769,7 +1834,7 @@
     "ids": []
    },
    "V2-PERSON": {
-    "total": 10,
+    "total": 17,
     "leaked": 0,
     "ids": []
    },
@@ -1794,7 +1859,7 @@
     "ids": []
    },
    "V2-SECRET": {
-    "total": 14,
+    "total": 20,
     "leaked": 0,
     "ids": []
    },
@@ -2664,6 +2729,71 @@
      "tokens": 1
     },
     {
+     "key": "v2a159",
+     "out": "Das Initialpasswort: {{KONTO_1}} muss beim ersten Login geaendert werden.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a160",
+     "out": "Das Standardpasswort: {{KONTO_1}} gilt fuer alle neuen Konten.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a161",
+     "out": "Fuer das Gaeste-WLAN gilt das Netzwerkpasswort: {{KONTO_1}} bis Monatsende.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a162",
+     "out": "Das Mailpasswort: {{KONTO_1}} wurde gestern zurueckgesetzt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a163",
+     "out": "Das Zugangspasswort lautet {{KONTO_1}} und wird nur telefonisch genannt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a164",
+     "out": "Das Kontopasswort = {{KONTO_1}} steht in der alten Notiz.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a165",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a166",
+     "out": "Frau {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a167",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a168",
+     "out": "Frau {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a169",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a170",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a171",
+     "out": "Frau {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
      "key": "v2n01",
      "out": "Der Hamburger Hafen schlug im vergangenen Jahr rund 120 Millionen Tonnen um.",
      "tokens": 0
@@ -3487,7 +3617,7 @@
     "ids": []
    },
    "V2-PERSON": {
-    "total": 10,
+    "total": 17,
     "leaked": 0,
     "ids": []
    },
@@ -3512,7 +3642,7 @@
     "ids": []
    },
    "V2-SECRET": {
-    "total": 14,
+    "total": 20,
     "leaked": 0,
     "ids": []
    },
@@ -4380,6 +4510,71 @@
     {
      "key": "v2a158",
      "out": "Zahlung auf {{IBAN_1}} bitte bis Freitag.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a159",
+     "out": "Das Initialpasswort: {{KONTO_1}} muss beim ersten Login geaendert werden.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a160",
+     "out": "Das Standardpasswort: {{KONTO_1}} gilt fuer alle neuen Konten.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a161",
+     "out": "Fuer das Gaeste-WLAN gilt das Netzwerkpasswort: {{KONTO_1}} bis Monatsende.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a162",
+     "out": "Das Mailpasswort: {{KONTO_1}} wurde gestern zurueckgesetzt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a163",
+     "out": "Das Zugangspasswort lautet {{KONTO_1}} und wird nur telefonisch genannt.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a164",
+     "out": "Das Kontopasswort = {{KONTO_1}} steht in der alten Notiz.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a165",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a166",
+     "out": "Frau {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a167",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a168",
+     "out": "Frau {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a169",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a170",
+     "out": "Herr {{NAME_1}} hat die Unterlagen unterschrieben.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a171",
+     "out": "Frau {{NAME_1}} hat die Unterlagen unterschrieben.",
      "tokens": 1
     },
     {
