@@ -25,7 +25,7 @@
         "Dialyse", "Fehlgeburt", "Abtreibung", "Schwangerschaftsabbruch", "Unfruchtbarkeit", "Alkoholismus", "Alkoholabhängigkeit",
         "Drogenabhängigkeit", "Suchterkrankung", "Suizid", "Selbstmord", "Essstörung", "Anorexie", "Bulimie", "Schwerbehinderung",
         "Pflegegrad", "Arbeitsunfähigkeit", "arbeitsunfähig", "Krankschreibung", "Neurodermitis", "Endometriose", "Mukoviszidose",
-        "Hämophilie", "Morbus", "schwanger", "Schwangerschaft",
+        "Hämophilie", "Morbus", "schwanger", "Schwangerschaft", "Rollstuhl", "BRCA1", "BRCA2",
         // Gesundheit: Wirkstoffe und Praeparate (Auswahl)
         "Metformin", "Insulin", "Ramipril", "Sertralin", "Citalopram", "Escitalopram", "Fluoxetin", "Venlafaxin", "Duloxetin",
         "Amitriptylin", "Mirtazapin", "Quetiapin", "Olanzapin", "Risperidon", "Aripiprazol", "Clozapin", "Haloperidol", "Lithium",
@@ -51,12 +51,12 @@
         "verurteilt", "Verurteilung", "vorbestraft", "Vorstrafe", "Straftat", "Ermittlungsverfahren", "Strafverfahren",
         "Strafbefehl", "Haftstrafe", "Freiheitsstrafe", "Bewährung", "Untersuchungshaft", "Inhaftierung", "Strafanzeige",
         "Betrug", "Diebstahl", "Körperverletzung", "Unterschlagung", "Steuerhinterziehung", "Bußgeldbescheid", "Führungszeugnis",
-        "Strafregister",
+        "Strafregister", "Ordnungswidrigkeit", "Fahrverbot", "Fahrerlaubnisentzug", "Führerscheinentzug", "Rotlichtverstoß", "Geschwindigkeitsüberschreitung",
         // Biometrie und Genetik
         "Fingerabdruck", "Gentest", "genetisch", "Iris-Scan", "Gesichtserkennung", "Stimmprofil", "biometrisch",
       ];
       // Kurzformen: nur exakt (Grossschreibung), ohne Endungen
-      const SENSITIVE_EXACT = ["HIV", "AIDS", "ADHS", "PTBS", "COPD", "DNA", "CDU", "CSU", "SPD", "FDP", "AfD", "BSW", "GEW", "EVG", "NGG", "DGB", "GdP"];
+      const SENSITIVE_EXACT = ["HIV", "AIDS", "ADHS", "PTBS", "COPD", "DNA", "CDU", "CSU", "SPD", "FDP", "AfD", "Roma", "BSW", "GEW", "EVG", "NGG", "DGB", "GdP"];
       const SENSITIVE_RX = [
         new RegExp(
           "(?<![A-Za-z0-9_\\u00C0-\\u024F])(?:" +
@@ -66,6 +66,10 @@
         ),
         new RegExp("(?<![A-Za-z0-9_\\u00C0-\\u024F])(?:" + SENSITIVE_EXACT.join("|") + ")(?![A-Za-z0-9_\\u00C0-\\u024F])", "g"),
         /\bGdB[ \t]?\d{2,3}\b/g,
+        /\bGrad[ \t]+der[ \t]+Behinderung[ \t]*\d{1,3}\b/gi,
+        /\bMerkzeichen[ \t]+(?:aG|G|H|Bl|Gl|B|RF|TBl)\b/g,
+        /\bPflegegrad[ \t]*[1-5]\b/gi,
+        /(?=\d)(?<=\b(?:Ordnungswidrigkeit|Geschwindigkeitsüberschreitung|Rotlichtverstoß|Verkehrsverstoß|Bußgeld|Verwarnung|Fahrverbot)[^\n]{0,120})\b\d{1,3}[ \t]*(?:km\/h|Punkte?)\b/gi,
         /\b\d{1,2}\.[ \t]?SSW\b/g,
         /\b\d{1,2}[ \t]+Punkte?[ \t]+in[ \t]+Flensburg\b/gi,
       ];
@@ -79,6 +83,8 @@
           pfx: "EMAIL",
           rx: [
             /(?<![a-zA-Z0-9._%+\-])([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g,
+            /(?<![a-zA-Z0-9._%+\-])([a-zA-Z0-9._%+\-]+@[ \t]*\r?\n[ \t]*[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g,
+            /(?<![a-zA-Z0-9._%+\-])([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]*[.\-][ \t]*\r?\n[ \t]*[a-zA-Z0-9.\-]*\.[a-zA-Z]{2,})/g,
             /(?<![a-zA-Z0-9._%+\-])([a-zA-Z0-9._%+\-]+[ \t]*(?:\(at\)|\[at\]|\{at\}|\(ät\)|\[ät\])[ \t]*[a-zA-Z0-9\-]+(?:[ \t]*(?:\(dot\)|\[dot\]|\(punkt\)|\.)[ \t]*[a-zA-Z0-9\-]+)*[ \t]*(?:\(dot\)|\[dot\]|\(punkt\)|\.)[ \t]*[a-zA-Z]{2,})/g,
           ],
         },
@@ -90,7 +96,7 @@
           on: true,
           pfx: "IBAN",
           rx: [
-            /\b([A-Za-z]{2}\d{2}[ \t]{1,3}[A-Za-z0-9]{4}(?![A-Za-z0-9])(?:[ \t]{1,3}(?=[A-Za-z0-9]{0,3}\d)[A-Za-z0-9]{4}(?![A-Za-z0-9])){1,6}(?:[ \t]{1,3}[\dO]{1,4}(?![A-Za-z0-9]))?)/g,
+            /\b([A-Za-z]{2}\d{2}[ \t]{1,3}[A-Za-z0-9]{4}(?![A-Za-z0-9])(?:(?:[ \t]{1,3}|[ \t]*(?:\r?\n){1,2}[ \t]*)(?=[A-Za-z0-9]{0,3}\d)[A-Za-z0-9]{4}(?![A-Za-z0-9])){1,6}(?:(?:[ \t]{1,3}|[ \t]*(?:\r?\n){1,2}[ \t]*)[\dO]{1,4}(?![A-Za-z0-9]))?)/g,
             /\b([A-Za-z]{2}\d{2}[A-Za-z0-9]{11,30})\b/g,
             /(Konto(?:nummer|nr\.?)?[\s:]+[\d\s]{6,18}\d)/gi,
             /((?:BLZ|Bankleitzahl)[\s:]+\d{8})/gi,
@@ -128,9 +134,15 @@
           pfx: "KONTO",
           rx: [
             /(?<![\w@.\/])(@[A-Za-z0-9_]{3,30})(?![\w@])/g,
-            /(?<![\w@.\/-])((?:t\.me|wa\.me|linkedin\.com\/in|instagram\.com|facebook\.com|x\.com|twitter\.com|xing\.com\/profile|tiktok\.com\/@)\/[A-Za-z0-9_.\-\/]{2,60})/gi,
-            /(?=[A-Za-z0-9._\-@])(?<=(?:Benutzer(?:name)?|User(?:name)?|Login|Nutzername|Account|Kennung)[ \t]{0,1000}[:=][ \t]{0,1000})([A-Za-z0-9._\-@]{3,40})/g,
-            /(?=\S)(?<=(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer)[ \t]{0,1000}[:=]?[ \t]{0,1000})(\S{4,64})/gi,
+            /(?<![\w@.\/-])((?:t\.me|wa\.me|linkedin\.com\/in|instagram\.com|facebook\.com|x\.com|twitter\.com|xing\.com\/profile|github\.com|gitlab\.com|bitbucket\.org|reddit\.com\/(?:user|u))\/[A-Za-z0-9_.\-\/]{2,60}|(?:medium\.com|youtube\.com|tiktok\.com|mastodon\.social)\/@[A-Za-z0-9_.\-\/]{2,60})/gi,
+            /(?=[A-Za-z0-9._\-@])(?<=\b(?:Benutzer(?:name)?|User(?:name)?|Login|Nutzername|Account|Kennung)[ \t]{0,1000}[:=][ \t]{0,1000})(?!(?:Benutzer(?:name)?|User(?:name)?|Nutzer(?:name)?)\b)([A-Za-z0-9._\-@]{3,40})/g,
+            /(?=[A-Za-z0-9._\-@])(?<=\b(?:Login|Anmeldung|Zugang)[ \t]{0,1000}[:=][ \t]{0,1000}(?:Benutzer(?:name)?|User(?:name)?|Nutzer(?:name)?)[ \t:=]{1,1000})([A-Za-z0-9._\-@]{3,40})/g,
+            /(?=[A-Za-z0-9._\-@])(?<=\b(?:Anmeldename|Anmelde-Name|Loginname|Login-Name|Kontoname|Nickname|Benutzername|Nutzername|Username)(?:[ \t]{1,1000}(?:ist|lautet|war))?[ \t:]{1,1000})(?!(?:ist|lautet|war|sind)\b)(?=[A-Za-z0-9._\-@]{0,39}[._\-@0-9])([A-Za-z0-9._\-@]{3,40})/g,
+            /(?=\S)(?<=\b(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK|WLAN-?(?:Schlüssel|Passwort|Key|Kennwort)|WPA2?-?(?:Schlüssel|Key|Passwort)|Wi-?Fi-?(?:Passwort|Key|Password))[ \t]{0,1000}[:=][ \t]{0,1000})(\S{4,64})/gi,
+            /(?=\S)(?<=\b(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK|WLAN-?(?:Schlüssel|Passwort|Key|Kennwort)|WPA2?-?(?:Schlüssel|Key|Passwort)|Wi-?Fi-?(?:Passwort|Key|Password))[ \t]{1,1000})(?!(?:lautet|ist|war|sind|und|oder|für|der|des|die|das|zur|zum)\b)(?=\S{0,63}[^A-Za-zäöüÄÖÜß\s])(\S{4,64})/gi,
+            /(?=\S)(?<=\b(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK)[ \t]+(?:der|des|die|das|den|dem|für|zur|zum|von|bei|im|in|auf|zu)(?:[ \t]+[A-Za-zäöüÄÖÜß\-]{2,30}){1,3}[ \t]{0,1000}[:=][ \t]{0,1000})(\S{4,64})/gi,
+            /(?=\S)(?<=\b(?:Passwort|Kennwort|Password|Passphrase|PIN|TAN|Zugangscode|Zugangsnummer|Geheimzahl|Tresorcode|Safe-?Code|Alarmcode|Türcode|Codewort|Sicherheitscode|PUK)(?:[ \t]+(?:der|des|die|das|den|dem|für|zur|zum|von|bei|im|in|auf|zu)(?:[ \t]+[A-Za-zäöüÄÖÜß\-]{2,30}){1,3})?[ \t]+(?:ist|lautet|war|sind)[ \t:=]{0,1000})(?=\S{0,63}[^A-Za-zäöüÄÖÜß\s])(\S{4,64})/gi,
+            /(?=[A-Za-z0-9+\/])(?<=\b(?:[A-Za-z][A-Za-z0-9_]{0,40}[_\-])?(?:SECRET|TOKEN|PASSWORD|PASSWD|PWD|API_?KEY|ACCESS_?KEY|PRIVATE_?KEY|AUTH_?KEY)[A-Za-z0-9_]{0,20}[ \t]{0,100}[:=][ \t]{0,100}["']?)(?=[^\s"',;]*[0-9\/+=_])([^\s"',;]{8,128})/gi,
             /\b((?:sk|pk|rk|api|key|tok|secret|ghp|gho|xox[abp])[-_][A-Za-z0-9_\-]{12,64})\b/g,
             /\b(eyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,})\b/g,
             /\b([0-9a-fA-F]{32}|[0-9a-fA-F]{40}|[0-9a-fA-F]{64})\b/g,
@@ -145,6 +157,7 @@
           pfx: "STANDORT",
           rx: [
             /(?<![\d.])(-?\d{1,2}\.\d{4,8}[ \t]*[,;][ \t]*-?\d{1,3}\.\d{4,8})(?![\d.])/g,
+            /\b((?:lat(?:itude)?|breite(?:ngrad)?)[ \t]*[:=][ \t]*-?\d{1,2}(?:\.\d{1,8})?°?[ \t]*[,;\/]?[ \t]*(?:lon(?:g(?:itude)?)?|lng|länge(?:ngrad)?)[ \t]*[:=][ \t]*-?\d{1,3}(?:\.\d{1,8})?°?)/gi,
             /(\d{1,3}°[ \t]?\d{1,2}['′][ \t]?\d{1,2}(?:[.,]\d+)?["″]?[ \t]?[NSOEW][ \t,;]*\d{1,3}°[ \t]?\d{1,2}['′][ \t]?\d{1,2}(?:[.,]\d+)?["″]?[ \t]?[NSOEW])/g,
           ],
         },
@@ -163,6 +176,11 @@
             /\b(756\.\d{4}\.\d{4}\.\d{2})\b/g,
             /\b([A-Z]{1,2}\d[A-Z\d]?[ ]?\d[A-Z]{2})\b/g,
             /(?=[A-Z0-9])(?<=(?:NIE|DNI|NIF|BSN|Burgerservicenummer|AHV-?Nr\.?|Sozialversicherungsnummer)[ \t:]{0,1000})([A-Z0-9][A-Z0-9.\- ]{6,16})/g,
+            /(?=[A-Z0-9])(?<=\b(?:Aufenthaltstitel|Aufenthaltserlaubnis|Aufenthaltskarte|eAT)[^\n]{0,80}?\b(?:Nr\.?|Nummer|No\.?)[ \t:]{0,5})([A-Z0-9]{6,12})\b/g,
+            /(?<![A-Z0-9<])(?=[A-Z0-9<]{30,46}(?![A-Z0-9<]))(?=(?:[A-Z0-9]*<){3})([A-Z0-9<]{30,46})/g,
+            /(?=[A-Z])(?<=\b(?:NI[ \t]+number|NINO|National[ \t]+Insurance(?:[ \t]+(?:number|no\.?))?|NI[ \t]*no\.?)[ \t:#]{0,1000})([A-Z]{2}[ ]?\d{2}[ ]?\d{2}[ ]?\d{2}[ ]?[A-D]?)\b/g,
+            /(?=\d)(?<=\b(?:SSN|Social[ \t]+Security(?:[ \t]+Number)?(?:[ \t]*\(SSN\))?)[ \t:#]{0,1000})(\d{3}[ \-]?\d{2}[ \-]?\d{4})\b/gi,
+            /(?=\d)(?<=(?:rodné[ \t]+číslo|rodne[ \t]+cislo|RČ|r\.č\.)[ \t:]{0,1000})(\d{6}\/?\d{3,4})\b/gi,
           ],
         },
         {
@@ -186,8 +204,10 @@
           pfx: "TEL",
           rx: [
             /((?:Tel(?:efon)?\.?(?:[ \-]?(?:Nr|Nummer)\.?)?|Fon|Fax|Mobil(?:e|funk)?|Handy|Rufnummer|Durchwahl|Zentrale)[\s:\.]*(?:\+|00)?\d[\d\s\-\(\)\/\.]{6,24})/gi,
-            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\(?\d{1,5}\)?(?:[ \t\-\.\/]?\d{2,8}){1,3})(?!\d)/g,
-            /(?<![\d\/\-\.])(\(?0[1-9]\d{1,4}\)?[ \t\/\-\.]?\d{2,10}(?:[ \t\-\.]\d{1,6}){0,3})(?!\d)/g,
+            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\(?\d{1,5}\)?(?:(?:[ \t\-\.\/]?\d{2,8}|[ \t]\d(?=[ \t]\d{2})){1,3}))(?!\d)/g,
+            /(?<![\d\/\-\.])(\(?0[1-9]\d{1,4}\)?(?:[ \t]*[\/\-\.][ \t]*|[ \t])?\d{2,10}(?:[ \t\-\.]\d{1,6}){0,3})(?!\d)/g,
+            /(?<![\d\/\-\.])(0[1-9](?:[ .\-]\d{2}){4})(?![\d])/g,
+            /(?<![\d\w])((?:\+|00(?=[1-9]))\d{1,3}[ \t\-\.]?(?:\(0\)[ \t\-\.]?)?\(?\d{1,5}\)?(?:[ \t\-\.\/]\d{2,8}){0,2}[ \t]*\r?\n[ \t]*\d{5,9})(?!\d)/g,
             /\b((?:(?:null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun)[ ,\-]+){6,}(?:null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun))\b/gi,
           ],
         },
@@ -239,7 +259,7 @@
             /((?:ISIN|WKN)[\s:]+[A-Z0-9]{6,12})/gi,
             /(Steuerberater(?:-?Nr\.?|nummer)[\s:]*[\d\/\-]{5,15})/gi,
             /(PZN[ \t:]*\d{7,8})/gi,
-            /((?:Versicherten(?:nummer|-Nr\.?)|Versicherten-?Nr\.?|Mitglieds-?Nr\.?|KV-Karte-Nr\.?|Betriebsstätten-?Nr\.?)[ \t:]*[A-Z0-9\-]{5,20})/gi,
+            /((?:Versicherten(?:nummer|-Nr\.?)|Versicherten-?Nr\.?|Krankenkassen-?(?:nr\.?|nummer)|KVNR|KV-?Nr\.?|Mitglieds-?Nr\.?|KV-Karte-Nr\.?|Betriebsstätten-?Nr\.?)[ \t:]*[A-Z0-9\-]{5,20})/gi,
             /\b(SN-\d{4}-\d{4,5})\b/g,
             /\b([A-Z]{3,4}-\d{4,5}-\d{4,5})\b/g,
             /\b([A-Z]{2,4}-[A-Z]{2}-\d{5}-\d{4})\b/g,
@@ -254,6 +274,8 @@
           pfx: "ORG",
           rx: [
             /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖ][A-Za-züäöÄÖÜß&\.\-]{1,30}(?:[ \t]+[A-Za-züäöÄÖÜß&\.\-]{1,30}){0,4}[ \t]+(?:GmbH(?:[ \t]*&[ \t]*Co\.?[ \t]*KG)?|AG|KGaA|KG|OHG|GbR|UG(?:[ \t]*\(haftungsbeschränkt\))?|e\.V\.|eG|SE|Stiftung|Ltd\.?|Inc\.?|Corp\.?|PartG|PartGmbB|Partnerschaft))\b/g,
+            /(Bundesagentur[ \t]+für[ \t]+[A-ZÜÄÖ][a-züäöß]+(?:[ \t]+und[ \t]+[A-ZÜÄÖ][a-züäöß]+)?)/g,
+            /\b((?:AOK|IKK|BKK)(?:[ \t]+[A-ZÜÄÖ][a-züäöß]+(?:-[A-ZÜÄÖ][a-züäöß]+)?)?|Barmer|DAK(?:-Gesundheit)?|KKH|Techniker[ \t]+Krankenkasse)(?![A-Za-z0-9_À-ɏ])/g,
             /((?:Kanzlei|Rechtsanwaltskanzlei|Steuerberatung|Wirtschaftsprüfung|Notariat|Notarkanzlei|Praxis|Arztpraxis)[ \t]+[A-ZÜÄÖ][A-Za-züäöß &\.\-]{2,50})/g,
             /((?:Amtsgericht|Landgericht|Oberlandesgericht|Bundesgerichtshof|Verwaltungsgericht|Finanzgericht|Sozialgericht|Arbeitsgericht)[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,35})/g,
             /((?:Finanzamt|Bundesministerium|Bundesamt|Landesamt|Stadtverwaltung)[ \t]+(?:der|des|für|von)?[ \t]*[A-ZÜÄÖ][A-Za-züäöß \-]{2,40})/g,
@@ -268,17 +290,23 @@
           on: true,
           pfx: "ADRESSE",
           rx: [
-            /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=(?:Geburtsort|Wohnort|Standort|Einsatzort|Tatort)[ \t]{0,1000}[:=][ \t]{0,1000})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ.\- ]{2,40}?)(?=[,;\n]|$)/g,
-            /(\b\d{1,4}[a-z]?,?[ \t]+(?:rue|avenue|boulevard|av\.|bd|impasse|chemin)[ \t]+(?:de[ \t]+(?:la[ \t]+)?|du[ \t]+|des[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30})/g,
+            /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=(?:Geburtsort|Wohnort|Standort|Einsatzort|Tatort)[ \t]{0,1000}[:=][ \t]{0,1000})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœA-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ.\- ]{2,40}?)(?=[,;\n]|$)/g,
+            /(\b\d{1,4}[a-z]?,?[ \t]+(?:rue|avenue|boulevard|av\.|bd|impasse|chemin|place|quai|allée)[ \t]+(?:de[ \t]+(?:la[ \t]+|l')?|du[ \t]+|des[ \t]+|d')?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ']+(?:(?:[ \t]+|-)(?:(?:de|du|des|la|le|les|sur)[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ']+){0,3})/g,
             /(\b(?:via|viale|piazza|corso|vicolo)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
-            /(\b(?:calle|avenida|paseo|plaza|c\/)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4})/g,
-            /(\bul\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
-            /(\b\d{1,4}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?[ \t]+(?:Street|Road|Lane|Avenue|Drive|Way|Close|Square|Gardens)\b)/g,
+            /(\b(?:[Cc]alle|[Aa]venida|[Pp]aseo|[Pp]laza|c\/)[ \t]+(?:(?:de|del)[ \t]+(?:(?:la|los|las|el)[ \t]+)?)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4})/g,
+            /(\bul\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?(?:[ \t]*[\/\-][ \t]*\d{1,4}[a-z]?)?)/g,
+            /(\b\d{1,4}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?[ \t]+(?:Street|Road|Lane|Avenue|Drive|Way|Close|Square|Gardens|Court|Place|Boulevard|Blvd|Terrace|Circle|Trail|Highway|Parkway|Crescent|Row|Hill|Grove|Mews)\b)/g,
             /(\b\d{2}-\d{3}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}|(?=\d)(?<=,[ \t]{0,1000})\d{5}[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?=[ \t]*(?:\.|$)))/g,
             /(?:(?![A-Za-zäöüß\.\-])|(?<![A-ZÄÖÜ][A-Za-zäöüß\.\-]{0,100}))([A-ZÄÖÜ][A-Za-zäöüß\.\-]+(?:[ \t]+[A-Za-zäöüß\.\-]+){0,3}[ \t]+\d+\s*[a-z]?(?:\s*[\-–\/]\s*\d+[a-z]?)?\s*,\s*(?:[A-Z]{1,2}-)?\d{4,5}[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+(?:[ \t]+[A-ZÄÖÜ][a-zäöüß\-]+)?)/g,
-            /(?<![a-zA-ZüäöÜÄÖ][a-züäöß \-]{0,100})([A-ZÜÄÖ][a-züäöß \-]+(?:stra(?:ß|ss)e|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
+            /(?<![a-zA-ZüäöÜÄÖ][a-züäöß \-]{0,100})(?![a-züäöß \-]*(?:Bundes|Landes|Kreis|Staats)stra(?:ß|ss)e[ \t]+\d)([A-ZÜÄÖ][a-züäöß \-]+(?:stra(?:ß|ss)e|str\.|gasse|weg|allee|platz|ring|damm|chaussee|ufer|promenade|pfad|steig)[ \t]+\d+[a-z]?(?:[ \t]*[\-–\/][ \t]*\d+[a-z]?)?)/gi,
             /(\b\d{5}[ \t]+[A-ZÜÄÖ][a-züäöß \-]{2,28})\b/g,
             /(\b[A-Z]{1,2}-\d{4}[ \t]+[A-ZÜÄÖ][a-züäöß\-]{2,25})\b/g,
+            /\b((?:Postfach|Postbox|P\.O\.[ \t]?Box|PO[ \t]Box)[ \t]+\d[\d \t]{1,9}\d)\b/g,
+            /(?<![A-Za-z0-9_À-ɏ])((?:Am|An[ \t]+der|An[ \t]+den|Auf[ \t]+dem|Auf[ \t]+der|Im|In[ \t]+der|In[ \t]+den|Zum|Zur|Unter[ \t]+den|Hinter[ \t]+dem|Vor[ \t]+dem|Bei[ \t]+der|Über[ \t]+dem|Neben[ \t]+dem)[ \t]+(?!(?:Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag|Wochenende|Morgen|Abend|Anfang|Ende|Mittag|Nachmittag|Vormittag|Beginn|Tag|Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|Jahr|Monat|Schluss|Rand|Stück|Teil|Ort|Tisch|Telefon|Computer|Thema|Projekt|Ziel|Rahmen|Gegensatz|Zuge|Auftrag|Vertrag|Fall|Gespräch|Seminar|Kurs|Meeting|Workshop|Beispiel|Vergleich|Detail|Durchschnitt|Prinzip|Allgemeinen|Wesentlichen|Gegenteil|Grunde|Laufe|Verlauf|Falle|Zusammenhang|Anhang|Text|Büro|Mal)\b)[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,24}(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,24})?[ \t]+\d{1,3}[a-z]?(?![\d.:,]?\d)(?![ \t]+(?:Uhr|Tage|Tagen|Personen|Euro|EUR|Prozent|Stück|Mal|Jahre|Jahren|Monate|Monaten|Wochen|Minuten|Stunden|Sekunden|Teilnehmer|Mitarbeiter|Seiten|Kinder|Plätze|%)))/g,
+            /\b([A-Z][a-zë]{2,25}(?:straat|gracht|laan|plein|kade|singel|dijk|steeg)[ \t]+\d{1,4}(?:[ \t]?[a-z]\b|-\d{1,3}|[ \t]?-[ \t]?[A-Za-z0-9]{1,3}\b)?)/g,
+            /(\b[1-9]\d{3}[ \t]?(?![ \t]?(?:EU|EM|WM|AD|BC|DM|FC|UK|US|TV|PC|IT|CD|GB|AG|CE)\b)[A-Z]{2}[ \t]+[A-Z][a-zë]+(?:[ \-][A-Z][a-zë]+)?)\b/g,
+            /\b([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]{2,25}(?:ská|ova|ová|cká|ní|ského|ého)[ \t]+\d{1,4}(?:\/\d{1,4})?[a-z]?)(?![\wáčďéěíňóřšťúůýž])/g,
+            /(\b[1-9]\d{2}[ \t]\d{2}[ \t]+[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+(?:[ \t]+\d{1,2})?)(?![\wáčďéěíňóřšťúůýž])/g,
           ],
         },
         {
@@ -303,7 +331,7 @@
           on: true,
           pfx: "NAME",
           rx: [
-            /(?:Herr|Frau|Hr\.|Fr\.)[ \t]+((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Phys|Math|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|M\.A\.|BSc|B\.Sc\.|BA|B\.A\.|PhD|MD|RA|RAin|StB|WP|Notar(?:in)?)\.?[ \t]+)*(?:(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,3})/g,
+            /(?:Herr|Frau|Hr\.|Fr\.)[ \t]+((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Phys|Math|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|M\.A\.|BSc|B\.Sc\.|BA|B\.A\.|PhD|MD|RA|RAin|StB|WP|Notar(?:in)?)\.?[ \t]+)*(?:(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:(?<=\b(?:Joh|Jos|Chr|Wilh|Ferd|Heinr|Herm|Bernh|Konr|Ludw|Friedr|Alex|Andr|Ant|Aug|Gust|Hch|Wolfg|Cathr|Marg|Elis|Kath))\.(?=[ \t]+[A-ZÜÄÖ]))?(?:[ \t]+[A-Z]\.)?(?:[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,3})/g,
             /((?:(?:Dr|Prof|Ing|Mag|med|jur|habil|dent|vet|rer|nat|Dipl(?:\.-?(?:Ing|Kfm|Jur|Math|Phys|Biol|Chem|Psych|Soz|Päd|Theol|Arch|Inform))?|LL\.M|MBA|MSc|M\.Sc\.|MA|PhD|MD)\.?[ \t]+){1,3}[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*(?:[ \t]+[A-Z]\.)?(?:(?:[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?)?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ]?[a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)*){0,2})/g,
             /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,}[ \t]+[A-Z]\.[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]{2,})(?![A-Za-z0-9_À-ɏ])/g,
             /(?<![A-Za-z0-9_À-ɏ])([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{3,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)(?![A-Za-z0-9_À-ɏ])/g,
@@ -352,7 +380,7 @@
           rx: [
             /(?=\d)(?<![\d.])(?<!(?:Version|Ver\.|Build|Release|Rev\.?|v|V)[ \t]{0,1000})((?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?!\d|\.\d)/g,
             /(?<![\w:])((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:(?:[0-9a-fA-F]{1,4})?|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})(?![\w:])/g,
-            /(https?:\/\/[^\s<>"{}|\\^`\[\]\)\(,;]{4,}[^\s<>"{}|\\^`\[\]\)\(,;.:!?])/g,
+            /(https?:\/\/(?:[^\s<>"{}|\\^`\[\]\)\(,;]|(?<=\d),(?=-?\d)){4,}[^\s<>"{}|\\^`\[\]\)\(,;.:!?])/g,
             /(?<![\w@.\/-])(www\.[a-z0-9\-]+(?:\.[a-z0-9\-]+)+(?:\/[^\s<>"{}|\\^`\[\]\)\(,;]*[^\s<>"{}|\\^`\[\]\)\(,;.:!?])?)/gi,
           ],
         },
@@ -380,6 +408,7 @@
         },
       ];
       const SW = new Set([
+        "Tonnen", "Stück", "Tabelle", "Abbildung", "Nutzung", "Celsius", "Projekte", "Prise", "Gipfel", "Senf", "Kabelbinder", "Handschuhe", "Deutschen", "Siehe", "Pseudonymen", "Pseudonym", "Grad", "Ordner", "Salz",
         "Millionen",
         "Milliarden",
         "Euro",
@@ -1278,8 +1307,14 @@
         const tc = (w) => w.charAt(0) + w.slice(1).toLowerCase();
         return LOCAL_NAMES.has(tc(words[0])) || words.some((w) => w.split("-").some((p) => LOCAL_SURNAMES.has(tc(p))));
       }
+      // Gattungswort vor einem Eigennamen ("Berg Zugspitze", "Hotel Alpenblick"): kein Personenname
+      const GENERIC_FIRST = /^(?:Berg|Hotel|Pension|Gasthof|Gasthaus|Restaurant|Museum|Hafen|Insel|Gipfel)$/;
       function okName(s) {
         const tt = s.trim();
+        {
+          const ws = tt.split(/[ \t]+/);
+          if (ws.length >= 2 && GENERIC_FIRST.test(ws[0]) && /^[A-ZÄÖÜ]/.test(ws[1])) return false;
+        }
         if (tt === tt.toUpperCase() && /[A-ZÄÖÜ]{2}/.test(tt)) return isCapsPersonName(tt);
         // GROSSGESCHRIEBENER Nachname mit Komma ("SCHMIEDEBERG, Ottilie"): beide Teile duerfen kein Stoppwort sein
         const kom = /^([A-ZÄÖÜ][A-ZÄÖÜß\-]+),[ \t]+(\S+)$/.exec(tt);
@@ -1308,6 +1343,8 @@
         const c = p.replace(/[^A-Za-züäöüÄÖÜß]/g, "");
         if (c.length < 2 || /^\d+$/.test(c)) return false;
         if (i === 0 && (SW.has(p) || SW.has(c))) return false;
+        // Ortsadjektiv auf -er ("Hamburger Hafen", "Wiener Saengerknaben"): kein Name
+        if (i === 0 && c.length > 5 && c.endsWith("er") && CITY_SET().has(c.slice(0, -2))) return false;
         return true;
       }
       const PROFILES = [
@@ -1639,12 +1676,19 @@
         /\b(GmbH|AG|e\.V\.|KG|OHG|UG|SE|Inc\.|Corp\.|LLC|Ltd\.|PLC|GmbH & Co\. KG|GmbH & Co\.)/gi,
         /(?:der|die|das)\s+([A-ZÄÖÜ][a-zäöü]+(?:[\s-][A-ZÄÖÜ][a-zäöü]+){0,3})\s+(?:GmbH|AG|e\.V\.|KG|UG|SE|Corp\.|Inc\.|Ltd\.)/g,
         /\b(Universität|Hochschule|Institut|Klinikum|Krankenhaus|Behörde|Amt|Ministerium|Stadt|Gemeinde|Landkreis|Sparkasse|Bank|Versicherung|Kanzlei|Praxis|Apotheke|Supermarkt|Bäckerei|Metzgerei|Restaurant|Café|Hotel|Schule|Kindergarten|Verein|Stiftung|Verband|Gewerkschaft|Kammer|Agentur|Redaktion|Verlag)\b/gi,
-        /\b([A-ZÄÖÜ][a-zäöü]+(?:sstraße|sweg|splatz|sallee|shof|sberg|sturm|sbrücke|shaus|spark|sbad|sgalerie|szentrum))\b/g,
+        /\b(?!(?:Bundes|Landes|Kreis|Staats)stra)([A-ZÄÖÜ][a-zäöü]+(?:sstraße|sweg|splatz|sallee|shof|sberg|sturm|sbrücke|shaus|spark|sbad|sgalerie|szentrum))\b/g,
       ];
+      // Eine Liste fuer Stichwortregel und Bewertung (vorher kannte die Bewertungsliste weniger Orte als die Stichwortregel)
+      const LOCAL_CITY_ALT = "Garmisch-Partenkirchen|Garmisch|Bergisch Gladbach|Bad Homburg|Baden-Baden|München|Berlin|Hamburg|Köln|Frankfurt|Stuttgart|Düsseldorf|Leipzig|Dresden|Hannover|Nürnberg|Bremen|Bonn|Münster|Karlsruhe|Mannheim|Augsburg|Wiesbaden|Freiburg|Aachen|Regensburg|Kiel|Erfurt|Mainz|Koblenz|Trier|Ulm|Heidelberg|Potsdam|Darmstadt|Bamberg|Passau|Bremen|Lübeck|Rostock|Chemnitz|Magdeburg|Saarbrücken|Würzburg|Ingolstadt|Flensburg|Cottbus|Gera|Bochum|Duisburg|Essen|Oberhausen|Leverkusen|Solingen|Wuppertal|Bielefeld|Dortmund|Gelsenkirchen|Krefeld|Mönchengladbach|Mülheim|Neuss|Paderborn|Remscheid|Siegen|Witten|Hagen|Herne|Iserlohn|Lüdenscheid|Moers|Ratingen|Velbert|Willich|Göttingen|Kassel|Detmold|Osnabrück|Oldenburg|Ludwigshafen|Hildesheim|Jena|Zwickau|Wolfsburg|Salzgitter|Heilbronn|Pforzheim|Reutlingen|Tübingen|Konstanz|Gütersloh|Recklinghausen|Offenbach|Fulda|Gießen|Marburg|Hanau|Bayreuth|Kempten|Rosenheim|Landshut|Schweinfurt|Erlangen|Fürth|Dessau|Stralsund|Greifswald|Schwerin|Brandenburg|Wien|Graz|Linz|Salzburg|Innsbruck|Klagenfurt|Zürich|Basel|Bern|Luzern|Genf|Lausanne|Winterthur|Lugano";
+      const LOCAL_CITY_RX = new RegExp("\\b(" + LOCAL_CITY_ALT + ")\\b", "i");
+      let citySet = null;
+      function CITY_SET() {
+        return citySet || (citySet = new Set(LOCAL_CITY_ALT.split("|")));
+      }
       const LOCAL_LOC_KEYWORDS = [
         /\b(in|nach|aus|bei|von|zu|im|am|zum|zur)\s+([A-ZÄÖÜ][a-zäöüß]+(?:(?:[-\s][A-ZÄÖÜ][a-zäöüß]+)?(?:[-\s][A-ZÄÖÜ][a-zäöüß]+)?))\b/g,
         /\b(Straße|Gasse|Weg|Platz|Allee|Ring|Damm|Ufer|Berg|Tal|Hof|Mühle|Schloss|Burg|Kirche|Kapelle|Brücke|Turm|Bad|Hafen|Flughafen|Bahnhof|Haltestelle)\b/gi,
-        /\b(München|Berlin|Hamburg|Köln|Frankfurt|Stuttgart|Düsseldorf|Leipzig|Dresden|Hannover|Nürnberg|Bremen|Bonn|Münster|Karlsruhe|Mannheim|Augsburg|Wiesbaden|Freiburg|Aachen|Regensburg|Kiel|Erfurt|Mainz|Koblenz|Trier|Ulm|Heidelberg|Potsdam|Darmstadt|Bamberg|Passau|Bremen|Lübeck|Rostock|Chemnitz|Magdeburg|Saarbrücken|Würzburg|Ingolstadt|Flensburg|Cottbus|Gera|Bochum|Duisburg|Essen|Oberhausen|Leverkusen|Solingen|Wuppertal|Bielefeld|Dortmund|Gelsenkirchen|Krefeld|Mönchengladbach|Mülheim|Neuss|Paderborn|Remscheid|Siegen|Witten|Hagen|Herne|Iserlohn|Lüdenscheid|Moers|Ratingen|Velbert|Willich)\b/g,
+        new RegExp("\\b(" + LOCAL_CITY_ALT + ")\\b", "g"),
       ];
       function detectLocalEntities(text) {
         var results = [];
@@ -1671,6 +1715,15 @@
             });
           }
         }
+        // Zeile "Nachname","Vorname" (CSV): ist eines der Woerter ein bekannter Vorname, sind beide Teile ein Name
+        var csvRx = /"([A-ZÄÖÜ][a-zäöüß]{2,}(?:-[A-ZÄÖÜ][a-zäöüß]{2,})?)"[ \t]*[,;][ \t]*"([A-ZÄÖÜ][a-zäöüß]{2,}(?:-[A-ZÄÖÜ][a-zäöüß]{2,})?)"/g;
+        while ((match = csvRx.exec(text)) !== null) {
+          if (!LOCAL_NAMES.has(match[1]) && !LOCAL_NAMES.has(match[2])) continue;
+          var s1 = match.index + 1;
+          var s2 = match.index + match[0].lastIndexOf(match[2]) ;
+          results.push({ entity_group: "PER", score: 0.85, word: match[1], start: s1, end: s1 + match[1].length });
+          results.push({ entity_group: "PER", score: 0.85, word: match[2], start: s2, end: s2 + match[2].length });
+        }
         for (var i = 0; i < LOCAL_ORG_KEYWORDS.length; i++) {
           var rx = LOCAL_ORG_KEYWORDS[i];
           rx.lastIndex = 0;
@@ -1692,8 +1745,7 @@
           while ((match = rx2.exec(text)) !== null) {
             var loc = (match[2] || match[1] || match[0]).trim();
             if (loc.length < 3) continue;
-            var cityRx =
-              /\b(München|Berlin|Hamburg|Köln|Frankfurt|Stuttgart|Düsseldorf|Leipzig|Dresden|Hannover|Nürnberg|Bremen|Bonn|Münster|Karlsruhe|Mannheim|Augsburg|Wiesbaden|Freiburg|Aachen|Regensburg|Kiel|Erfurt|Mainz|Koblenz|Trier|Ulm|Heidelberg|Potsdam|Darmstadt|Bamberg|Passau|Bremen|Lübeck|Rostock|Chemnitz|Magdeburg|Saarbrücken|Würzburg|Ingolstadt)\b/i;
+            var cityRx = LOCAL_CITY_RX;
             var score = loc.match(cityRx) ? 0.9 : 0.6;
             results.push({
               entity_group: "LOC",
@@ -1784,9 +1836,9 @@
         return true;
       }
       // Liefert den (ggf. gekuerzten) Wert oder null, wenn der Treffer unplausibel ist.
-      function hardValue(pfx, val, id) {
+      function hardValue(pfx, val, id, before) {
         if (id === "device" && /^\d{2}[ \-]?\d{6}[ \-]?\d{6}[ \-]?\d$/.test(val)) return luhnOk(val.replace(/\D/g, "")) ? val : null;
-        if (id === "intlid" && !validIntlId(val)) return null;
+        if (id === "intlid" && !validIntlId(val) && !(/^\d{11}$/.test(val) && /\bPESEL[ \t:]*$/i.test(before || ""))) return null;
         if (pfx === "KARTE") return isValidCard(val) ? val : null;
         if (pfx === "TEL") return /^[A-Za-zäöüß ,\-]+$/.test(val) || val.replace(/\D/g, "").length >= 7 ? val : null;
         if (pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val)) {
@@ -1968,7 +2020,7 @@
               const raw = gval !== null ? gval : m[0];
               let val = raw.trim();
               if (!val || val.length < 2) continue;
-              val = hardValue(e.pfx, val, e.id);
+              val = hardValue(e.pfx, val, e.id, text.slice(Math.max(0, m.index - 24), m.index));
               if (!val) continue;
               const off = (gval !== null ? m[0].indexOf(raw) : 0) + (raw.length - raw.replace(/^\s+/, "").length);
               pass1.push({
@@ -2067,7 +2119,12 @@
             const aiOn = aiCache.key === text;
             let belegt = null, maxEnd = null;
             if (aiOn) {
-              belegt = p1.concat(pass2).sort((a, b) => a.start - b.start);
+              // Modelltreffer, die an einer Wortgrenze mitten im Wort enden ("Bir" aus "Birgit"), werden spaeter verworfen
+              // und duerfen den Wortlistentreffer nicht blockieren
+              const lebt = (x) =>
+                !(["NAME", "ORG", "ROLLE", "ORT"].includes(x.pfx) &&
+                  ((x.end < text.length && /[\wäöüÄÖÜß]/.test(text[x.end])) || (x.start > 0 && /[\wäöüÄÖÜß]/.test(text[x.start - 1]))));
+              belegt = p1.concat(pass2).filter(lebt).sort((a, b) => a.start - b.start);
               maxEnd = [];
               belegt.forEach((x, i) => (maxEnd[i] = i ? Math.max(maxEnd[i - 1], x.end) : x.end));
             }
@@ -2078,7 +2135,13 @@
                 if (belegt[mid].start < b) lo = mid + 1;
                 else hi = mid;
               }
-              return lo > 0 && maxEnd[lo - 1] > a;
+              // Beruehrt nur dann, wenn ein Treffer ueberlappt, der kein Namen-Treffer des Modells ist: ein Wortlistentreffer,
+              // der einen reinen Namen-Modelltreffer verlaengert ("Zoe Schulz" um "Schulz"), ersetzt ihn beim Zusammenfuehren
+              for (let k = lo - 1; k >= 0 && maxEnd[k] > a; k--) {
+                const x = belegt[k];
+                if (x.end > a && !(x.pfx === "NAME" && x.meth === "KI (NER-Modell)")) return true;
+              }
+              return false;
             };
             const neu = [];
             const ART = "(?:der|die|das|den|dem|des|ein|eine|einem|einen|einer|eines|mein|meine|meinen|dein|deine|unser|unsere|sein|seine|ihr|ihre|kein|keine|am|im|zum|zur|vom|beim)";
@@ -2193,7 +2256,7 @@
         const nameStarts = new Set();
         for (const c of cands) if (c.pfx === "NAME") nameStarts.add(c.start);
         const rxWort = /^[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]+)?)(?![\wäöüß])/;
-        const rxVon = /^[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:der|den|dem|la|los))?[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/;
+        const rxVon = /^[ \t]+(?:von|van|de|zu|zur|vom|ter|ten|di|da|le|la|bin|ibn)(?:[ \t]+(?:und[ \t]+zu|der|den|dem|la|los))?[ \t]+([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}(?:-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,})?)/;
         const rxBind = /^-[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ]{2,}/;
         // Treffer je Position zwischenspeichern: viele Treffer laufen ueber dieselben Woerter (sonst Aufwand Treffer mal Spannenlaenge).
         const vorMemo = (rx) => {
