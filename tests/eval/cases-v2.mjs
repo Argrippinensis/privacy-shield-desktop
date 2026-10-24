@@ -183,6 +183,21 @@ export const CASES_V2 = [
   ['v2a156', 'V2-AUSLAND', 'Maschinenlesbare Zeile: P<D<<MUSTERMANN<<ERIKA<<<<<<<<<<<<<<<<<<<<<<\nC01X00T478D<<6408125F2702283<<<<<<<<<<<<<<<4', ['MUSTERMANN', 'C01X00T478']],
   ['v2a157', 'V2-KONTAKT', 'Rückruf unter +49 (0)711\n14732931 oder 0049 711 5311\n609742 erbeten.', ['14732931', '609742']],
   ['v2a158', 'V2-FORM', 'Zahlung auf CH57 7498\n\n4845 4962 2574 9 bitte bis Freitag.', ['7498', '2574']],
+  // Pruefer-Nachbesserung C1.2: Passwoerter in zusammengesetzten Woertern
+  ['v2a159', 'V2-SECRET', 'Das Initialpasswort: Wechsel123x muss beim ersten Login geaendert werden.', ['Wechsel123x']],
+  ['v2a160', 'V2-SECRET', 'Das Standardpasswort: Willkommen1 gilt fuer alle neuen Konten.', ['Willkommen1']],
+  ['v2a161', 'V2-SECRET', 'Fuer das Gaeste-WLAN gilt das Netzwerkpasswort: Hausnetz2024 bis Monatsende.', ['Hausnetz2024']],
+  ['v2a162', 'V2-SECRET', 'Das Mailpasswort: abc12345 wurde gestern zurueckgesetzt.', ['abc12345']],
+  ['v2a163', 'V2-SECRET', 'Das Zugangspasswort lautet Lk92-xx und wird nur telefonisch genannt.', ['Lk92-xx']],
+  ['v2a164', 'V2-SECRET', 'Das Kontopasswort = Qx7!mLp2 steht in der alten Notiz.', ['Qx7!mLp2']],
+  // Pruefer-Nachbesserung C1.2: Einzelnachnamen nach Anrede, die wie Ortsadjektive oder Stoppwoerter aussehen
+  ['v2a165', 'V2-PERSON', 'Herr Wiener hat die Unterlagen unterschrieben.', ['Wiener']],
+  ['v2a166', 'V2-PERSON', 'Frau Berliner hat die Unterlagen unterschrieben.', ['Berliner']],
+  ['v2a167', 'V2-PERSON', 'Herr Hamburger hat die Unterlagen unterschrieben.', ['Hamburger']],
+  ['v2a168', 'V2-PERSON', 'Frau Salz hat die Unterlagen unterschrieben.', ['Salz']],
+  ['v2a169', 'V2-PERSON', 'Herr Ordner hat die Unterlagen unterschrieben.', ['Ordner']],
+  ['v2a170', 'V2-PERSON', 'Herr Senf hat die Unterlagen unterschrieben.', ['Senf']],
+  ['v2a171', 'V2-PERSON', 'Frau Grad hat die Unterlagen unterschrieben.', ['Grad']],
   // ---- Negativfaelle (nichts maskieren): Fachbegriffe, Orte in Firmennamen, Produktnummern, Daten, Gesetze, Code
   ['v2n01', 'NEG', 'Der Hamburger Hafen schlug im vergangenen Jahr rund 120 Millionen Tonnen um.', []],
   ['v2n02', 'NEG', 'Die Berliner Philharmoniker eröffnen die Saison mit einem Werk von Brahms.', []],
@@ -244,4 +259,21 @@ export const CASES_V2 = [
   ['v2n58', 'NEG', 'Insgesamt wurden 1.284 Anträge gestellt, davon 976 bewilligt und 308 abgelehnt.', []],
   ['v2n59', 'NEG', 'Die Software unterstützt die Formate PDF, DOCX, XLSX und CSV.', []],
   ['v2n60', 'NEG', 'Das Studienjahr beginnt im Oktober, die Anmeldefrist endet am 15. Juli.', []],
+  // Pruefer-Nachbesserung C1.2: Satzanfaenge mit Zahl (kein Name, kein Wert)
+  ['v2n61', 'NEG', 'Im Kapitel 3 wird das Verfahren erklärt.', []],
+  ['v2n62', 'NEG', 'Auf der Seite 3 steht die Tabelle.', []],
+  ['v2n63', 'NEG', 'In der Klasse 5 sind 24 Kinder.', []],
+  ['v2n64', 'NEG', 'Im Quartal 3 stieg der Umsatz.', []],
+  ['v2n65', 'NEG', 'In der Abbildung 3 sieht man den Verlauf.', []],
+  ['v2n66', 'NEG', 'Im Raum 12 findet die Sitzung statt.', []],
+  ['v2n67', 'NEG', 'Auf dem Gleis 5 steht der Zug.', []],
+  ['v2n68', 'NEG', 'Zum Schritt 2 gehören drei Aufgaben.', []],
+  // Pruefer-Nachbesserung C1.2: Abkuerzungen nach Jahreszahl
+  ['v2n69', 'NEG', 'Seit 2023 KI Entwicklung im Haus.', []],
+  ['v2n70', 'NEG', 'Im Jahr 2022 PR Abteilung neu aufgebaut.', []],
+  // Pruefer-Nachbesserung C1.2: Zahlenfolgen, die wie Kennungen aussehen
+  ['v2n71', 'NEG', 'Version 120 00 Dateien wurden geprüft.', []],
+  ['v2n72', 'NEG', 'Nr. 123 45 Ersatzteile liegen bereit.', []],
+  ['v2n73', 'NEG', 'Die Casanova 5 und Innova 12 sind Produktnamen.', []],
+  ['v2n74', 'NEG', 'Lottozahlen 05 12 23 34 45 wurden gezogen.', []],
 ];
