@@ -1333,14 +1333,11 @@
    "accept": [
     "xvfb-run -a node --test --test-concurrency=1 tests/info.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261024",
-    "ts": 1792871233208
-   },
+   "commit": "ede90e8",
+   "lease": null,
    "notes": ""
   },
   {
