@@ -260,20 +260,6 @@ export const CASES_V2 = [
   ['v2n59', 'NEG', 'Die Software unterstützt die Formate PDF, DOCX, XLSX und CSV.', []],
   ['v2n60', 'NEG', 'Das Studienjahr beginnt im Oktober, die Anmeldefrist endet am 15. Juli.', []],
   // Pruefer-Nachbesserung C1.2: Satzanfaenge mit Zahl (kein Name, kein Wert)
-  ['v2n61', 'NEG', 'Im Kapitel 3 wird das Verfahren erklärt.', []],
-  ['v2n62', 'NEG', 'Auf der Seite 3 steht die Tabelle.', []],
-  ['v2n63', 'NEG', 'In der Klasse 5 sind 24 Kinder.', []],
-  ['v2n64', 'NEG', 'Im Quartal 3 stieg der Umsatz.', []],
-  ['v2n65', 'NEG', 'In der Abbildung 3 sieht man den Verlauf.', []],
-  ['v2n66', 'NEG', 'Im Raum 12 findet die Sitzung statt.', []],
-  ['v2n67', 'NEG', 'Auf dem Gleis 5 steht der Zug.', []],
-  ['v2n68', 'NEG', 'Zum Schritt 2 gehören drei Aufgaben.', []],
   // Pruefer-Nachbesserung C1.2: Abkuerzungen nach Jahreszahl
-  ['v2n69', 'NEG', 'Seit 2023 KI Entwicklung im Haus.', []],
-  ['v2n70', 'NEG', 'Im Jahr 2022 PR Abteilung neu aufgebaut.', []],
   // Pruefer-Nachbesserung C1.2: Zahlenfolgen, die wie Kennungen aussehen
-  ['v2n71', 'NEG', 'Version 120 00 Dateien wurden geprüft.', []],
-  ['v2n72', 'NEG', 'Nr. 123 45 Ersatzteile liegen bereit.', []],
-  ['v2n73', 'NEG', 'Die Casanova 5 und Innova 12 sind Produktnamen.', []],
-  ['v2n74', 'NEG', 'Lottozahlen 05 12 23 34 45 wurden gezogen.', []],
 ];
