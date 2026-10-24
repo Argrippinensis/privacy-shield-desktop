@@ -34,3 +34,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   platform: process.platform
 });
+
+// Kommandozeilenmodus (E1.w): nur fuer die versteckte Seite app://ps/cli.html; der Hauptprozess antwortet zusaetzlich nur im CLI-Modus.
+if (location.protocol === 'app:' && location.pathname === '/cli.html') {
+  contextBridge.exposeInMainWorld('psCli', {
+    nextFile: () => ipcRenderer.invoke('cli-next-file'),
+    result: (msg) => ipcRenderer.invoke('cli-result', msg)
+  });
+}
