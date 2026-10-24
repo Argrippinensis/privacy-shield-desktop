@@ -15,9 +15,9 @@
     },
     {
       "dest": "vendor/mammoth/mammoth.browser.min.js",
-      "url": "https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js",
-      "sha256": "596ef52239e52d8ee3cee10b2ee4a72596abf900d0e4f468593f956e9f1809b0",
-      "size": 642759
+      "url": "https://cdn.jsdelivr.net/npm/mammoth@1.13.0/mammoth.browser.min.js",
+      "sha256": "92914a3708cfdf1e62cb553d1856a7fedab21da83d8ee82845de2f897b368cab",
+      "size": 405060
     },
     {
       "dest": "vendor/jszip/jszip.min.js",

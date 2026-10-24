@@ -8,6 +8,9 @@ der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.
 ### Änderungen
 - Platzhalterformat: Nennt ein Text dieselbe Person mehrfach (Hans Müller, Herr Müller, Hans), bekommen alle Formen dieselbe Nummer mit Endung ({{NAME_1}}, {{NAME_1.NACHNAME}}, {{NAME_1.VORNAME}}, {{NAME_1.KURZ}}), nur wenn eindeutig; die Rückübersetzung bleibt exakt.
 
+### Intern
+- mammoth.js 1.6.0 auf 1.13.0 (DOCX lesen; Browser-Datei 642.759 auf 405.060 Bytes, Lizenz unverändert BSD-2-Clause). Umlaute und Sonderzeichen im DOCX-Rundlauf unverändert, Differenztest 0 Abweichungen von 645.
+
 ## [1.8.0] - 2026-10-20
 
 ### Erkennung
