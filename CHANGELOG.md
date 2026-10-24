@@ -11,6 +11,7 @@ der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.
 ### Intern
 - mammoth.js 1.6.0 auf 1.13.0 (DOCX lesen; Browser-Datei 642.759 auf 405.060 Bytes, Lizenz unverändert BSD-2-Clause). Umlaute und Sonderzeichen im DOCX-Rundlauf unverändert, Differenztest 0 Abweichungen von 645.
 - JSZip 3.10.1 auf 3.10.2 (ZIP lesen und schreiben; Datei 97.630 auf 97.781 Bytes, Lizenz unverändert MIT; Korrekturen: Erkennung von Binärdaten aus anderem Kontext, Blob-Lesen ab Node 18). Die ZIP-Prüfung in `app/lib/formats.js` liest weiterhin `_data.uncompressedSize`; `formats.test` grün.
+- jsPDF 2.5.1 auf 4.2.1 (PDF schreiben; Datei 364.463 auf 420.165 Bytes, Lizenz unverändert MIT; enthält die Sicherheitskorrekturen der Versionen 3 und 4). Die optionalen Nachlade-Abhängigkeiten (canvg, html2canvas, dompurify) werden nicht verwendet und lösen keinen Netzzugriff aus. Umlaute und Sonderzeichen im PDF-Export unverändert (WinAnsi); Zeichen außerhalb davon (z. B. polnisches ł, kyrillisch, CJK) gab es mit der Standardschrift schon vorher nicht, unverändert.
 
 ## [1.8.0] - 2026-10-20
 
