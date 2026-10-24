@@ -1526,14 +1526,11 @@
    "accept": [
     "xvfb-run -a node --test --test-concurrency=1 tests/open-with.test.mjs"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261024",
-    "ts": 1792876142569
-   },
+   "commit": "8fb2334",
+   "lease": null,
    "notes": ""
   },
   {
