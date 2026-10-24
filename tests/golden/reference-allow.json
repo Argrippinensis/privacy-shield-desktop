@@ -1,11 +1,147 @@
 [
  {
+  "mode": "w0",
+  "key": "o03",
+  "reason": "C1.2 Organisationsregel: \"Bundesagentur fuer ...\" wird als Organisation maskiert; vorher blieb \"Bundesagentur fuer\" im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "4756f82901a79f40878b268f3f0b77c33b38fca36d9c470fc69091c17d222ece",
+  "storeSha256": "c129868a4b5077630287aec877a8418c100ce98498843c010ce18838080e5000",
+  "entities": 1
+ },
+ {
+  "mode": "w0",
+  "key": "o10",
+  "reason": "C1.2 Organisationsregel: Krankenkassen (AOK, IKK, BKK, Barmer, DAK, KKH, Techniker Krankenkasse); vorher blieb \"AOK Bayern\" im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "64a58d1001c46a033b652194716df299c75ce20b47f7a855a94c348d5b4013f5",
+  "storeSha256": "53688cbafaec676b5132ee7437087e3a8ed29fe22411073c9920b6bcaee3e658",
+  "entities": 1
+ },
+ {
+  "mode": "w0",
+  "key": "ga03",
+  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext",
+  "outSha256": "a43492a3715af2852d355e332be4cfdbe9302f5f84d72a9d837aca01082fb6ac",
+  "storeSha256": "214029cae9fd56c756896d29ac9ddb50434500a0d41daa0bc0ee48a8567caeff",
+  "entities": 2
+ },
+ {
+  "mode": "w0",
+  "key": "ga04",
+  "reason": "C1.2 Namenszusatz \"von und zu\" wird in der Verlaengerungsregel erkannt; vorher blieb der Nachnamenteil im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "de8bc435b782ec1b4d1ab6a9e0ec1b984de92c0c04bfb323a759c8f9bd42183a",
+  "storeSha256": "4900798a9342b63d39c6c6770c0a33f0b2f415d068b833011232d41c38d5cc64",
+  "entities": 1
+ },
+ {
+  "mode": "w0",
+  "key": "ga05",
+  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext",
+  "outSha256": "26244206be06550008a00e907f3b867e25d8c2ae08da608b660f6487c02823ef",
+  "storeSha256": "418bd30b03046e49ef202284c111dbbeafbec267987a0a6ccde739ef2758cf4a",
+  "entities": 2
+ },
+ {
+  "mode": "w0",
+  "key": "ga17",
+  "reason": "C1.2 Fehlalarm behoben: \"Standort\" endete auf \"tan\", die Stichwortregel PIN/TAN (ohne Wortgrenze) maskierte \"dortfreigabe\"; jetzt gilt eine Wortgrenze, das Wort bleibt lesbar (weniger Maskierung, kein personenbezogener Wert betroffen)",
+  "outSha256": "856d0fd5e8c0e476b17c0d286877b8e5ea3bf5f52d4cbcbae8640edc0f42a1d2",
+  "storeSha256": "06fb7a3e0024d2899b0a8bdafb001dbc454da83d6f678d6c3494a7d744cf3451",
+  "entities": 1
+ },
+ {
+  "mode": "w0",
+  "key": "ga25",
+  "reason": "C1.2 Geburtsort mit Grossbuchstaben im Ortsnamen (\"Bad Homburg v. d. Hoehe\") wird vollstaendig maskiert; vorher nur Teile (nur zusaetzliche Maskierung)",
+  "outSha256": "49c60552f5ada1aed450b5c2d90c31211ee65e6accf3849ce37014d0988de909",
+  "storeSha256": "9d2b2d1cd9d634fb96f82bd1bb133f70294017035913511471efda9a5290fe41",
+  "entities": 2
+ },
+ {
+  "mode": "w0",
+  "key": "ga28",
+  "reason": "C1.2 Aufenthaltstitel: Nummer in Klammer \"(Nr. ...)\" hinter dem Stichwort wird maskiert; vorher im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "8f7a3a81b232e2131e4a8311ac083a0af000360dd8980ac11970bbbd2215f3e1",
+  "storeSha256": "2703f625c50291181ad312c462a2184254a77773d30ba51f4fc7859b00691080",
+  "entities": 1
+ },
+ {
+  "mode": "w0",
+  "key": "gb03",
+  "reason": "C1.2 Art. 9/10: Merkzeichen, Grad der Behinderung, Pflegegrad mit Stufe werden als Ganzes maskiert; vorher blieben Teile lesbar (nur zusaetzliche Maskierung)",
+  "outSha256": "25bfe429fa6ffa8b8704d03212f7eb2a031c100fd60dc249650a849d89ff9792",
+  "storeSha256": "c9e25e303bffcc630bbbb09207db5005977c054fe63133caa66c703cb49f24ef",
+  "entities": 4
+ },
+ {
+  "mode": "w0",
+  "key": "gb09",
+  "reason": "C1.2 Art. 9: \"Roma\" im Profil strict (Begriffsliste); vorher im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "1fe968d1454f8c0f5443ae377d527156d4da99dd834341c863cc7709bc54d351",
+  "storeSha256": "95a9e66d0c16b74a5b067a1f7b722745c43c975ce8fbba61c2f5f5dddd57b96d",
+  "entities": 2
+ },
+ {
+  "mode": "w0",
+  "key": "gd04",
+  "reason": "C1.2 IBAN ueber Zeilenumbruch hinweg wird als IBAN maskiert; vorher blieb der erste Teil im Klartext und der Rest wurde als Telefonnummer gelesen (nur zusaetzliche Maskierung)",
+  "outSha256": "30514266b27b0605b4df237a0c88903534463bd101f9d5ed6ffb1d1eeceabc53",
+  "storeSha256": "a08ce0afce64878b2c8ad0022975ac0b3c57e51e889332dfab120518e88877c1",
+  "entities": 1
+ },
+ {
+  "mode": "w0",
+  "key": "ge01",
+  "reason": "C1.2 UK National Insurance Number mit Stichwort \"NI number\" (Praefix QQ ist formal ungueltig); vorher im Klartext, Platzhalternummern verschieben sich (nur zusaetzliche Maskierung)",
+  "outSha256": "81afb8284c79e2b11f72f85facb9e0197490e96aa9bf24afb8728b28e33fc4f7",
+  "storeSha256": "44450189cba154e0d1a7c8d2b478314663028a56dd9c01df9d9223a374b1927e",
+  "entities": 5
+ },
+ {
+  "mode": "w0",
+  "key": "syn1",
+  "reason": "C1.2 Synthetik-Dokument: Ortsliste erweitert, neue Strassenregel \"Am ... Nr.\", Platzhalterart oder -nummer der Adresse/des Orts wechselt; nichts wird lesbar",
+  "outSha256": "7b286ecc2ad08a10561a113d558652eed42f45854645400078b51f664ccac396",
+  "storeSha256": "3a5dcccac508a992ec3671f13cee74f544f4d5119848a352e2faf7084353c120",
+  "entities": 6
+ },
+ {
+  "mode": "w0",
+  "key": "syn12",
+  "reason": "C1.2 Fehlalarm behoben: \"Tannenberg Bau KG\" (Wortanfang Tan) wurde durch die Stichwortregel TAN ohne Wortgrenze als Zugangsdaten maskiert; jetzt Wortgrenze, Platzhalterarten und -nummern verschieben sich; kein personenbezogener Wert wird lesbar",
+  "outSha256": "56ad3b499ad04e6a4c82074b0a51299be7e420209bd0a42df53d0ae7fe36225b",
+  "storeSha256": "b9472c223c97537e20acccb487f8814deeda07de1d16193b7eb2404ea7e3ff2e",
+  "entities": 6
+ },
+ {
+  "mode": "w0",
+  "key": "syn28",
+  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext",
+  "outSha256": "c8621503de16edc4bfb2062fc7541e688099f63335fe4033b8b9a5a1eeb5f783",
+  "storeSha256": "3f1effa2e6fc4a5b70316ca7ba374a0d59ad42d439e827360bebd32118b66f90",
+  "entities": 9
+ },
+ {
+  "mode": "w0",
+  "key": "syn36",
+  "reason": "C1.2 Fehlalarm behoben: Wortgrenze bei den Zugangsdaten-Stichwoertern PIN/TAN (\"Tan...\" am Wortanfang); kein personenbezogener Wert wird lesbar",
+  "outSha256": "a33f1521f1f45ab68eb785c37dc5fbad10607e4953d51df0e5478ea73b8f045a",
+  "storeSha256": "7101550a0e4545a498f219cb31d5a5a1ee689944a194cde287db1116c01adf4d",
+  "entities": 6
+ },
+ {
   "mode": "w1",
   "key": "n12",
   "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
   "outSha256": "ff3f7890efa954f9e75537554a7933a060a1c52fc53097a0bc3fb0ce1573b813",
   "storeSha256": "318144154cb6dea9f45e937238fec2bcafa3ba867eea467d09b016b163bd7bfc",
   "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "n18",
+  "reason": "C1.2 Ortsliste erweitert (Linz u. a.): Ortsname wird maskiert; vorher im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "bccc81bc16451453825d27552b959a9162370fdb3248a307e5a2faec30b4e01a",
+  "storeSha256": "2849ca4cadf378fcb1b4d3b225c7f8780e979b28cf8e793f58c07f935ad11c4a",
+  "entities": 2
  },
  {
   "mode": "w1",
@@ -17,6 +153,62 @@
  },
  {
   "mode": "w1",
+  "key": "o03",
+  "reason": "C1.2 Organisationsregel: \"Bundesagentur fuer ...\" wird als Organisation maskiert; vorher blieb \"Bundesagentur fuer\" im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "4756f82901a79f40878b268f3f0b77c33b38fca36d9c470fc69091c17d222ece",
+  "storeSha256": "c129868a4b5077630287aec877a8418c100ce98498843c010ce18838080e5000",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "o10",
+  "reason": "C1.2 Organisationsregel: Krankenkassen (AOK, IKK, BKK, Barmer, DAK, KKH, Techniker Krankenkasse); vorher blieb \"AOK Bayern\" im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "64a58d1001c46a033b652194716df299c75ce20b47f7a855a94c348d5b4013f5",
+  "storeSha256": "53688cbafaec676b5132ee7437087e3a8ed29fe22411073c9920b6bcaee3e658",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "a03",
+  "reason": "C1.2 Strassenregel \"Am Markt 3\": Adresse ohne Hausnummer-Postleitzahl-Form wird als Adresse maskiert; Platzhalterart wechselt (Ort zu Adresse), nichts wird lesbar",
+  "outSha256": "a5df9d378db4eaadb479bb84fc870f9434257584c1c7257620bfa9a3bffc4c87",
+  "storeSha256": "2bbcacd95c14ec38d5258b51db1b0426c967248889df37eda5cf7bbe1507fd36",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "a04",
+  "reason": "C1.2 Strassenregel \"Am Markt 3 ...\": Platzhalterart wechselt (Ort zu Adresse), nichts wird lesbar",
+  "outSha256": "a5df9d378db4eaadb479bb84fc870f9434257584c1c7257620bfa9a3bffc4c87",
+  "storeSha256": "418033ea8354301394bbb818946f8a8b13764bc55d1f02e0eb4ee50c012c0640",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "a07",
+  "reason": "C1.2 Ortsliste erweitert (Garmisch-Partenkirchen): Ortsname wird maskiert; vorher im Klartext (nur zusaetzliche Maskierung, Entscheidung E-ORT)",
+  "outSha256": "bb77fbbd4c539f3dfb8938dc14a582fcd23fff30f2be8abf67e30b2173844493",
+  "storeSha256": "9bd16de4e1671c659db06651def68bf24c8bdc50a77124c88aebc51b0bbd806a",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "a09",
+  "reason": "C1.2 Ortsliste erweitert (Linz): die Adresse wird als Ort gefuehrt (Platzhalterart wechselt, nichts wird lesbar)",
+  "outSha256": "2095ba6a391481d80634c6c681985d727d93f99c9c06a66383e6bde44757302a",
+  "storeSha256": "810a6925dc328e5ddf6d9139a95396099c78c579a72139d930cb5ba655b516b2",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "a10",
+  "reason": "C1.2 Ortsliste erweitert (Wien/Linz/Graz u. a.): Platzhalterart wechselt (Adresse zu Ort), nichts wird lesbar",
+  "outSha256": "17fb74d4f6df983282f26390ffce1434ad960aa96d3856b23641188154cccedd",
+  "storeSha256": "0a52942684c6fc981736bd0e7566030f82a73164e369a1c040554817adedbd64",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
   "key": "d03",
   "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
   "outSha256": "2f2079a70fe511126fb51ca927d94b81ac6fc698a75a73a18b7b160d0ea79929",
@@ -25,10 +217,50 @@
  },
  {
   "mode": "w1",
+  "key": "d05",
+  "reason": "C1.2 Ortsliste erweitert (Wien u. a.): Ortsname wird maskiert; vorher im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "cb3f95b1b91c25a0b8d46951d81cca2c8c9338da244f3d720ae9d875629158f7",
+  "storeSha256": "ea797cf0c5fc971291abb9deba986de25ccb85a46b06d2a6e72af8339dedd19e",
+  "entities": 2
+ },
+ {
+  "mode": "w1",
+  "key": "ga03",
+  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext",
+  "outSha256": "a43492a3715af2852d355e332be4cfdbe9302f5f84d72a9d837aca01082fb6ac",
+  "storeSha256": "f28b3e3fe490fad1fa9550f61347df8e67261b0b21c5a734847aff9bf74b224e",
+  "entities": 2
+ },
+ {
+  "mode": "w1",
+  "key": "ga04",
+  "reason": "C1.2 Namenszusatz \"von und zu\" wird in der Verlaengerungsregel erkannt; vorher blieb der Nachnamenteil im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "de8bc435b782ec1b4d1ab6a9e0ec1b984de92c0c04bfb323a759c8f9bd42183a",
+  "storeSha256": "4900798a9342b63d39c6c6770c0a33f0b2f415d068b833011232d41c38d5cc64",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "ga05",
+  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext | Stand C1.2: C1.2 Ortsliste erweitert (Dortmund u. a.): Ortsname wird maskiert; vorher im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "0f4ba2fa044ac27f4b9c75cc0a0c7810825c8f88545bc9e11df4f9c9af952a29",
+  "storeSha256": "0339391e2f6dcc4b3189ffaa034828c712298720407dd161a69c8408f46402a0",
+  "entities": 3
+ },
+ {
+  "mode": "w1",
   "key": "ga09",
   "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
   "outSha256": "58c496a897de70efc9282356cb71d9bfcb283ec63eb99d49d9a99bfef73adce7",
   "storeSha256": "c623237df6fe60a385486a78c1c6971c51446555ac120c1e582dff62f799e14c",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "ga17",
+  "reason": "C1.2 Fehlalarm behoben: \"Standort\" endete auf \"tan\", die Stichwortregel PIN/TAN (ohne Wortgrenze) maskierte \"dortfreigabe\"; jetzt gilt eine Wortgrenze, das Wort bleibt lesbar (weniger Maskierung, kein personenbezogener Wert betroffen)",
+  "outSha256": "856d0fd5e8c0e476b17c0d286877b8e5ea3bf5f52d4cbcbae8640edc0f42a1d2",
+  "storeSha256": "06fb7a3e0024d2899b0a8bdafb001dbc454da83d6f678d6c3494a7d744cf3451",
   "entities": 1
  },
  {
@@ -49,6 +281,62 @@
  },
  {
   "mode": "w1",
+  "key": "ga25",
+  "reason": "C1.2 Geburtsort mit Grossbuchstaben im Ortsnamen (\"Bad Homburg v. d. Hoehe\") wird vollstaendig maskiert; vorher nur Teile (nur zusaetzliche Maskierung)",
+  "outSha256": "318842b80eafe99a30af3643754e1ffd960272e7c21664e04d31ba7f65767f13",
+  "storeSha256": "a9bbffeb9f3a60d103badb0f6448ada015b878aa56507e9142961030113dda4e",
+  "entities": 2
+ },
+ {
+  "mode": "w1",
+  "key": "ga28",
+  "reason": "C1.2 Aufenthaltstitel: Nummer in Klammer \"(Nr. ...)\" hinter dem Stichwort wird maskiert; vorher im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "8f7a3a81b232e2131e4a8311ac083a0af000360dd8980ac11970bbbd2215f3e1",
+  "storeSha256": "2703f625c50291181ad312c462a2184254a77773d30ba51f4fc7859b00691080",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "gb03",
+  "reason": "C1.2 Art. 9/10: Merkzeichen, Grad der Behinderung, Pflegegrad mit Stufe werden als Ganzes maskiert; vorher blieben Teile lesbar (nur zusaetzliche Maskierung)",
+  "outSha256": "25bfe429fa6ffa8b8704d03212f7eb2a031c100fd60dc249650a849d89ff9792",
+  "storeSha256": "c9e25e303bffcc630bbbb09207db5005977c054fe63133caa66c703cb49f24ef",
+  "entities": 4
+ },
+ {
+  "mode": "w1",
+  "key": "gb09",
+  "reason": "C1.2 Art. 9: \"Roma\" im Profil strict (Begriffsliste); vorher im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "1fe968d1454f8c0f5443ae377d527156d4da99dd834341c863cc7709bc54d351",
+  "storeSha256": "95a9e66d0c16b74a5b067a1f7b722745c43c975ce8fbba61c2f5f5dddd57b96d",
+  "entities": 2
+ },
+ {
+  "mode": "w1",
+  "key": "gc03",
+  "reason": "C1.2 Orte: \"Flensburg\" wird als Ort erkannt (Bewertungsliste und Stichwortliste zusammengefuehrt); Platzhalterart der Spanne wechselt, nichts wird lesbar",
+  "outSha256": "d6bcabc6a7dd4d7eac3e96fd8a06ba850251884be96acd55ec356fab83eda8e5",
+  "storeSha256": "24c29de1dcd9723e5266397a37b1266af6237c10c88f8a0ae120204688928dcc",
+  "entities": 4
+ },
+ {
+  "mode": "w1",
+  "key": "gd04",
+  "reason": "C1.2 IBAN ueber Zeilenumbruch hinweg wird als IBAN maskiert; vorher blieb der erste Teil im Klartext und der Rest wurde als Telefonnummer gelesen (nur zusaetzliche Maskierung)",
+  "outSha256": "30514266b27b0605b4df237a0c88903534463bd101f9d5ed6ffb1d1eeceabc53",
+  "storeSha256": "a08ce0afce64878b2c8ad0022975ac0b3c57e51e889332dfab120518e88877c1",
+  "entities": 1
+ },
+ {
+  "mode": "w1",
+  "key": "ge01",
+  "reason": "C1.2 UK National Insurance Number mit Stichwort \"NI number\" (Praefix QQ ist formal ungueltig); vorher im Klartext, Platzhalternummern verschieben sich (nur zusaetzliche Maskierung)",
+  "outSha256": "81afb8284c79e2b11f72f85facb9e0197490e96aa9bf24afb8728b28e33fc4f7",
+  "storeSha256": "44450189cba154e0d1a7c8d2b478314663028a56dd9c01df9d9223a374b1927e",
+  "entities": 5
+ },
+ {
+  "mode": "w1",
   "key": "ge04",
   "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
   "outSha256": "f6c4366b792c6af183f572cf65acfb4c78ebbb632b5e0cb421e0b1a7daaedaaa",
@@ -62,6 +350,14 @@
   "outSha256": "05aa5ab77efe2f5de9204b138e0a44e4cf97fa1593534966e531815dd5b9133a",
   "storeSha256": "ac286ffcf0d8b436c9f063b359524b136470728ac2e1debc4bc9c46ce3fe249f",
   "entities": 9
+ },
+ {
+  "mode": "w1",
+  "key": "syn1",
+  "reason": "C1.2 Synthetik-Dokument: Ortsliste erweitert, neue Strassenregel \"Am ... Nr.\", Platzhalterart oder -nummer der Adresse/des Orts wechselt; nichts wird lesbar",
+  "outSha256": "7b286ecc2ad08a10561a113d558652eed42f45854645400078b51f664ccac396",
+  "storeSha256": "3a5dcccac508a992ec3671f13cee74f544f4d5119848a352e2faf7084353c120",
+  "entities": 6
  },
  {
   "mode": "w1",
@@ -82,10 +378,10 @@
  {
   "mode": "w1",
   "key": "syn12",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
-  "outSha256": "8b319059ebe00a9c9de54cc1d1982de8313b4894e81585f3bceb8c42e7be2b4e",
-  "storeSha256": "23b6d73c10049ae854e8ff7579839e20b204e1d415e780eae54cf8d62d6bc3c9",
-  "entities": 8
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md | Stand C1.2: C1.2 Fehlalarm behoben: \"Tannenberg Bau KG\" (Wortanfang Tan) wurde durch die Stichwortregel TAN ohne Wortgrenze als Zugangsdaten maskiert; jetzt Wortgrenze, Platzhalterarten und -nummern verschieben sich; kein personenbezogener Wert wird lesbar",
+  "outSha256": "06b5e0ff8ebf010e58972f7d1b389d4c80e7da7af3583a8d1b84996ba5bb5bfc",
+  "storeSha256": "aaaa4e426943fcfeef8203c454b0490b51132a73ab0ffe48945ec84a5f27108b",
+  "entities": 7
  },
  {
   "mode": "w1",
@@ -97,6 +393,22 @@
  },
  {
   "mode": "w1",
+  "key": "syn15",
+  "reason": "C1.2 Synthetik-Dokument: Ortsliste erweitert, neue Strassenregel \"Am ... Nr.\", Platzhalterart oder -nummer der Adresse/des Orts wechselt; nichts wird lesbar",
+  "outSha256": "4eacce08faa940d5b2bab6da4a0f0d897fc5f87c1ab92292fe120999dec4104d",
+  "storeSha256": "a1fd83c8487f1a8488e255b547a95e78eddc7c98e0c16e5a5f11f4ec3636e487",
+  "entities": 6
+ },
+ {
+  "mode": "w1",
+  "key": "syn19",
+  "reason": "C1.2 Synthetik-Dokument: Ortsliste erweitert, neue Strassenregel \"Am ... Nr.\", Platzhalterart oder -nummer der Adresse/des Orts wechselt; nichts wird lesbar",
+  "outSha256": "bf64713ea3d208ce9cc0a1651e406e701c32818381b7888f5be2a80360061684",
+  "storeSha256": "36ad1b1c49a98b6eaeadaff47134905b03a7a37893f351a25cc9fdb90402adfc",
+  "entities": 7
+ },
+ {
+  "mode": "w1",
   "key": "syn27",
   "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
   "outSha256": "24bee7644ed8863561535a0ff78a8334b34a45fcfa52bdfe7ca196b5c87ced8a",
@@ -105,10 +417,18 @@
  },
  {
   "mode": "w1",
+  "key": "syn28",
+  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext",
+  "outSha256": "78b660aec1ef84012745537279d825ccab256d2d37df3ff1c941436582aef71a",
+  "storeSha256": "e22831c6fcf3c7b971270676777e9df9912087bae9a96a2458d2e47c6dbc989e",
+  "entities": 9
+ },
+ {
+  "mode": "w1",
   "key": "syn29",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
-  "outSha256": "13b47d7da0c188d9b88aedd9d561b093e21ae90c09bf160a00d6003db89f02bf",
-  "storeSha256": "2510f86762ce569c81c12db4ba19c4d6d81a0d5e849221c540d2221e8beece4e",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md | Stand C1.2: C1.2 Synthetik-Dokument: Ortsliste erweitert, neue Strassenregel \"Am ... Nr.\", Platzhalterart oder -nummer der Adresse/des Orts wechselt; nichts wird lesbar",
+  "outSha256": "d5a9d8fce8142e5accab2029e7eebf7529f279e928e24bd36436940e668464cc",
+  "storeSha256": "d7c822dff533540d364296fbfdb08b538be1c5c421f5f72d5cbb11185ecc65a4",
   "entities": 6
  },
  {
@@ -129,10 +449,26 @@
  },
  {
   "mode": "w1",
+  "key": "syn35",
+  "reason": "C1.2 Synthetik-Dokument: Ortsliste erweitert, neue Strassenregel \"Am ... Nr.\", Platzhalterart oder -nummer der Adresse/des Orts wechselt; nichts wird lesbar",
+  "outSha256": "67a0e49dea7b73d39a0d17145a2314ee95b8e7e37ac6e70bd2738271a0d446c0",
+  "storeSha256": "c705c9a57fdeaddf4574e2f74382ee3e0e6beff561df019228b505adb931141f",
+  "entities": 10
+ },
+ {
+  "mode": "w1",
+  "key": "syn36",
+  "reason": "C1.2 Fehlalarm behoben: Wortgrenze bei den Zugangsdaten-Stichwoertern PIN/TAN (\"Tan...\" am Wortanfang); kein personenbezogener Wert wird lesbar",
+  "outSha256": "a33f1521f1f45ab68eb785c37dc5fbad10607e4953d51df0e5478ea73b8f045a",
+  "storeSha256": "7101550a0e4545a498f219cb31d5a5a1ee689944a194cde287db1116c01adf4d",
+  "entities": 6
+ },
+ {
+  "mode": "w1",
   "key": "syn40",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
-  "outSha256": "06b5e0ff8ebf010e58972f7d1b389d4c80e7da7af3583a8d1b84996ba5bb5bfc",
-  "storeSha256": "ee5bfdd0b60bb92a1aa7beac6e91b9db5e5b66b427d8b05bf0756738451a6b76",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md | Stand C1.2: C1.2 Synthetik-Dokument: Ortsliste erweitert, neue Strassenregel \"Am ... Nr.\", Platzhalterart oder -nummer der Adresse/des Orts wechselt; nichts wird lesbar",
+  "outSha256": "bf64713ea3d208ce9cc0a1651e406e701c32818381b7888f5be2a80360061684",
+  "storeSha256": "a500910b32cd7fc7050d11412ab92c5b1c39ab535a3a66a0900041b095ab7140",
   "entities": 7
  },
  {
@@ -152,44 +488,28 @@
   "entities": 18
  },
  {
-  "mode": "w0",
-  "key": "syn28",
-  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext",
-  "outSha256": "c8621503de16edc4bfb2062fc7541e688099f63335fe4033b8b9a5a1eeb5f783",
-  "storeSha256": "3f1effa2e6fc4a5b70316ca7ba374a0d59ad42d439e827360bebd32118b66f90",
-  "entities": 9
- },
- {
-  "mode": "w1",
-  "key": "syn28",
-  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext",
-  "outSha256": "78b660aec1ef84012745537279d825ccab256d2d37df3ff1c941436582aef71a",
-  "storeSha256": "e22831c6fcf3c7b971270676777e9df9912087bae9a96a2458d2e47c6dbc989e",
-  "entities": 9
+  "mode": "ki",
+  "key": "o03",
+  "reason": "C1.2 Organisationsregel: \"Bundesagentur fuer ...\" wird als Organisation maskiert; vorher blieb \"Bundesagentur fuer\" im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "4756f82901a79f40878b268f3f0b77c33b38fca36d9c470fc69091c17d222ece",
+  "storeSha256": "c129868a4b5077630287aec877a8418c100ce98498843c010ce18838080e5000",
+  "entities": 1
  },
  {
   "mode": "ki",
-  "key": "syn28",
-  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext",
-  "outSha256": "7eae6d4d348e769d4ab5f0951008f61bb619159b06e9280a25d92c709d72c970",
-  "storeSha256": "e183ba65bb0d3d8b5379bba40dbc6b089335afb9c1f7d8cd0a0c3d45df6172ad",
-  "entities": 9
+  "key": "a03",
+  "reason": "C1.2 Strassenregel \"Am Markt 3\": Adresse ohne Hausnummer-Postleitzahl-Form wird als Adresse maskiert; Platzhalterart wechselt (Ort zu Adresse), nichts wird lesbar",
+  "outSha256": "a5df9d378db4eaadb479bb84fc870f9434257584c1c7257620bfa9a3bffc4c87",
+  "storeSha256": "2bbcacd95c14ec38d5258b51db1b0426c967248889df37eda5cf7bbe1507fd36",
+  "entities": 1
  },
  {
-  "mode": "w0",
-  "key": "ga03",
-  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext",
-  "outSha256": "a43492a3715af2852d355e332be4cfdbe9302f5f84d72a9d837aca01082fb6ac",
-  "storeSha256": "214029cae9fd56c756896d29ac9ddb50434500a0d41daa0bc0ee48a8567caeff",
-  "entities": 2
- },
- {
-  "mode": "w1",
-  "key": "ga03",
-  "reason": "C1.1 Gruppe C2: GROSSGESCHRIEBENER Nachname mit Komma (MUELLER, HANS) wird als Name maskiert; vorher blieb er in w0/ki im Klartext",
-  "outSha256": "a43492a3715af2852d355e332be4cfdbe9302f5f84d72a9d837aca01082fb6ac",
-  "storeSha256": "f28b3e3fe490fad1fa9550f61347df8e67261b0b21c5a734847aff9bf74b224e",
-  "entities": 2
+  "mode": "ki",
+  "key": "a04",
+  "reason": "C1.2 Strassenregel \"Am Markt 3 ...\": Platzhalterart wechselt (Ort zu Adresse), nichts wird lesbar",
+  "outSha256": "a5df9d378db4eaadb479bb84fc870f9434257584c1c7257620bfa9a3bffc4c87",
+  "storeSha256": "418033ea8354301394bbb818946f8a8b13764bc55d1f02e0eb4ee50c012c0640",
+  "entities": 1
  },
  {
   "mode": "ki",
@@ -200,20 +520,12 @@
   "entities": 2
  },
  {
-  "mode": "w0",
-  "key": "ga05",
-  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext",
-  "outSha256": "26244206be06550008a00e907f3b867e25d8c2ae08da608b660f6487c02823ef",
-  "storeSha256": "418bd30b03046e49ef202284c111dbbeafbec267987a0a6ccde739ef2758cf4a",
-  "entities": 2
- },
- {
-  "mode": "w1",
-  "key": "ga05",
-  "reason": "C1.1 Gruppe C3: Spitzname in Anfuehrungszeichen nach nennen ihn / alias / genannt wird als Name maskiert; vorher blieb er im Klartext",
-  "outSha256": "26244206be06550008a00e907f3b867e25d8c2ae08da608b660f6487c02823ef",
-  "storeSha256": "418bd30b03046e49ef202284c111dbbeafbec267987a0a6ccde739ef2758cf4a",
-  "entities": 2
+  "mode": "ki",
+  "key": "ga04",
+  "reason": "C1.2 Namenszusatz \"von und zu\" wird in der Verlaengerungsregel erkannt; vorher blieb der Nachnamenteil im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "de8bc435b782ec1b4d1ab6a9e0ec1b984de92c0c04bfb323a759c8f9bd42183a",
+  "storeSha256": "4900798a9342b63d39c6c6770c0a33f0b2f415d068b833011232d41c38d5cc64",
+  "entities": 1
  },
  {
   "mode": "ki",
@@ -225,10 +537,82 @@
  },
  {
   "mode": "ki",
+  "key": "ga17",
+  "reason": "C1.2 Fehlalarm behoben: \"Standort\" endete auf \"tan\", die Stichwortregel PIN/TAN (ohne Wortgrenze) maskierte \"dortfreigabe\"; jetzt gilt eine Wortgrenze, das Wort bleibt lesbar (weniger Maskierung, kein personenbezogener Wert betroffen)",
+  "outSha256": "b5d205e895590f8809def31e44f7c2d6bb30342f29b1ce5831c7215c5538bfa7",
+  "storeSha256": "e20b68d0f72fa8653b3c0e42bac3b8b4b74813a59362c22cb1881e0fdd490833",
+  "entities": 2
+ },
+ {
+  "mode": "ki",
+  "key": "ga25",
+  "reason": "C1.2 Geburtsort mit Grossbuchstaben im Ortsnamen (\"Bad Homburg v. d. Hoehe\") wird vollstaendig maskiert; vorher nur Teile (nur zusaetzliche Maskierung)",
+  "outSha256": "318842b80eafe99a30af3643754e1ffd960272e7c21664e04d31ba7f65767f13",
+  "storeSha256": "df29042804b7af7e1592b8487ea9240ded1612d4cd5b325d336b0159f195e260",
+  "entities": 2
+ },
+ {
+  "mode": "ki",
+  "key": "ga28",
+  "reason": "C1.2 Aufenthaltstitel: Nummer in Klammer \"(Nr. ...)\" hinter dem Stichwort wird maskiert; vorher im Klartext (nur zusaetzliche Maskierung)",
+  "outSha256": "8f7a3a81b232e2131e4a8311ac083a0af000360dd8980ac11970bbbd2215f3e1",
+  "storeSha256": "2703f625c50291181ad312c462a2184254a77773d30ba51f4fc7859b00691080",
+  "entities": 1
+ },
+ {
+  "mode": "ki",
+  "key": "gb03",
+  "reason": "C1.2 Art. 9/10: Merkzeichen, Grad der Behinderung, Pflegegrad mit Stufe werden als Ganzes maskiert; vorher blieben Teile lesbar (nur zusaetzliche Maskierung)",
+  "outSha256": "25bfe429fa6ffa8b8704d03212f7eb2a031c100fd60dc249650a849d89ff9792",
+  "storeSha256": "c9e25e303bffcc630bbbb09207db5005977c054fe63133caa66c703cb49f24ef",
+  "entities": 4
+ },
+ {
+  "mode": "ki",
+  "key": "gd04",
+  "reason": "C1.2 IBAN ueber Zeilenumbruch hinweg wird als IBAN maskiert; vorher blieb der erste Teil im Klartext und der Rest wurde als Telefonnummer gelesen (nur zusaetzliche Maskierung)",
+  "outSha256": "30514266b27b0605b4df237a0c88903534463bd101f9d5ed6ffb1d1eeceabc53",
+  "storeSha256": "a08ce0afce64878b2c8ad0022975ac0b3c57e51e889332dfab120518e88877c1",
+  "entities": 1
+ },
+ {
+  "mode": "ki",
+  "key": "ge01",
+  "reason": "C1.2 UK National Insurance Number mit Stichwort \"NI number\" (Praefix QQ ist formal ungueltig); vorher im Klartext, Platzhalternummern verschieben sich (nur zusaetzliche Maskierung)",
+  "outSha256": "9c5157fc5dd3b7d0c088fcdb486e015d898a71cedcd9b340a4781658a5e1562f",
+  "storeSha256": "544270fe7808bfa5030ac9844bdce8909ffd4c1a7cf72dd5447380b73f6313f4",
+  "entities": 6
+ },
+ {
+  "mode": "ki",
+  "key": "syn1",
+  "reason": "C1.2 Synthetik-Dokument: Ortsliste erweitert, neue Strassenregel \"Am ... Nr.\", Platzhalterart oder -nummer der Adresse/des Orts wechselt; nichts wird lesbar",
+  "outSha256": "7b286ecc2ad08a10561a113d558652eed42f45854645400078b51f664ccac396",
+  "storeSha256": "3a5dcccac508a992ec3671f13cee74f544f4d5119848a352e2faf7084353c120",
+  "entities": 6
+ },
+ {
+  "mode": "ki",
   "key": "syn12",
-  "reason": "C1.1 Gruppe E: Mit KI-Treffern ergaenzen die Wortlisten Personennamen mit bekanntem Vornamen, die das Modell uebersehen hat und die keinen anderen Treffer beruehren; vorher blieb der Name im Klartext",
-  "outSha256": "8b319059ebe00a9c9de54cc1d1982de8313b4894e81585f3bceb8c42e7be2b4e",
-  "storeSha256": "7bb8f09128897d81ff3cd5049866936e97e118a6f6855573ff0c165d65916312",
-  "entities": 8
+  "reason": "C1.1 Gruppe E: Mit KI-Treffern ergaenzen die Wortlisten Personennamen mit bekanntem Vornamen, die das Modell uebersehen hat und die keinen anderen Treffer beruehren; vorher blieb der Name im Klartext | Stand C1.2: C1.2 Fehlalarm behoben: \"Tannenberg Bau KG\" (Wortanfang Tan) wurde durch die Stichwortregel TAN ohne Wortgrenze als Zugangsdaten maskiert; jetzt Wortgrenze, Platzhalterarten und -nummern verschieben sich; kein personenbezogener Wert wird lesbar",
+  "outSha256": "06b5e0ff8ebf010e58972f7d1b389d4c80e7da7af3583a8d1b84996ba5bb5bfc",
+  "storeSha256": "aaaa4e426943fcfeef8203c454b0490b51132a73ab0ffe48945ec84a5f27108b",
+  "entities": 7
+ },
+ {
+  "mode": "ki",
+  "key": "syn28",
+  "reason": "C1.1 Gruppe C1: Nachname aus der Stoppwortliste (Richter) wird nach Namenszusatz (von, de) mitmaskiert; vorher blieb er im Klartext",
+  "outSha256": "7eae6d4d348e769d4ab5f0951008f61bb619159b06e9280a25d92c709d72c970",
+  "storeSha256": "e183ba65bb0d3d8b5379bba40dbc6b089335afb9c1f7d8cd0a0c3d45df6172ad",
+  "entities": 9
+ },
+ {
+  "mode": "ki",
+  "key": "syn36",
+  "reason": "C1.2 Fehlalarm behoben: Wortgrenze bei den Zugangsdaten-Stichwoertern PIN/TAN (\"Tan...\" am Wortanfang); kein personenbezogener Wert wird lesbar",
+  "outSha256": "a33f1521f1f45ab68eb785c37dc5fbad10607e4953d51df0e5478ea73b8f045a",
+  "storeSha256": "7101550a0e4545a498f219cb31d5a5a1ee689944a194cde287db1116c01adf4d",
+  "entities": 6
  }
 ]
