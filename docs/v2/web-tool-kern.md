@@ -1,10 +1,10 @@
 # Erkennungskern im Web-Tool (Vorbereitung, Paket F1.b)
 
-Stand: Desktop-App 2.0 in Arbeit. Dies ist eine Vorbereitung; das Web-Tool wird in diesem Paket nicht geaendert und nicht ausgeliefert (Umsetzung nach 2.0, Entscheidung D18).
+Stand: Desktop-App 2.0.0 (Veroeffentlichung steht aus). Der Kern ist ausgelagert und in der Desktop-App eingebunden; das Web-Tool (arcangeli.eu) ist unveraendert und wird nicht mit 2.0 ausgeliefert (Umsetzung danach, Entscheidung D18).
 
 ## Wie das Modul eingebunden ist
 
-`app/privacy-shield.html` enthaelt den Erkennungskern nicht mehr (Regeln, Profile, Wortlisten, Stoppwoerter, Nachbearbeitung, Platzhaltervergabe). Er liegt in `app/lib/detect.js` und wird per `<script src="lib/detect.js"></script>` nach JSZip und vor dem Hauptskript geladen. Das Modul ist UMD: im Browser `window.PSDetect` (auch `PSLib.detect`), in Node `require`.
+`app/privacy-shield.html` enthaelt den Erkennungskern nicht mehr (Regeln, Profile, Wortlisten, Stoppwoerter, Nachbearbeitung, Platzhaltervergabe). Er liegt in `app/lib/detect.js` und wird per `<script src="lib/detect.js"></script>` nach `lib/placeholder.js` und `lib/coref.js` (seine beiden Abhaengigkeiten) und vor dem Hauptskript geladen. Das Modul ist UMD: im Browser `window.PSDetect` (auch `PSLib.detect`), in Node `require`.
 
 Die HTML behaelt nur duenne Fassaden mit unveraenderten Namen (`ENTS`, `PROFILES`, `store`, `cnt`, `aiCache`, `localAIMode`, `whitelist`, `cvars`, `curProf`, `collectEntities`, `anon`, `anonCore`, `deanon`, ...):
 
@@ -17,7 +17,7 @@ Zusaetzlich zur Schnittstelle aus F1 (`PROFILES`, `ENTS`, `detect`, `createState
 
 ## Was das Web-Tool tun kann
 
-`lib/detect.js` ist ohne DOM, ohne Netzwerk und ohne Abhaengigkeiten; das Web-Tool kann dieselbe Datei per `<script>` laden und dieselben Fassaden benutzen. Damit endet die Drift zwischen App und Web-Tool. Der Differenztest (`node tests/eval/diff-reference.mjs --node`) bleibt die Absicherung.
+`lib/detect.js` ist ohne DOM und ohne Netzwerk und braucht nur `lib/placeholder.js` und `lib/coref.js`; das Web-Tool kann dieselbe Datei per `<script>` laden und dieselben Fassaden benutzen. Damit endet die Drift zwischen App und Web-Tool. Der Differenztest (`node tests/eval/diff-reference.mjs --node`) bleibt die Absicherung.
 
 ## Bewusst nicht geteilt
 
