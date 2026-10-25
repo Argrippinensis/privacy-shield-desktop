@@ -1,4 +1,4 @@
-# Barrierefreiheit: Backlog (Stand D2.2)
+# Barrierefreiheit: Backlog (Stand G1.docs, Messung aus D2.2)
 
 Stand: axe-core 4.14.0, Tags wcag2a, wcag2aa, wcag21a, wcag21aa. In allen neun Ansichten und beiden Frames (Werkzeug, Hülle) gibt es
 0 Verstöße mit Impact serious oder critical (`tests/a11y.test.mjs`). Hier stehen nur die nicht blockierenden Restbefunde.

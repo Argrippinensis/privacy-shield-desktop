@@ -15,6 +15,10 @@ Die HTML behaelt nur duenne Fassaden mit unveraenderten Namen (`ENTS`, `PROFILES
 
 Zusaetzlich zur Schnittstelle aus F1 (`PROFILES`, `ENTS`, `detect`, `createState`, `anonymize`, `deanonymize`, `normalizeForDetection`) exportiert das Modul rein additiv `maskHard(text, opts)`, `isStopword(w)` und `token(state, val, pfx, col, meth)`.
 
+## Optionen von `detect` und `anonymize`
+
+Beide Funktionen nehmen ein Optionsobjekt: `ents` (Ids der aktiven Regeln), `wordlists` (Wortlisten-Erkennung, Standard an), `aiSpans` (Treffer der KI), `whitelist` (Teilzeichenfolge), `released` (exakte Freigaben `{ pfx, value }`), `cvars` (eigene Variablen), `extraSpans` (Treffer eigener Regeln, von `PSLib.policy.toSpans` berechnet; Positionen beziehen sich auf den normalisierten Text) und bei `anonymize` zusaetzlich `state` (Zuordnung, wird in place fortgeschrieben) sowie `reserved` (woertliche Platzhalter, die nie neu vergeben werden).
+
 ## Was das Web-Tool tun kann
 
 `lib/detect.js` ist ohne DOM und ohne Netzwerk und braucht nur `lib/placeholder.js` und `lib/coref.js`; das Web-Tool kann dieselbe Datei per `<script>` laden und dieselben Fassaden benutzen. Damit endet die Drift zwischen App und Web-Tool. Der Differenztest (`node tests/eval/diff-reference.mjs --node`) bleibt die Absicherung.
