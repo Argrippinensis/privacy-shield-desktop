@@ -38,7 +38,7 @@ after(() => { for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: tr
 function runCli(args, { env = {}, stdin, appDir = ROOT, timeout = TIMEOUT_MS } = {}) {
   return new Promise((resolve) => {
     const argv = [...(PACKAGED ? [] : [appDir]), '--no-sandbox', '--cli', ...args];
-    const exe = PACKAGED || electronPath;
+    const exe = process.env.PS_PACKAGED_BIN || electronPath;
     const childEnv = { ...process.env, PS_BLOCK_EXTERNAL: '1', ...env };
     delete childEnv.ELECTRON_RUN_AS_NODE;
     const t0 = Date.now();
