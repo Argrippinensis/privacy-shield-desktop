@@ -17,6 +17,15 @@ und werden mit der Installation ausgeliefert (keine Nachladung aus dem Internet)
 | Tesseract-Sprachdaten deu, eng (best_int) | 4.0.0 | Apache-2.0 | https://github.com/tesseract-ocr/tessdata_best |
 | Tailwind CSS (nur beim Bau, erzeugt `app/css/tailwind.css`) | 3.4.17 | MIT | https://tailwindcss.com |
 
+## Nur Entwicklung (Tests), wird nicht ausgeliefert
+
+| Komponente | Version | Lizenz | Quelle |
+|---|---|---|---|
+| axe-core (Entwicklungsabhaengigkeit fuer die Barrierefreiheits-Tests) | 4.14.0 | MPL-2.0 | https://github.com/dequelabs/axe-core |
+
+axe-core liegt nur in `node_modules` (`devDependencies`) und wird weder in das Programm noch in den Installer aufgenommen
+(`build.files` in `package.json` enthaelt `node_modules` nicht).
+
 ## KI-Modell zur Erkennung von Namen, Organisationen und Orten
 
 - Modell: `distilbert-base-multilingual-cased-ner-hrl` von Davlan (David Adelani et al.),

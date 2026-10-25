@@ -20,17 +20,6 @@
         -webkit-font-smoothing: antialiased;
         background: #fff;
       }
-      h1 {
-        font-weight: 300;
-        letter-spacing: -0.03em;
-        line-height: 1.05;
-        font-size: 38px;
-      }
-      @media (min-width: 768px) {
-        h1 {
-          font-size: 56px;
-        }
-      }
       h2 {
         font-weight: 400;
         letter-spacing: -0.025em;
@@ -672,6 +661,7 @@
       #FUNDEBTN .funde-n:empty { display: none; }
       #FUNDEBTN:focus-visible, #FUNDE button:focus-visible, #FUNDE input:focus-visible, #FUNDE select:focus-visible, #FUNDELIST:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
       #FUNDEBTN:focus-visible { outline-color: #fff; outline-offset: -4px; }
+      #LCBAND:focus-visible { outline: 2px solid #1a3a5c; outline-offset: -2px; box-shadow: none; } /* Band liegt in einem overflow:hidden-Panel: Ring innen */
       body.funde-open #FUNDEBTN { right: 360px; }
       #FUNDE {
         display: none; position: fixed; top: 0; right: 0; bottom: 0; width: 360px; max-width: 100vw; z-index: 55; flex-direction: column;
@@ -858,12 +848,26 @@
           -webkit-tap-highlight-color: transparent;
         }
       }
+      /* D2.1: nur fuer Screenreader, Sprunglink, einheitlicher Fokusring (2 px Navy, Abstand 2, heller Saum fuer dunklen Grund) */
+      .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+      .skip-link { position: absolute; left: 12px; top: -60px; z-index: 100; padding: 8px 14px; background: #1a3a5c; color: #fff; border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none; }
+      .skip-link:focus { top: 12px; }
+      :focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; box-shadow: 0 0 0 5px #fff; }
+      #main:focus-visible { outline: 0; box-shadow: none; }
+      .drop-zone input:focus-visible { box-shadow: none; }
+      .drop-zone:has(input:focus-visible) { outline: 2px solid #1a3a5c; outline-offset: 2px; border-color: #1a3a5c; background: #e8f0fe; }
+      .link-btn { background: none; border: 0; padding: 0; font-family: inherit; cursor: pointer; text-align: inherit; }
+      /* Gleiche Optik wie zuvor: Groesse und Gewicht erbt die Willkommen-Ueberschrift (der Tailwind-Preflight setzt inherit) */
+      .h-display { font-size: inherit; font-weight: inherit; letter-spacing: -0.03em; line-height: 1.05; }
+      .tool-panel-header h2 { margin: 0; letter-spacing: normal; line-height: inherit; }
     </style>
     <!-- Muss nach den Seitenstilen stehen: gleiche Kaskade wie das frueher eingesetzte Tailwind-Play-CDN -->
     <link rel="stylesheet" href="css/tailwind.css" />
   </head>
   <body>
-    <nav class="nav-glass fixed top-0 left-0 right-0 z-50" role="navigation">
+    <a class="skip-link" href="#main">Zum Inhalt</a>
+    <header>
+    <nav class="nav-glass fixed top-0 left-0 right-0 z-50" aria-label="Hauptnavigation">
       <div class="max-w-container mx-auto px-6 h-14 flex items-center justify-between">
         <a href="https://arcangeli.eu" class="text-sm font-semibold text-ink tracking-tight">arcangeli.eu</a>
         <div class="flex items-center gap-1 text-sm text-muted">
@@ -874,7 +878,9 @@
         </div>
       </div>
     </nav>
-    <div style="padding-top: 56px">
+    </header>
+    <main id="main" tabindex="-1" style="padding-top: 56px">
+      <h1 class="sr-only">PrivacyShield: Texte für KI anonymisieren</h1>
       <div class="max-w-container mx-auto px-6 pt-6">
         <div class="r" style="background: #fafafa; border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden">
           <div style="padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap">
@@ -906,6 +912,8 @@
               </div>
               <button
                 onclick="toggleInfoBlock()"
+                aria-expanded="false"
+                aria-controls="infoBlockDetails"
                 style="
                   background: 0 0;
                   border: none;
@@ -921,7 +929,7 @@
                   font-family: inherit;
                 "
               >
-                <span id="infoBlockArrow" style="display: inline-block; transition: transform 0.2s">▸</span>
+                <span id="infoBlockArrow" aria-hidden="true" style="display: inline-block; transition: transform 0.2s">▸</span>
                 <span id="infoBlockLabel">Mehr erfahren</span>
               </button>
             </div>
@@ -1023,7 +1031,7 @@
         <div class="tool-container" style="max-width: 680px; margin: 0 auto">
           <div style="text-align: center">
             <p class="text-xs font-medium tracking-widest text-muted uppercase mb-4">Datenschutz & KI</p>
-            <h1>Daten sicher f&uuml;r KI freigeben</h1>
+            <h2 class="h-display">Daten sicher f&uuml;r KI freigeben</h2>
             <p
               class="text-base"
               style="
@@ -1112,9 +1120,9 @@
             <button class="btn-accent" onclick="startApp()" style="padding: 14px 40px; font-size: 14px">
               Jetzt starten
             </button>
-            <p class="text-xs" style="color: #999; margin-top: 12px; cursor: pointer" onclick="showOBGuide()">
+            <button type="button" class="link-btn text-xs" style="color: #999; display: block; margin: 12px auto 0" onclick="showOBGuide()">
               Anleitung im Detail anzeigen
-            </p>
+            </button>
             <div
               style="
                 margin-top: 24px;
@@ -1131,8 +1139,10 @@
               <p style="font-size: 10px; color: #999; margin-bottom: 8px">
                 Zuordnung (.psmap, oder unverschlüsselte .csv) aus vorheriger Sitzung laden, um dieselben Variablen wiederzuverwenden.
               </p>
-              <label
+              <button
+                type="button"
                 class="btn btn-ghost"
+                onclick="document.getElementById('inp-map-load-ob').click()"
                 style="
                   font-size: 11px;
                   padding: 6px 14px;
@@ -1141,29 +1151,26 @@
                   align-items: center;
                   gap: 5px;
                 "
-                ><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                ><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                Zuordnung laden <input type="file" accept=".psmap,.csv" style="display: none" onchange="impMap(this)"
-              /></label>
+                Zuordnung laden</button
+              ><input id="inp-map-load-ob" type="file" accept=".psmap,.csv" style="display: none" tabindex="-1" aria-label="Zuordnung laden" onchange="impMap(this)" />
             </div>
             <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5e5; text-align: left">
-              <p
-                style="
-                  font-size: 12px;
-                  font-weight: 600;
-                  color: #111;
-                  cursor: pointer;
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                "
+              <button
+                type="button"
+                id="profilesToggle"
+                class="link-btn"
+                aria-expanded="false"
+                aria-controls="profilesSection"
+                style="font-size: 12px; font-weight: 600; color: #111; display: flex; align-items: center; gap: 6px"
                 onclick="toggleProfiles()"
               >
-                <span id="profilesToggleArrow">▸</span> Filterprofile
-              </p>
+                <span id="profilesToggleArrow" aria-hidden="true">▸</span> Filterprofile
+              </button>
               <div id="profilesSection" style="display: none; margin-top: 12px">
                 <p class="text-xs" style="color: #666; margin-bottom: 10px; line-height: 1.5">
                   Wähle ein vorkonfiguriertes Profil oder stelle die Erkennungsregeln manuell im Tool ein.
@@ -1185,7 +1192,11 @@
           align-items: center;
           justify-content: center;
         "
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="guideTitle"
         onclick="if (event.target === this) hideOBGuide();"
+        onkeydown="obGuideKey(event)"
       >
         <div
           style="
@@ -1199,7 +1210,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
           "
         >
-          <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 16px">So funktioniert PrivacyShield</h2>
+          <h2 id="guideTitle" style="font-size: 20px; font-weight: 600; margin-bottom: 16px">So funktioniert PrivacyShield</h2>
           <div class="step-grid mb-6" style="display: grid; grid-template-columns: 1fr; gap: 12px; text-align: left">
             <div class="step-card">
               <div class="step-num-label">Schritt 1</div>
@@ -1249,7 +1260,7 @@
             ><input type="checkbox" id="obDontShow" style="width: 14px; height: 14px; cursor: pointer" /> Nicht mehr
             anzeigen</label
           >
-          <button class="btn-accent" onclick="hideOBGuide()" style="width: 100%">Verstanden, los geht's</button>
+          <button class="btn-accent" id="guideClose" onclick="hideOBGuide()" style="width: 100%">Verstanden, los geht's</button>
         </div>
       </div>
       <div
@@ -1306,11 +1317,11 @@
           <div style="display: flex; flex-direction: column; gap: 14px">
             <div class="tool-panel">
               <div class="tool-panel-header">
-                <span style="font-size: 12px; font-weight: 600">Datei importieren</span>
+                <h2 style="font-size: 12px; font-weight: 600">Datei importieren</h2>
               </div>
               <div class="tool-panel-body">
                 <div class="drop-zone" id="DZ">
-                  <input type="file" id="FI" accept=".txt,.pdf,.docx,.doc,.csv,.md,.json,.rtf,.xlsx,.ods,.odt,.odp,.pptx,.eml,.html,.htm" multiple="multiple" />
+                  <input type="file" id="FI" aria-label="Dateien auswählen" accept=".txt,.pdf,.docx,.doc,.csv,.md,.json,.rtf,.xlsx,.ods,.odt,.odp,.pptx,.eml,.html,.htm" multiple="multiple" />
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
                     <polyline points="16 16 12 12 8 16" />
                     <line x1="12" y1="12" x2="12" y2="21" />
@@ -1351,6 +1362,7 @@
                       flex-shrink: 0;
                     "
                     id="FC"
+                    aria-label="Datei entfernen"
                   >
                     ×
                   </button>
@@ -1360,12 +1372,12 @@
             </div>
             <div class="tool-panel" id="PRJPANEL" style="display: none">
               <div class="tool-panel-header">
-                <span style="font-size: 12px; font-weight: 600">Dokumente</span>
+                <h2 style="font-size: 12px; font-weight: 600">Dokumente</h2>
                 <span style="font-size: 11px; color: #999" id="PRJCOUNT"></span>
               </div>
               <div class="tool-panel-body">
                 <div class="prj-list" id="PRJLIST" role="list" aria-label="Dokumente im Projekt"></div>
-                <div id="PRJPROG" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" style="font-size: 11px; color: #666">
+                <div id="PRJPROG" role="progressbar" aria-live="polite" aria-label="Fortschritt" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" style="font-size: 11px; color: #666">
                   <span id="PRJPROGT">0 von 0</span>
                   <div class="prj-track"><div class="prj-fill" id="PRJFILL"></div></div>
                 </div>
@@ -1461,7 +1473,7 @@
             </div>
             <div class="tool-panel">
               <div class="tool-panel-header">
-                <span style="font-size: 12px; font-weight: 600"><span id="aiStatusIcon"></span> KI-Erkennung </span
+                <h2 style="font-size: 12px; font-weight: 600"><span id="aiStatusIcon"></span> KI-Erkennung </h2
                 ><span id="aiStatusBadge" class="category-label" style="background: #f0f2f5; color: #4a5568"
                   >Nicht geladen</span
                 >
@@ -1513,7 +1525,7 @@
                   </button>
                 </div>
                 <div id="aiStatusError" style="display: none">
-                  <p class="text-xs" style="color: #dc2626; font-weight: 600">KI-Erkennung konnte nicht starten.</p>
+                  <p class="text-xs" role="alert" style="color: #dc2626; font-weight: 600">KI-Erkennung konnte nicht starten.</p>
                   <p id="aiErrorReason" class="text-xs" style="color: #444; margin-top: 6px; line-height: 1.5"></p>
                   <p class="text-xs" style="color: #666; margin-top: 6px; line-height: 1.5">
                     Die Standard-Erkennung (Regeln und Wortlisten) läuft weiter, erkennt aber weniger, vor allem Namen,
@@ -1528,7 +1540,7 @@
             </div>
             <div class="tool-panel">
               <div class="tool-panel-header">
-                <span style="font-size: 12px; font-weight: 600">Erkennungsregeln</span>
+                <h2 style="font-size: 12px; font-weight: 600">Erkennungsregeln</h2>
                 <button class="btn btn-ghost" style="padding: 3px 8px; font-size: 11px" onclick="toggleAll()">
                   Alle
                 </button>
@@ -1537,9 +1549,9 @@
             </div>
             <div class="tool-panel">
               <div class="tool-panel-header">
-                <span style="font-size: 12px; font-weight: 600"
+                <h2 style="font-size: 12px; font-weight: 600"
                   >Whitelist <span id="WLCNT" style="font-size: 10px; color: #999; font-weight: 400"></span
-                ></span>
+                ></h2>
                 <div style="display: flex; gap: 3px">
                   <button
                     class="btn btn-ghost"
@@ -1557,12 +1569,14 @@
                   >
                     Export
                   </button>
-                  <label
+                  <button
+                    type="button"
                     class="btn btn-ghost"
                     style="padding: 2px 7px; font-size: 10px; cursor: pointer"
                     title="Importieren"
-                    >Import<input type="file" accept=".txt,.csv" style="display: none" onchange="importWL(this)"
-                  /></label>
+                    onclick="document.getElementById('inp-wl-import').click()"
+                    >Import</button
+                  ><input id="inp-wl-import" type="file" accept=".txt,.csv" style="display: none" tabindex="-1" aria-label="Whitelist importieren" onchange="importWL(this)" />
                 </div>
               </div>
               <div class="tool-panel-body">
@@ -1584,6 +1598,7 @@
                   <input
                     class="input-field"
                     id="WLI"
+                    aria-label="Neuer Whitelist-Eintrag"
                     type="text"
                     placeholder="z. B. München, arcangeli.eu"
                     style="flex: 1"
@@ -1592,6 +1607,7 @@
                     class="btn btn-ghost"
                     style="padding: 7px 10px; font-size: 11px; flex-shrink: 0"
                     onclick="addWL()"
+                    aria-label="Whitelist-Eintrag hinzufügen"
                   >
                     +
                   </button>
@@ -1600,6 +1616,7 @@
                   <textarea
                     class="input-field"
                     id="WLBULKTA"
+                    aria-label="Mehrere Whitelist-Einträge"
                     placeholder="Mehrere Einträge — eine pro Zeile oder kommagetrennt"
                     style="height: 64px; font-size: 11px; resize: none; width: 100%; box-sizing: border-box"
                   ></textarea>
@@ -1621,7 +1638,7 @@
           <div style="display: flex; flex-direction: column; gap: 14px">
             <div class="tool-panel">
               <div class="tool-panel-header">
-                <span style="font-size: 12px; font-weight: 600">Originaltext</span>
+                <h2 style="font-size: 12px; font-weight: 600">Originaltext</h2>
                 <div style="display: flex; align-items: center; gap: 7px">
                   <button
                     class="btn btn-ghost"
@@ -1656,6 +1673,7 @@
                   <div id="HLMIRROR" class="highlight-mirror" aria-hidden="true"></div>
                   <textarea
                     id="IT"
+                    aria-label="Originaltext"
                     placeholder="Text einf&uuml;gen oder Datei hochladen ..."
                     style="
                       height: 200px;
@@ -1665,7 +1683,6 @@
                       font-family: monospace;
                       font-size: 12px;
                       line-height: 1.7;
-                      outline: 0;
                       background: #fff;
                       width: 100%;
                     "
@@ -1718,7 +1735,7 @@
             <div id="resultArea" style="display: none; flex-direction: column; gap: 14px">
               <div class="tool-panel">
                 <div class="tool-panel-header">
-                  <span style="font-size: 12px; font-weight: 600">Anonymisierter Text</span>
+                  <h2 style="font-size: 12px; font-weight: 600">Anonymisierter Text</h2>
                   <div style="display: flex; gap: 8px">
                     <button class="btn btn-ghost" style="font-size: 11px; padding: 3px 10px" onclick="cpAnon()">
                       Kopieren
@@ -1736,6 +1753,7 @@
                 <div class="tool-panel-body" style="padding: 12px">
                   <textarea
                     id="AT"
+                    aria-label="Anonymisierter Text"
                     class="anon-result w-full"
                     readonly="readonly"
                     placeholder="Anonymisierter Text erscheint hier ..."
@@ -1771,7 +1789,7 @@
               </div>
               <div class="tool-panel">
                 <div class="tool-panel-header">
-                  <span style="font-size: 12px; font-weight: 600">Schritt 3 — KI verarbeiten</span>
+                  <h2 style="font-size: 12px; font-weight: 600">Schritt 3 — KI verarbeiten</h2>
                   <span style="font-size: 11px; color: #999">Text wird vor dem Öffnen kopiert</span>
                 </div>
                 <div class="tool-panel-body" style="padding: 12px">
@@ -1862,12 +1880,13 @@
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
                 <div class="tool-panel">
                   <div class="tool-panel-header">
-                    <span style="font-size: 12px; font-weight: 600">KI-Antwort (mit Variablen)</span>
+                    <h2 style="font-size: 12px; font-weight: 600">KI-Antwort (mit Variablen)</h2>
                     <span style="font-size: 11px; color: #999" id="AC">0 Zeichen</span>
                   </div>
                   <div class="tool-panel-body" style="padding: 12px">
                     <textarea
                       id="AR"
+                      aria-label="KI-Antwort mit Variablen"
                       placeholder="KI-Antwort hier einf&uuml;gen ..."
                       style="
                         height: 180px;
@@ -1877,7 +1896,6 @@
                         font-family: monospace;
                         font-size: 12px;
                         line-height: 1.7;
-                        outline: 0;
                         background: #fff;
                       "
                     ></textarea>
@@ -1892,7 +1910,7 @@
                 </div>
                 <div class="tool-panel">
                   <div class="tool-panel-header">
-                    <span style="font-size: 12px; font-weight: 600">Fertiges Dokument</span>
+                    <h2 style="font-size: 12px; font-weight: 600">Fertiges Dokument</h2>
                     <div style="display: flex; gap: 5px">
                       <button class="btn btn-ghost" style="font-size: 11px; padding: 3px 10px" onclick="dlRes()">
                         TXT
@@ -1905,6 +1923,7 @@
                   <div class="tool-panel-body" style="padding: 12px">
                     <textarea
                       id="RT"
+                      aria-label="Fertiges Dokument"
                       class="final-result w-full"
                       readonly="readonly"
                       placeholder="Das fertige Dokument erscheint hier ..."
@@ -1926,8 +1945,8 @@
             </div>
             <div class="tool-panel" style="margin-top: 14px">
               <div class="tool-panel-header">
-                <span style="font-size: 12px; font-weight: 600"
-                  >Variablen-Zuordnung — existiert nur im RAM, wird nach Sitzung gelöscht</span
+                <h2 style="font-size: 12px; font-weight: 600"
+                  >Variablen-Zuordnung — existiert nur im RAM, wird nach Sitzung gelöscht</h2
                 >
                 <span style="font-size: 11px; font-weight: 600; color: #1a3a5c" id="MB">0 Einträge</span>
               </div>
@@ -1972,9 +1991,9 @@
           <div style="max-width: 520px">
             <div class="tool-panel" id="policy-panel">
               <div class="tool-panel-header">
-                <span style="font-size: 12px; font-weight: 600"
+                <h2 style="font-size: 12px; font-weight: 600"
                   >Eigene Regeln <span id="policy-count" style="font-size: 12px; color: #595959; font-weight: 400"></span
-                ></span>
+                ></h2>
                 <div style="display: flex; gap: 4px">
                   <button id="policy-import-btn" type="button" class="btn btn-ghost" style="padding: 5px 10px; font-size: 12px; min-height: 28px" title="Regeldatei policy.json laden" onclick="document.getElementById('policy-file').click()">Importieren</button>
                   <input id="policy-file" type="file" accept=".json,application/json" style="display: none" tabindex="-1" aria-label="Regeldatei policy.json importieren" onchange="policyImport(this)" />
@@ -2013,7 +2032,7 @@
             </div>
             <div style="height: 14px"></div>
             <div class="tool-panel">
-              <div class="tool-panel-header"><span style="font-size: 12px; font-weight: 600">Eigene Muster</span></div>
+              <div class="tool-panel-header"><h2 style="font-size: 12px; font-weight: 600">Eigene Muster</h2></div>
               <div class="tool-panel-body">
                 <div id="CVL"></div>
                 <div class="mb-2">
@@ -2034,6 +2053,7 @@
           </div>
         </details>
       </section>
+    </main>
       <footer class="py-12 border-t border-[#e5e5e5]" style="margin-top: 60px">
         <div class="max-w-container mx-auto px-6 text-center">
           <p class="text-sm font-medium text-ink mb-3">
@@ -2051,18 +2071,19 @@
             >
           </p>
           <p class="text-2xs" style="font-size: 9px; color: #ccc; margin-top: 12px">
-            <span
-              style="cursor: pointer; text-decoration: underline dotted; color: #aaa"
+            <button
+              type="button"
+              class="link-btn"
+              style="text-decoration: underline dotted; color: #aaa; font-size: inherit"
               onclick="checkForUpdate()"
               title="Nach Updates suchen"
-              >v1.6.1</span
+              >v1.6.1</button
             >
             · <span style="font-family: monospace">privacyshield</span> · 13.06.2026
           </p>
         </div>
       </footer>
-    </div>
-    <div class="toast" id="TOAST">
+    <div class="toast" id="TOAST" role="status" aria-live="polite" aria-atomic="true">
       <div class="toast-icon" id="TI"><svg class="ti-s" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg class="ti-e" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="14"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
       <span id="TT"></span>
     </div>
@@ -2082,6 +2103,8 @@
     ></div>
     <div
       id="AMP"
+      role="dialog"
+      aria-label="Was soll maskiert werden?"
       style="
         display: none;
         position: fixed;
@@ -2160,12 +2183,13 @@
           Abbrechen
         </button>
       </div>
-      <div id="AMPERROR" style="display: none; margin-top: 6px; font-size: 11px; color: #ff3b30"></div>
+      <div id="AMPERROR" role="alert" style="display: none; margin-top: 6px; font-size: 11px; color: #ff3b30"></div>
     </div>
+    <aside id="FUNDEWRAP" aria-label="Funde">
     <button id="FUNDEBTN" type="button" onclick="toggleFunde()" aria-controls="FUNDE" aria-expanded="false" title="Liste aller Funde anzeigen">
       <span class="funde-t">Funde</span><span class="funde-n" id="FUNDECNT"></span>
     </button>
-    <aside id="FUNDE" aria-label="Funde">
+    <div id="FUNDE" role="group" aria-label="Liste der Funde">
       <div class="funde-head">
         <h2>Funde</h2>
         <button type="button" class="funde-close" onclick="toggleFunde(false)" aria-label="Funde schließen">
@@ -2186,6 +2210,7 @@
       <div class="funde-hint">Die Originalwerte sind nur hier sichtbar. Freigegebene Werte bleiben im Ergebnis im Klartext. Nichts wird gespeichert.</div>
       <div id="FUNDELIST"></div>
       <div id="FUNDESTATUS" class="funde-sr" role="status"></div>
+    </div>
     </aside>
     <script src="vendor/pdfjs/pdf.min.js"></script>
     <script src="vendor/mammoth/mammoth.browser.min.js"></script>
@@ -2244,9 +2269,14 @@
           c.className = "profile-card" + (p.id === "standard" ? " sel" : "");
           c.dataset.pid = p.id;
           c.innerHTML = `\n      <div class="profile-name">${p.lbl}${p.badge ? '<span class="profile-badge">' + p.badge + "</span>" : ""}</div>\n      <div class="profile-desc">${p.desc}</div>\n      ${p.note ? '<div class="profile-note">' + p.note + "</div>" : ""}\n      <div class="profile-tags">${p.tags.map((t) => '<span class="profile-tag">' + t + "</span>").join("")}</div>\n    `;
+          c.setAttribute("role", "button");
+          c.tabIndex = 0;
+          c.setAttribute("aria-pressed", p.id === "standard" ? "true" : "false");
+          c.onkeydown = (ev) => { if (ev.key === " " || ev.key === "Enter") { ev.preventDefault(); c.onclick(); } };
           c.onclick = () => {
-            pg.querySelectorAll(".profile-card").forEach((x) => x.classList.remove("sel"));
+            pg.querySelectorAll(".profile-card").forEach((x) => { x.classList.remove("sel"); x.setAttribute("aria-pressed", "false"); });
             c.classList.add("sel");
+            c.setAttribute("aria-pressed", "true");
             curProf = p.id;
             if (p.id !== "custom") ENTS.forEach((e) => (e.on = p.ents.includes(e.id)));
             prjMarkStale();
@@ -2372,13 +2402,26 @@
         document.getElementById("WS").style.display = "none";
         document.getElementById("OB").style.display = "block";
       }
+      let obGuideOpener = null;
       function showOBGuide() {
+        obGuideOpener = document.activeElement;
         document.getElementById("guideModal").style.display = "flex";
+        document.getElementById("guideClose").focus();
       }
       function hideOBGuide() {
         document.getElementById("guideModal").style.display = "none";
         const cb = document.getElementById("obDontShow");
         if (cb && cb.checked) localStorage.setItem("privacyShield_onboarding_done", "true");
+        if (obGuideOpener && obGuideOpener.focus && document.getElementById("OB").style.display !== "none") obGuideOpener.focus();
+        obGuideOpener = null;
+      }
+      // Anleitung: Esc schliesst, Tab bleibt im Dialog
+      function obGuideKey(e) {
+        if (e.key === "Escape") { e.preventDefault(); hideOBGuide(); return; }
+        if (e.key !== "Tab") return;
+        const f = [document.getElementById("obDontShow"), document.getElementById("guideClose")];
+        if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[1].focus(); }
+        else if (!e.shiftKey && document.activeElement === f[1]) { e.preventDefault(); f[0].focus(); }
       }
       function toggleInfoBlock() {
         const d = document.getElementById("infoBlockDetails");
@@ -2388,6 +2431,7 @@
         d.style.display = open ? "block" : "none";
         arrow.style.transform = open ? "rotate(90deg)" : "";
         label.textContent = open ? "Weniger anzeigen" : "Mehr erfahren";
+        arrow.parentNode.setAttribute("aria-expanded", open ? "true" : "false");
       }
       function toggleProfiles() {
         const section = document.getElementById("profilesSection");
@@ -2399,6 +2443,7 @@
           section.style.display = "none";
           arrow.textContent = "▸";
         }
+        document.getElementById("profilesToggle").setAttribute("aria-expanded", section.style.display === "block" ? "true" : "false");
       }
       function showDeanonStep() {
         document.getElementById("AR").focus();
@@ -2419,12 +2464,18 @@
             '</div><div style="font-size:11px;color:#999;">' +
             e.desc +
             '</div></div></div><div class="toggle-switch"></div>';
-          r.onclick = () => {
+          r.setAttribute("role", "switch");
+          r.tabIndex = 0;
+          r.setAttribute("aria-checked", e.on ? "true" : "false");
+          const toggleRule = () => {
             e.on = !e.on;
             r.classList.toggle("on", e.on);
+            r.setAttribute("aria-checked", e.on ? "true" : "false");
             curProf = "custom";
             prjMarkStale();
           };
+          r.onclick = toggleRule;
+          r.onkeydown = (ev) => { if (ev.key === " " || ev.key === "Enter") { ev.preventDefault(); toggleRule(); } };
           el.appendChild(r);
         });
       }
@@ -2697,6 +2748,8 @@
           const b = document.createElement("button");
           b.className = "custom-var-del";
           b.textContent = "×";
+          b.type = "button";
+          b.setAttribute("aria-label", "Eigene Regel " + v.n + " entfernen");
           b.addEventListener("click", () => removeCV(i));
           d.append(nm, pt, b);
           l.appendChild(d);
@@ -3611,7 +3664,7 @@
         const band = document.getElementById("LCBAND"), list = document.getElementById("LCLIST"), r = lcLast.res, ok = r.clean;
         const msg = r.error ? "nicht möglich" : ok ? "keine Auffälligkeiten" : r.count === 1 ? "1 möglicher Rest" : r.count + " mögliche Reste"; const ic = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="' + (ok ? "M3 8.5l3.2 3.2L13 4.5" : "M8 2l6.5 11.5h-13z M8 6.5v3 M8 11.6v.1") + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         band.style.cssText += ";display:flex;cursor:" + (r.count ? "pointer" : "default") + ";background:" + (ok ? "#ecfdf5;color:#047857" : "#fffbeb;color:#92400e");
-        band.innerHTML = ic + "<span>Gegenprüfung: " + msg + "</span>"; if (!r.count) list.style.display = "none";
+        band.innerHTML = ic + "<span>Gegenprüfung: " + msg + "</span>"; band.setAttribute("aria-label", "Gegenprüfung: " + msg + (r.count ? " (Liste ein- oder ausklappen)" : "")); if (!r.count) list.style.display = "none";
         band.setAttribute("aria-expanded", list.style.display === "none" ? "false" : "true"); const bt = (fn, i, t) => '<button type="button" class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="' + fn + "(" + i + ')">' + t + "</button>";
         list.innerHTML = r.findings.map((f, i) => '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12px"><span class="pill" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d">' + esc(f.type) + '</span><code style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#444">' + esc(f.snippet) + "</code>" + bt("lcMask", i, "Maskieren") + bt("lcIgnore", i, "Ignorieren") + "</div>").join("");
       }
@@ -4062,6 +4115,9 @@
       }
       function toast(msg, type = "s") {
         const el = document.getElementById("TOAST");
+        // Fehler werden sofort angesagt, Hinweise hoeflich
+        el.setAttribute("role", type === "e" ? "alert" : "status");
+        el.setAttribute("aria-live", type === "e" ? "assertive" : "polite");
         document.getElementById("TT").textContent = msg;
         el.className = "toast on " + type;
         clearTimeout(el._t);
@@ -4466,7 +4522,7 @@
             esc(v) +
             '</span><button style="background:none;border:none;color:#999;cursor:pointer;font-size:15px;line-height:1;padding:0;transition:color .15s" onmouseover="this.style.color=\'#dc2626\'" onmouseout="this.style.color=\'#999\'" onclick="removeWL(' +
             i +
-            ')">×</button>';
+            ')" aria-label="Eintrag entfernen: ' + escA(v) + '">×</button>';
           l.appendChild(d);
         });
         const cnt_el = document.getElementById("WLCNT");
@@ -4740,6 +4796,7 @@
           prjMarkStale();
           document.querySelectorAll(".profile-card").forEach(function (c) {
             c.classList.toggle("sel", c.dataset.pid === medProfile.id);
+            c.setAttribute("aria-pressed", c.dataset.pid === medProfile.id ? "true" : "false");
           });
         }
         document.getElementById("IT").value = TEST_DOC_MED;
