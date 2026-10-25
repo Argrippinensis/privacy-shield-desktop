@@ -670,7 +670,7 @@
       #FUNDEBTN .funde-t { writing-mode: vertical-rl; }
       #FUNDEBTN .funde-n { font-size: 10px; font-weight: 600; background: #fff; color: #1a3a5c; border-radius: 100px; padding: 2px 6px; min-width: 18px; text-align: center; }
       #FUNDEBTN .funde-n:empty { display: none; }
-      #FUNDEBTN:focus-visible, #FUNDE button:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
+      #FUNDEBTN:focus-visible, #FUNDE button:focus-visible, #FUNDE input:focus-visible, #FUNDE select:focus-visible, #FUNDELIST:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
       #FUNDEBTN:focus-visible { outline-color: #fff; outline-offset: -4px; }
       body.funde-open #FUNDEBTN { right: 360px; }
       #FUNDE {
@@ -704,6 +704,23 @@
       #FUNDELIST .fund-toggle { grid-column: 2; font: 500 11px "Plus Jakarta Sans", system-ui, sans-serif; color: #1a3a5c; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 4px 9px; cursor: pointer; }
       #FUNDELIST .fund-toggle:disabled { color: #999; cursor: default; background: #f5f5f5; }
       #FUNDELIST .funde-empty { padding: 28px 16px; color: #666; line-height: 1.6; text-align: center; }
+      /* D1.w2: Rueckgaengig, Filter, grosse Listen */
+      .funde-bar { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #e5e5e5; }
+      .funde-row { display: flex; align-items: center; gap: 8px; }
+      .funde-bar button, .funde-bar select, .funde-bar input { font: 500 12px "Plus Jakarta Sans", system-ui, sans-serif; color: #1a3a5c; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 6px 10px; min-height: 30px; }
+      .funde-bar button { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+      .funde-bar button:hover:not([aria-disabled="true"]):not([aria-pressed="true"]) { background: #f5f5f5; }
+      .funde-bar button[aria-disabled="true"] { color: #767676; border-color: #f0f0f0; cursor: default; }
+      .funde-bar button[aria-pressed="true"] { background: #1a3a5c; border-color: #1a3a5c; color: #fff; }
+      .funde-bar input { width: 100%; color: #111; }
+      .funde-bar input::placeholder { color: #666; opacity: 1; }
+      .funde-bar select { flex: 1; min-width: 0; }
+      #FUNDELIST.virt { position: relative; }
+      #FUNDELIST .fv { position: relative; margin: 0; padding: 0; list-style: none; }
+      #FUNDELIST .fv > li { position: absolute; left: 0; right: 0; box-sizing: border-box; overflow: hidden; }
+      #FUNDELIST .fv > li[data-key] { height: 64px; align-content: center; }
+      #FUNDELIST .fv > li.fg-h { height: 40px; position: absolute; }
+      #FUNDELIST li[data-key] { scroll-margin-top: 42px; }
       .pill {
         display: inline-block;
         padding: 2px 7px;
@@ -2155,6 +2172,17 @@
           <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
       </div>
+      <div class="funde-bar">
+        <div class="funde-row">
+          <button type="button" id="FUNDEUNDO" onclick="fundeStep(false)" aria-label="Rückgängig" title="Rückgängig (Strg+Z)" aria-disabled="true"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3L2.5 6.5 6 10M3 6.5h6a4 4 0 010 8H6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Rückgängig</button>
+          <button type="button" id="FUNDEREDO" onclick="fundeStep(true)" aria-label="Wiederholen" title="Wiederholen (Strg+Y)" aria-disabled="true"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3l3.5 3.5L10 10M13 6.5H7a4 4 0 000 8h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Wiederholen</button>
+        </div>
+        <input type="search" id="FUNDESEARCH" aria-label="Funde nach Wert durchsuchen" placeholder="Wert suchen" autocomplete="off" spellcheck="false" />
+        <div class="funde-row">
+          <select id="FUNDEFILTER" aria-label="Kategorie"><option value="">Alle Kategorien</option></select>
+          <button type="button" id="FUNDEDOUBT" aria-pressed="false" title="Nur Funde anzeigen, bei denen die Erkennung unsicher ist">Nur Zweifelsfälle</button>
+        </div>
+      </div>
       <div class="funde-hint">Die Originalwerte sind nur hier sichtbar. Freigegebene Werte bleiben im Ergebnis im Klartext. Nichts wird gespeichert.</div>
       <div id="FUNDELIST"></div>
       <div id="FUNDESTATUS" class="funde-sr" role="status"></div>
@@ -2195,7 +2223,7 @@
         </div>
       </div>
     </div>
-    <script src="lib/review.js"></script><script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script><script src="lib/formats.js"></script><script src="lib/officefmt.js"></script>
+    <script src="lib/history.js"></script><script src="lib/review.js"></script><script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script><script src="lib/formats.js"></script><script src="lib/officefmt.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
       const PROFILES = PSDetect.PROFILES;
@@ -2301,6 +2329,7 @@
           document.getElementById("FT").classList.remove("on");
           document.getElementById("FI").value = "";
           document.getElementById("IT").value = "";
+          fundeTextChanged();
           const thumb = document.getElementById("PDFTHUMB");
           if (thumb) thumb.style.display = "none";
           updIC();
@@ -2450,6 +2479,7 @@
         policyChanged();
       }
       function policyChanged() {
+        policy.rules = policy.rules.map((r) => Object.assign({}, r)); // Listenindex der Regel liegt am Objekt: neu aufbauen lassen
         prjMarkStale();
         aiCache = { key: null, spans: [] };
         policySave();
@@ -2693,6 +2723,7 @@
       // K1.fix: Einstellung (Profil, Entitaeten, Richtlinie, KI-Modus) geaendert: Ergebnisse gelten als veraltet, ZIP gesperrt bis zum naechsten Lauf
       let prjStale = false, prjCfg = null;
       function prjMarkStale() {
+        fundeConfigChanged();
         if (!prj || !(prjRes.size || prjBusy)) return;
         prjStale = true;
         prjRender();
@@ -3089,11 +3120,13 @@
           const txt = await readTextOf(file);
           setP(100);
           document.getElementById("IT").value = txt;
+          fundeTextChanged();
           updIC();
           toast('"' + file.name + '" geladen', "s");
           setStep(1);
         } catch (err) {
           document.getElementById("IT").value = ""; // abgelehnte Datei: kein Text der vorigen Datei stehen lassen
+          fundeTextChanged();
           updIC();
           scheduleHighlight();
           toast("Fehler: " + err.message, "e");
@@ -3583,7 +3616,7 @@
         list.innerHTML = r.findings.map((f, i) => '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12px"><span class="pill" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d">' + esc(f.type) + '</span><code style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#444">' + esc(f.snippet) + "</code>" + bt("lcMask", i, "Maskieren") + bt("lcIgnore", i, "Ignorieren") + "</div>").join("");
       }
       function toggleLCList() { const list = document.getElementById("LCLIST"); if (!lcLast || !lcLast.res.count) return; list.style.display = list.style.display === "none" ? "block" : "none"; document.getElementById("LCBAND").setAttribute("aria-expanded", list.style.display === "none" ? "false" : "true"); }
-      async function lcMask(i) { const f = lcLast.res.findings[i], v = lcLast.at.slice(f.start, f.end); if (!PSLib.marks.add(manualMarks, { value: v, pfx: f.type })) return toast("Dieser Wert kann nicht markiert werden", "e"); await reanon(); }
+      async function lcMask(i) { const f = lcLast.res.findings[i], v = lcLast.at.slice(f.start, f.end); if (!PSLib.marks.add(manualMarks, { value: v, pfx: f.type })) return toast("Dieser Wert kann nicht markiert werden", "e"); fundeRecord(); await reanon(); }
       function lcIgnore(i) { const f = lcLast.res.findings[i]; lcIgnored.add(f.type + "\u0000" + lcLast.at.slice(f.start, f.end)); runLeakCheck(); }
       let anonBusy = false, repStart = null, repDur = 0;
       const APP_VERSION = "1.8.0"; // muss mit package.json uebereinstimmen
@@ -4069,23 +4102,42 @@
         }
       }
       // D1.w1: Seitenleiste "Funde" (Pruefansicht). Entscheidungen liegen nur im Speicher (released), nichts wird gespeichert.
-      let fundeOpen = false, fundeDirty = true, fundeKeep = false, fundeCache = null, fundeList = [], fundeFlash = null, _fundeDeb = null, _fundeFlashT = null, _fundeTxt = null, fundeSnap = "[]";
+      let fundeOpen = false, fundeDirty = true, fundeKeep = false, fundeCache = null, fundeList = [], fundeFlash = null, _fundeDeb = null, _fundeFlashT = null, _fundeTxt = null, fundeSnap = "[[],[],[]]";
+      // D1.w2: Verlauf der Entscheidungen, Filter, Liste fuer viele Eintraege
+      let fundeAll = [], fundeF = { cat: "", doubt: false, q: "" }, fundeV = null, fundeVwin = "", fundeStatFlip = false, fundeOptSig = null;
+      const fundeHist = PSLib.history.create({ limit: 100 }), FUNDE_VIRT = 500, FUNDE_LI = 64, FUNDE_GH = 40, FUNDE_CHUNK = 20;
+      function fundeState() { return { whitelist: whitelist, released: released, marks: manualMarks }; }
+      function fundeMac() { try { return window.parent.electronAPI.platform === "darwin"; } catch (x) { return false; /* ohne Bruecke */ } }
+      function fundeBtns() {
+        const u = document.getElementById("FUNDEUNDO"), r = document.getElementById("FUNDEREDO");
+        if (u) u.setAttribute("aria-disabled", fundeHist.canUndo() ? "false" : "true");
+        if (r) r.setAttribute("aria-disabled", fundeHist.canRedo() ? "false" : "true");
+      }
+      // Stand als Schnappschuss ablegen, wenn er vom aktuellen abweicht (eine Aenderung = ein Schnappschuss)
+      function fundeRecord() {
+        const c = fundeHist.current();
+        if (!c || JSON.stringify(c) !== JSON.stringify(fundeState())) fundeHist.push(fundeState());
+        fundeBtns();
+      }
+      fundeRecord();
       const FUNDE_FLASH = "rgba(26,58,92,0.28)";
       function escA(v) { return esc(String(v)).replace(/"/g, "&quot;"); }
       function fundeIsReleased(pfx, value) { return released.some((r) => r.pfx === pfx && r.value === value); }
       function toggleFunde(open) {
+        const was = fundeOpen, inside = document.getElementById("FUNDE").contains(document.activeElement);
         fundeOpen = typeof open === "boolean" ? open : !fundeOpen;
         document.getElementById("FUNDE").classList.toggle("on", fundeOpen);
         document.body.classList.toggle("funde-open", fundeOpen);
         const b = document.getElementById("FUNDEBTN");
         b.setAttribute("aria-expanded", fundeOpen ? "true" : "false");
         if (fundeOpen) { fundeDirty = true; refreshFunde(); }
+        else if (was && inside) b.focus(); // Fokus zurueck auf den oeffnenden Knopf
       }
       // Funde aus dem Original (IT) berechnen, ohne Freigaben, damit freigegebene Werte sichtbar bleiben
       // Kennung der Erkennungskonfiguration: Aenderung macht den Cache der Funde ungueltig
       function fundeSig() {
         let c = "";
-        try { c = JSON.stringify([activeEntIds(), curProf, cvars, PSLib.marks.toCvars(manualMarks), policyRuleCount(), localAIMode, aiCache.key ? aiCache.key.length : 0, aiCache.spans.length]); } catch (e) { c = String(Math.random()); }
+        try { c = JSON.stringify([activeEntIds(), curProf, cvars, PSLib.marks.toCvars(manualMarks), policyFault, policy.rules.filter(policyIsActive), localAIMode, aiCache.key ? aiCache.key.length : 0, aiCache.spans.length]); } catch (e) { c = String(Math.random()); }
         return c;
       }
       function fundeTextChanged() {
@@ -4096,7 +4148,8 @@
       }
       function fundeReset() {
         clearTimeout(_fundeDeb); clearTimeout(_fundeTxt); clearTimeout(_fundeFlashT);
-        fundeFlash = null; fundeList = []; fundeCache = null; fundeDirty = true; fundeSnap = "[]";
+        fundeFlash = null; fundeList = []; fundeCache = null; fundeDirty = true; fundeSnap = "[[],[],[]]";
+        fundeHist.clear(); fundeRecord();
         renderFunde();
       }
       function fundeSpans(text) {
@@ -4108,7 +4161,7 @@
           spans = PSDetect.detect(text, {
             ents: activeEntIds(),
             cvars: cvars.concat(PSLib.marks.toCvars(manualMarks)),
-            extraSpans: policySpans(text),
+            extraSpans: policyFault ? [] : policySpans(text), // bei Regelfehler keine zweite Fehlermeldung
             whitelist: [],
             released: [],
             wordlists: localAIMode,
@@ -4123,7 +4176,7 @@
         if (!fundeOpen) { fundeDirty = true; return; }
         renderFunde();
       }
-      function fundeRelSig() { return JSON.stringify(released.map((r) => r.pfx + "\u0000" + r.value).sort()); }
+      function fundeRelSig() { return JSON.stringify([released.map((r) => r.pfx + "\u0000" + r.value).sort(), whitelist, manualMarks.items]); }
       function fundeAfterAnon() {
         fundeSnap = fundeRelSig();
         if (fundeKeep) { fundeKeep = false; renderFunde(); } else { fundeDirty = true; refreshFunde(); }
@@ -4134,43 +4187,120 @@
         return (v, pfx) => idx.get(pfx + "|" + v) || null;
       }
       function fundeLabel(pfx) { const e = ENTS.find((x) => x.pfx === pfx); return e ? e.lbl : pfx; }
+      function fundeSay(msg) { const st = document.getElementById("FUNDESTATUS"); if (st) { fundeStatFlip = !fundeStatFlip; st.textContent = msg + (fundeStatFlip ? " " : ""); } }
+      function fundeFocusInfo(box) {
+        const a = document.activeElement;
+        if (!a || !box.contains(a)) return null;
+        const l = a.closest("li[data-key]");
+        return { key: l ? l.dataset.key : null, cls: a.className, grp: a.dataset ? a.dataset.type : null };
+      }
+      function fundeFocusBack(box, keep) {
+        if (!keep || !(keep.key || keep.grp)) return;
+        let el = null;
+        if (keep.key) { const li = Array.from(box.querySelectorAll("li[data-key]")).find((x) => x.dataset.key === keep.key); if (li) el = li.querySelector(String(keep.cls).indexOf("fund-jump") >= 0 ? ".fund-jump" : ".fund-toggle:not(:disabled)") || li.querySelector(".fund-jump"); }
+        else el = Array.from(box.querySelectorAll(".fg-all")).find((x) => x.dataset.type === keep.grp);
+        if (el) el.focus({ preventScroll: true });
+      }
+      function fundeLiHtml(e, pos) {
+        const frei = e.decision === "freigeben", viaWL = frei && !fundeIsReleased(e.type, e.value);
+        const ph = frei ? (viaWL ? "freigegeben über die Whitelist" : "im Klartext") : (e.token || "wird maskiert");
+        return '<li data-key="' + escA(e.key) + '" class="' + (frei ? "frei" : "") + '"' + (pos ? ' style="top:' + pos.y + 'px" aria-posinset="' + (pos.i + 1) + '" aria-setsize="' + fundeList.length + '"' : "") + ">"
+          + '<button type="button" class="fund-jump" title="Erste Fundstelle im Text markieren">' + esc(e.value) + "</button>"
+          + '<span class="fund-cnt">' + e.count + "×</span>"
+          + '<span class="fund-ph">' + esc(ph) + "</span>"
+          + '<button type="button" class="fund-toggle"' + (viaWL ? ' disabled title="Über die Whitelist freigegeben"' : "") + ' aria-label="' + escA(e.value) + (frei ? " maskieren" : " freigeben") + '">' + (frei ? "Maskieren" : "Freigeben") + "</button></li>";
+      }
+      function fundeHeadHtml(g, id, tag, style) {
+        const alle = g.items.every((e) => e.decision === "freigeben");
+        // bei aktivem Filter/Suche wirkt der Knopf nur auf die angezeigten Eintraege: Beschriftung entsprechend
+        const f = fundeF, wer = (f.cat || f.doubt || f.q.trim()) ? "alle angezeigten" : "alle dieses Typs";
+        return "<" + tag + ' class="fg-h"' + (style || "") + '><span class="fg-t"' + (id ? ' id="' + id + '"' : "") + ">" + esc(fundeLabel(g.type)) + '</span><span class="fg-n" title="Anzahl verschiedener Werte">' + g.items.length + "</span>"
+          + '<button type="button" class="fg-all" data-type="' + escA(g.type) + '" data-act="' + (alle ? "maskieren" : "freigeben") + '" aria-label="' + wer + " " + (alle ? "maskieren" : "freigeben") + ": " + escA(fundeLabel(g.type)) + '">' + wer + " " + (alle ? "maskieren" : "freigeben") + "</button></" + tag + ">";
+      }
+      // Kategorien der Auswahlliste aus den Funden aufbauen (nur bei Aenderung, damit ein offenes Menue stabil bleibt)
+      function fundeOpts() {
+        const types = []; fundeAll.forEach((e) => { if (types[types.length - 1] !== e.type && types.indexOf(e.type) < 0) types.push(e.type); });
+        const sig = types.join("|");
+        if (fundeF.cat && types.indexOf(fundeF.cat) < 0) fundeF.cat = "";
+        if (sig === fundeOptSig) return;
+        fundeOptSig = sig;
+        const sel = document.getElementById("FUNDEFILTER");
+        sel.innerHTML = '<option value="">Alle Kategorien</option>' + types.map((t) => '<option value="' + escA(t) + '">' + esc(fundeLabel(t)) + "</option>").join("");
+        sel.value = fundeF.cat;
+      }
+      function fundeFilter(list) {
+        const f = fundeF, q = f.q.trim().toLowerCase();
+        if (!f.cat && !f.doubt && !q) return list;
+        const lc = new Set(f.doubt && lcLast && lcLast.res && lcLast.res.findings ? lcLast.res.findings.map((x) => x.type + "|" + lcLast.at.slice(x.start, x.end)) : []);
+        return list.filter((e) => (!f.cat || e.type === f.cat) && (!f.doubt || e.soft || lc.has(e.key)) && (!q || e.value.toLowerCase().includes(q)));
+      }
       function renderFunde() {
         const box = document.getElementById("FUNDELIST");
         const text = document.getElementById("IT").value;
         const cnt = document.getElementById("FUNDECNT");
-        const keep = document.activeElement && box.contains(document.activeElement) ? { key: (document.activeElement.closest("li[data-key]") || {}).dataset ? document.activeElement.closest("li[data-key]").dataset.key : null, cls: document.activeElement.className, grp: document.activeElement.dataset ? document.activeElement.dataset.type : null } : null;
-        const top = box.scrollTop;
-        if (!text.trim()) { fundeList = []; fundeCache = null; cnt.textContent = ""; box.innerHTML = '<div class="funde-empty">Noch keine Funde. Text einfügen und auf „Anonymisieren“ klicken.</div>'; return; }
-        const list = PSLib.review.build(fundeSpans(text), text, { tokenOf: fundeTokenOf(), released: released, whitelist: whitelist });
-        fundeList = list;
-        cnt.textContent = list.length ? String(list.length) : "";
-        if (!list.length) { box.innerHTML = '<div class="funde-empty">Keine Funde im Text.</div>'; return; }
+        fundeBtns();
+        if (!text.trim()) { fundeAll = []; fundeList = []; fundeCache = null; fundeV = null; cnt.textContent = ""; box.classList.remove("virt"); box.innerHTML = '<div class="funde-empty">Noch keine Funde. Text einfügen und auf „Anonymisieren“ klicken.</div>'; fundeOpts(); return; }
+        fundeAll = PSLib.review.build(fundeSpans(text), text, { tokenOf: fundeTokenOf(), released: released, whitelist: whitelist });
+        cnt.textContent = fundeAll.length ? String(fundeAll.length) : "";
+        fundeOpts();
+        fundeShow();
+      }
+      // gefilterte Liste darstellen (ab FUNDE_VIRT Eintraegen nur der sichtbare Ausschnitt)
+      function fundeShow() {
+        const box = document.getElementById("FUNDELIST"), keep = fundeFocusInfo(box), top = box.scrollTop;
+        fundeList = fundeFilter(fundeAll);
+        fundeV = null; fundeVwin = ""; box.classList.remove("virt");
+        if (!fundeAll.length) { box.innerHTML = '<div class="funde-empty">Keine Funde im Text.</div>'; return; }
+        if (!fundeList.length) { box.innerHTML = '<div class="funde-empty">Keine Funde für diese Filter.</div>'; return; }
         const groups = [];
-        for (const e of list) { const g = groups[groups.length - 1]; if (g && g.type === e.type) g.items.push(e); else groups.push({ type: e.type, items: [e] }); }
+        for (const e of fundeList) { const g = groups[groups.length - 1]; if (g && g.type === e.type) g.items.push(e); else groups.push({ type: e.type, items: [e] }); }
+        if (fundeList.length >= FUNDE_VIRT) {
+          const rows = [], at = []; let y = 0, i = 0;
+          for (const g of groups) { rows.push({ g: g, y: y }); y += FUNDE_GH; for (const e of g.items) { at.push(rows.length); rows.push({ e: e, i: i++, y: y }); y += FUNDE_LI; } }
+          fundeV = { rows: rows, at: at, total: y };
+          box.classList.add("virt");
+          box.innerHTML = '<ul class="fv" style="height:' + y + 'px"></ul>';
+          box.scrollTop = top;
+          fundeVDraw(true);
+        } else {
+          let h = "";
+          for (const [gi, g] of groups.entries()) h += '<section class="fg" data-type="' + escA(g.type) + '" aria-labelledby="fgt' + gi + '">' + fundeHeadHtml(g, "fgt" + gi, "div") + "<ul>" + g.items.map((e) => fundeLiHtml(e)).join("") + "</ul></section>";
+          box.innerHTML = h;
+          box.scrollTop = top;
+        }
+        fundeFocusBack(box, keep);
+      }
+      function fundeVDraw(force) {
+        const box = document.getElementById("FUNDELIST"), v = fundeV, ul = box.querySelector(".fv");
+        if (!v || !ul) return;
+        const rows = v.rows, st = box.scrollTop, vh = box.clientHeight || 600, hOf = (r) => (r.g ? FUNDE_GH : FUNDE_LI);
+        let lo = 0, hi = rows.length - 1;
+        while (lo < hi) { const m = (lo + hi) >> 1; if (rows[m].y + hOf(rows[m]) > st) hi = m; else lo = m + 1; }
+        let last = lo;
+        while (last < rows.length - 1 && rows[last].y < st + vh) last++;
+        const a = Math.max(0, (Math.floor(lo / FUNDE_CHUNK) - 1) * FUNDE_CHUNK), b = Math.min(rows.length, (Math.floor(last / FUNDE_CHUNK) + 2) * FUNDE_CHUNK);
+        if (!force && fundeVwin === a + ":" + b) return;
+        fundeVwin = a + ":" + b;
+        const keep = fundeFocusInfo(box);
         let h = "";
-        for (const [gi, g] of groups.entries()) {
-          const alle = g.items.every((e) => e.decision === "freigeben");
-          h += '<section class="fg" data-type="' + escA(g.type) + '" aria-labelledby="fgt' + gi + '"><div class="fg-h"><span class="fg-t" id="fgt' + gi + '">' + esc(fundeLabel(g.type)) + '</span><span class="fg-n" title="Anzahl verschiedener Werte">' + g.items.length + '</span>'
-            + '<button type="button" class="fg-all" data-type="' + escA(g.type) + '" data-act="' + (alle ? "maskieren" : "freigeben") + '" aria-label="alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + ": " + escA(fundeLabel(g.type)) + '">alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + "</button></div><ul>";
-          for (const e of g.items) {
-            const frei = e.decision === "freigeben", viaWL = frei && !fundeIsReleased(e.type, e.value);
-            const ph = frei ? (viaWL ? "freigegeben über die Whitelist" : "im Klartext") : (e.token || "wird maskiert");
-            h += '<li data-key="' + escA(e.key) + '" class="' + (frei ? "frei" : "") + '">'
-              + '<button type="button" class="fund-jump" title="Erste Fundstelle im Text markieren">' + esc(e.value) + "</button>"
-              + '<span class="fund-cnt">' + e.count + "×</span>"
-              + '<span class="fund-ph">' + esc(ph) + "</span>"
-              + '<button type="button" class="fund-toggle"' + (viaWL ? ' disabled title="Über die Whitelist freigegeben"' : "") + ' aria-label="' + escA(e.value) + (frei ? " maskieren" : " freigeben") + '">' + (frei ? "Maskieren" : "Freigeben") + "</button></li>";
-          }
-          h += "</ul></section>";
+        for (let k = a; k < b; k++) { const r = rows[k]; h += r.g ? fundeHeadHtml(r.g, "", "li", ' style="top:' + r.y + 'px"') : fundeLiHtml(r.e, r); }
+        ul.innerHTML = h;
+        fundeFocusBack(box, keep);
+      }
+      // Pfeil auf/ab, Pos1, Ende: Fokus auf den Eintrag j (bei langen Listen vorher in den Ausschnitt bildlaufen)
+      function fundeFocusAt(j, sel) {
+        const box = document.getElementById("FUNDELIST");
+        if (fundeV) {
+          const y = fundeV.rows[fundeV.at[j]].y;
+          if (y < box.scrollTop) box.scrollTop = Math.max(0, j === 0 ? 0 : y - 4); else if (y + FUNDE_LI > box.scrollTop + box.clientHeight) box.scrollTop = y + FUNDE_LI - box.clientHeight;
+          if (j === 0) box.scrollTop = 0;
+          fundeVDraw();
         }
-        box.innerHTML = h;
-        box.scrollTop = top;
-        if (keep && (keep.key || keep.grp)) {
-          let el = null;
-          if (keep.key) { const li = Array.from(box.querySelectorAll("li[data-key]")).find((x) => x.dataset.key === keep.key); if (li) el = li.querySelector(keep.cls.indexOf("fund-jump") >= 0 ? ".fund-jump" : ".fund-toggle:not(:disabled)") || li.querySelector(".fund-jump"); }
-          else el = Array.from(box.querySelectorAll(".fg-all")).find((x) => x.dataset.type === keep.grp);
-          if (el) el.focus({ preventScroll: true });
-        }
+        const key = fundeList[j].key, li = Array.from(box.querySelectorAll("li[data-key]")).find((x) => x.dataset.key === key);
+        const el = li && (li.querySelector(sel) || li.querySelector(".fund-jump"));
+        if (!el) return;
+        el.focus({ preventScroll: !!fundeV });
+        if (!fundeV) el.scrollIntoView({ block: "nearest" });
       }
       function fundeDecide(entries, release) {
         entries.forEach((e) => {
@@ -4178,12 +4308,67 @@
           if (release && i < 0) released.push({ pfx: e.type, value: e.value });
           if (!release && i >= 0) released.splice(i, 1);
         });
+        fundeRecord();
         renderFunde();
-        const st = document.getElementById("FUNDESTATUS");
-        if (st) st.textContent = (release ? "Freigegeben: " : "Maskiert: ") + entries.length + (entries.length === 1 ? " Wert" : " Werte");
+        fundeSay((release ? "Freigegeben: " : "Maskiert: ") + entries.length + (entries.length === 1 ? " Wert" : " Werte"));
         clearTimeout(_fundeDeb);
         _fundeDeb = setTimeout(fundeApply, 300);
       }
+      // Rueckgaengig/Wiederholen: Stand zurueckschreiben, Ergebnis neu aufbauen (Fokus bleibt am Eintrag)
+      function fundeStep(redo) {
+        if (!(redo ? fundeHist.canRedo() : fundeHist.canUndo())) return;
+        const s = redo ? fundeHist.redo() : fundeHist.undo();
+        whitelist = s.whitelist; released = s.released; manualMarks = s.marks;
+        renderWL(); buildAnnotateOverlay();
+        renderFunde();
+        fundeSay(redo ? "Wiederholt" : "Rückgängig gemacht");
+        clearTimeout(_fundeDeb);
+        _fundeDeb = setTimeout(fundeApply, 300);
+      }
+      // Konfiguration geaendert (Profil, Entitaeten, Markierungen, Regeln): bei offener Leiste sofort neu aufbauen
+      let _fundeCfg = null;
+      function fundeConfigChanged() {
+        if (!fundeOpen) { fundeDirty = true; return; }
+        clearTimeout(_fundeCfg);
+        _fundeCfg = setTimeout(() => { fundeDirty = true; renderFunde(); }, 120);
+      }
+      (function fundeUi() {
+        const box = document.getElementById("FUNDELIST"), q = document.getElementById("FUNDESEARCH"), sel = document.getElementById("FUNDEFILTER"), dbt = document.getElementById("FUNDEDOUBT");
+        let t = null;
+        const done = () => { fundeShow(); fundeSay(fundeList.length + (fundeList.length === 1 ? " Fund angezeigt" : " Funde angezeigt")); };
+        q.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => { fundeF.q = q.value; done(); }, 120); });
+        // Kuerzel in den Tooltips je nach Plattform (wie bei den Tastaturkuerzeln)
+        const mac0 = fundeMac(), ub = document.getElementById("FUNDEUNDO"), rb = document.getElementById("FUNDEREDO");
+        if (ub) ub.title = "Rückgängig (" + (mac0 ? "Cmd" : "Strg") + "+Z)";
+        if (rb) rb.title = "Wiederholen (" + (mac0 ? "Cmd+Umschalt+Z" : "Strg+Y") + ")";
+        q.addEventListener("keydown", (ev) => {
+          if (ev.key !== "Escape" || ev.defaultPrevented || !q.value) return;
+          ev.preventDefault(); clearTimeout(t); q.value = ""; fundeF.q = ""; done();
+        });
+        sel.addEventListener("change", () => { fundeF.cat = sel.value; done(); });
+        dbt.addEventListener("click", () => { fundeF.doubt = !fundeF.doubt; dbt.setAttribute("aria-pressed", fundeF.doubt ? "true" : "false"); done(); });
+        box.addEventListener("scroll", () => { if (fundeV) fundeVDraw(); });
+        box.addEventListener("keydown", (ev) => {
+          const k = ev.key;
+          if (ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey || ["ArrowDown", "ArrowUp", "Home", "End"].indexOf(k) < 0) return;
+          const a = document.activeElement, l = a && a.closest ? a.closest("li[data-key]") : null, i = l ? fundeList.findIndex((e) => e.key === l.dataset.key) : -1;
+          if (i < 0) return;
+          ev.preventDefault();
+          fundeFocusAt(k === "Home" ? 0 : k === "End" ? fundeList.length - 1 : Math.max(0, Math.min(fundeList.length - 1, i + (k === "ArrowDown" ? 1 : -1))), a.classList.contains("fund-toggle") ? ".fund-toggle:not(:disabled)" : ".fund-jump");
+        });
+        // Kuerzel: nur bei offener Leiste und nicht in Eingabefeldern (dort gilt die Textbearbeitung des Browsers)
+        document.addEventListener("keydown", (ev) => {
+          if (!fundeOpen || ev.defaultPrevented) return;
+          if (ev.key === "Escape" && document.getElementById("FUNDE").contains(document.activeElement)) { ev.preventDefault(); toggleFunde(false); return; }
+          const mac = fundeMac();
+          if (ev.altKey || !(mac ? ev.metaKey && !ev.ctrlKey : ev.ctrlKey && !ev.metaKey)) return;
+          const tg = ev.target;
+          if (tg && tg.closest && tg.closest("input, textarea, select, [contenteditable]")) return;
+          const key = String(ev.key).toLowerCase();
+          if (key === "z") { ev.preventDefault(); fundeStep(ev.shiftKey); }
+          else if (key === "y" && !mac && !ev.shiftKey) { ev.preventDefault(); fundeStep(true); }
+        });
+      })();
       async function fundeApply() {
         if (fundeRelSig() === fundeSnap) return; // nichts geaendert
         if (prj) { prjRefresh(); return; } // Projekt: wie nach Whitelist-Aenderung (laufend: vormerken, ZIP: veraltet)
@@ -4257,6 +4442,7 @@
           return;
         }
         whitelist.push(val);
+        fundeRecord();
         inp.value = "";
         renderWL();
         toast('"' + val + '" zur Whitelist hinzugefügt', "s");
@@ -4264,6 +4450,7 @@
       }
       function removeWL(i) {
         whitelist.splice(i, 1);
+        fundeRecord();
         renderWL();
         prjRefresh();
       }
@@ -4518,7 +4705,7 @@
         addManualMark(word, pfx);
       }
       function addManualMark(word, pfx) {
-        const ok = PSLib.marks.add(manualMarks, { value: word, pfx: pfx }); if (ok) buildAnnotateOverlay();
+        const ok = PSLib.marks.add(manualMarks, { value: word, pfx: pfx }); if (ok) { buildAnnotateOverlay(); fundeRecord(); fundeConfigChanged(); }
         toast(ok ? "Markiert als " + pfx + ": wird beim Anonymisieren ersetzt" : "Dieser Wert kann nicht markiert werden", ok ? "s" : "e");
       }
       function closePopup() {
@@ -4534,6 +4721,7 @@
           startApp();
         }
         document.getElementById("IT").value = TEST_DOC;
+        fundeTextChanged();
         updIC();
         scheduleHighlight();
         toast('Testdokument geladen — klicke "Anonymisieren"', "s");
@@ -4555,6 +4743,7 @@
           });
         }
         document.getElementById("IT").value = TEST_DOC_MED;
+        fundeTextChanged();
         updIC();
         scheduleHighlight();
         toast('Medizin-Testdokument geladen — klicke "Anonymisieren"', "s");
@@ -4697,6 +4886,7 @@
         });
         document.getElementById("WLBULKTA").value = "";
         document.getElementById("WLBULK").style.display = "none";
+        fundeRecord();
         renderWL();
         toast(added + " Einträge zur Whitelist hinzugefügt", "s");
       }
@@ -4724,6 +4914,7 @@
               added++;
             }
           });
+          fundeRecord();
           renderWL();
           input.value = "";
           toast(added + " Einträge importiert", "s");
