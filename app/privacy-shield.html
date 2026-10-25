@@ -9,6 +9,12 @@
       content="Anonymisieren Sie sensible Daten vor der KI-Nutzung. 100% lokal auf Ihrem Rechner. Erkennung von Namen, IBAN, Adressen & mehr."
     />
     <style>
+      /* D2.2: gedaempfter Text, mindestens 4,5:1 auf Weiss und auf den getoenten Flaechen */
+      :root {
+        --ps-muted: #666;
+        --ps-ok-ink: #047857;
+        --ps-err-ink: #b91c1c;
+      }
       html {
         scroll-behavior: smooth;
       }
@@ -34,7 +40,7 @@
         color: #666;
       }
       .text-muted {
-        color: #999;
+        color: var(--ps-muted);
       }
       .text-ink {
         color: #111;
@@ -220,7 +226,7 @@
         text-align: center;
         font-size: 12px;
         font-weight: 500;
-        color: #999;
+        color: var(--ps-muted);
         border-right: 1px solid #e5e5e5;
         transition: all 0.2s;
       }
@@ -232,7 +238,7 @@
         background: #e8f0fe;
       }
       .step-tab.done {
-        color: #10b981;
+        color: var(--ps-ok-ink);
       }
       .step-num {
         display: inline-flex;
@@ -252,7 +258,7 @@
         color: #fff;
       }
       .step-tab.done .step-num {
-        background: #10b981;
+        background: var(--ps-ok-ink);
         color: #fff;
       }
       .input-field {
@@ -272,7 +278,7 @@
         background: #fff;
       }
       .input-field::placeholder {
-        color: #999;
+        color: var(--ps-muted);
       }
       .btn {
         display: inline-flex;
@@ -305,7 +311,7 @@
       }
       .btn-danger {
         background: #fff0ee;
-        color: #ff3b30;
+        color: var(--ps-err-ink);
         border: 1px solid rgba(255, 59, 48, 0.15);
       }
       .btn-danger:hover {
@@ -366,7 +372,7 @@
       .sep-text {
         font-size: 11px;
         font-weight: 500;
-        color: #999;
+        color: var(--ps-muted);
         white-space: nowrap;
       }
       .profile-grid {
@@ -416,7 +422,7 @@
       }
       .profile-note {
         font-size: 10px;
-        color: #999;
+        color: var(--ps-muted);
         margin-bottom: 8px;
         font-style: italic;
       }
@@ -507,7 +513,7 @@
       }
       .toast.e .toast-icon {
         background: #fff0ee;
-        color: #ff3b30;
+        color: var(--ps-err-ink);
       }
       /* S3.fix: Symbole fest im Markup, nur umgeschaltet (kein neues SVG pro Meldung) */
       .toast-icon svg { display: none; }
@@ -543,7 +549,7 @@
       .prj-st.laeuft svg { animation: prjspin 1s linear infinite; }
       @keyframes prjspin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .prj-st.laeuft svg { animation: none; } }
-      .prj-del { flex: 0 0 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid transparent; border-radius: 8px; color: #999; cursor: pointer; transition: color 0.15s, background 0.15s; }
+      .prj-del { flex: 0 0 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid transparent; border-radius: 8px; color: var(--ps-muted); cursor: pointer; transition: color 0.15s, background 0.15s; }
       .prj-del:hover:not(:disabled) { color: #b91c1c; background: #fff0ee; }
       .prj-del:disabled { opacity: 0.4; cursor: default; }
       .prj-item:focus-visible, .prj-del:focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; }
@@ -602,14 +608,14 @@
       .custom-var-del {
         background: 0 0;
         border: none;
-        color: #999;
+        color: var(--ps-muted);
         cursor: pointer;
         font-size: 16px;
         padding: 0;
         transition: color 0.15s;
       }
       .custom-var-del:hover {
-        color: #ff3b30;
+        color: var(--ps-err-ink);
       }
       .map-table-wrap {
         overflow-x: auto;
@@ -692,7 +698,7 @@
       #FUNDELIST .fund-cnt { grid-column: 2; font-size: 11px; color: #666; text-align: right; }
       #FUNDELIST .fund-ph { grid-column: 1; font: 11px monospace; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       #FUNDELIST .fund-toggle { grid-column: 2; font: 500 11px "Plus Jakarta Sans", system-ui, sans-serif; color: #1a3a5c; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 4px 9px; cursor: pointer; }
-      #FUNDELIST .fund-toggle:disabled { color: #999; cursor: default; background: #f5f5f5; }
+      #FUNDELIST .fund-toggle:disabled { color: var(--ps-muted); cursor: default; background: #f5f5f5; }
       #FUNDELIST .funde-empty { padding: 28px 16px; color: #666; line-height: 1.6; text-align: center; }
       /* D1.w2: Rueckgaengig, Filter, grosse Listen */
       .funde-bar { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #e5e5e5; }
@@ -812,6 +818,17 @@
         transform: scale(1.05);
         z-index: 2;
         position: relative;
+      }
+      /* D2.2: reduzierte Bewegung (Fortschritt und Einblenden ohne Gleiten, Funktion bleibt) */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
       }
     </style>
     <style>
@@ -1120,7 +1137,7 @@
             <button class="btn-accent" onclick="startApp()" style="padding: 14px 40px; font-size: 14px">
               Jetzt starten
             </button>
-            <button type="button" class="link-btn text-xs" style="color: #999; display: block; margin: 12px auto 0" onclick="showOBGuide()">
+            <button type="button" class="link-btn text-xs" style="color: var(--ps-muted); display: block; margin: 12px auto 0" onclick="showOBGuide()">
               Anleitung im Detail anzeigen
             </button>
             <div
@@ -1136,7 +1153,7 @@
               <p style="font-size: 11px; font-weight: 600; color: #333; margin-bottom: 4px">
                 Bestehendes Mapping importieren
               </p>
-              <p style="font-size: 10px; color: #999; margin-bottom: 8px">
+              <p style="font-size: 10px; color: var(--ps-muted); margin-bottom: 8px">
                 Zuordnung (.psmap, oder unverschlüsselte .csv) aus vorheriger Sitzung laden, um dieselben Variablen wiederzuverwenden.
               </p>
               <button
@@ -1269,7 +1286,7 @@
       >
         <span
           class="category-label"
-          style="background: #ecfdf5; color: #059669; display: inline-flex; align-items: center; gap: 5px"
+          style="background: #ecfdf5; color: var(--ps-ok-ink); display: inline-flex; align-items: center; gap: 5px"
           >100% lokal auf dem Rechner</span
         >
         <span
@@ -1295,7 +1312,7 @@
           gap: 12px;
           margin-bottom: 12px;
           font-size: 10px;
-          color: #888;
+          color: var(--ps-muted);
           justify-content: center;
         "
         class="r"
@@ -1303,7 +1320,7 @@
         <span>Dauer native PDFs: ~2–4 Sek. pro Seite</span> <span>Gescannte PDFs: ~5–30 Sek. pro Seite</span>
         <span>Native PDFs max. ~50 Seiten</span> <span>Gescannte PDFs max. ~20 Seiten</span>
       </div>
-      <div style="margin-bottom: 12px; font-size: 10px; color: #999" class="r">
+      <div style="margin-bottom: 12px; font-size: 10px; color: var(--ps-muted)" class="r">
         <span>Vor der ersten Nutzung bitte „Mehr erfahren" lesen</span>
       </div>
       <div class="max-w-container mx-auto px-6 py-8" id="WS" style="display: none">
@@ -1322,14 +1339,14 @@
               <div class="tool-panel-body">
                 <div class="drop-zone" id="DZ">
                   <input type="file" id="FI" aria-label="Dateien auswählen" accept=".txt,.pdf,.docx,.doc,.csv,.md,.json,.rtf,.xlsx,.ods,.odt,.odp,.pptx,.eml,.html,.htm" multiple="multiple" />
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#767676" stroke-width="1.5">
                     <polyline points="16 16 12 12 8 16" />
                     <line x1="12" y1="12" x2="12" y2="21" />
                     <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3" />
                   </svg>
                   <div class="text-sm font-medium text-secondary mt-1">Datei ablegen oder klicken</div>
-                  <div class="text-xs" style="color: #999; margin-top: 4px">PDF · DOCX · TXT · CSV · JSON</div>
-                  <div class="text-xs" style="color: #ccc; margin-top: 2px">auch gescannte PDFs</div>
+                  <div class="text-xs" style="color: var(--ps-muted); margin-top: 4px">PDF · DOCX · TXT · CSV · JSON</div>
+                  <div class="text-xs" style="color: var(--ps-muted); margin-top: 2px">auch gescannte PDFs</div>
                 </div>
                 <div class="file-tag" id="FT" style="align-items: flex-start; gap: 8px">
                   <canvas
@@ -1348,13 +1365,13 @@
                   ></canvas>
                   <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden; min-width: 0; gap: 2px">
                     <span class="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap" id="FN"></span>
-                    <span style="font-size: 11px; color: #999" id="FS"></span>
+                    <span style="font-size: 11px; color: var(--ps-muted)" id="FS"></span>
                   </div>
                   <button
                     style="
                       background: 0 0;
                       border: none;
-                      color: #999;
+                      color: var(--ps-muted);
                       cursor: pointer;
                       font-size: 17px;
                       line-height: 1;
@@ -1373,7 +1390,7 @@
             <div class="tool-panel" id="PRJPANEL" style="display: none">
               <div class="tool-panel-header">
                 <h2 style="font-size: 12px; font-weight: 600">Dokumente</h2>
-                <span style="font-size: 11px; color: #999" id="PRJCOUNT"></span>
+                <span style="font-size: 11px; color: var(--ps-muted)" id="PRJCOUNT"></span>
               </div>
               <div class="tool-panel-body">
                 <div class="prj-list" id="PRJLIST" role="list" aria-label="Dokumente im Projekt"></div>
@@ -1404,7 +1421,7 @@
                     border: none;
                     cursor: pointer;
                     font-size: 11px;
-                    color: #bbb;
+                    color: var(--ps-muted);
                     display: inline-flex;
                     align-items: center;
                     gap: 5px;
@@ -1417,7 +1434,7 @@
                     this.style.background = '#f0f4f8';
                   "
                   onmouseout="
-                    this.style.color = '#bbb';
+                    this.style.color = 'var(--ps-muted)';
                     this.style.background = 'none';
                   "
                 >
@@ -1430,7 +1447,7 @@
                     border: none;
                     cursor: pointer;
                     font-size: 11px;
-                    color: #bbb;
+                    color: var(--ps-muted);
                     display: inline-flex;
                     align-items: center;
                     gap: 5px;
@@ -1443,30 +1460,30 @@
                     this.style.background = '#f0f4f8';
                   "
                   onmouseout="
-                    this.style.color = '#bbb';
+                    this.style.color = 'var(--ps-muted)';
                     this.style.background = 'none';
                   "
                 >
                   Testdokument (Medizin)
                 </button>
               </div>
-              <div style="font-size: 10px; color: #ccc; margin-top: 3px">
+              <div style="font-size: 10px; color: var(--ps-muted); margin-top: 3px">
                 PDF:
                 <a
                   href="../tests/privacy-shield-testdokument-recht.pdf"
                   target="_blank"
-                  style="color: #bbb; text-decoration: none"
+                  style="color: var(--ps-muted); text-decoration: none"
                   onmouseover="this.style.color = '#1a3a5c'"
-                  onmouseout="this.style.color = '#bbb'"
+                  onmouseout="this.style.color = 'var(--ps-muted)'"
                   >Recht</a
                 >
                 &nbsp;·&nbsp;
                 <a
                   href="../tests/privacy-shield-testdokument-medizin.pdf"
                   target="_blank"
-                  style="color: #bbb; text-decoration: none"
+                  style="color: var(--ps-muted); text-decoration: none"
                   onmouseover="this.style.color = '#1a3a5c'"
-                  onmouseout="this.style.color = '#bbb'"
+                  onmouseout="this.style.color = 'var(--ps-muted)'"
                   >Medizin</a
                 >
               </div>
@@ -1483,7 +1500,7 @@
                   <input type="checkbox" id="aiAutoToggle" checked onchange="setAIMode(this.checked ? 'auto' : 'off')" style="margin-top: 2px" />
                   <span>
                     KI-Erkennung verwenden
-                    <span style="color: #999; display: block">Erkennt Personen, Organisationen und Orte. 100% lokal, funktioniert ohne Internet.</span>
+                    <span style="color: var(--ps-muted); display: block">Erkennt Personen, Organisationen und Orte. 100% lokal, funktioniert ohne Internet.</span>
                   </span>
                 </label>
                 <div id="aiStatusDefault">
@@ -1510,12 +1527,12 @@
                       style="height: 100%; background: #1a3a5c; border-radius: 2px; width: 0%; transition: width 0.3s"
                     ></div>
                   </div>
-                  <p class="text-xs" style="color: #999; margin-top: 6px">
+                  <p class="text-xs" style="color: var(--ps-muted); margin-top: 6px">
                     Wird aus der Installation geladen · kein Download
                   </p>
                 </div>
                 <div id="aiStatusReady" style="display: none">
-                  <span class="category-label" style="background: #ecfdf5; color: #059669">AKTIV</span>
+                  <span class="category-label" style="background: #ecfdf5; color: var(--ps-ok-ink)">AKTIV</span>
                   <p class="text-xs" style="color: #666; margin-top: 4px">
                     Erkennt automatisch Personen, Organisationen und Orte.
                   </p>
@@ -1550,7 +1567,7 @@
             <div class="tool-panel">
               <div class="tool-panel-header">
                 <h2 style="font-size: 12px; font-weight: 600"
-                  >Whitelist <span id="WLCNT" style="font-size: 10px; color: #999; font-weight: 400"></span
+                  >Whitelist <span id="WLCNT" style="font-size: 10px; color: var(--ps-muted); font-weight: 400"></span
                 ></h2>
                 <div style="display: flex; gap: 3px">
                   <button
@@ -1628,7 +1645,7 @@
                     Alle hinzufügen
                   </button>
                 </div>
-                <p class="text-xs" style="color: #999; margin-top: 6px">Nach Änderungen: Neu anonymisieren klicken.</p>
+                <p class="text-xs" style="color: var(--ps-muted); margin-top: 6px">Nach Änderungen: Neu anonymisieren klicken.</p>
               </div>
             </div>
             <button class="btn btn-ghost w-full text-xs" onclick="showOB()" style="font-size: 12px">
@@ -1648,7 +1665,7 @@
                   >
                     Annotieren
                   </button>
-                  <span style="font-size: 11px; color: #999" id="IC">0 Zeichen</span>
+                  <span style="font-size: 11px; color: var(--ps-muted)" id="IC">0 Zeichen</span>
                 </div>
               </div>
               <div class="tool-panel-body" style="padding: 12px">
@@ -1790,7 +1807,7 @@
               <div class="tool-panel">
                 <div class="tool-panel-header">
                   <h2 style="font-size: 12px; font-weight: 600">Schritt 3 — KI verarbeiten</h2>
-                  <span style="font-size: 11px; color: #999">Text wird vor dem Öffnen kopiert</span>
+                  <span style="font-size: 11px; color: var(--ps-muted)">Text wird vor dem Öffnen kopiert</span>
                 </div>
                 <div class="tool-panel-body" style="padding: 12px">
                   <p style="font-size: 12px; color: #666; margin-bottom: 10px; line-height: 1.5">
@@ -1881,7 +1898,7 @@
                 <div class="tool-panel">
                   <div class="tool-panel-header">
                     <h2 style="font-size: 12px; font-weight: 600">KI-Antwort (mit Variablen)</h2>
-                    <span style="font-size: 11px; color: #999" id="AC">0 Zeichen</span>
+                    <span style="font-size: 11px; color: var(--ps-muted)" id="AC">0 Zeichen</span>
                   </div>
                   <div class="tool-panel-body" style="padding: 12px">
                     <textarea
@@ -1963,7 +1980,7 @@
                     </thead>
                     <tbody id="MT">
                       <tr>
-                        <td colspan="4" style="text-align: center; color: #999; padding: 22px; font-size: 12px">
+                        <td colspan="4" style="text-align: center; color: var(--ps-muted); padding: 22px; font-size: 12px">
                           Noch keine Anonymisierung durchgeführt — Zuordnung laden oder Text anonymisieren
                         </td>
                       </tr>
@@ -2065,16 +2082,16 @@
           </p>
           <p class="text-xs text-muted">
             Alexander Arcangeli · München ·
-            <a href="https://arcangeli.eu/impressum.html" style="color: #1a3a5c; text-decoration: none">Impressum</a> ·
-            <a href="https://arcangeli.eu/datenschutz.html" style="color: #1a3a5c; text-decoration: none"
+            <a href="https://arcangeli.eu/impressum.html" style="color: #1a3a5c; text-decoration: underline; text-underline-offset: 2px">Impressum</a> ·
+            <a href="https://arcangeli.eu/datenschutz.html" style="color: #1a3a5c; text-decoration: underline; text-underline-offset: 2px"
               >Datenschutz</a
             >
           </p>
-          <p class="text-2xs" style="font-size: 9px; color: #ccc; margin-top: 12px">
+          <p class="text-2xs" style="font-size: 9px; color: var(--ps-muted); margin-top: 12px">
             <button
               type="button"
               class="link-btn"
-              style="text-decoration: underline dotted; color: #aaa; font-size: inherit"
+              style="text-decoration: underline dotted; color: var(--ps-muted); font-size: inherit"
               onclick="checkForUpdate()"
               title="Nach Updates suchen"
               >v1.6.1</button
@@ -2183,7 +2200,7 @@
           Abbrechen
         </button>
       </div>
-      <div id="AMPERROR" role="alert" style="display: none; margin-top: 6px; font-size: 11px; color: #ff3b30"></div>
+      <div id="AMPERROR" role="alert" style="display: none; margin-top: 6px; font-size: 11px; color: #b91c1c"></div>
     </div>
     <aside id="FUNDEWRAP" aria-label="Funde">
     <button id="FUNDEBTN" type="button" onclick="toggleFunde()" aria-controls="FUNDE" aria-expanded="false" title="Liste aller Funde anzeigen">
@@ -2461,7 +2478,7 @@
             e.col +
             ';flex-shrink:0"></div><div><div style="font-size:12px;font-weight:500;">' +
             e.lbl +
-            '</div><div style="font-size:11px;color:#999;">' +
+            '</div><div style="font-size:11px;color: var(--ps-muted);">' +
             e.desc +
             '</div></div></div><div class="toggle-switch"></div>';
           r.setAttribute("role", "switch");
@@ -3409,7 +3426,7 @@
         const look = {
           def: [aiMode() === "off" ? "Aus" : "Bereit", "#f0f2f5", "#4a5568"],
           loading: ["Lädt...", "#fffbeb", "#92400e"],
-          ready: ["Aktiv (NER-Modell)", "#ecfdf5", "#059669"],
+          ready: ["Aktiv (NER-Modell)", "#ecfdf5", "#047857"],
           error: ["Fallback (Wortlisten)", "#fffbeb", "#92400e"],
         }[state];
         badgeEl.textContent = look[0];
@@ -3827,21 +3844,42 @@
                   '</td><td><span class="pill" style="background:' +
                   esc(c) +
                   "18;color:" +
-                  esc(c) +
+                  esc(inkFor(c)) +
                   ";border:1px solid " +
                   esc(c) +
                   '44">' +
                   esc(d.t) +
-                  '</span></td><td style="color:#999">' +
+                  '</span></td><td style="color: var(--ps-muted)">' +
                   esc(d.m) +
                   "</td></tr>";
                 },
               )
               .join("")
-          : '<tr><td colspan="4" style="text-align:center;color:#999;padding:22px;font-size:12px">Noch keine Anonymisierung durchgeführt</td></tr>';
+          : '<tr><td colspan="4" style="text-align:center;color: var(--ps-muted);padding:22px;font-size:12px">Noch keine Anonymisierung durchgeführt</td></tr>';
       }
       function esc(s) {
         return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+      // D2.2: Textfarbe fuer Markierungen. Die Signalfarbe bleibt fuer Punkt, Rahmen und Toenung; der Text darf ihre Farbfamilie
+      // behalten, wird aber abgedunkelt, bis er auf der Toenung (Farbe mit 9 % Deckkraft auf Weiss) mindestens 4,5:1 erreicht.
+      const INK_CACHE = {};
+      function inkFor(c) {
+        if (INK_CACHE[c]) return INK_CACHE[c];
+        const m = /^#([0-9a-f]{6})$/i.exec(c || "");
+        if (!m) return c;
+        const rgb = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16));
+        const lum = (v) => {
+          const x = v.map((n) => { n /= 255; return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4); });
+          return 0.2126 * x[0] + 0.7152 * x[1] + 0.0722 * x[2];
+        };
+        const grund = lum(rgb.map((n) => n * 0.094 + 255 * 0.906));
+        let f = 1, v = rgb;
+        while (f > 0.2) {
+          v = rgb.map((n) => Math.round(n * f));
+          if ((grund + 0.05) / (lum(v) + 0.05) >= 4.6) break;
+          f -= 0.02;
+        }
+        return (INK_CACHE[c] = "#" + v.map((n) => n.toString(16).padStart(2, "0")).join(""));
       }
       // Verschlüsselte Zuordnung (.psmap)
       function psMapUnsaved() {
@@ -4518,9 +4556,9 @@
           d.style.cssText =
             "display:flex;align-items:center;justify-content:space-between;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:5px 9px;flex-shrink:0";
           d.innerHTML =
-            '<span style="font-size:11px;color:#059669;font-weight:500">' +
+            '<span style="font-size:11px;color:#047857;font-weight:500">' +
             esc(v) +
-            '</span><button style="background:none;border:none;color:#999;cursor:pointer;font-size:15px;line-height:1;padding:0;transition:color .15s" onmouseover="this.style.color=\'#dc2626\'" onmouseout="this.style.color=\'#999\'" onclick="removeWL(' +
+            '</span><button style="background:none;border:none;color: var(--ps-muted);cursor:pointer;font-size:15px;line-height:1;padding:0;transition:color .15s" onmouseover="this.style.color=\'#dc2626\'" onmouseout="this.style.color=\'var(--ps-muted)\'" onclick="removeWL(' +
             i +
             ')" aria-label="Eintrag entfernen: ' + escA(v) + '">×</button>';
           l.appendChild(d);
@@ -4633,7 +4671,7 @@
         overlay.innerHTML = "";
         if (!text.trim()) {
           overlay.innerHTML =
-            "<div style=\"color:#999;text-align:center;padding:40px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;\">Kein Text vorhanden.<br>Füge Text ein oder lade eine Datei hoch.</div>";
+            "<div style=\"color: var(--ps-muted);text-align:center;padding:40px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;\">Kein Text vorhanden.<br>Füge Text ein oder lade eine Datei hoch.</div>";
           return;
         }
         const entities = collectEntities(text).map(function (s) {
