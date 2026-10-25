@@ -709,7 +709,7 @@
       .funde-row { display: flex; align-items: center; gap: 8px; }
       .funde-bar button, .funde-bar select, .funde-bar input { font: 500 12px "Plus Jakarta Sans", system-ui, sans-serif; color: #1a3a5c; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 6px 10px; min-height: 30px; }
       .funde-bar button { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
-      .funde-bar button:hover:not([aria-disabled="true"]) { background: #f5f5f5; }
+      .funde-bar button:hover:not([aria-disabled="true"]):not([aria-pressed="true"]) { background: #f5f5f5; }
       .funde-bar button[aria-disabled="true"] { color: #767676; border-color: #f0f0f0; cursor: default; }
       .funde-bar button[aria-pressed="true"] { background: #1a3a5c; border-color: #1a3a5c; color: #fff; }
       .funde-bar input { width: 100%; color: #111; }
@@ -4107,6 +4107,7 @@
       let fundeAll = [], fundeF = { cat: "", doubt: false, q: "" }, fundeV = null, fundeVwin = "", fundeStatFlip = false, fundeOptSig = null;
       const fundeHist = PSLib.history.create({ limit: 100 }), FUNDE_VIRT = 500, FUNDE_LI = 64, FUNDE_GH = 40, FUNDE_CHUNK = 20;
       function fundeState() { return { whitelist: whitelist, released: released, marks: manualMarks }; }
+      function fundeMac() { try { return window.parent.electronAPI.platform === "darwin"; } catch (x) { return false; /* ohne Bruecke */ } }
       function fundeBtns() {
         const u = document.getElementById("FUNDEUNDO"), r = document.getElementById("FUNDEREDO");
         if (u) u.setAttribute("aria-disabled", fundeHist.canUndo() ? "false" : "true");
@@ -4211,8 +4212,10 @@
       }
       function fundeHeadHtml(g, id, tag, style) {
         const alle = g.items.every((e) => e.decision === "freigeben");
+        // bei aktivem Filter/Suche wirkt der Knopf nur auf die angezeigten Eintraege: Beschriftung entsprechend
+        const f = fundeF, wer = (f.cat || f.doubt || f.q.trim()) ? "alle angezeigten" : "alle dieses Typs";
         return "<" + tag + ' class="fg-h"' + (style || "") + '><span class="fg-t"' + (id ? ' id="' + id + '"' : "") + ">" + esc(fundeLabel(g.type)) + '</span><span class="fg-n" title="Anzahl verschiedener Werte">' + g.items.length + "</span>"
-          + '<button type="button" class="fg-all" data-type="' + escA(g.type) + '" data-act="' + (alle ? "maskieren" : "freigeben") + '" aria-label="alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + ": " + escA(fundeLabel(g.type)) + '">alle dieses Typs ' + (alle ? "maskieren" : "freigeben") + "</button></" + tag + ">";
+          + '<button type="button" class="fg-all" data-type="' + escA(g.type) + '" data-act="' + (alle ? "maskieren" : "freigeben") + '" aria-label="' + wer + " " + (alle ? "maskieren" : "freigeben") + ": " + escA(fundeLabel(g.type)) + '">' + wer + " " + (alle ? "maskieren" : "freigeben") + "</button></" + tag + ">";
       }
       // Kategorien der Auswahlliste aus den Funden aufbauen (nur bei Aenderung, damit ein offenes Menue stabil bleibt)
       function fundeOpts() {
@@ -4334,6 +4337,14 @@
         let t = null;
         const done = () => { fundeShow(); fundeSay(fundeList.length + (fundeList.length === 1 ? " Fund angezeigt" : " Funde angezeigt")); };
         q.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => { fundeF.q = q.value; done(); }, 120); });
+        // Kuerzel in den Tooltips je nach Plattform (wie bei den Tastaturkuerzeln)
+        const mac0 = fundeMac(), ub = document.getElementById("FUNDEUNDO"), rb = document.getElementById("FUNDEREDO");
+        if (ub) ub.title = "Rückgängig (" + (mac0 ? "Cmd" : "Strg") + "+Z)";
+        if (rb) rb.title = "Wiederholen (" + (mac0 ? "Cmd+Umschalt+Z" : "Strg+Y") + ")";
+        q.addEventListener("keydown", (ev) => {
+          if (ev.key !== "Escape" || ev.defaultPrevented || !q.value) return;
+          ev.preventDefault(); clearTimeout(t); q.value = ""; fundeF.q = ""; done();
+        });
         sel.addEventListener("change", () => { fundeF.cat = sel.value; done(); });
         dbt.addEventListener("click", () => { fundeF.doubt = !fundeF.doubt; dbt.setAttribute("aria-pressed", fundeF.doubt ? "true" : "false"); done(); });
         box.addEventListener("scroll", () => { if (fundeV) fundeVDraw(); });
@@ -4349,7 +4360,7 @@
         document.addEventListener("keydown", (ev) => {
           if (!fundeOpen || ev.defaultPrevented) return;
           if (ev.key === "Escape" && document.getElementById("FUNDE").contains(document.activeElement)) { ev.preventDefault(); toggleFunde(false); return; }
-          let mac = false; try { mac = window.parent.electronAPI.platform === "darwin"; } catch (x) { /* ohne Bruecke */ }
+          const mac = fundeMac();
           if (ev.altKey || !(mac ? ev.metaKey && !ev.ctrlKey : ev.ctrlKey && !ev.metaKey)) return;
           const tg = ev.target;
           if (tg && tg.closest && tg.closest("input, textarea, select, [contenteditable]")) return;
