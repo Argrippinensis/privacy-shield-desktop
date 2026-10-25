@@ -2,7 +2,7 @@
 //   node tests/eval/diff-reference.mjs           App (Electron), gleiche Laeufe wie dump-reference.mjs
 //   node tests/eval/diff-reference.mjs --node    PSDetect (app/lib/detect.js) im selben Prozess, ohne Electron
 //   --allow <Datei>  andere Allow-Datei (Tests); --propose  gibt Eintragskoepfe (mode, key, Hashes, Anzahl; ohne reason) fuer unerlaubte Abweichungen aus
-// Exit 1 auch bei ungenutzten Ausnahmen.
+// Exit 1 auch bei ungenutzten Ausnahmen. Ein Eintrag darf einen eigenen App-Stand ("app") tragen, der nur ohne --node gilt.
 // Erlaubte (erklaerte) Abweichungen: tests/golden/reference-allow.json, Liste von { mode, key, reason, outSha256, storeSha256, entities } (an den genehmigten Stand gebunden).
 // Exit 0 bei 0 nicht erlaubten Abweichungen und 0 ungenutzten Ausnahmen, sonst 1.
 import fs from 'fs';
@@ -21,12 +21,20 @@ function validEntry(a) {
     && Number.isInteger(a.entities) && a.entities >= 0;
 }
 
+function validApp(x) {
+  return !!x && typeof x.outSha256 === 'string' && HEX.test(x.outSha256) && typeof x.storeSha256 === 'string' && HEX.test(x.storeSha256)
+    && Number.isInteger(x.entities) && x.entities >= 0;
+}
+
 // referenceItems, currentItems: Listen wie in reference-v1.8.json;
 // allow: Liste von { mode, key, reason, outSha256, storeSha256, entities } (genehmigter NEUER Stand des Falls)
 // -> { deviations, allowed, unused }; Abweichung: { mode, key, what: ['fehlt'|'eingabe'|'text'|'zuordnung'], line }
 // Eine Ausnahme gilt nur bei exakt passendem outSha256, storeSha256 und entities, unveraenderter Eingabe und vorhandenem Fall;
 // "fehlt" und "eingabe" sind nie erlaubbar; Platzhalter und unvollstaendige Eintraege erlauben nichts.
-export function compareItems(referenceItems, currentItems, allow = []) {
+// opts.app = true (App-Modus, Electron): ein Eintrag darf zusaetzlich den genehmigten Stand der App in "app": { outSha256, storeSha256, entities }
+// tragen (D53: die App liefert mit dem echten Modell fuer ki/syn12 den Span "Berliner Allee" statt "Berliner Alle" der Referenz; die Platzhalterart
+// wechselt von ADRESSE zu ORT, nichts wird lesbar). Im Node-Modus zaehlt nur der Stand ohne "app". Beide Staende gelten als genutzt.
+export function compareItems(referenceItems, currentItems, allow = [], opts = {}) {
   const cur = new Map(currentItems.map((i) => [i.mode + '/' + i.key, i]));
   const used = new Set();
   const deviations = [], allowed = [];
@@ -44,7 +52,8 @@ export function compareItems(referenceItems, currentItems, allow = []) {
     const d = { mode: r.mode, key: r.key, what, line: `${r.mode}/${r.key}: ${what.map((w) => (w === 'fehlt' ? 'fehlt' : w + ' abweichend')).join(', ')}` };
     const hit = what[0] === 'fehlt' || what[0] === 'eingabe' ? null
       : allow.find((a) => validEntry(a) && a.mode === r.mode && a.key === r.key
-        && a.outSha256 === c.outSha256 && a.storeSha256 === c.storeSha256 && a.entities === c.entities);
+        && ((a.outSha256 === c.outSha256 && a.storeSha256 === c.storeSha256 && a.entities === c.entities)
+          || (opts.app && validApp(a.app) && a.app.outSha256 === c.outSha256 && a.app.storeSha256 === c.storeSha256 && a.app.entities === c.entities)));
     if (hit) { used.add(hit); allowed.push({ ...d, reason: hit.reason }); } else deviations.push(d);
   }
   return { deviations, allowed, unused: allow.filter((a) => !used.has(a)) };
@@ -102,7 +111,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const ref = JSON.parse(fs.readFileSync(REFERENCE, 'utf8'));
   const allow = fs.existsSync(allowFile) ? JSON.parse(fs.readFileSync(allowFile, 'utf8')) : [];
   const current = node ? await collectItemsNode(ref.items) : await collectItems();
-  const r = compareItems(ref.items, current, allow);
+  const r = compareItems(ref.items, current, allow, { app: !node });
   if (propose) {
     console.log(JSON.stringify(proposeEntries(r, current), null, 1));
     process.exit(0);

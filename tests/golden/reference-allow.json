@@ -594,10 +594,15 @@
  {
   "mode": "ki",
   "key": "syn12",
-  "reason": "C1.1 Gruppe E: Mit KI-Treffern ergaenzen die Wortlisten Personennamen mit bekanntem Vornamen, die das Modell uebersehen hat und die keinen anderen Treffer beruehren; vorher blieb der Name im Klartext | Stand C1.2: C1.2 Fehlalarm behoben: \"Tannenberg Bau KG\" (Wortanfang Tan) wurde durch die Stichwortregel TAN ohne Wortgrenze als Zugangsdaten maskiert; jetzt Wortgrenze, Platzhalterarten und -nummern verschieben sich; kein personenbezogener Wert wird lesbar",
+  "reason": "C1.1 Gruppe E: Mit KI-Treffern ergaenzen die Wortlisten Personennamen mit bekanntem Vornamen, die das Modell uebersehen hat und die keinen anderen Treffer beruehren; vorher blieb der Name im Klartext | Stand C1.2: C1.2 Fehlalarm behoben: \"Tannenberg Bau KG\" (Wortanfang Tan) wurde durch die Stichwortregel TAN ohne Wortgrenze als Zugangsdaten maskiert; jetzt Wortgrenze, Platzhalterarten und -nummern verschieben sich; kein personenbezogener Wert wird lesbar | App-Modus (D53, C1.3): das echte Modell liefert den Span \"Berliner Allee\" (die Referenz 1.8.0 hat \"Berliner Alle\"); die Anschrift wird als ORT statt ADRESSE gefuehrt, nichts wird lesbar (Stand \"app\")",
   "outSha256": "06b5e0ff8ebf010e58972f7d1b389d4c80e7da7af3583a8d1b84996ba5bb5bfc",
   "storeSha256": "aaaa4e426943fcfeef8203c454b0490b51132a73ab0ffe48945ec84a5f27108b",
-  "entities": 7
+  "entities": 7,
+  "app": {
+   "outSha256": "bf64713ea3d208ce9cc0a1651e406e701c32818381b7888f5be2a80360061684",
+   "storeSha256": "6c4ed1fa8628035cdac84af76b4fb0c783a19bbe2d1596e73d947b7388f8da89",
+   "entities": 7
+  }
  },
  {
   "mode": "ki",

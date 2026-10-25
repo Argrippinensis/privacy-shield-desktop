@@ -83,7 +83,7 @@
     "ids": []
    },
    "NEG": {
-    "total": 60,
+    "total": 74,
     "leaked": 6,
     "ids": [
      "v2n02",
@@ -1309,6 +1309,76 @@
      "key": "v2n60",
      "out": "Das Studienjahr beginnt im Oktober, die Anmeldefrist endet am 15. Juli.",
      "tokens": 0
+    },
+    {
+     "key": "v2n61",
+     "out": "Im Kapitel 3 wird das Verfahren erklärt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n62",
+     "out": "Auf der Seite 3 steht die Tabelle.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n63",
+     "out": "In der Klasse 5 sind 24 Kinder.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n64",
+     "out": "Im Quartal 3 stieg der Umsatz.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n65",
+     "out": "In der Abbildung 3 sieht man den Verlauf.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n66",
+     "out": "Im Raum 12 findet die Sitzung statt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n67",
+     "out": "Auf dem Gleis 5 steht der Zug.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n68",
+     "out": "Zum Schritt 2 gehören drei Aufgaben.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n69",
+     "out": "Seit 2023 KI Entwicklung im Haus.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n70",
+     "out": "Im Jahr 2022 PR Abteilung neu aufgebaut.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n71",
+     "out": "Version 120 00 Dateien wurden geprüft.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n72",
+     "out": "Nr. 123 45 Ersatzteile liegen bereit.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n73",
+     "out": "Die Casanova 5 und Innova 12 sind Produktnamen.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n74",
+     "out": "Lottozahlen 05 12 23 34 45 wurden gezogen.",
+     "tokens": 0
     }
    ],
    "synth": [
@@ -1864,7 +1934,7 @@
     "ids": []
    },
    "NEG": {
-    "total": 60,
+    "total": 74,
     "leaked": 8,
     "ids": [
      "v2n02",
@@ -3092,6 +3162,76 @@
      "key": "v2n60",
      "out": "Das Studienjahr beginnt im Oktober, die Anmeldefrist endet am 15. Juli.",
      "tokens": 0
+    },
+    {
+     "key": "v2n61",
+     "out": "Im Kapitel 3 wird das Verfahren erklärt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n62",
+     "out": "Auf der Seite 3 steht die Tabelle.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n63",
+     "out": "In der Klasse 5 sind 24 Kinder.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n64",
+     "out": "Im Quartal 3 stieg der Umsatz.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n65",
+     "out": "In der Abbildung 3 sieht man den Verlauf.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n66",
+     "out": "Im Raum 12 findet die Sitzung statt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n67",
+     "out": "Auf dem Gleis 5 steht der Zug.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n68",
+     "out": "Zum Schritt 2 gehören drei Aufgaben.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n69",
+     "out": "Seit 2023 KI Entwicklung im Haus.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n70",
+     "out": "Im Jahr 2022 PR Abteilung neu aufgebaut.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n71",
+     "out": "Version 120 00 Dateien wurden geprüft.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n72",
+     "out": "Nr. 123 45 Ersatzteile liegen bereit.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n73",
+     "out": "Die Casanova 5 und Innova 12 sind Produktnamen.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n74",
+     "out": "Lottozahlen 05 12 23 34 45 wurden gezogen.",
+     "tokens": 0
     }
    ],
    "synth": [
@@ -3647,7 +3787,7 @@
     "ids": []
    },
    "NEG": {
-    "total": 60,
+    "total": 74,
     "leaked": 9,
     "ids": [
      "v2n02",
@@ -4875,6 +5015,76 @@
     {
      "key": "v2n60",
      "out": "Das Studienjahr beginnt im Oktober, die Anmeldefrist endet am 15. Juli.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n61",
+     "out": "Im Kapitel 3 wird das Verfahren erklärt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n62",
+     "out": "Auf der Seite 3 steht die Tabelle.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n63",
+     "out": "In der Klasse 5 sind 24 Kinder.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n64",
+     "out": "Im Quartal 3 stieg der Umsatz.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n65",
+     "out": "In der Abbildung 3 sieht man den Verlauf.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n66",
+     "out": "Im Raum 12 findet die Sitzung statt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n67",
+     "out": "Auf dem Gleis 5 steht der Zug.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n68",
+     "out": "Zum Schritt 2 gehören drei Aufgaben.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n69",
+     "out": "Seit 2023 KI Entwicklung im Haus.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n70",
+     "out": "Im Jahr 2022 PR Abteilung neu aufgebaut.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n71",
+     "out": "Version 120 00 Dateien wurden geprüft.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n72",
+     "out": "Nr. 123 45 Ersatzteile liegen bereit.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n73",
+     "out": "Die Casanova 5 und Innova 12 sind Produktnamen.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n74",
+     "out": "Lottozahlen 05 12 23 34 45 wurden gezogen.",
      "tokens": 0
     }
    ],
