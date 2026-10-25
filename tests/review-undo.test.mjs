@@ -28,6 +28,9 @@ const SOFT = ['NAME', 'ORG', 'ORT', 'ADRESSE', 'ROLLE', 'MEDIZIN', 'SENSIBEL'];
 const TEXT_KONFIG = 'Herr Anton Beispiel meldet sich unter anton@beispiel-firma.de, IBAN DE89 3704 0044 0532 0130 00. Das Rotkehlchen und die Blaumeise sitzen hier.';
 const LANG = { timeout: 120000 };
 const KURZ = { timeout: 60000 };
+// macOS: Cmd statt Strg, Wiederholen nur mit Cmd+Umschalt+Z (kein Cmd+Y), Dokumentende mit Cmd+Pfeil unten (D1.w2, CI-Probelauf 3).
+const MAC = process.platform === 'darwin';
+const MOD = MAC ? 'Meta' : 'Control';
 
 // Neue App starten, Tool-Frame holen, KI aus (deterministische Erkennung). Kurze Aktionszeitgrenze: fehlende Elemente schnell melden.
 async function startApp() {
@@ -174,7 +177,7 @@ test('Control+Z bei Fokus auf einem Eintrag macht die Entscheidung rueckgaengig,
     await oeffneFunde(f);
     await freigeben(f, 'NAME|' + ANTON, ANTON);
     await f.focus(li('NAME|' + ANTON) + ' button.fund-toggle');
-    await a.win.keyboard.press('Control+Z');
+    await a.win.keyboard.press(MOD + '+Z');
     await warteAT(f, (v) => !document.getElementById('AT').value.includes(v), ANTON);
     assert.deepEqual(await relListe(f), [], 'Control+Z hat die Freigabe nicht zurueckgenommen');
     assert.equal(await f.evaluate(() => document.getElementById('IT').value), TEXT_GRUPPE, 'Control+Z am Eintrag darf den Eingabetext nicht aendern');
@@ -188,10 +191,10 @@ test('Control+Z bei Fokus auf #IT aendert nur den Text des Eingabefeldes, die En
     await oeffneFunde(f);
     await freigeben(f, 'NAME|' + ANTON, ANTON);
     await f.focus('#IT');
-    await a.win.keyboard.press('Control+End');
+    await a.win.keyboard.press(MAC ? 'Meta+ArrowDown' : 'Control+End');
     await a.win.keyboard.insertText(' Notiz');
     assert.equal(await f.evaluate(() => document.getElementById('IT').value), TEXT_GRUPPE + ' Notiz', 'Voraussetzung: Tastatureingabe im Feld');
-    await a.win.keyboard.press('Control+Z');
+    await a.win.keyboard.press(MOD + '+Z');
     await sleep(500);
     assert.equal(await f.evaluate(() => document.getElementById('IT').value), TEXT_GRUPPE, 'Control+Z in #IT muss die Texteingabe zuruecknehmen');
     assert.deepEqual(await relListe(f), ['NAME|' + ANTON], 'Control+Z in #IT darf die Entscheidung nicht zuruecknehmen');
@@ -207,7 +210,7 @@ test('Control+Z bei Fokus im Suchfeld #FUNDESEARCH nimmt keine Entscheidung zuru
     await freigeben(f, 'NAME|' + ANTON, ANTON);
     await braucht(f, '#FUNDESEARCH');
     await f.focus('#FUNDESEARCH');
-    await a.win.keyboard.press('Control+Z');
+    await a.win.keyboard.press(MOD + '+Z');
     await sleep(600);
     assert.deepEqual(await relListe(f), ['NAME|' + ANTON], 'Control+Z im Suchfeld darf die Entscheidung nicht zuruecknehmen');
   });
@@ -222,13 +225,15 @@ test('Strg+Y und Strg+Umschalt+Z wirken als Wiederholen', KURZ, async () => {
     await f.click('#FUNDEUNDO');
     await warteAT(f, (v) => !document.getElementById('AT').value.includes(v), ANTON);
     await f.focus(li('NAME|' + ANTON) + ' button.fund-toggle');
-    await a.win.keyboard.press('Control+Y');
-    await warteAT(f, (v) => document.getElementById('AT').value.includes(v), ANTON);
-    assert.deepEqual(await relListe(f), ['NAME|' + ANTON], 'Control+Y gibt nicht wieder frei');
-    await f.click('#FUNDEUNDO');
-    await warteAT(f, (v) => !document.getElementById('AT').value.includes(v), ANTON);
-    await f.focus(li('NAME|' + ANTON) + ' button.fund-toggle');
-    await a.win.keyboard.press('Control+Shift+Z');
+    if (!MAC) {
+      await a.win.keyboard.press(MOD + '+Y');
+      await warteAT(f, (v) => document.getElementById('AT').value.includes(v), ANTON);
+      assert.deepEqual(await relListe(f), ['NAME|' + ANTON], 'Control+Y gibt nicht wieder frei');
+      await f.click('#FUNDEUNDO');
+      await warteAT(f, (v) => !document.getElementById('AT').value.includes(v), ANTON);
+      await f.focus(li('NAME|' + ANTON) + ' button.fund-toggle');
+    }
+    await a.win.keyboard.press(MOD + '+Shift+Z');
     await warteAT(f, (v) => document.getElementById('AT').value.includes(v), ANTON);
     assert.deepEqual(await relListe(f), ['NAME|' + ANTON], 'Control+Umschalt+Z gibt nicht wieder frei');
   });
@@ -253,7 +258,7 @@ test('Drei Entscheidungen, zweimal Undo, neue Entscheidung: Redo ist nicht mehr 
     await freigeben(f, 'EMAIL|' + MAIL, MAIL);
     assert.ok(await istDeaktiviert(f, '#FUNDEREDO'), 'neue Entscheidung muss den Wiederholen-Zweig verwerfen (#FUNDEREDO deaktiviert)');
     await f.focus(li('EMAIL|' + MAIL) + ' button.fund-toggle');
-    await a.win.keyboard.press('Control+Y');
+    await a.win.keyboard.press(MOD + '+Y');
     await sleep(700);
     assert.deepEqual(await relListe(f), ['EMAIL|' + MAIL, 'NAME|' + ANTON], 'Control+Y darf nach einer neuen Entscheidung nichts mehr wiederholen');
   });
