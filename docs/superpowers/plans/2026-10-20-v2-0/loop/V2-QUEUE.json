@@ -1680,12 +1680,12 @@
     "xvfb-run -a node tests/eval/diff-reference.mjs",
     "npm run build:linux && PS_PACKAGED_BIN=dist/linux-unpacked/privacy-shield-desktop xvfb-run -a npm test"
    ],
-   "status": "offen",
+   "status": "verschoben",
    "attempts": 0,
    "branch": "",
    "commit": "",
    "lease": null,
-   "notes": ""
+   "notes": "Transformers.js 3.5.2 bleibt: Version 4 aendert die Modell-Lade-API, Plan verlangt Messprotokoll (Ladezeit, Spitzenspeicher, Analysezeit, Ergebnisgleichheit); das Modell (135359829 Bytes, Pruefsumme) und der KI-Kern bleiben unveraendert; Risiko kurz vor 2.0.0 hoeher als Nutzen. Nach 2.1 mit Messprotokoll. Vermerk im CHANGELOG (G1.docs)."
   },
   {
    "id": "F4.a",
