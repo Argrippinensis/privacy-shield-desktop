@@ -2094,9 +2094,10 @@
               style="text-decoration: underline dotted; color: var(--ps-muted); font-size: inherit"
               onclick="checkForUpdate()"
               title="Nach Updates suchen"
-              >v1.6.1</button
+              id="PS-VERSION-LABEL"
+              >v&#8211;</button
             >
-            · <span style="font-family: monospace">privacyshield</span> · 13.06.2026
+            · <span style="font-family: monospace">privacyshield</span>
           </p>
         </div>
       </footer>
@@ -3689,7 +3690,17 @@
       async function lcMask(i) { const f = lcLast.res.findings[i], v = lcLast.at.slice(f.start, f.end); if (!PSLib.marks.add(manualMarks, { value: v, pfx: f.type })) return toast("Dieser Wert kann nicht markiert werden", "e"); fundeRecord(); await reanon(); }
       function lcIgnore(i) { const f = lcLast.res.findings[i]; lcIgnored.add(f.type + "\u0000" + lcLast.at.slice(f.start, f.end)); runLeakCheck(); }
       let anonBusy = false, repStart = null, repDur = 0;
-      const APP_VERSION = "1.8.0"; // muss mit package.json uebereinstimmen
+      // Version nur in package.json: die Huelle liefert sie asynchron (Kanal get-app-version); ohne Huelle bleibt "unbekannt"
+      let APP_VERSION = "unbekannt";
+      (async function loadAppVersion() {
+        try {
+          const api = window.parent !== window && window.parent.electronAPI;
+          const v = api && api.getAppVersion ? await api.getAppVersion() : null;
+          if (typeof v === "string" && /^\d+\.\d+\.\d+(-[A-Za-z0-9.]+)?$/.test(v)) APP_VERSION = v;
+        } catch (x) { /* Huelle antwortet nicht: Fallback bleibt */ }
+        const lbl = document.getElementById("PS-VERSION-LABEL");
+        if (lbl) lbl.textContent = APP_VERSION === "unbekannt" ? "Version unbekannt" : "v" + APP_VERSION;
+      })();
       // Bericht ohne personenbezogene Werte: nur Zaehler, Einstellungen und Pruefsumme
       async function saveReport() {
         const t = document.getElementById("AT").value;
