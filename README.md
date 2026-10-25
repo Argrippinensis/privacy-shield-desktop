@@ -41,7 +41,7 @@ Grenzen:
 
     PrivacyShield --cli --in <Datei|Ordner> --out <Ordner> [--report] [--map zuordnung.psmap --password-env VARIABLE]
 
-Optionen, Rückgabecodes, Beispiele für Linux, macOS und Windows: `docs/kommandozeile.md`. Unter Windows gibt es kein `--password-stdin` (dort `--password-env`).
+Optionen, Rückgabecodes, Beispiele für Linux, macOS und Windows: `docs/kommandozeile.md`. Unbekannte Schalter nach `--cli` werden mit Code 2 abgelehnt (Chromium-Schalter wie `--no-sandbox` bleiben erlaubt). Unter Windows gibt es kein `--password-stdin` (dort `--password-env`).
 
 ## Richtliniendatei
 
@@ -52,7 +52,7 @@ Eigene Kennungen und Begriffe als `policy.json` (Oberfläche: Bereich "Eigene Re
     npm install
     npm start          # lädt beim ersten Mal Bibliotheken und Modell (ca. 170 MB), danach nur Prüfsummen-Check
 
-Die Version steht nur in `package.json`. Weitere Dokumente: `docs/erkennung-entscheidungen.md` (Entscheidungen und bekannte Lücken der Erkennung), `docs/a11y-backlog.md` (Barrierefreiheit), `docs/v2/web-tool-kern.md` (Erkennungskern für das Web-Tool), `docs/abnahme-windows.md` (Handprüfung vor einer Veröffentlichung).
+Die Version steht nur in `package.json`; Fußzeile und Berichte zeigen sie von dort. Weitere Dokumente: `docs/erkennung-entscheidungen.md` (Entscheidungen und bekannte Lücken der Erkennung), `docs/a11y-backlog.md` (Barrierefreiheit), `docs/v2/web-tool-kern.md` (Erkennungskern für das Web-Tool), `docs/abnahme-windows.md` (Handprüfung vor einer Veröffentlichung).
 
 ## Gebündelte Komponenten (`app/vendor`, `app/models`)
 
@@ -99,10 +99,9 @@ Windows: NSIS-Installer; macOS: ZIP für Intel und Apple Silicon (ad-hoc signier
 
 ## Release
 
-1. Abschnitt in `CHANGELOG.md` ergänzen, Version in `package.json` erhöhen, per Pull Request nach `main`.
+1. Abschnitt in `CHANGELOG.md` ergänzen und mit Datum überschreiben (`## [x.y.z] - JJJJ-MM-TT`), Version in `package.json` erhöhen, per Pull Request nach `main`.
 2. `git tag vX.Y.Z && git push --tags`
 
-GitHub Actions baut alle Plattformen, testet jedes gebaute Programm und erstellt das Release nur, wenn alles grün ist
-(Release-Text aus `CHANGELOG.md`, `SHA256SUMS.txt`). Danach: `node scripts/verify-release.mjs vX.Y.Z [--upgrade-from vA.B.C]`.
+GitHub Actions baut alle Plattformen und testet jedes gebaute Programm. Der Release-Job (`scripts/check-release-inputs.mjs`) prüft vorab, dass der Tag zur Version in `package.json` passt, dass `CHANGELOG.md` einen datierten Abschnitt für diese Version hat und dass die fünf Installationsdateien `PrivacyShield-Setup.exe`, `PrivacyShield-mac-arm64.zip`, `PrivacyShield-mac-x64.zip`, `PrivacyShield.AppImage` und `PrivacyShield.deb` vorhanden und nicht leer sind. Das Release entsteht zunächst als Entwurf (Release-Text aus `CHANGELOG.md`, `SHA256SUMS.txt`) und wird erst veröffentlicht, wenn alle Dateien hochgeladen sind. Danach: `node scripts/verify-release.mjs vX.Y.Z [--upgrade-from vA.B.C]`.
 Die Website verlinkt auf `releases/latest/download/<fester Dateiname>` und muss bei neuen Versionen nicht angepasst werden.
 Vor einer Veröffentlichung läuft die Handprüfung auf einem echten Windows-Rechner (`docs/abnahme-windows.md`).

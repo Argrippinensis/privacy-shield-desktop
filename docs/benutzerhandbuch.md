@@ -11,7 +11,7 @@ PrivacyShield ersetzt persönliche Angaben in Ihren Dokumenten (Namen, Adressen,
 3. **Prüfen.** Lesen Sie das Ergebnis. Nutzen Sie die Gegenprüfung (Abschnitt 2) und die Prüfansicht "Funde" (Abschnitt 5). Übersehene Stellen können Sie im Modus "Annotieren" per Klick auf einzelne Wörter nachmarkieren; diese Markierungen bleiben bei "Neu anonymisieren" erhalten.
 4. **Kopieren oder speichern.** "Kopieren" legt den anonymisierten Text in die Zwischenablage. Die Antwort einer KI fügen Sie unter "KI-Antwort einfügen" ein; "Originaldaten einsetzen" setzt die echten Werte wieder ein. Das fertige Dokument speichern Sie als TXT oder PDF. Dafür muss die Zuordnung noch im Programm vorhanden sein (Abschnitt 4).
 
-Wer in den Einstellungen ein anderes Profil ("Standard", "Finanzen & Recht", "Medizin & Pflege", "Maximal") wählt, ändert, welche Arten von Angaben erkannt werden. Begriffe, die nie ersetzt werden sollen (zum Beispiel Ihr eigener Firmenname), tragen Sie in die "Whitelist" ein; Vorsicht: sie wirkt auf Wortteile, ein Eintrag "Berlin" gibt auch "Berliner Allee 5" frei.
+Über die Filterprofile ("Standard", "Finanzen & Recht", "Medizin & Pflege", "Maximal") oder die Auswahl der Erkennungsregeln legen Sie fest, welche Arten von Angaben erkannt werden. Begriffe, die nie ersetzt werden sollen (zum Beispiel Ihr eigener Firmenname), tragen Sie in die "Whitelist" ein; Vorsicht: sie wirkt auf Wortteile, ein Eintrag "Berlin" gibt auch "Berliner Allee 5" frei.
 
 ## 2. Gegenprüfung
 
@@ -36,7 +36,7 @@ Der Knopf "Funde" öffnet eine Seitenleiste mit allen erkannten Werten, nach Typ
 * **Freigeben:** Der Wert bleibt im Ergebnis im Klartext (nur dieser Typ mit genau diesem Wert). **Maskieren** nimmt die Freigabe zurück.
 * Pro Gruppe gibt es "alle ... freigeben" bzw. "maskieren". Ein Klick auf den Wert markiert die erste Fundstelle im Text.
 * "Nur Zweifelsfälle" zeigt Funde, bei denen die Erkennung unsicher ist (Namen, Organisationen, Orte, Adressen u. a.); das Suchfeld und der Kategorie-Filter grenzen die Liste ein.
-* **Rückgängig und Wiederholen** über die Pfeilknöpfe oder per Tastatur: **Strg+Z** (macOS: **Cmd+Z**) macht die letzte Entscheidung rückgängig, **Strg+Y** oder **Strg+Umschalt+Z** (macOS: **Cmd+Umschalt+Z**) stellt sie wieder her. Das gilt nur, wenn der Cursor nicht in einem Eingabefeld steht; dort bleibt das normale Rückgängig der Textbearbeitung. **Esc** schließt die Leiste.
+* **Rückgängig und Wiederholen** über die Pfeilknöpfe oder per Tastatur: **Strg+Z** (macOS: **Cmd+Z**) macht die letzte Entscheidung rückgängig, **Strg+Y** oder **Strg+Umschalt+Z** (macOS: **Cmd+Umschalt+Z**) stellt sie wieder her. Das gilt nur, wenn der Cursor nicht in einem Eingabefeld steht; dort bleibt das normale Rückgängig der Textbearbeitung. **Esc** schließt die Leiste, wenn der Fokus in ihr liegt.
 
 Nichts davon wird dauerhaft gespeichert.
 
@@ -61,6 +61,6 @@ Wählen Sie mehrere Dateien aus oder ziehen Sie sie gemeinsam in das Feld. Es er
 * **Fehlalarme sind möglich:** harmlose Wörter (Gattungsnamen, Produktnamen) können ersetzt werden. Das ist in Kauf genommen, um nichts zu übersehen.
 * **Kein formattreuer Export.** Das Ergebnis ist reiner Text (TXT) oder ein einfaches PDF; Layout, Bilder und Tabellen des Originals bleiben nicht erhalten.
 * **Dateien:** höchstens 30 MB je Datei; bei einem Projekt höchstens 200 Dokumente.
-* **Updates.** Unter Windows und bei der Linux-AppImage installiert sich ein Update nach Ihrer Bestätigung selbst. Unter macOS (nicht signiert) und beim deb-Paket weist die App nur auf die neue Version hin und führt zur Download-Seite.
+* **Updates.** Unter Windows und bei der Linux-AppImage installiert sich ein Update, nachdem Sie im Hinweis auf "Jetzt aktualisieren" geklickt haben, und die App startet neu. Unter macOS (nicht signiert) und beim deb-Paket weist die App nur auf die neue Version hin und führt zur Download-Seite.
 
 Bei Problemen: Knopf "Info", dort "Diagnose kopieren". Die Diagnose enthält keine Dokumentinhalte und keine Dateinamen.

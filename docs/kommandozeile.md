@@ -24,7 +24,7 @@ PrivacyShield --cli --in <Datei|Ordner> --out <Ordner>
 | `--report` | Schreibt zusätzlich `bericht.txt` und `bericht.json` in den Ausgabeordner. |
 | `--map` | Schreibt die verschlüsselte Zuordnung (`.psmap`) genau an diesen Pfad; der Ordner wird angelegt. Braucht eine Passwortquelle. Darf nicht die Eingabedatei sein und nicht im Eingabeordner liegen. |
 | `--password-env` | Name einer Umgebungsvariablen mit dem Passwort (mindestens 10 Zeichen). |
-| `--password-stdin` | Das Passwort wird als eine Zeile von der Standardeingabe gelesen. | Unter Windows hat Electron auch beim Start aus dem Quelltext keine nutzbare Standardeingabe. Dort bitte `--password-env` verwenden (Rückgabecode 2 mit Meldung, wenn nichts gelesen wird).
+| `--password-stdin` | Das Passwort wird als eine Zeile von der Standardeingabe gelesen. Unter Windows hat Electron weder in der gebauten Programmdatei noch beim Start aus dem Quelltext eine nutzbare Standardeingabe: dort bitte `--password-env` verwenden (Rückgabecode 2 mit Meldung, wenn nichts gelesen wird). |
 | `--fail-on-findings` | Rückgabecode 4, wenn die Gegenprüfung in mindestens einem Dokument mögliche Reste meldet. |
 | `--recursive` | Auch Unterordner des Eingabeordners einlesen. |
 | `--quiet` | Keine Fortschrittsmeldungen (Fehler und Zusammenfassung bleiben). |
@@ -40,7 +40,7 @@ Die Dokumente werden in einem gemeinsamen Platzhalterraum anonymisiert: Dieselbe
 * mit `--report`: `bericht.txt` und `bericht.json` (nur Zähler und Einstellungen, keine Inhalte)
 * mit `--map`: die verschlüsselte Zuordnung am angegebenen Pfad; sie enthält die Originalnamen der Dokumente und lässt sich in der Oberfläche laden
 
-Es wird erst geschrieben, wenn alle Dokumente verarbeitet sind. Bei einem Fehler entstehen keine halben Ergebnisse. Ältere Dateien im Ausgabeordner, die nicht überschrieben werden (zum Beispiel `anonymisiert_005.txt` aus einem früheren, größeren Lauf), bleiben unberührt; am besten für jeden Lauf einen leeren Ordner nehmen.
+Es wird erst geschrieben, wenn alle Dokumente gelesen und verarbeitet sind; bei einem Lesefehler entstehen keine Teilergebnisse. Das Schreiben selbst ist nicht atomar: Bricht es ab (zum Beispiel weil der Datenträger voll ist, Code 6), können einzelne Ausgabedateien fehlen oder unvollständig sein. Ältere Dateien im Ausgabeordner, die nicht überschrieben werden (zum Beispiel `anonymisiert_005.txt` aus einem früheren, größeren Lauf), bleiben unberührt; am besten für jeden Lauf einen leeren Ordner nehmen.
 
 Ausgegeben werden nur Fortschritt und Zusammenfassung, **nie Dateinamen, Pfade, Dokumentinhalte oder Passwörter**:
 
@@ -57,7 +57,7 @@ Fehler nennen nur die Nummer der Datei (die Reihenfolge wie oben). Die Ausgabe i
 | Code | Bedeutung |
 |---|---|
 | 0 | Erfolg |
-| 2 | Falsche Argumente (zum Beispiel `--in` oder `--out` fehlt, ungültiges Profil, `--map` ohne genau eine Passwortquelle, Passwort zu kurz oder als Argument) |
+| 2 | Falsche Argumente (zum Beispiel `--in` oder `--out` fehlt, ungültiges Profil, unbekannter Schalter, `--map` ohne genau eine Passwortquelle, Passwort zu kurz oder als Argument) |
 | 3 | Eingabefehler: Datei oder Ordner fehlt, kein unterstütztes Dokument, Format kaputt, Datei über 30 MB oder leer, gescanntes PDF ohne Text, ungültige `--policy`, `--out`, `--map` oder `--log` ist die Eingabedatei oder liegt im Eingabeordner, mehr als 200 Dokumente |
 | 4 | Gegenprüfung meldet Reste und `--fail-on-findings` ist gesetzt (die Ergebnisse sind trotzdem geschrieben) |
 | 5 | KI verlangt (`--ai auto`), aber das Modell fehlt oder startet nicht |
