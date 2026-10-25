@@ -74,7 +74,10 @@ jobs:
           # /D= muss das letzte Argument sein und darf nicht in Anfuehrungszeichen stehen
           $p = Start-Process -Wait -PassThru -FilePath $installer -ArgumentList '/S','/D=C:\PS-Test'
           if ($p.ExitCode -ne 0) { throw "Installer-Exitcode $($p.ExitCode)" }
-          if (-not (Test-Path 'C:\PS-Test\PrivacyShield.exe')) { throw 'Installation fehlgeschlagen: C:\PS-Test\PrivacyShield.exe fehlt' }
+          # NSIS-Nachlauf: die Datei kann kurz nach Ende des Installers noch fehlen, bis zu 30 s im 1-s-Takt warten
+          $exe = 'C:\PS-Test\PrivacyShield.exe'
+          for ($i = 0; $i -lt 30 -and -not (Test-Path $exe); $i++) { Start-Sleep -Seconds 1 }
+          if (-not (Test-Path $exe)) { throw "Installation fehlgeschlagen: $exe fehlt (auch nach 30 s)" }
       - name: Windows - Modelldatei der Installation pruefen
         if: runner.os == 'Windows'
         shell: pwsh
