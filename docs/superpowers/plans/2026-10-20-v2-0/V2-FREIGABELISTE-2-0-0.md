@@ -57,7 +57,7 @@ Bitte sehen Sie sich die Bilder an (Ordner `artifacts/screenshots-2-0-0/`): Will
 
 Details: `CHANGELOG.md`, `docs/benutzerhandbuch.md`.
 
-## 4. Was von Ihnen entschieden werden muss (Standardantwort gilt, wenn Sie nichts sagen)
+## 4. Entscheidungen (am 2026-10-25 von Ihnen im Chat beantwortet: F6 ja, F8 nein, F9 nein für 2.0, D60 nach 2.0; F7 gilt mit der Standardantwort ja)
 
 | Nr | Frage | Meine Empfehlung | Folge bei "Nein" |
 |---|---|---|---|
