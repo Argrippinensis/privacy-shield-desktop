@@ -466,3 +466,47 @@ test('D49: preload.js enthält keine doppelten Einträge (getAppInfo, getLicense
   const doppelt = [...new Set(keys.filter((k, i) => keys.indexOf(k) !== i))];
   assert.deepEqual(doppelt, [], 'doppelte Schlüssel in preload.js: ' + doppelt.join(', '));
 });
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// Prueferbefund D2.1: die Optik bleibt gegenueber v2/main unveraendert (Werte dort gemessen, 1280 x 800, siehe Kommentar)
+//   v2/main: Willkommen-Ueberschrift 16 px, Gewicht 400, Zeilenhoehe 16,8 px, Buchstabenabstand -0,48 px, Knopf-Unterkante 738 px.
+//   v2/main: 13 Panel-Titel (span in .tool-panel-header) 12 px, Gewicht 600, Zeilenhoehe 18 px, Buchstabenabstand normal.
+
+test('Optik: Willkommen-Überschrift bei 1280 x 800 wie in v2/main (höchstens 20 px, Gewicht 400, einzeilig, "Jetzt starten" sichtbar)', { timeout: 120000 }, async () => {
+  const ctx = await starte();
+  try {
+    await ctx.a.app.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; w.setContentSize(1280, 800); });
+    await ctx.a.win.waitForFunction(() => window.innerWidth === 1280 && window.innerHeight === 800, null, { timeout: 5000 });
+    await ctx.f.waitForFunction(() => document.getElementById('OB') && getComputedStyle(document.getElementById('OB')).display !== 'none', null, { timeout: 5000 });
+    const r = await ctx.f.evaluate(() => {
+      const h = [...document.querySelectorAll('h1, h2')].find((e) => e.textContent.includes('Daten sicher') && e.checkVisibility());
+      if (!h) return { fehlt: true };
+      const cs = getComputedStyle(h);
+      const knopf = [...document.querySelectorAll('button')].find((b) => /Jetzt starten/.test(b.textContent) && b.checkVisibility());
+      return {
+        fs: parseFloat(cs.fontSize), fw: cs.fontWeight, lh: parseFloat(cs.lineHeight), hoehe: h.getBoundingClientRect().height,
+        knopfUnten: knopf ? knopf.getBoundingClientRect().bottom : null, fensterHoehe: window.innerHeight,
+      };
+    });
+    assert.ok(!r.fehlt, 'sichtbare Willkommen-Überschrift mit "Daten sicher" nicht gefunden');
+    assert.ok(r.fs <= 20, `Schriftgröße ${r.fs} px (v2/main: 16 px, erlaubt höchstens 20 px)`);
+    assert.equal(r.fw, '400', `Schriftgewicht ${r.fw} (v2/main: 400)`);
+    assert.ok(r.hoehe < 40, `Überschrift ${r.hoehe} px hoch, umbricht auf mehrere Zeilen (v2/main: 16,8 px)`);
+    assert.ok(r.knopfUnten !== null, 'Knopf "Jetzt starten" nicht sichtbar');
+    assert.ok(r.knopfUnten <= r.fensterHoehe, `"Jetzt starten" endet bei ${r.knopfUnten} px, Fenster ${r.fensterHoehe} px hoch (v2/main: 738 px)`);
+  } finally { await ctx.a.close(); }
+});
+
+test('Optik: die 13 Panel-Titel (h2) behalten Größe und Gewicht der alten Panel-Überschriften (12 px, 600, 18 px)', { timeout: 120000 }, async () => {
+  const ctx = await starte();
+  try {
+    await arbeitsbereich(ctx.f);
+    const titel = await ctx.f.evaluate(() => [...document.querySelectorAll('.tool-panel-header h2')].map((h) => {
+      const cs = getComputedStyle(h);
+      return { text: h.textContent.trim().slice(0, 24), fs: cs.fontSize, fw: cs.fontWeight, lh: cs.lineHeight, ls: cs.letterSpacing };
+    }));
+    assert.equal(titel.length, 13, `erwartet 13 Panel-Titel (h2), gefunden ${titel.length}`);
+    const abweichend = titel.filter((t) => t.fs !== '12px' || t.fw !== '600' || t.lh !== '18px' || t.ls !== 'normal');
+    assert.deepEqual(abweichend, [], 'Panel-Titel weichen von v2/main ab (12px, 600, 18px, normal): ' + JSON.stringify(abweichend));
+  } finally { await ctx.a.close(); }
+});
