@@ -1716,14 +1716,11 @@
     "npm run test:unit",
     "node tests/eval/diff-reference.mjs --node"
    ],
-   "status": "laeuft",
+   "status": "fertig",
    "attempts": 1,
    "branch": "",
-   "commit": "",
-   "lease": {
-    "owner": "orch-20261024",
-    "ts": 1792885569955
-   },
+   "commit": "1c7afe5",
+   "lease": null,
    "notes": ""
   },
   {
