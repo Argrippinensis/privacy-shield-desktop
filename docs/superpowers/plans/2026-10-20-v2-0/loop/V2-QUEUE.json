@@ -1179,7 +1179,8 @@
     "tests/golden/baseline.json",
     "tests/golden/reference-allow.json",
     "tests/unit/detect.differential.test.mjs",
-    "tests/eval-v2.test.mjs"
+    "tests/eval-v2.test.mjs",
+    "tests/eval/diff-reference.mjs"
    ],
    "tests": [],
    "accept": [
