@@ -162,13 +162,17 @@ test('copy-text mit mehr als 5000 Zeichen wirft invalid argument', async () => {
   } finally { await a.close(); }
 });
 
-test('dismiss-update akzeptiert nur Versionen der Form 1.2.3', async () => {
+test('dismiss-update akzeptiert nur Versionen der Form 1.2.3 oder 2.0.0-beta.1', async () => {
   const a = await launchApp({ offline: true, env: { PS_TEST_HOOKS: '1' } });
   try {
-    for (const bad of ['1.2', 'x.y.z', '1.2.3-beta', '1.2.3\n', 7, null, { v: '1.2.3' }]) {
+    for (const bad of ['1.2', '2.0', 'x.y.z', '2.0.0.0', '2.0.0-', '2.0.0-b!', '', '1.2.3; rm', ' 1.2.3', '../1.2.3', '1.2.3\n', 7, null, { v: '1.2.3' }]) {
       const r = await invoke(a, 'dismiss-update', { url: TRUSTED }, [bad]);
       assert.equal(r.ok, false, JSON.stringify(bad));
       assert.match(r.err, /invalid argument/, JSON.stringify(bad));
+    }
+    for (const good of ['1.2.3', '2.0.0-beta.1', '2.0.0-beta.12', '2.0.0-rc.1']) {
+      const r = await invoke(a, 'dismiss-update', { url: TRUSTED }, [good]);
+      assert.equal(r.ok, true, `${good}: ${r.err}`);
     }
   } finally { await a.close(); }
 });

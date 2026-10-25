@@ -158,7 +158,11 @@ jobs:
           FILES=$(find dist -maxdepth 1 -type f \( -name 'PrivacyShield*' -o -name 'latest*.yml' -o -name 'SHA256SUMS.txt' \) | tr '\n' ' ')
           echo "Dateien: $FILES"
           # shellcheck disable=SC2086
-          gh release create "$GITHUB_REF_NAME" $FILES --draft --title "PrivacyShield $GITHUB_REF_NAME" --notes-file notes.md
+          # Tag mit '-' (z. B. v2.0.0-beta.1) = Vorabversion: wird als Prerelease angelegt und nie 'Latest'
+          case "$GITHUB_REF_NAME" in
+            *-*) gh release create "$GITHUB_REF_NAME" $FILES --draft --prerelease --title "PrivacyShield $GITHUB_REF_NAME (Vorabversion)" --notes-file notes.md ;;
+            *) gh release create "$GITHUB_REF_NAME" $FILES --draft --title "PrivacyShield $GITHUB_REF_NAME" --notes-file notes.md ;;
+          esac
       - name: Hochgeladene Dateien pruefen und Release veroeffentlichen
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -170,14 +174,47 @@ jobs:
               exit 1
             fi
           done
-          gh release edit "$GITHUB_REF_NAME" --draft=false
+          # Vor dem Veroeffentlichen: Die Markierung als Vorabversion muss zum Tag passen (ein Release laesst sich nicht zurueckziehen)
+          PRE=$(gh release view "$GITHUB_REF_NAME" --json isPrerelease --jq .isPrerelease)
+          case "$GITHUB_REF_NAME" in
+            *-*) [ "$PRE" = "true" ] || { echo "Release bleibt Entwurf: Vorabversion ist nicht als Vorabversion markiert"; exit 1; } ;;
+            *) [ "$PRE" = "false" ] || { echo "Release bleibt Entwurf: stabile Version ist als Vorabversion markiert"; exit 1; } ;;
+          esac
+          # Vorabversionen behalten das Prerelease-Flag beim Veroeffentlichen
+          case "$GITHUB_REF_NAME" in
+            *-*) gh release edit "$GITHUB_REF_NAME" --draft=false --prerelease ;;
+            *) gh release edit "$GITHUB_REF_NAME" --draft=false ;;
+          esac
       - name: Download-Links pruefen
-        # Die Website verlinkt auf releases/latest/download/<fester Dateiname>; hier sicherstellen, dass sie funktionieren.
+        # Stabil: Die Website verlinkt auf releases/latest/download/<fester Dateiname>; hier sicherstellen, dass sie funktionieren.
+        # Vorabversion: Dateien ueber releases/download/<Tag>/ pruefen und sicherstellen, dass 'Latest' NICHT der neue Tag ist.
         env:
           REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for f in PrivacyShield-Setup.exe PrivacyShield-mac-arm64.zip PrivacyShield-mac-x64.zip PrivacyShield.AppImage PrivacyShield.deb SHA256SUMS.txt; do
-            code=$(curl -sIL -o /dev/null -w "%{http_code}" "https://github.com/${REPO}/releases/latest/download/$f")
-            echo "$f -> HTTP $code"
-            [ "$code" = "200" ] || exit 1
-          done
+          case "$GITHUB_REF_NAME" in
+            *-*)
+              for f in PrivacyShield-Setup.exe PrivacyShield-mac-arm64.zip PrivacyShield-mac-x64.zip PrivacyShield.AppImage PrivacyShield.deb SHA256SUMS.txt; do
+                code=$(curl -sIL -o /dev/null -w "%{http_code}" "https://github.com/${REPO}/releases/download/${GITHUB_REF_NAME}/$f")
+                echo "$f -> HTTP $code"
+                [ "$code" = "200" ] || exit 1
+              done
+              # 404 heisst: es gibt noch kein stabiles Release; jeder andere Fehler bricht ab (keine stille Bestaetigung)
+              if LATEST=$(gh api "repos/${REPO}/releases/latest" --jq .tag_name 2>latest.err); then
+                :
+              elif grep -q "HTTP 404" latest.err; then
+                LATEST=""
+              else
+                echo "Latest-Pruefung nicht moeglich:"; cat latest.err; exit 1
+              fi
+              echo "Latest ist: ${LATEST:-(kein stabiles Release)}"
+              [ "$LATEST" != "$GITHUB_REF_NAME" ] || { echo "Vorabversion ist faelschlich Latest"; exit 1; }
+              ;;
+            *)
+              for f in PrivacyShield-Setup.exe PrivacyShield-mac-arm64.zip PrivacyShield-mac-x64.zip PrivacyShield.AppImage PrivacyShield.deb SHA256SUMS.txt; do
+                code=$(curl -sIL -o /dev/null -w "%{http_code}" "https://github.com/${REPO}/releases/latest/download/$f")
+                echo "$f -> HTTP $code"
+                [ "$code" = "200" ] || exit 1
+              done
+              ;;
+          esac
