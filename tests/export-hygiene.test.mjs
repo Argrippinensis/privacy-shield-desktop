@@ -90,6 +90,17 @@ async function dlgSeen(app, ms = 4000) {
 }
 const closeWin = (app) => app.evaluate(({ BrowserWindow }) => { BrowserWindow.getAllWindows()[0].close(); });
 const winCount = (app) => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length).catch(() => 0);
+// Plattformneutral: "Fenster geschlossen" = kein Fenster mehr. Unter Linux/Windows beendet sich mit dem letzten Fenster auch
+// die App (evaluate scheitert, winCount liefert 0); unter macOS bleibt die App bewusst ohne Fenster im Dock
+// (window-all-closed), das Playwright-Ereignis 'close' der App kommt dort nie.
+async function fensterZu(app, ms) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms) {
+    if ((await winCount(app)) === 0) return true;
+    await sleep(100);
+  }
+  return false;
+}
 
 async function mitUngespeicherterZuordnung() {
   const a = await launchApp({ offline: true });
@@ -116,7 +127,7 @@ test('Schliessen mit ungespeicherter Zuordnung: Trotzdem schliessen (response 1)
   const { a } = await mitUngespeicherterZuordnung();
   try {
     await stubDialog(a.app, 1);
-    const closed = a.app.waitForEvent('close', { timeout: 10000 }).then(() => true, () => false);
+    const closed = fensterZu(a.app, 10000);
     await closeWin(a.app).catch(() => {});
     assert.equal(await dlgSeen(a.app), 1, 'Dialog nicht genau einmal gezeigt');
     assert.equal(await closed, true, 'App/Fenster nicht geschlossen');
@@ -128,7 +139,7 @@ test('Schliessen nach Speichern der Zuordnung: ohne Dialog', async () => {
   try {
     await f.evaluate(() => { mapSaved = true; });
     await stubDialog(a.app, 0);
-    const closed = a.app.waitForEvent('close', { timeout: 10000 }).then(() => true, () => false);
+    const closed = fensterZu(a.app, 10000);
     await closeWin(a.app).catch(() => {});
     assert.equal(await closed, true, 'App/Fenster nicht geschlossen');
   } finally { await a.close(); }
@@ -176,7 +187,7 @@ test('K4.fix: Schliessen nach bestaetigtem Speichern der Zuordnung (echter Schre
     assert.equal(await f.evaluate(() => psMapUnsaved()), false, 'Testaufbau: bestaetigt gespeichert');
     await stubDialog(a.app, 0);
     const t0 = Date.now();
-    const closed = a.app.waitForEvent('close', { timeout: 10000 }).then(() => true, () => false);
+    const closed = fensterZu(a.app, 10000);
     await closeWin(a.app).catch(() => {});
     assert.equal(await closed, true, 'App/Fenster nicht geschlossen');
     // Die Dialog-Attrappe antwortet erst nach 1,5 s: schnelleres Schliessen heisst, es wurde nicht gewarnt
@@ -193,7 +204,7 @@ test('D30: haengender Renderer bei ungespeicherter Zuordnung, "Trotzdem schliess
     await stubDialog(a.app, 1);
     haengen(f);
     await sleep(300);
-    const closed = a.app.waitForEvent('close', { timeout: 15000 }).then(() => true, () => false);
+    const closed = fensterZu(a.app, 15000);
     await closeWin(a.app).catch(() => {});
     assert.equal(await dlgSeen(a.app, 8000), 1, 'Erwartet genau eine Warnung statt stillem Schliessen');
     assert.equal(await closed, true, 'Fenster nicht geschlossen');
