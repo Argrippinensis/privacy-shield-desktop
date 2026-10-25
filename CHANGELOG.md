@@ -5,9 +5,7 @@ der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.
 
 ## [Unreleased] (2.0.0)
 
-Die Überschrift trägt erst bei der Veröffentlichung das Datum (`## [2.0.0] - JJJJ-MM-TT`); der Release-Ablauf verlangt einen datierten Abschnitt.
-
-**HINWEIS Platzhalterformat:** Nennt ein Text dieselbe Person in mehreren Formen (Hans Müller, Herr Müller, Hans), bekommen alle Formen dieselbe Nummer mit Endung: `{{NAME_1}}`, `{{NAME_1.NACHNAME}}`, `{{NAME_1.VORNAME}}`, `{{NAME_1.KURZ}}`. Verknüpft wird nur, wenn es eindeutig ist (zwei Personen mit gleichem Nachnamen bleiben getrennt, Gegenhinweise wie gegensätzliche Anreden oder Beziehungswörter verhindern eine Verknüpfung). Die Rückübersetzung bleibt exakt. Wer Platzhalter in eigenen Skripten oder Vorlagen auswertet, muss die Endung nach dem Punkt zulassen.
+**HINWEIS Platzhalterformat:** Nennt ein Text dieselbe Person in mehreren Formen (Hans Müller, Herr Müller, Hans), bekommen alle Formen dieselbe Nummer mit Endung: `{{NAME_1}}`, `{{NAME_1.NACHNAME}}`, `{{NAME_1.VORNAME}}`, `{{NAME_1.KURZ}}`. Verknüpft wird nur, wenn es eindeutig ist (zwei Personen mit gleichem Nachnamen bleiben getrennt, Gegenhinweise wie gegensätzliche Anreden oder Beziehungswörter verhindern eine Verknüpfung). Die Rückübersetzung stellt die Originalwerte wieder her (über die `.psmap` exakt; die unverschlüsselte CSV ist bei wörtlichen Platzhaltern im Originaltext nicht verlustfrei). Wer Platzhalter in eigenen Skripten oder Vorlagen auswertet, muss die Endung nach dem Punkt zulassen.
 
 **HINWEIS Zuordnung jetzt verschlüsselt:** "Zuordnung speichern" erzeugt standardmäßig eine verschlüsselte `.psmap`-Datei (Passwort, mindestens 10 Zeichen). **Ohne das Passwort ist sie nicht wiederherstellbar; Passwortverlust ist endgültig.** Der Export als unverschlüsselte CSV bleibt als bewusste Alternative (mit Rückfrage).
 
@@ -16,12 +14,12 @@ Die Überschrift trägt erst bei der Veröffentlichung das Datum (`## [2.0.0] - 
 - Verknüpfung derselben Person über mehrere Namensformen (siehe HINWEIS Platzhalterformat), im Projekt über alle Dokumente.
 - Namen: Wortlisten ergänzen das Modell um Personennamen (Chat-Sprecher, Ansprache), GROSSGESCHRIEBENE Nachnamen mit Komma, Spitznamen und Kurzformen, Kennzahlen mit einem Verb zwischen Stichwort und Wert.
 - Weniger Fehlalarme: Gattungswörter nach Präpositionen ("Im Kapitel 3", "Auf der Seite 3"), Abkürzungen hinter Jahreszahlen, Zahlenreihen mit Stichwort (Lottozahlen, Version, Nr.).
-- Wörtliche Platzhalter im Originaltext (zum Beispiel `{{NAME_7}}` in einem früheren Ergebnis) werden reserviert und nie neu vergeben; sie bleiben unverändert stehen, die Rückübersetzung bleibt exakt.
+- Wörtliche Platzhalter im Originaltext (zum Beispiel `{{NAME_7}}` in einem früheren Ergebnis) werden reserviert und nie neu vergeben; sie bleiben unverändert stehen, die Rückübersetzung über die `.psmap` bleibt exakt.
 - Eigene Regeln und Richtliniendatei (`policy.json`): Begriffslisten und Muster aus einer sicheren Teilmenge regulärer Ausdrücke (keine unbegrenzten Wiederholungen, keine Rückverweise, keine Vor- und Rückschau, `{m,n}` bis 64), Import und Export in der Oberfläche, `--policy` in der Kommandozeile. Dieselbe Prüfung gilt für die "Eigenen Variablen". Format: `docs/policy-format.md`.
 - Messstand (Testmengen, keine Zusage für echte Dokumente): mit Modell und im Ausfallmodus (Regeln plus Wortlisten) auf allen Handfällen und synthetischen Dokumenten keine Lecks; reine Regeln ohne Wortlisten sind nur noch Diagnosemodus. Reste und bewusst offene Fehlalarme: `docs/erkennung-entscheidungen.md`.
 
 ### Vertrauen
-- Gegenprüfung: Nach dem Anonymisieren läuft die Erkennung ein zweites Mal über das Ergebnis; mögliche Reste werden mit Schwere (hoch, mittel) aufgelistet und lassen sich maskieren oder ignorieren.
+- Gegenprüfung: Nach dem Anonymisieren läuft die Erkennung (mit Regeln und Wortlisten, ohne KI-Modell) ein zweites Mal über das Ergebnis; mögliche Reste werden mit Schwere (hoch, mittel) aufgelistet und lassen sich maskieren oder ignorieren.
 - Bericht (`bericht.txt`, im Projekt-ZIP und in der Kommandozeile zusätzlich `bericht.json`): Version, Zeitpunkt, Profil, KI-Modus, Zahl der Freigaben und eigenen Regeln, je Dokument Zeichenzahl, Funde je Kategorie, Gegenprüfung und SHA-256 des Ergebnisses. Keine personenbezogenen Werte.
 - Verschlüsselte Zuordnung `.psmap`: AES-256-GCM, PBKDF2-HMAC-SHA-256 mit 600.000 Iterationen, zufälliges Salz und Nonce je Datei, nur Web Crypto. Eine Warnung beim Schließen erscheint, wenn eine Zuordnung nicht gespeichert wurde ("gespeichert" gilt erst nach bestätigtem Schreiben).
 - Manuelle Markierungen sind Daten, die beim erneuten Anonymisieren erhalten bleiben.
@@ -29,15 +27,16 @@ Die Überschrift trägt erst bei der Veröffentlichung das Datum (`## [2.0.0] - 
 - Veraltete Ergebnisse (nach geänderten Einstellungen) werden gesperrt, statt mit altem Stand gespeichert zu werden.
 
 ### Dokumente
-- Projekte mit mehreren Dateien (bis 200 Dokumente, 200 MB Text): Liste, gemeinsame Platzhalter, Fortschritt, Abbrechen, ZIP mit Ergebnissen, Bericht und Zuordnung, Rundlauf (Anonymisieren, Zuordnung speichern, laden, Rückübersetzen) ergibt den Originaltext.
+- Projekte mit mehreren Dateien (bis 200 Dokumente, 200 MB Text): Liste, gemeinsame Platzhalter, Fortschritt, Abbrechen, ZIP mit Ergebnissen, Bericht und Zuordnung, Rundlauf (Anonymisieren, Zuordnung als `.psmap` speichern, laden, Rückübersetzen) ergibt den Originaltext.
 - Neue Formate: `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.rtf` (bisher Rohtext), `.eml`, `.html`. DOCX: Kopfzeilen, Fußzeilen, Fußnoten, Endnoten und Kommentare werden nach dem Haupttext angehängt.
 - Kodierung: UTF-8 (streng), UTF-16 mit BOM, sonst Windows-1252 (Latin-1-Dateien und RTF-Umlaute wurden zuvor nicht erkannt).
 - `.doc`, `.xls` und `.ppt` (alte Binärformate) werden mit einer klaren Meldung abgelehnt.
+- PDF: Die Oberfläche nennt für PDF mit Textebene etwa 50 Seiten als Richtwert (eine feste Seitengrenze gibt es nicht, nur 30 MB je Datei). Gescannte PDFs werden per OCR gelesen, aber nur die ersten 20 Seiten.
 - Schutz vor präparierten Archiven (ZIP-Bomben): Prüfung der Größen vor dem Entpacken, Zählung der tatsächlich entpackten Bytes, höchstens 2.000 Einträge und 200 MiB.
 
 ### Bedienung
 - Prüfansicht "Funde": alle Funde nach Typ und Wert mit Filter, Suche, "Nur Zweifelsfälle", Freigeben und Maskieren (exakt für Typ und Wert), Rückgängig und Wiederholen mit Strg+Z, Strg+Y bzw. Cmd+Z, Cmd+Umschalt+Z, Tastatursteuerung, große Listen bleiben flüssig.
-- Barrierefreiheit: Struktur, Beschriftungen, Tastaturbedienung, Fokusführung in Dialogen, Ansagen für Hilfstechnik, Kontraste, reduzierte Bewegung, Zoom bis 200 Prozent. Automatischer Test (axe-core) ohne Verstöße der Stufen serious und critical; Restbefunde in `docs/a11y-backlog.md`.
+- Barrierefreiheit: Struktur, Beschriftungen, weitgehende Bedienung mit der Tastatur (Ausnahme: Der Modus "Annotieren" ist nur mit der Maus bedienbar), Fokusführung in Dialogen, Ansagen für Hilfstechnik, Kontraste, reduzierte Bewegung, Zoom bis 200 Prozent. Automatischer Test (axe-core) ohne Verstöße der Stufen serious und critical; Restbefunde in `docs/a11y-backlog.md`.
 - Info-Dialog: Version, Systemdaten, Zustand der KI-Installation, Lizenzen, Impressum und Datenschutz, "Diagnose kopieren" (ohne Dokumentinhalte und Dateinamen).
 - Die Versionsanzeige (Fußzeile, Berichte) kommt aus `package.json` statt aus festen Texten.
 
@@ -66,20 +65,25 @@ Die Überschrift trägt erst bei der Veröffentlichung das Datum (`## [2.0.0] - 
 - Das Platzhalterformat erweitert sich um die Endung (siehe HINWEIS); Platzhalter ohne Endung aus früheren Versionen werden weiterhin zurückübersetzt, wenn die alte Zuordnung geladen ist.
 
 ### Zurückgestellt (mit Grund)
-- pdf.js bleibt bei 3.11.174 (Nutzerentscheidung F5: Version 4 liefert nur ES-Module und bräuchte eine Brücke; Restrisiko mit Schutzmaßnahmen: 30-MB-Grenze, `isEvalSupported: false`, kein Netzzugriff).
+- pdf.js bleibt bei 3.11.174: Version 4 liefert nur ES-Module und bräuchte eine zusätzliche Brücke. Das Restrisiko ist bewusst in Kauf genommen und durch Schutzmaßnahmen begrenzt (30-MB-Grenze, `isEvalSupported: false`, kein Netzzugriff).
 - Transformers.js 4: nur mit Messprotokoll; Modell und KI-Kern bleiben unverändert (Transformers.js 3.5.2), weil das Risiko kurz vor 2.0.0 größer ist als der Nutzen.
-- Nach 2.1 verschoben (Kann-Pakete): B3 formattreuer Export (DOCX, XLSX), C4 weitere Sprachen, D4 englische Oberfläche, D5 dunkles Design, E3 zentrale Konfiguration, E4 tragbare Version, E5 Signierung (braucht den Kauf eines Zertifikats).
+- Für Version 2.1 oder später vorgesehen: formattreuer Export (DOCX, XLSX), weitere Sprachen, englische Oberfläche, dunkles Design, zentrale Konfiguration, tragbare Version, Signierung der Installationsdateien (braucht den Kauf eines Zertifikats).
 
 ### Bekannte Grenzen
 - Windows: kein `--password-stdin` (Fenster-Programm ohne Standardeingabe, auch beim Start aus dem Quelltext); dort `--password-env` verwenden.
-- Niederländische Postleitzahlen mit Buchstabenpaaren wie AD, AG oder CE bleiben lesbar, die Straße davor wird maskiert (D60).
-- Ortsnamen in Firmennamen werden maskiert (E-ORT, offene Frage F6).
-- Die Ausnahmeliste (Whitelist) macht den ganzen Fund sichtbar, Teilreste davon werden aber weiter maskiert (D54, offene Frage F8).
+- Niederländische Postleitzahlen mit Buchstabenpaaren wie AD, AG oder CE bleiben lesbar, die Straße davor wird maskiert.
+- Ortsnamen in Firmennamen werden bewusst maskiert (lieber ein Wort zu viel).
+- Die Ausnahmeliste (Whitelist) macht den ganzen Fund sichtbar, Teilreste davon werden aber weiter maskiert (Beispiel: Eintrag "Berlin" bei "Hauptstr. 46, 65311 Berlin": "Berlin" bleibt lesbar, die Straße bleibt ersetzt).
+- Die Gegenprüfung nutzt nur Regeln und Wortlisten, nicht das KI-Modell; "keine Auffälligkeiten" sagt daher wenig über Namen, die das Modell übersehen hat.
+- PDF: Für PDF mit Textebene gibt es keine feste Seitengrenze (nur 30 MB je Datei). Gescannte PDFs werden nur bis zur 20. Seite per OCR gelesen; spätere Seiten fehlen im Ergebnis. Enthält ein PDF teils Text, teils Scan-Seiten, wird nicht per OCR gelesen, und die Scan-Seiten fehlen.
+- Die unverschlüsselte CSV-Zuordnung lässt Einträge für Platzhalter weg, die wörtlich im Originaltext standen; die Rückübersetzung aus der CSV ist dann nicht verlustfrei. Die `.psmap` enthält sie.
+- Der Modus "Annotieren" ist nur mit der Maus bedienbar.
+- Eine präparierte oder sehr große DOCX-Datei kann das Programm stark verlangsamen oder zum Absturz bringen (hoher Speicherbedarf); die mitgelieferte DOCX-Bibliothek enthält ältere Teile mit bekannten Meldungen zu Rechenzeit-Angriffen. Betroffen ist nur die Verfügbarkeit, nicht der Datenschutz.
 - Erkennung ist nie vollständig; OCR-Lesefehler, Text in Bildern und weitere Sprachen bleiben Grenzen (siehe `docs/benutzerhandbuch.md`). Unter macOS umgeht Cmd+Q die Rückfrage bei nicht gespeicherter Zuordnung. Das Schreiben der Ausgabedateien in der Kommandozeile ist nicht atomar.
 
 ### Intern
 - Erkennungskern als Modul `app/lib/detect.js` (ohne Oberflächenzugriff, in Node testbar); neue Logik in Modulen mit Unit-Tests; Differenztest gegen die Referenz von 1.8.0 (`node tests/eval/diff-reference.mjs`), Korpus mit 263 weiteren Fällen und 98 synthetischen Dokumenten (`npm run eval -- --set v2`), Realdokument-Test für TXT, DOCX, PDF und OCR.
-- mammoth.js 1.6.0 auf 1.13.0 (DOCX lesen; Browser-Datei 642.759 auf 405.060 Bytes, Lizenz unverändert BSD-2-Clause). Umlaute und Sonderzeichen im DOCX-Rundlauf unverändert, Differenztest 0 Abweichungen von 645.
+- mammoth.js 1.6.0 auf 1.13.0 (DOCX lesen; Browser-Datei 642.759 auf 405.060 Bytes, Lizenz unverändert BSD-2-Clause). Umlaute und Sonderzeichen im DOCX-Rundlauf unverändert, Differenztest: keine unerlaubten Abweichungen von 645 Referenzfällen.
 - JSZip 3.10.1 auf 3.10.2 (ZIP lesen und schreiben; Datei 97.630 auf 97.781 Bytes, Lizenz unverändert MIT; Korrekturen: Erkennung von Binärdaten aus anderem Kontext, Blob-Lesen ab Node 18). Die ZIP-Prüfung in `app/lib/formats.js` liest weiterhin `_data.uncompressedSize`; `formats.test` grün.
 - jsPDF 2.5.1 auf 4.2.1 (PDF schreiben; Datei 364.463 auf 420.165 Bytes, Lizenz unverändert MIT; enthält die Sicherheitskorrekturen der Versionen 3 und 4). Die optionalen Nachlade-Abhängigkeiten (canvg, html2canvas, dompurify) werden nicht verwendet und lösen keinen Netzzugriff aus. Umlaute und Sonderzeichen im PDF-Export unverändert (WinAnsi); Zeichen außerhalb davon (z. B. polnisches ł, kyrillisch, CJK) gab es mit der Standardschrift schon vorher nicht, unverändert.
 - Tesseract.js 5.1.1 auf 7.0.0 samt Core 5.1.1 auf 7.0.0 (OCR; Lizenz unverändert Apache-2.0; Sprachdaten deu/eng best_int 4.0.0 aus derselben Quelle, Prüfsumme unverändert). Neu im Paket: `tesseract-core-relaxedsimd-lstm.wasm.js` (die Bibliothek wählt zur Laufzeit relaxedsimd, simd oder die einfache Datei; ohne die neue Datei fände ein aktueller Chromium den Kern nicht). Aufrufcode unverändert. Messung auf einem gescannten Testdokument (3 Seiten, 1.478 Zeichen): Zeichenfehlerrate 2,98 % vorher und nachher (44 Fehler, identisch), Zeit 6,4 bis 7,3 s vorher, 5,2 bis 5,3 s nachher; OCR-Realdokumente weiter 1 Rest von 24 (4,2 %), OCR-Teil des Tests 19,1 s auf 17,3 s; kein Netzzugriff (alle Dateien von `app://`).
