@@ -116,7 +116,7 @@ test('Diagnose enthält PrivacyShield <Version>, die Zeile "Installation:", Elec
     await f.waitForFunction((s) => document.getElementById('IT').value.includes(s), SECRET, { timeout: 15000 });
     await a.win.click('#btn-info');
     await a.win.waitForTimeout(300);
-    await a.win.click('#btn-diag');
+    await a.win.click('#info-dialog .info-actions button >> text=Diagnose kopieren');
     await a.win.waitForTimeout(800);
     const text = await a.app.evaluate(({ clipboard }) => clipboard.readText());
     assert.ok(text.startsWith('PrivacyShield ' + VERSION), 'Diagnose beginnt mit PrivacyShield <Version>: ' + text.slice(0, 40));
