@@ -1367,6 +1367,8 @@
     "package-lock.json",
     "THIRD_PARTY_NOTICES.md",
     "tests/helpers.mjs",
+    "preload.js",
+    "tests/info.test.mjs",
     "tests/a11y-struktur.test.mjs"
    ],
    "tests": [
