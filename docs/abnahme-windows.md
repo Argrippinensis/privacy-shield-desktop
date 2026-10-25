@@ -20,7 +20,7 @@ Alle Beispieltexte unten sind erfunden. Verwenden Sie für die Prüfung keine ec
   `brief1.txt`: "Sehr geehrte Frau Erika Musterfrau, Ihre Rechnung Nr. 4711 ist offen. Bitte überweisen Sie auf die IBAN DE89 3704 0044 0532 0130 00. Rückfragen: erika.musterfrau@example.org oder Telefon 030 1234567."
   `brief2.txt`: "Notiz: Herr Max Mustermann hat mit Frau Musterfrau gesprochen. Erika Musterfrau ist unter erika.musterfrau@example.org erreichbar. Die Lieferung geht nach Musterstraße 12, 10115 Berlin."
   `brief3.txt`: "Protokoll vom 12.03.2026. Anwesend: Erika Musterfrau, Max Mustermann. Frau Musterfrau bestätigt die Zahlung von 250,00 EUR."
-- [ ] Zum Vergleich (Update-Test, Punkt 9) ist die Version 1.8.0 des Installers erreichbar.
+- [ ] Zum Vergleich (Update-Test, Punkt 10) ist die Version 1.8.0 des Installers erreichbar.
 
 ## 1. Installation
 
@@ -56,7 +56,7 @@ Alle Beispieltexte unten sind erfunden. Verwenden Sie für die Prüfung keine ec
 
 ## 5. Zuordnung speichern und laden
 
-- [ ] Im Arbeitsbereich das Mapping prüfen (Bereich "Variablen-Zuordnung" mit Einträgen). "Zuordnung speichern" klicken, Passwort zweimal eingeben, Datei `zuordnung.psmap` speichern. Meldung "Zuordnung verschlüsselt gespeichert".
+- [ ] "Zurücksetzen" klicken, `brief1.txt` laden und anonymisieren. Dann das Mapping prüfen (Bereich "Variablen-Zuordnung" mit Einträgen). "Zuordnung speichern" klicken, Passwort zweimal eingeben, Datei `zuordnung.psmap` speichern. Meldung "Zuordnung verschlüsselt gespeichert".
 - [ ] Die Datei im Editor öffnen: Der Inhalt ist nicht lesbar (Binärdaten) und enthält die Namen nicht im Klartext.
 - [ ] PrivacyShield schließen. Rückfrage zur nicht gespeicherten Zuordnung erscheint nur, wenn nicht gespeichert wurde; hier darf sie nicht erscheinen. Neu starten.
 - [ ] Auf der Startseite "Zuordnung laden", `zuordnung.psmap` wählen. Zuerst ein falsches Passwort eingeben: Meldung "Passwort falsch oder Datei beschädigt". Dann das richtige Passwort: Meldung "n Einträge geladen".
@@ -87,7 +87,7 @@ Eingabeaufforderung (cmd) öffnen. Den Pfad zur `PrivacyShield.exe` an Ihre Inst
   `echo Code: %ERRORLEVEL%` zeigt `Code: 0`; danach `set PS_PW=`. Die Datei `zuordnung.psmap` existiert.
 - [ ] Die in Punkt 8 erzeugte `zuordnung.psmap` lässt sich in der Oberfläche mit demselben Passwort laden (wie in Punkt 5).
 - [ ] Ein Tippfehler in einem Schalter wird abgelehnt: `start /wait "" "C:\Program Files\PrivacyShield\PrivacyShield.exe" --cli --in "C:\PS-Test\eingang" --out "C:\PS-Test\aus3" --profil strict` und `echo Code: %ERRORLEVEL%` zeigt `Code: 2`.
-- [ ] Während eines Laufs (Beispiel Lauf 1) bleibt eine gleichzeitig geöffnete PrivacyShield-Oberfläche unberührt.
+- [ ] Vor Lauf 1 PrivacyShield öffnen und einen Text eintragen; nach dem Lauf sind Fenster und Text unverändert.
 - [ ] Mit eingeschaltetem Flugmodus (wie in Punkt 2) laufen die Läufe ebenfalls ohne Fehler.
 
 ## 9. Öffnen mit
@@ -100,6 +100,7 @@ Eingabeaufforderung (cmd) öffnen. Den Pfad zur `PrivacyShield.exe` an Ihre Inst
 Dieser Punkt lässt sich erst prüfen, wenn 2.0.0 als Release verfügbar ist. Er braucht eine Internetverbindung.
 
 - [ ] Flugmodus ausschalten. 2.0.0 deinstallieren, falls installiert (Windows-Einstellungen, Apps). Die Version 1.8.0 installieren und starten; links unten steht `v1.8.0`.
+- [ ] In 1.8.0 ein Dokument anonymisieren (zum Beispiel `brief1.txt`), "Als CSV exportieren" (unter "Weitere Optionen") nach `C:\PS-Test` speichern und den Schalter "KI-Erkennung verwenden" umstellen. Damit hat Punkt 10 später eine CSV-Zuordnung und eine geänderte Einstellung zum Prüfen.
 - [ ] Nach kurzer Zeit erscheint der Hinweis "Neue Version 2.0.0 verfügbar" (alternativ über den Knopf "Updates" oder "Info", "Auf Updates prüfen").
 - [ ] "Jetzt aktualisieren" klicken. Der Download zeigt einen Fortschritt ("Download... n%"), danach "Installation läuft, App wird neu gestartet...".
 - [ ] Die App startet in der neuen Version; links unten steht `v2.0.0`; der Info-Dialog nennt Version 2.0.0.
