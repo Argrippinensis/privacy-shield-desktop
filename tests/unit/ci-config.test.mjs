@@ -59,3 +59,26 @@ test('build.yml: installierte App wird mit PS_INSTALLED=1 und tests/installed.te
   assert.match(buildYml, /PS_INSTALLED\s*[:=]\s*['"]?1\b/);
   assert.match(buildYml, /installed\.test\.mjs/);
 });
+
+test('build.yml: kein ${{ inputs ... }} innerhalb eines run:-Blocks (Script-Injection, nur env:)', { skip: SKIP_YAML }, () => {
+  const py = 'import yaml,sys,json; d=yaml.safe_load(open(sys.argv[1])); print(json.dumps([[j,s.get("name"),s.get("run")] for j,v in d["jobs"].items() for s in v.get("steps",[]) if "run" in s]))';
+  const r = spawnSync('python3', ['-I', '-c', py, path.join(ROOT, '.github', 'workflows', 'build.yml')], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  for (const [job, name, run] of JSON.parse(r.stdout)) {
+    assert.doesNotMatch(String(run), /\$\{\{\s*(?:github\.event\.)?inputs/, `Schritt "${name}" (${job}): inputs im run:-Block, per env: uebergeben`);
+  }
+});
+
+test('build.yml: die drei Installationsschritte laufen nur unter Windows mit shell: pwsh', { skip: SKIP_YAML }, () => {
+  const py = 'import yaml,sys,json; d=yaml.safe_load(open(sys.argv[1])); print(json.dumps([s for v in d["jobs"].values() for s in v.get("steps",[])]))';
+  const r = spawnSync('python3', ['-I', '-c', py, path.join(ROOT, '.github', 'workflows', 'build.yml')], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const steps = JSON.parse(r.stdout);
+  const wanted = [/Installer still installieren/, /Modelldatei der Installation/, /Tests gegen die installierte App/];
+  for (const re of wanted) {
+    const s = steps.find((x) => re.test(x.name || ''));
+    assert.ok(s, `Schritt ${re} fehlt`);
+    assert.match(String(s.if), /runner\.os\s*==\s*'Windows'/, `Schritt "${s.name}": Bedingung runner.os == 'Windows' fehlt`);
+    assert.equal(s.shell, 'pwsh', `Schritt "${s.name}": shell: pwsh fehlt`);
+  }
+});
