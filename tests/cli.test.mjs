@@ -302,6 +302,16 @@ test('falsches Profil ergibt Code 2 und eine Meldung ohne Pfadinhalte', async ()
   assert.ok(!fs.existsSync(out), 'bei Argumentfehlern darf nichts geschrieben werden');
 });
 
+test('vertipptes --profil ergibt Code 2, ohne einen Ausgabeordner anzulegen', async () => {
+  const dir = await makeInputDir();
+  const out = path.join(tmp(), 'Ausgang');
+  const r = await runCli(['--in', dir, '--out', out, '--profil', 'strict', '--ai', 'off']);
+  expectCode(r, 2, 'unbekannte Option');
+  assert.match(r.all, /--profil/);
+  assert.ok(!r.all.includes('Eingang_Kunde'), 'Meldung enthaelt Pfadinhalt');
+  assert.ok(!fs.existsSync(out), 'bei Argumentfehlern darf nichts geschrieben werden');
+});
+
 test('fehlendes --out ergibt Code 2', async () => {
   const dir = await makeInputDir();
   const r = await runCli(['--in', dir]);
