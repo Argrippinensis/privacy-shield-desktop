@@ -123,6 +123,6 @@ Remove-Item Env:PS_PW
 
 ## Hinweise
 
-* **Tippfehler in Optionen.** Unbekannte Schalter werden ignoriert, weil Chromium eigene Schalter wie `--no-sandbox` mitführen darf. Ein falsch geschriebener eigener Schalter (zum Beispiel `--profil`) fällt deshalb nicht als Fehler auf, sondern über den Standardwert oder weil `--in`/`--out` fehlt. Bei Verdacht Profil und Bericht prüfen (`--report`).
+* **Tippfehler in Optionen.** Unbekannte Schalter nach `--cli` werden mit Rückgabecode 2 abgelehnt, damit zum Beispiel `--profil strict` nicht unbemerkt das Standardprofil verwendet. Bekannte Chromium-Schalter wie `--no-sandbox` bleiben erlaubt; Electron-Schalter vor `--cli` gehören zum Programmstart.
 * **Temporäre Daten.** Der Lauf nutzt einen eigenen, temporären Programmordner (im Temp-Verzeichnis, Name beginnt mit `psc-run-`) und löscht ihn am Ende. Weil das Programm beim Beenden noch ein paar KB anlegt, räumt ein kurzer Hilfsprozess kurz danach nach; bleibt doch ein Rest, entfernt ihn der nächste Lauf nach einem Tag.
 * **Zeitgrenze.** Meldet die interne Seite 15 Minuten lang nichts (kein Dokument gelesen, kein KI-Abschnitt fertig), bricht der Lauf mit Code 6 ab.
