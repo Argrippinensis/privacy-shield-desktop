@@ -84,7 +84,7 @@ Eine laufende Regex lässt sich in der Anwendung nicht abbrechen. Ein ungünstig
 * Rückverweise (`\1` bis `\9`, `\k<name>`).
 * Vorausschau und Rückschau (`(?=`, `(?!`, `(?<=`, `(?<!`) und benannte Gruppen (`(?<name>`).
 * Muster über 200 Zeichen, andere Flags als `i`, ungültige Syntax.
-* Zu aufwendige Muster: Das Produkt der Obergrenzen aller Wiederholungen darf höchstens 1000 sein (`?` zählt 2, `{n}` zählt 1, `{m,n}` zählt `n`, bei `m` gleich 0 zählt es `n + 1`), und zusätzlich darf ein Aufwandsmaß aus diesem Produkt und der Länge der wiederholten Teile höchstens 3000 betragen (Meldung "Das Muster ist zu aufwendig"). Bei Ablehnung hilft es, kleinere Obergrenzen zu wählen.
+* Zu aufwendige Muster: Das Produkt der Obergrenzen aller Wiederholungen darf höchstens 1000 sein (`?` zählt 2, `{n}` zählt 1, `{m,n}` zählt `n`, bei `m` gleich 0 zählt es `n + 1`). Zusätzlich darf das Produkt der Obergrenzen mal (Anzahl der festen Zeichen im Muster plus 1) höchstens 3000 betragen. Feste Zeichen sind alle, die nicht unter einer veränderlichen Wiederholung stehen. Meldung: "Das Muster ist zu aufwendig". Dann hilft es, kleinere Obergrenzen zu wählen oder das Muster zu kürzen. Beispiel: `a{1,10}a{1,10}a{1,10}b` (Produkt 1000, ein festes Zeichen) wird angenommen, `a{1,10}a{1,10}a{1,10}bbbbbbbb` (acht feste Zeichen) wird abgelehnt.
 
 ### Beispiele
 
