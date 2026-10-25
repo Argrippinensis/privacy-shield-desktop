@@ -200,10 +200,15 @@ test('Tastatur: sichtbarer Knopf #policy-import-btn ist fokussierbar und loest p
     assert.ok(info, '#policy-import-btn fehlt');
     assert.equal(info.tag, 'BUTTON');
     assert.ok(info.sichtbar && info.fokus, JSON.stringify(info));
+    // Auf langsamen CI-Rechnern verpasst die erste Taste gelegentlich den Fokus (zweimal beobachtet): bis zu 3 Versuche mit neuem Fokus.
+    // Es muss weiterhin ein Dateidialog nach der Taste erscheinen; ohne Dialog nach 3 Versuchen schlaegt der Test fehl.
     for (const taste of ['Enter', ' ']) {
-      await f.focus('#policy-import-btn', { timeout: 1500 });
-      const [chooser] = await Promise.all([a.win.waitForEvent('filechooser', { timeout: 10000 }), a.win.keyboard.press(taste)]);
-      assert.ok(chooser, 'kein Dateidialog nach Taste ' + JSON.stringify(taste));
+      let chooser = null;
+      for (let versuch = 1; versuch <= 3 && !chooser; versuch++) {
+        await f.focus('#policy-import-btn', { timeout: 3000 });
+        try { [chooser] = await Promise.all([a.win.waitForEvent('filechooser', { timeout: 6000 }), a.win.keyboard.press(taste)]); } catch { chooser = null; }
+      }
+      assert.ok(chooser, 'kein Dateidialog nach Taste ' + JSON.stringify(taste) + ' (3 Versuche)');
     }
   } finally { await a.close(); }
 });
