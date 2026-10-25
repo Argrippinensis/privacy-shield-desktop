@@ -13,7 +13,7 @@ on:
         default: false
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -125,22 +125,20 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     needs: [build]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
       - uses: actions/download-artifact@v8
         with:
           pattern: builds-*
           merge-multiple: true
           path: dist
-      - name: Alle Installer vorhanden?
-        # Verhindert ein Release ohne Installer einer Plattform (Download-Links der Website liefen sonst ins Leere).
-        run: |
-          for pattern in "PrivacyShield-Setup*.exe" "PrivacyShield*mac*.zip" "PrivacyShield*.AppImage" "PrivacyShield*.deb"; do
-            if ! compgen -G "dist/$pattern" > /dev/null; then
-              echo "FEHLT: $pattern - Build-Job erneut ausfuehren, bevor das Release erstellt wird"
-              exit 1
-            fi
-          done
+      - name: Tag, Version, Changelog und alle Installer pruefen
+        run: node scripts/check-release-inputs.mjs "$GITHUB_REF_NAME"
       - name: Release-Text aus CHANGELOG.md
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
@@ -152,7 +150,7 @@ jobs:
           cd dist
           sha256sum PrivacyShield* > SHA256SUMS.txt
           cat SHA256SUMS.txt
-      - name: Create Release
+      - name: Release als Entwurf mit Assets anlegen
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -160,7 +158,19 @@ jobs:
           FILES=$(find dist -maxdepth 1 -type f \( -name 'PrivacyShield*' -o -name 'latest*.yml' -o -name 'SHA256SUMS.txt' \) | tr '\n' ' ')
           echo "Dateien: $FILES"
           # shellcheck disable=SC2086
-          gh release create "$GITHUB_REF_NAME" $FILES --title "PrivacyShield $GITHUB_REF_NAME" --notes-file notes.md
+          gh release create "$GITHUB_REF_NAME" $FILES --draft --title "PrivacyShield $GITHUB_REF_NAME" --notes-file notes.md
+      - name: Hochgeladene Dateien pruefen und Release veroeffentlichen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[] | select(.size > 0) | .name' > assets.txt
+          for file in PrivacyShield-Setup.exe PrivacyShield-mac-arm64.zip PrivacyShield-mac-x64.zip PrivacyShield.AppImage PrivacyShield.deb SHA256SUMS.txt; do
+            if ! grep -Fxq "$file" assets.txt; then
+              echo "Release bleibt Entwurf: hochgeladene Datei fehlt oder ist leer: $file"
+              exit 1
+            fi
+          done
+          gh release edit "$GITHUB_REF_NAME" --draft=false
       - name: Download-Links pruefen
         # Die Website verlinkt auf releases/latest/download/<fester Dateiname>; hier sicherstellen, dass sie funktionieren.
         env:
