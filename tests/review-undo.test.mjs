@@ -639,3 +639,150 @@ test('D45 Ab 1100 px reserviert die Leiste Platz (360 px), der Inhalt rueckt nac
     assert.ok(r.sw <= r.iw + 1, 'waagerechter Bildlauf: ' + JSON.stringify(r));
   });
 });
+
+// ---------------------------------------------------------------------------------------------
+// Reparaturzyklus D1.w2: Faelle zu den Pruefermaengeln
+// ---------------------------------------------------------------------------------------------
+
+// Kontrastverhaeltnis nach WCAG aus zwei rgb()/rgba()-Zeichenketten (berechnete Farben)
+const kontrast = (fg, bg) => {
+  const lum = (c) => {
+    const m = c.match(/[\d.]+/g).slice(0, 3).map(Number).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2];
+  };
+  const a = lum(fg), b = lum(bg);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+};
+
+test('D1.w2-a Schalter #FUNDEDOUBT gedrueckt behaelt bei Mausberuehrung lesbaren Kontrast (mindestens 4.5)', KURZ, async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_FILTER);
+    await oeffneFunde(f);
+    await braucht(f, '#FUNDEDOUBT');
+    await f.click('#FUNDEDOUBT');
+    assert.equal(await f.getAttribute('#FUNDEDOUBT', 'aria-pressed'), 'true', 'Voraussetzung: Schalter gedrueckt');
+    await f.hover('#FUNDEDOUBT');
+    await sleep(400);
+    const c = await f.evaluate(() => { const s = getComputedStyle(document.getElementById('FUNDEDOUBT')); return { fg: s.color, bg: s.backgroundColor }; });
+    const v = kontrast(c.fg, c.bg);
+    assert.ok(v >= 4.5, 'Kontrast bei Mausberuehrung im gedrueckten Zustand ' + v.toFixed(2) + ' (Schrift ' + c.fg + ' auf ' + c.bg + ')');
+  });
+});
+
+test('D1.w2-b Gruppenknopf bei aktiver Suche: "alle dieses Typs" wirkt auf alle Eintraege des Typs, sonst heisst er "angezeigten"', LANG, async () => {
+  await mitApp(async (f) => {
+    const text = Array.from({ length: 700 }, (_, i) => `Kontakt ${i}: person${i}@muster-${i}.de`).join('\n');
+    await lade(f, text);
+    await oeffneFunde(f);
+    // Voraussetzung: alle angezeigten (person7*) und zwei nicht angezeigte (person1, person2) sind freigegeben
+    const n = await f.evaluate(() => {
+      const w = fundeAll.filter((e) => e.type === 'EMAIL' && (/^person7(\d)?@/.test(e.value) || /^person[12]@/.test(e.value)));
+      fundeDecide(w, true);
+      return w.length;
+    });
+    assert.equal(n, 13, 'Voraussetzung: 11 angezeigte plus 2 versteckte freigegeben');
+    await f.fill('#FUNDESEARCH', 'person7');
+    await warteKeys(f, (x) => x.length === 11, 'Suche "person7" muss genau 11 Eintraege zeigen');
+    const r = await f.evaluate(() => {
+      const b = Array.from(document.querySelectorAll('#FUNDELIST button')).find((x) => /^alle /i.test(x.textContent.trim()));
+      if (!b) return { ok: false };
+      const label = b.textContent.trim() + ' | ' + (b.getAttribute('aria-label') || '');
+      b.click();
+      return { ok: true, label };
+    });
+    assert.ok(r.ok, 'kein Gruppenknopf gefunden');
+    assert.match(r.label, /maskieren/i, 'Voraussetzung: Gruppenknopf maskiert (alle angezeigten sind freigegeben): ' + r.label);
+    await sleep(500);
+    const rest = await relListe(f);
+    const zeigte = (s) => /^EMAIL\|person7(\d)?@/.test(s);
+    assert.ok(!rest.some(zeigte), 'angezeigte Werte muessen maskiert sein: ' + JSON.stringify(rest));
+    if (/angezeigten/i.test(r.label)) {
+      assert.deepEqual(rest.filter((s) => !zeigte(s)).length, 2, 'bei "angezeigten" duerfen versteckte Freigaben bleiben: ' + JSON.stringify(rest));
+    } else {
+      assert.deepEqual(rest, [], 'Beschriftung "' + r.label + '" verspricht alle Eintraege des Typs, aber es blieben Freigaben: ' + JSON.stringify(rest));
+    }
+  });
+});
+
+test('D1.w2-c Escape im Suchfeld leert zuerst das Feld, ein zweites Escape schliesst die Leiste und der Fokus kehrt zu #FUNDEBTN zurueck', KURZ, async () => {
+  await mitApp(async (f, a) => {
+    await lade(f, TEXT_GRUPPE);
+    await f.focus('#FUNDEBTN');
+    await a.win.keyboard.press('Enter');
+    await f.waitForSelector('#FUNDELIST li[data-key]', { timeout: 8000 });
+    await f.fill('#FUNDESEARCH', 'anton');
+    await warteKeys(f, (x) => x.length === 2, 'Suche "anton" muss zwei Eintraege zeigen');
+    await f.focus('#FUNDESEARCH');
+    await a.win.keyboard.press('Escape');
+    await sleep(400);
+    assert.equal(await f.inputValue('#FUNDESEARCH'), '', 'erstes Escape muss das Suchfeld leeren');
+    assert.ok(await f.isVisible('#FUNDE'), 'erstes Escape darf die Leiste nicht schliessen');
+    assert.equal(await f.evaluate(() => document.activeElement && document.activeElement.id), 'FUNDESEARCH', 'Fokus bleibt im Suchfeld');
+    await warteKeys(f, (x) => x.length === 3, 'nach dem Leeren muessen wieder alle Eintraege erscheinen');
+    await a.win.keyboard.press('Escape');
+    await sleep(300);
+    assert.ok(!(await f.isVisible('#FUNDE')), 'zweites Escape schliesst die Leiste nicht');
+    assert.equal(await f.evaluate(() => document.activeElement && document.activeElement.id), 'FUNDEBTN', 'Fokus kehrt nicht zu #FUNDEBTN zurueck');
+  });
+});
+
+test('D1.w2-d1 Undo/Redo einer Whitelist-Aenderung stellt den Zustand her', KURZ, async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_GRUPPE);
+    await oeffneFunde(f);
+    await f.evaluate(() => { document.getElementById('WLI').value = 'Sonderbegriff'; addWL(); });
+    assert.deepEqual(await f.evaluate(() => whitelist.slice()), ['Sonderbegriff']);
+    await f.click('#FUNDEUNDO');
+    await sleep(300);
+    assert.deepEqual(await f.evaluate(() => whitelist.slice()), [], 'Undo stellt die Whitelist nicht her');
+    await f.click('#FUNDEREDO');
+    await sleep(300);
+    assert.deepEqual(await f.evaluate(() => whitelist.slice()), ['Sonderbegriff'], 'Redo stellt die Whitelist nicht her');
+  });
+});
+
+test('D1.w2-d2 Undo/Redo einer manuellen Markierung stellt den Zustand her', KURZ, async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_KONFIG);
+    await oeffneFunde(f);
+    const zahl = () => f.evaluate(() => PSLib.marks.toCvars(manualMarks).length);
+    assert.equal(await zahl(), 0);
+    await f.evaluate(() => addManualMark('Rotkehlchen', 'NAME'));
+    assert.equal(await zahl(), 1, 'Voraussetzung: Markierung gesetzt');
+    await f.click('#FUNDEUNDO');
+    await sleep(300);
+    assert.equal(await zahl(), 0, 'Undo nimmt die Markierung nicht zurueck');
+    await f.click('#FUNDEREDO');
+    await sleep(300);
+    assert.equal(await zahl(), 1, 'Redo stellt die Markierung nicht wieder her');
+  });
+});
+
+test('D1.w2-d3 Verlaufslimit: nach 150 Entscheidungen hoechstens 100 Undo-Schritte', KURZ, async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_GRUPPE);
+    await oeffneFunde(f);
+    const schritte = await f.evaluate(() => {
+      const e = fundeAll[0];
+      for (let i = 0; i < 150; i++) fundeDecide([e], i % 2 === 0);
+      let n = 0;
+      while (fundeHist.canUndo() && n < 1000) { fundeStep(false); n++; }
+      return n;
+    });
+    assert.ok(schritte <= 100, 'mehr als 100 Undo-Schritte: ' + schritte);
+    assert.ok(schritte >= 50, 'Verlauf ist unerwartet kurz: ' + schritte);
+  });
+});
+
+test('D1.w2-d4 clearAll setzt den Verlauf zurueck: #FUNDEUNDO und #FUNDEREDO sind danach inaktiv', KURZ, async () => {
+  await mitApp(async (f) => {
+    await lade(f, TEXT_GRUPPE);
+    await oeffneFunde(f);
+    await freigeben(f, 'NAME|' + ANTON, ANTON);
+    assert.ok(!(await istDeaktiviert(f, '#FUNDEUNDO')), 'Voraussetzung: Undo aktiv');
+    await f.evaluate(() => clearAll());
+    await sleep(400);
+    assert.ok(await istDeaktiviert(f, '#FUNDEUNDO'), '#FUNDEUNDO muss nach clearAll inaktiv sein');
+    assert.ok(await istDeaktiviert(f, '#FUNDEREDO'), '#FUNDEREDO muss nach clearAll inaktiv sein');
+  });
+});
