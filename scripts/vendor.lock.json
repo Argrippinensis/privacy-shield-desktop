@@ -33,27 +33,33 @@
     },
     {
       "dest": "vendor/tesseract/tesseract.min.js",
-      "url": "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js",
-      "sha256": "a8e29918d098b2b06e1012bdaeffb4aec0445c5d5654709023e0bd1f442a80e8",
-      "size": 66695
+      "url": "https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js",
+      "sha256": "000c27d9cd0def655f77b36c72a389c0ab13793aa31cb4d7aab56d09c0afbc7e",
+      "size": 62961
     },
     {
       "dest": "vendor/tesseract/worker.min.js",
-      "url": "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
-      "sha256": "aca1229639fc9907d86f96e825955a2b7c5716d17f3bc3acd71f9c7ab66181fc",
-      "size": 123724
+      "url": "https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js",
+      "sha256": "576b7df7e3393e137e51849357c9adb53fe7ac1bb69bfa06cf3d61520f182c6d",
+      "size": 111307
+    },
+    {
+      "dest": "vendor/tesseract/tesseract-core-relaxedsimd-lstm.wasm.js",
+      "url": "https://cdn.jsdelivr.net/npm/tesseract.js-core@7.0.0/tesseract-core-relaxedsimd-lstm.wasm.js",
+      "sha256": "861a536cf9ef8e63cb644d57bab39c388f37f7d6b6f60024b741c5f6b39a59b3",
+      "size": 3905767
     },
     {
       "dest": "vendor/tesseract/tesseract-core-simd-lstm.wasm.js",
-      "url": "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-simd-lstm.wasm.js",
-      "sha256": "ce20eda9533cbed1e6c2b4276fbae1e0adc61b6754b5513084be601787b457cf",
-      "size": 3938657
+      "url": "https://cdn.jsdelivr.net/npm/tesseract.js-core@7.0.0/tesseract-core-simd-lstm.wasm.js",
+      "sha256": "c58b46a4c796c0b8afccf77591d5b875b6896b45d402bbce8caa6f5362447b38",
+      "size": 3899472
     },
     {
       "dest": "vendor/tesseract/tesseract-core-lstm.wasm.js",
-      "url": "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core-lstm.wasm.js",
-      "sha256": "8f04aa0cc81e7bde33f80e92fa01a7a665f0b4884d098acf5de9c7104a11dfaa",
-      "size": 3938277
+      "url": "https://cdn.jsdelivr.net/npm/tesseract.js-core@7.0.0/tesseract-core-lstm.wasm.js",
+      "sha256": "eef5f8b2f8e20e150680b20adaec4a60babafee3adbe8a94583c81fee46e8680",
+      "size": 3896484
     },
     {
       "dest": "vendor/tesseract/lang/deu.traineddata.gz",
