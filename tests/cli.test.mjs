@@ -501,14 +501,24 @@ test('--map mit --password-env: zuordnung.psmap wird geschrieben, entschluesselt
   await assert.rejects(PSMAP.decrypt(new Uint8Array(fs.readFileSync(MAP)), 'ganz anderes Passwort'), 'falsches Passwort darf nicht entschluesseln');
 });
 
-// Windows, gebautes Programm: Die exe ist ein Fenster-Programm ohne Standardeingabe (CI-Probelauf 2026-10-25, D56); dort gilt --password-env.
-test('--map mit --password-stdin ist gleichwertig (eine Zeile von der Standardeingabe)', { skip: process.platform === 'win32' && !!process.env.PS_PACKAGED_BIN && 'Windows-exe ohne Standardeingabe (siehe docs/kommandozeile.md)' }, async () => {
+// Windows: Sowohl Electron im Quelltextlauf als auch die gebaute GUI-exe haben keine nutzbare Standardeingabe.
+test('--map mit --password-stdin ist gleichwertig (eine Zeile von der Standardeingabe)', { skip: process.platform === 'win32' && 'Windows-Electron ohne Standardeingabe (siehe docs/kommandozeile.md)' }, async () => {
   const dir = await makeRoundtripDir();
   const out = path.join(tmp(), 'Ausgang');
   const MAP = path.join(tmp(), 'zuordnung.psmap');
   const r = await runCli(['--in', dir, '--out', out, '--ai', 'off', '--map', MAP, '--password-stdin'], { stdin: PASSWORD + '\n' });
   expectCode(r, 0, '--password-stdin');
   await assertRoundtrip(out, r, MAP);
+});
+
+test('Windows: --password-stdin meldet Code 2 und schreibt keine Zuordnung', { skip: process.platform !== 'win32' }, async () => {
+  const dir = await makeRoundtripDir();
+  const out = path.join(tmp(), 'Ausgang');
+  const MAP = path.join(tmp(), 'zuordnung.psmap');
+  const r = await runCli(['--in', dir, '--out', out, '--ai', 'off', '--map', MAP, '--password-stdin'], { stdin: PASSWORD + '\n' });
+  expectCode(r, 2, 'Windows ohne Standardeingabe');
+  assert.match(r.all, /Standardeingabe/);
+  assert.ok(!fs.existsSync(MAP), 'ohne Passwort darf keine Zuordnung entstehen');
 });
 
 test('Zuordnung mit DOCX und PDF: docs enthaelt die Originalnamen und der Rundlauf stellt Person und E-Mail wieder her', async () => {
