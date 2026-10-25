@@ -1642,12 +1642,12 @@
     "xvfb-run -a npm run eval",
     "xvfb-run -a node tests/eval/diff-reference.mjs"
    ],
-   "status": "offen",
+   "status": "verschoben",
    "attempts": 0,
    "branch": "",
    "commit": "",
    "lease": null,
-   "notes": ""
+   "notes": "pdf.js bleibt bei 3.11.174: Nutzerentscheidung Frage F5 (2026-10-21, ja, Restrisiko-Entscheidung). Schutzmassnahmen: 30-MB-Grenze, isEvalSupported false, Sandbox, kein Netzzugriff. Bruecke fuer pdf.js 4 (nur ES-Module) nach 2.1; Vermerk im CHANGELOG (G1.docs)."
   },
   {
    "id": "F3.d",
