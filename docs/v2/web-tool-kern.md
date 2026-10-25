@@ -1,10 +1,10 @@
 # Erkennungskern im Web-Tool (Vorbereitung, Paket F1.b)
 
-Stand: Desktop-App 2.0 in Arbeit. Dies ist eine Vorbereitung; das Web-Tool wird in diesem Paket nicht geaendert und nicht ausgeliefert (Umsetzung nach 2.0, Entscheidung D18).
+Stand: Desktop-App 2.0.0 (Veroeffentlichung steht aus). Der Kern ist ausgelagert und in der Desktop-App eingebunden; das Web-Tool (arcangeli.eu) ist unveraendert und wird nicht mit 2.0 ausgeliefert (Umsetzung danach, Entscheidung D18).
 
 ## Wie das Modul eingebunden ist
 
-`app/privacy-shield.html` enthaelt den Erkennungskern nicht mehr (Regeln, Profile, Wortlisten, Stoppwoerter, Nachbearbeitung, Platzhaltervergabe). Er liegt in `app/lib/detect.js` und wird per `<script src="lib/detect.js"></script>` nach JSZip und vor dem Hauptskript geladen. Das Modul ist UMD: im Browser `window.PSDetect` (auch `PSLib.detect`), in Node `require`.
+`app/privacy-shield.html` enthaelt den Erkennungskern nicht mehr (Regeln, Profile, Wortlisten, Stoppwoerter, Nachbearbeitung, Platzhaltervergabe). Er liegt in `app/lib/detect.js` und wird per `<script src="lib/detect.js"></script>` nach `lib/placeholder.js` und `lib/coref.js` (seine beiden Abhaengigkeiten) und vor dem Hauptskript geladen. Das Modul ist UMD: im Browser `window.PSDetect` (auch `PSLib.detect`), in Node `require`.
 
 Die HTML behaelt nur duenne Fassaden mit unveraenderten Namen (`ENTS`, `PROFILES`, `store`, `cnt`, `aiCache`, `localAIMode`, `whitelist`, `cvars`, `curProf`, `collectEntities`, `anon`, `anonCore`, `deanon`, ...):
 
@@ -15,9 +15,13 @@ Die HTML behaelt nur duenne Fassaden mit unveraenderten Namen (`ENTS`, `PROFILES
 
 Zusaetzlich zur Schnittstelle aus F1 (`PROFILES`, `ENTS`, `detect`, `createState`, `anonymize`, `deanonymize`, `normalizeForDetection`) exportiert das Modul rein additiv `maskHard(text, opts)`, `isStopword(w)` und `token(state, val, pfx, col, meth)`.
 
+## Optionen von `detect` und `anonymize`
+
+Beide Funktionen nehmen ein Optionsobjekt: `ents` (Ids der aktiven Regeln), `wordlists` (Wortlisten-Erkennung, Standard an), `aiSpans` (Treffer der KI), `whitelist` (Teilzeichenfolge), `released` (exakte Freigaben `{ pfx, value }`), `cvars` (eigene Variablen), `extraSpans` (Treffer eigener Regeln, von `PSLib.policy.toSpans` berechnet; Positionen beziehen sich auf den normalisierten Text) und bei `anonymize` zusaetzlich `state` (Zuordnung, wird in place fortgeschrieben) sowie `reserved` (woertliche Platzhalter, die nie neu vergeben werden).
+
 ## Was das Web-Tool tun kann
 
-`lib/detect.js` ist ohne DOM, ohne Netzwerk und ohne Abhaengigkeiten; das Web-Tool kann dieselbe Datei per `<script>` laden und dieselben Fassaden benutzen. Damit endet die Drift zwischen App und Web-Tool. Der Differenztest (`node tests/eval/diff-reference.mjs --node`) bleibt die Absicherung.
+`lib/detect.js` ist ohne DOM und ohne Netzwerk und braucht nur `lib/placeholder.js` und `lib/coref.js`; das Web-Tool kann dieselbe Datei per `<script>` laden und dieselben Fassaden benutzen. Damit endet die Drift zwischen App und Web-Tool. Der Differenztest (`node tests/eval/diff-reference.mjs --node`) bleibt die Absicherung.
 
 ## Bewusst nicht geteilt
 

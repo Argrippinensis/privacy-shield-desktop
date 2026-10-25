@@ -1,6 +1,6 @@
 # Erkennungsentscheidungen und Backlog
 
-Backlog der Erkennungsluecken der zweiten Fallmenge (`tests/eval/cases-v2.mjs`, 175 Faelle, und `generateDocs2(98)`), gemessen in Paket C1.0
+Backlog der Erkennungsluecken der zweiten Fallmenge (`tests/eval/cases-v2.mjs`, aktuell 263 Faelle: 189 positive und 74 Negativfaelle, und `generateDocs2(98)`), gemessen in Paket C1.0
 mit `npm run eval -- --set v2`. Maßstab: Leck (ein Wert steht nach dem Anonymisieren noch im Text) und Fehlalarm (Text ohne Personenbezug
 wird maskiert, Kategorie NEG). Die Ausgangsstaende stehen als Ratsche in `tests/eval/baseline-v2.json`.
 
@@ -22,7 +22,7 @@ Modi: wortlisten (nur Regeln), fallback (Regeln plus Wortlisten, Modell startet 
 <!-- BACKLOG-START -->
 Stand der Messung: C1.3 Endstand Durchlauf 3 (Fehlalarme jetzt von 74 Negativfaellen der zweiten Menge)
 
-| Modus | Luecken Handfaelle (von 158) | Fehlalarme (NEG von 74) | Synthetik undicht (von 860) |
+| Modus | Luecken Handfaelle (von 189) | Fehlalarme (NEG von 74) | Synthetik undicht (von 860) |
 |---|---|---|---|
 | wortlisten | 20 | 6 | 61 |
 | fallback | 0 | 8 | 0 |
@@ -544,3 +544,16 @@ Entscheidung: Ein gleicher Nachname ist kein Beleg fuer dieselbe Person. `PSLib.
 Praezisierung nach Pruefung: (a) Gelesen wird nur ein Fenster von 150 Zeichen vor und 60 Zeichen nach dem Span (Laufzeit linear; 10000 Spans unter 0,1 s). (b) Satzgrenze fuer das Beziehungswort: Satzzeichen plus Leerraum (nicht nach Titelkuerzeln wie Dr., Prof.) oder Absatzumbruch (Leerzeile). (c) Generationszusatz (junior, senior, jun., sen., Jr., Sr.) nur in derselben Zeile; ausgeschrieben nur, wenn danach kein Grossbuchstabe folgt ("Weber Senior Partner" ist kein Zusatz). Bei ausgeschriebenen Namen gehoert der Zusatz zum Schluessel: "Hans Weber senior" und "Hans Weber junior" sind zwei Personen, alleinstehendes "Weber" oder "Hans" bleibt dann unverknuepft (gleiche Schreibweise teilt weiter den Platzhalter ueber `tok()`, der Zusatz bleibt im Text sichtbar). (d) Apposition: "Herr Weber, der Ehemann von Anna Weber" (Komma, Beziehungswort, von/des/der unmittelbar nach dem Span) trennt den Span von Anna Weber.
 
 Bewusste Grenzen (nicht erfasst): Partner und Kollege(in) sind keine Beziehungswoerter ("Partner Weber" in Kanzleien, "Kollegin Weber" kann dieselbe Person sein). "Anna Weber ... Herr Weber" (Anrede nur auf einer Seite, hier gegen den weiblichen Vornamen) bleibt verknuepft; der Anrede-Konflikt gilt nur zwischen zwei ausdruecklichen Anreden. Beziehungswoerter ausser der Liste (Lebensgefaehrte, Schwager, Onkel usw.) und Hinweise weiter als drei Woerter vor dem Span werden nicht erkannt. Generationszusaetze vor dem Nachnamen oder in anderer Form (Weber der Aeltere, II.) werden nicht erkannt. Die Beziehungswort-Pruefung nach dem Span kennt nur die Apposition mit Komma.
+
+## Zusammenfassung der bekannten Grenzen (Stand G1.docs, Vorbereitung 2.0.0)
+
+Kurzliste der in diesem Dokument und im Entscheidungsprotokoll begruendeten Grenzen; Einzelheiten stehen in den Abschnitten oben.
+
+* **Ortsnamen in Firmennamen werden maskiert** (E-ORT, zum Beispiel "Stadtwerke Muenchen", "Volkshochschule Heidelberg", "Sparkasse Koeln-Bonn"). Ein stehengebliebener Wohnort waere ein Leck, ein uebrig maskierter Ort nur ein Schoenheitsfehler. Offene Frage F6 (Standardantwort: weiter maskieren) ist noch nicht beantwortet.
+* **Ausnahmeliste (Whitelist) und Teilreste:** Ein Eintrag macht den ganzen Fund sichtbar, Teile davon werden aber erneut als Fund ersetzt (Beispiel: Eintrag "Berlin" bei "Hauptstr. 46, 65311 Berlin": "Berlin" lesbar, "Hauptstr. 46" maskiert). Strengere Seite, kein Leck, Rundlauf korrekt. Als `test.todo` gefuehrt; offene Frage F8 (Standardantwort: so lassen).
+* **Niederlaendische Postleitzahlen** mit Buchstabenpaaren aus der allgemeinen Ausschlussliste (EU, EM, WM, AD, BC, DM, FC, UK, US, TV, PC, IT, CD, GB, AG, CE), zum Beispiel "1011 AD Amsterdam", bleiben im Klartext; die Strasse davor wird maskiert (D60). Behebung fuer eine Folgeversion vorgeschlagen.
+* **Leerraum ueber 1000 Zeichen** zwischen Stichwort und Wert (zum Beispiel Kundennummer, Benutzername): der Wert bleibt dann im Klartext (D28, extrem konstruierter Fall, aus der Begrenzung fuer die Rechenzeit).
+* **Weitere bewusst offene Fehlalarme** (Brahms, Berg Zugspitze, Museum Ludwig, Japan, Deutsche Einheit, Weblink im Codebeispiel): siehe Tabelle "Bleibende Fehlalarme als bekannte Luecke".
+* **Gescannte Dokumente (OCR):** Der einzige Rest der Realdokumente ist ein Nachname hinter einem Zeilenumbruch; Lesefehler der Texterkennung sind kein Erkennungsfehler. OCR-Toleranz in Kennzahlen (O/0, l/1) und Soft-Hyphen/Zero-Width sind zurueckgestellt (kein Fund im Korpus).
+* **Verknuepfung derselben Person** bleibt absichtlich vorsichtig (zwei Personen mit gleichem Nachnamen werden nicht verknuepft; Partner und Kollege gelten nicht als Beziehungswoerter); Genitivformen haengen an der Spanerkennung.
+* **Sprachen:** Die Regeln sind auf deutsche Texte ausgelegt, einzelne Laenderformate (CH, AT, NL, FR, CZ u. a.) sind hinterlegt; weitere Sprachen (Paket C4) sind nicht Teil von 2.0.

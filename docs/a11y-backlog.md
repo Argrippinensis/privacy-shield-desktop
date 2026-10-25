@@ -1,4 +1,4 @@
-# Barrierefreiheit: Backlog (Stand D2.2)
+# Barrierefreiheit: Backlog (Stand G1.docs, Messung aus D2.2)
 
 Stand: axe-core 4.14.0, Tags wcag2a, wcag2aa, wcag21a, wcag21aa. In allen neun Ansichten und beiden Frames (Werkzeug, Hülle) gibt es
 0 Verstöße mit Impact serious oder critical (`tests/a11y.test.mjs`). Hier stehen nur die nicht blockierenden Restbefunde.
@@ -24,6 +24,8 @@ auch nicht im best-practice-Lauf. Ursache von aria-allowed-role: `#LCBAND` träg
 5. Annotieren-Modus ist nur per Maus bedienbar. Tastaturkonzept nötig (Auswahl per Tastatur, Typ wählen, Bestätigen).
 6. Update-Dialoge und Anleitung haben keinen `inert`-Hintergrund (Fokus und Screenreader erreichen den Hintergrund).
 7. Info-Dialog: Abschnittstitel in Großbuchstaben (CSS `text-transform`); Screenreader lesen sie teils buchstabierend. Besser: Schreibweise im Text, Optik per CSS nur bei Bedarf.
+8. `.fund-toggle:disabled` (über die Whitelist freigegebene Werte in der Prüfansicht) ist abgeschwächt dargestellt; nach WCAG für deaktivierte Bedienelemente nicht erforderlich, bei Gelegenheit angleichen (D58).
+9. `INK_CACHE` in `app/privacy-shield.html` ist ein einfaches Objekt; Härtung auf `Object.create(null)` oder `Map`, sobald Farbwerte aus fremden Quellen kommen können (eigene Regelfarben, D58).
 
 ## Kontraste alt und neu (Text, Soll 4,5:1)
 
@@ -61,4 +63,5 @@ nicht mehr als Link erkennbar war (axe link-in-text-block).
 ## Bewegung und Zoom
 
 - `prefers-reduced-motion: reduce`: globale Regel in `privacy-shield.html` und `index.html` (Dauer 0,01 ms, eine Wiederholung); Fortschrittsbalken springen statt zu gleiten.
+- Die Einblende-Klasse `.r` (Elemente, die beim Erscheinen einfahren) verschiebt nur noch (`transform`) und blendet nicht mehr über Transparenz ein; sichtbare Funktion unverändert.
 - Zoom 200 % bei 1280 x 800: kein horizontales Scrollen (unverändert grün).
