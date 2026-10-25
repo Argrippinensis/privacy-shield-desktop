@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { launchApp, toolFrame, setFiles, makeAppVariant, ROOT } from './helpers.mjs';
+import { launchApp, toolFrame, setFiles, makeAppVariant, ROOT, PACKAGED } from './helpers.mjs';
 
 const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
 const MODEL_REL = 'models/Xenova/distilbert-base-multilingual-cased-ner-hrl/onnx/model_quantized.onnx';
@@ -95,7 +95,7 @@ test('Info-Dialog zeigt Modellname und Installation "vollständig" bei intakter 
   } finally { await a.close(); }
 });
 
-test('Mit fehlender Modelldatei listet der Info-Dialog den relativen Pfad (nie den Programmordner)', async () => {
+test('Mit fehlender Modelldatei listet der Info-Dialog den relativen Pfad (nie den Programmordner)', { skip: PACKAGED && 'braucht Quelltext-Variante (makeAppVariant), laeuft im gebauten Programm nicht (laeuft in ci.yml)' }, async () => {
   const v = makeAppVariant({ dropModel: true });
   const a = await launchApp({ offline: true, appDir: v.dir });
   try {

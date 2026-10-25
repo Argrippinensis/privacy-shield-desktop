@@ -31,7 +31,7 @@ function runProc(args, { env = {}, timeout = 30000, cwd } = {}) {
     const childEnv = { ...process.env, PS_BLOCK_EXTERNAL: '1', ...env };
     delete childEnv.ELECTRON_RUN_AS_NODE;
     const t0 = Date.now();
-    const child = spawn(PACKAGED || electronPath, argv, { ...(cwd ? { cwd } : {}), env: childEnv, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
+    const child = spawn(process.env.PS_PACKAGED_BIN || electronPath, argv, { ...(cwd ? { cwd } : {}), env: childEnv, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
     let out = '', timedOut = false, done = false;
     child.stdout.on('data', (d) => { out += d; });
     child.stderr.on('data', (d) => { out += d; });
