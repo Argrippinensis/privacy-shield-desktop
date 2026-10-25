@@ -27,6 +27,24 @@ Umfang: 300 Änderungen seit 1.8.0, 117 Dateien.
 
 **Wortlaut-Hinweis (Ihre Entscheidung, rechtlich heikel):** Die Willkommensseite sagt seit 1.x "100% lokal & datenschutzkonform" und "Kein Daten-Leakage". Das habe ich nicht angefasst (Datenschutztexte entscheiden Sie). Ich empfehle, "datenschutzkonform" als Zusage zu überdenken, weil die Erkennung nie 100 Prozent sicher ist.
 
+### Beleg "keine neuen Lecks gegenüber 1.8.0", Fall für Fall
+
+1. **Alte Testmenge, 645 Eingaben in allen drei Modi** (Vergleich mit der echten 1.8.0-Ausgabe): 77 erlaubte Abweichungen, jede einzeln begründet und an die genaue Ausgabe gebunden (jede andere Abweichung lässt den Test scheitern). 74 verdecken mehr Text oder legen nichts offen. Die übrigen 3 (je in mehreren Modi) sind behobene Fehlalarme ("Standort", "Tannenberg Bau KG" waren fälschlich als Zugangsdaten verdeckt): kein personenbezogener Wert wird lesbar. **Kein einziger Fall, in dem ein Wert lesbar wurde, den 1.8.0 verdeckt hat.**
+2. **Neue Testmenge (263 Fälle plus 860 synthetische Werte, gab es in 1.8.0 nicht):** Vergleich mit dem Ausgangsstand, gemessen bei Einführung der Menge mit der Erkennung von 1.8.0:
+
+| Modus | Handfälle undicht | Fehlalarme | Synthetische Werte undicht |
+|---|---|---|---|
+| ohne KI, nur Regeln und Wortlisten | 36 auf 20 | 21 auf 6 | 68 auf 61 |
+| ohne KI, Ersatz-Erkennung | 36 auf 0 | 23 auf 8 | 46 auf 0 |
+| mit KI | 24 auf 0 | 25 auf 9 | 24 auf 0 |
+
+   Eine feste Sperre (Ratsche) lässt die Tests scheitern, sobald eine dieser Zahlen schlechter wird.
+3. Die verbleibenden Zahlen im Modus "ohne KI, nur Regeln und Wortlisten" (12 von 150 Handfällen, 18 von 276 synthetischen Werten) sind der Stand dieses Notmodus. In 1.8.0 lag er bei 21 und 18.
+
+### Oberfläche zur Sichtung durch Sie
+
+Bitte sehen Sie sich die Bilder an (Ordner `artifacts/screenshots-2-0-0/`): Willkommensseite, Arbeitsansicht mit Ergebnis, Funde-Leiste, Info-Dialog, jeweils bei 1280 und 900 Pixel. Die Gestaltung ist von mir und den unabhängigen Prüfern bewertet, die Abnahme der Optik gehört aber Ihnen.
+
 ## 3. Was neu ist (Kurzfassung für Anwender)
 
 - Mehrere Dokumente gemeinsam anonymisieren, dieselbe Person bekommt überall denselben Platzhalter.
