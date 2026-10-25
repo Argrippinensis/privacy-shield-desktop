@@ -3,6 +3,23 @@
 Format: ein Abschnitt je Version, Überschrift `## [x.y.z] - JJJJ-MM-TT`. Der Release-Workflow übernimmt den Abschnitt
 der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.Y.Z").
 
+## [2.0.0-beta.1] - 2026-10-25
+
+**Vorabversion zum Ausprobieren, nicht die empfohlene Version.** Die stabile Version bleibt 1.8.0 (Download-Seite und automatische Updates ändern sich durch diese Beta nicht). Wer 2.0 testen möchte, installiert diese Datei zusätzlich oder anstelle von 1.8.0 und kann jederzeit wieder 1.8.0 installieren.
+
+Was Sie in der Beta prüfen können:
+- Mehrere Dokumente gemeinsam anonymisieren, dieselbe Person bekommt überall denselben Platzhalter (neues Format mit Endung, z. B. `{{NAME_1.NACHNAME}}`).
+- Zuordnung speichern ist jetzt passwortgeschützt (`.psmap`). **Passwortverlust ist endgültig.**
+- Prüfansicht mit Rückgängig/Wiederholen, Filter und Suche, Gegenprüfung, Bericht.
+- Kommandozeile, "Öffnen mit", eigene Regeln per Richtliniendatei.
+- Bessere Erkennung (Adressen, Kontakte, Zugangsdaten, Gesundheits- und Strafdaten), barrierefreie und besser lesbare Oberfläche, aktuelle Bibliotheken.
+
+Bitte beachten Sie:
+- Die Beta ist **nicht signiert**; Windows kann bei der Installation eine SmartScreen-Warnung zeigen.
+- Keine Erkennung ist vollständig. Prüfen Sie das Ergebnis, bevor Sie Dokumente weitergeben, und nutzen Sie für wichtige Dokumente zunächst weiter die stabile Version.
+- Rückmeldungen: In der App "Diagnose kopieren" wählen und den Text mit Ihrer Beschreibung senden. Er enthält keine Dokumentinhalte.
+- Die vollständige Liste der Neuerungen, Behebungen und bekannten Grenzen steht unten im Abschnitt zu 2.0.0.
+
 ## [Unreleased] (2.0.0)
 
 **HINWEIS Platzhalterformat:** Nennt ein Text dieselbe Person in mehreren Formen (Hans Müller, Herr Müller, Hans), bekommen alle Formen dieselbe Nummer mit Endung: `{{NAME_1}}`, `{{NAME_1.NACHNAME}}`, `{{NAME_1.VORNAME}}`, `{{NAME_1.KURZ}}`. Verknüpft wird nur, wenn es eindeutig ist (zwei Personen mit gleichem Nachnamen bleiben getrennt, Gegenhinweise wie gegensätzliche Anreden oder Beziehungswörter verhindern eine Verknüpfung). Die Rückübersetzung stellt die Originalwerte wieder her (über die `.psmap` exakt; die unverschlüsselte CSV ist bei wörtlichen Platzhaltern im Originaltext nicht verlustfrei). Wer Platzhalter in eigenen Skripten oder Vorlagen auswertet, muss die Endung nach dem Punkt zulassen.
