@@ -1375,11 +1375,14 @@
    "accept": [
     "xvfb-run -a node --test --test-concurrency=1 tests/a11y-struktur.test.mjs"
    ],
-   "status": "offen",
-   "attempts": 0,
+   "status": "laeuft",
+   "attempts": 1,
    "branch": "",
    "commit": "",
-   "lease": null,
+   "lease": {
+    "owner": "orch-20261024",
+    "ts": 1792911106177
+   },
    "notes": ""
   },
   {
