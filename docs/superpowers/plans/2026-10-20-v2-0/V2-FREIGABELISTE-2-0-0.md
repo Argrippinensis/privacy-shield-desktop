@@ -12,7 +12,7 @@ Die App 2.0.0 ist fertig gebaut, geprüft und dokumentiert. Alle 58 Pflichtpaket
 |---|---|
 | Alle automatischen Tests (Quellcode) | 1583 bestanden, 0 Fehler (7 bewusst übersprungen, 1 bekannter offener Fall) |
 | Tests gegen das fertig gebaute Programm (Linux) | alle bestanden, auch mit relativem Programmpfad |
-| Probelauf auf GitHub, drei Systeme (Windows, macOS, Linux) | grün, ohne Veröffentlichung |
+| Probelauf auf GitHub, drei Systeme (Windows, macOS, Linux), auf dem endgültigen Stand | grün, ohne Veröffentlichung |
 | Absichtlicher Fehlerlauf (Modelldatei fehlt) | scheitert wie gewollt auf Windows an genau dem Prüfschritt |
 | Windows-Installation (still installiert, Modelldatei 135.359.829 Bytes, App-Selbstprüfung) | in der CI bestanden |
 | Erkennung gegenüber 1.8.0 (Vergleich mit 645 Referenzfällen) | keine unerlaubten Abweichungen, in beiden Prüfwegen |
