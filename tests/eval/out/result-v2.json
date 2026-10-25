@@ -17,7 +17,7 @@
     ]
    },
    "V2-KONTAKT": {
-    "total": 15,
+    "total": 19,
     "leaked": 0,
     "ids": []
    },
@@ -27,7 +27,7 @@
     "ids": []
    },
    "V2-STANDORT": {
-    "total": 19,
+    "total": 24,
     "leaked": 7,
     "ids": [
      "v2a111",
@@ -73,7 +73,7 @@
     ]
    },
    "V2-AUSLAND": {
-    "total": 16,
+    "total": 25,
     "leaked": 0,
     "ids": []
    },
@@ -83,7 +83,7 @@
     "ids": []
    },
    "NEG": {
-    "total": 60,
+    "total": 74,
     "leaked": 6,
     "ids": [
      "v2n02",
@@ -1011,6 +1011,96 @@
      "tokens": 1
     },
     {
+     "key": "v2a172",
+     "out": "Adresa: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a173",
+     "out": "Praha 1, {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a174",
+     "out": "Lieferung an {{NAME_1}}, {{ADRESSE_1}}, Praha",
+     "tokens": 2
+    },
+    {
+     "key": "v2a175",
+     "out": "Anschrift: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a176",
+     "out": "Anschrift: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a177",
+     "out": "Das Büro liegt in der {{ADRESSE_2}} und das Archiv in der {{ADRESSE_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a178",
+     "out": "Kanzlei: {{ADRESSE_2}} oder {{ADRESSE_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a179",
+     "out": "Besuch bei {{NAME_1}}, danach {{ADRESSE_3}}, dann {{ADRESSE_2}} und {{ADRESSE_1}}.",
+     "tokens": 4
+    },
+    {
+     "key": "v2a180",
+     "out": "Adresa: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a181",
+     "out": "Brno, {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a182",
+     "out": "Sie erreichen Jean unter der Nummer {{TEL_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a183",
+     "out": "Bitte rufen Sie unter Nr. {{TEL_1}} an.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a184",
+     "out": "Mobil Nr. {{TEL_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a185",
+     "out": "Meine Nummer: {{TEL_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a186",
+     "out": "Postcode: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a187",
+     "out": "Postcode: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a188",
+     "out": "Postcode: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a189",
+     "out": "Postcode: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
      "key": "v2n01",
      "out": "Der Hamburger Hafen schlug im vergangenen Jahr rund 120 Millionen Tonnen um.",
      "tokens": 0
@@ -1308,6 +1398,76 @@
     {
      "key": "v2n60",
      "out": "Das Studienjahr beginnt im Oktober, die Anmeldefrist endet am 15. Juli.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n61",
+     "out": "Im Kapitel 3 wird das Verfahren erklärt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n62",
+     "out": "Auf der Seite 3 steht die Tabelle.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n63",
+     "out": "In der Klasse 5 sind 24 Kinder.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n64",
+     "out": "Im Quartal 3 stieg der Umsatz.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n65",
+     "out": "In der Abbildung 3 sieht man den Verlauf.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n66",
+     "out": "Im Raum 12 findet die Sitzung statt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n67",
+     "out": "Auf dem Gleis 5 steht der Zug.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n68",
+     "out": "Zum Schritt 2 gehören drei Aufgaben.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n69",
+     "out": "Seit 2023 KI Entwicklung im Haus.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n70",
+     "out": "Im Jahr 2022 PR Abteilung neu aufgebaut.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n71",
+     "out": "Version 120 00 Dateien wurden geprüft.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n72",
+     "out": "Nr. 123 45 Ersatzteile liegen bereit.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n73",
+     "out": "Die Casanova 5 und Innova 12 sind Produktnamen.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n74",
+     "out": "Lottozahlen 05 12 23 34 45 wurden gezogen.",
      "tokens": 0
     }
    ],
@@ -1814,7 +1974,7 @@
     "ids": []
    },
    "V2-KONTAKT": {
-    "total": 15,
+    "total": 19,
     "leaked": 0,
     "ids": []
    },
@@ -1824,7 +1984,7 @@
     "ids": []
    },
    "V2-STANDORT": {
-    "total": 19,
+    "total": 24,
     "leaked": 0,
     "ids": []
    },
@@ -1854,7 +2014,7 @@
     "ids": []
    },
    "V2-AUSLAND": {
-    "total": 16,
+    "total": 25,
     "leaked": 0,
     "ids": []
    },
@@ -1864,7 +2024,7 @@
     "ids": []
    },
    "NEG": {
-    "total": 60,
+    "total": 74,
     "leaked": 8,
     "ids": [
      "v2n02",
@@ -2794,6 +2954,96 @@
      "tokens": 1
     },
     {
+     "key": "v2a172",
+     "out": "Adresa: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a173",
+     "out": "Praha 1, {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a174",
+     "out": "Lieferung an {{NAME_1}}, {{ADRESSE_1}}, Praha",
+     "tokens": 2
+    },
+    {
+     "key": "v2a175",
+     "out": "Anschrift: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a176",
+     "out": "Anschrift: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a177",
+     "out": "Das Büro liegt in der {{ADRESSE_2}} und das Archiv in der {{ADRESSE_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a178",
+     "out": "Kanzlei: {{ADRESSE_2}} oder {{ADRESSE_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a179",
+     "out": "Besuch bei {{NAME_1}}, danach {{ADRESSE_3}}, dann {{ADRESSE_2}} und {{ADRESSE_1}}.",
+     "tokens": 4
+    },
+    {
+     "key": "v2a180",
+     "out": "Adresa: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a181",
+     "out": "Brno, {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a182",
+     "out": "Sie erreichen Jean unter der Nummer {{TEL_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a183",
+     "out": "Bitte rufen Sie unter Nr. {{TEL_1}} an.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a184",
+     "out": "Mobil Nr. {{TEL_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a185",
+     "out": "Meine Nummer: {{TEL_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a186",
+     "out": "Postcode: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a187",
+     "out": "Postcode: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a188",
+     "out": "Postcode: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a189",
+     "out": "Postcode: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
      "key": "v2n01",
      "out": "Der Hamburger Hafen schlug im vergangenen Jahr rund 120 Millionen Tonnen um.",
      "tokens": 0
@@ -3091,6 +3341,76 @@
     {
      "key": "v2n60",
      "out": "Das Studienjahr beginnt im Oktober, die Anmeldefrist endet am 15. Juli.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n61",
+     "out": "Im Kapitel 3 wird das Verfahren erklärt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n62",
+     "out": "Auf der Seite 3 steht die Tabelle.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n63",
+     "out": "In der Klasse 5 sind 24 Kinder.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n64",
+     "out": "Im Quartal 3 stieg der Umsatz.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n65",
+     "out": "In der Abbildung 3 sieht man den Verlauf.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n66",
+     "out": "Im Raum 12 findet die Sitzung statt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n67",
+     "out": "Auf dem Gleis 5 steht der Zug.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n68",
+     "out": "Zum Schritt 2 gehören drei Aufgaben.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n69",
+     "out": "Seit 2023 KI Entwicklung im Haus.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n70",
+     "out": "Im Jahr 2022 PR Abteilung neu aufgebaut.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n71",
+     "out": "Version 120 00 Dateien wurden geprüft.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n72",
+     "out": "Nr. 123 45 Ersatzteile liegen bereit.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n73",
+     "out": "Die Casanova 5 und Innova 12 sind Produktnamen.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n74",
+     "out": "Lottozahlen 05 12 23 34 45 wurden gezogen.",
      "tokens": 0
     }
    ],
@@ -3597,7 +3917,7 @@
     "ids": []
    },
    "V2-KONTAKT": {
-    "total": 15,
+    "total": 19,
     "leaked": 0,
     "ids": []
    },
@@ -3607,7 +3927,7 @@
     "ids": []
    },
    "V2-STANDORT": {
-    "total": 19,
+    "total": 24,
     "leaked": 0,
     "ids": []
    },
@@ -3637,7 +3957,7 @@
     "ids": []
    },
    "V2-AUSLAND": {
-    "total": 16,
+    "total": 25,
     "leaked": 0,
     "ids": []
    },
@@ -3647,7 +3967,7 @@
     "ids": []
    },
    "NEG": {
-    "total": 60,
+    "total": 74,
     "leaked": 9,
     "ids": [
      "v2n02",
@@ -4578,6 +4898,96 @@
      "tokens": 1
     },
     {
+     "key": "v2a172",
+     "out": "{{ORG_1}}: {{ADRESSE_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a173",
+     "out": "{{ORG_2}} 1, {{ORG_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a174",
+     "out": "Lieferung an {{NAME_1}}, {{ORT_2}}, {{ORT_1}}",
+     "tokens": 3
+    },
+    {
+     "key": "v2a175",
+     "out": "Anschrift: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a176",
+     "out": "Anschrift: {{NAME_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a177",
+     "out": "Das Büro liegt in der {{ORT_2}} und das Archiv in der {{ORT_1}}.",
+     "tokens": 2
+    },
+    {
+     "key": "v2a178",
+     "out": "Kanzlei: {{ADRESSE_1}} oder {{NAME_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a179",
+     "out": "Besuch bei {{NAME_4}}, danach {{NAME_3}}, dann {{NAME_2}} und {{NAME_1}}.",
+     "tokens": 4
+    },
+    {
+     "key": "v2a180",
+     "out": "Adresa: {{ORG_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a181",
+     "out": "Brno, {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a182",
+     "out": "Sie erreichen {{NAME_1}} unter der Nummer {{TEL_1}}",
+     "tokens": 2
+    },
+    {
+     "key": "v2a183",
+     "out": "Bitte rufen Sie unter Nr. {{TEL_1}} an.",
+     "tokens": 1
+    },
+    {
+     "key": "v2a184",
+     "out": "Mobil Nr. {{TEL_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a185",
+     "out": "Meine Nummer: {{TEL_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a186",
+     "out": "Postcode: {{ADRESSE_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a187",
+     "out": "Postcode: {{ORT_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a188",
+     "out": "Postcode: {{ORT_1}}",
+     "tokens": 1
+    },
+    {
+     "key": "v2a189",
+     "out": "Postcode: {{ORT_1}}",
+     "tokens": 1
+    },
+    {
      "key": "v2n01",
      "out": "Der Hamburger Hafen schlug im vergangenen Jahr rund 120 Millionen Tonnen um.",
      "tokens": 0
@@ -4875,6 +5285,76 @@
     {
      "key": "v2n60",
      "out": "Das Studienjahr beginnt im Oktober, die Anmeldefrist endet am 15. Juli.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n61",
+     "out": "Im Kapitel 3 wird das Verfahren erklärt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n62",
+     "out": "Auf der Seite 3 steht die Tabelle.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n63",
+     "out": "In der Klasse 5 sind 24 Kinder.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n64",
+     "out": "Im Quartal 3 stieg der Umsatz.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n65",
+     "out": "In der Abbildung 3 sieht man den Verlauf.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n66",
+     "out": "Im Raum 12 findet die Sitzung statt.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n67",
+     "out": "Auf dem Gleis 5 steht der Zug.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n68",
+     "out": "Zum Schritt 2 gehören drei Aufgaben.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n69",
+     "out": "Seit 2023 KI Entwicklung im Haus.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n70",
+     "out": "Im Jahr 2022 PR Abteilung neu aufgebaut.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n71",
+     "out": "Version 120 00 Dateien wurden geprüft.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n72",
+     "out": "Nr. 123 45 Ersatzteile liegen bereit.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n73",
+     "out": "Die Casanova 5 und Innova 12 sind Produktnamen.",
+     "tokens": 0
+    },
+    {
+     "key": "v2n74",
+     "out": "Lottozahlen 05 12 23 34 45 wurden gezogen.",
      "tokens": 0
     }
    ],

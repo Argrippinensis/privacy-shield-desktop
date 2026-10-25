@@ -20,9 +20,9 @@ Modi: wortlisten (nur Regeln), fallback (Regeln plus Wortlisten, Modell startet 
 ## Offene Luecken (je Modus, je Fall-Id, synthetisch je Dokument und Wert)
 
 <!-- BACKLOG-START -->
-Stand der Messung: C1.2 Endstand Durchlauf 2
+Stand der Messung: C1.3 Endstand Durchlauf 3 (Fehlalarme jetzt von 74 Negativfaellen der zweiten Menge)
 
-| Modus | Luecken Handfaelle (von 158) | Fehlalarme (NEG von 60) | Synthetik undicht (von 860) |
+| Modus | Luecken Handfaelle (von 158) | Fehlalarme (NEG von 74) | Synthetik undicht (von 860) |
 |---|---|---|---|
 | wortlisten | 20 | 6 | 61 |
 | fallback | 0 | 8 | 0 |
@@ -399,6 +399,90 @@ Messung nach der Behebung: Handfaelle erste Menge wortlisten 12, fallback 0, ki 
 7. **baseline-v2, wortlisten V2-STANDORT 6 auf 7: ausdruecklich begruendete, gelockerte Ausnahme.** Ursache sind die drei neuen Ortsfaelle v2a136 bis v2a138, die im Diagnosemodus ohne Ortswoerterbuch nicht loesbar sind; alle bisherigen Faelle sind in keinem Modus schlechter. Das ist die einzige Stelle, an der eine Baseline nicht strikt verbessert wurde. Ebenso wurde der Fall v2n53 entschaerft (Ortsnamen Tuebingen und Reutlingen aus dem Text entfernt, Entscheidung E-ORT). **Beides ist vom Nutzer zu bestaetigen.**
 8. **Test-IBAN in v2a158 ist erfunden.** Die Pruefsumme stimmt, die Nummer gehoert aber zu keinem echten Konto; fuer Tests zulaessig, soll in C1.3 (oder bei der naechsten Bearbeitung des Falls) als erfundener Wert gekennzeichnet bleiben.
 
+
+### Durchlauf 3 (C1.3): Fehlalarme Gattungswoerter, Abkuerzungen, Zahlenfolgen
+
+Ausgangslage: Die 14 Fehlalarm-Faelle v2n61 bis v2n74 (Pruefer C1.2, Maengel 3 bis 5) wurden mit dem Zaehler 74 Negativfaelle in `tests/eval/cases-v2.mjs` und `tests/eval-v2.test.mjs` aufgenommen (Commit "test(C1.3): Fehlalarm-Faelle v2n61 bis v2n74") und waren in allen Modi rot. Je Fund eine Entscheidung; Behebung mit der kleinsten Regelaenderung in `app/lib/detect.js`. Alle Entscheidungen sind Entscheidung "Regel" (kein Modell- oder Woerterbucheingriff).
+
+**v2n61, v2n62, v2n63, v2n64, v2n65, v2n66, v2n67, v2n68: Regel.** Die Strassenregel "Am/Im/Zum/Zur/Auf der/In der ... Name Zahl" ohne Postleitzahl las "Im Kapitel 3", "Auf der Seite 3", "In der Klasse 5", "Im Quartal 3", "In der Abbildung 3", "Im Raum 12", "Auf dem Gleis 5", "Zum Schritt 2" als Adresse. Die Ausschlussliste fuer das erste Wort nach der Praeposition (bisher Wochentage, Monate, Ende, Beispiel u. a.) wurde um Gattungswoerter fuer Gliederung, Zaehlung und Ort im Gebaeude erweitert: Kapitel, Seite, Klasse, Quartal, Halbjahr, Semester, Abbildung, Tabelle, Grafik, Diagramm, Folie, Zeile, Spalte, Absatz, Abschnitt, Raum, Gleis, Schritt, Etage, Stockwerk, Phase, Stufe, Runde, Lektion, Aufgabe, Uebung, Version, Paragraf, Artikel, Satz, Level, Position, Schicht. Grund: Das Gattungswort mit einer Zahl ist eine Verweisform, keine Strasse. Nicht aufgenommen wurden Woerter, die auch echte Strassennamen sein koennen (Platz, Block, Bereich, Reihe, Ring): die Strassenform "Am Platz 3" bleibt eine Adresse. Die Wortgrenze `\b` bleibt, "Raumfahrtweg 3" ist also nicht betroffen.
+
+**v2n69, v2n70: Regel.** Die niederlaendische Postleitzahl-Regel (vier Ziffern, zwei Grossbuchstaben, Ort) las "2023 KI Entwicklung" und "2022 PR Abteilung" als Postleitzahl. Erste Fassung (Pruefer C1.3 berichtigt, siehe "Nachtrag" unten): eine Jahreszahl vor einer festen Liste von Abkuerzungen war pauschal keine Postleitzahl, ausser ein Ort aus einer 28er-Liste folgte; das liess echte Postleitzahlen wie "1990 AR Castricum" im Klartext. Stand nach dem Nachtrag: (a) Eine Jahreszahl (19xx oder 20xx) vor zwei Buchstaben, von denen mindestens einer I, O, Q, U, Y oder F ist (KI, BI, QA, AI, UX, UI, CI, OS u. a.), ist keine Postleitzahl; diese Buchstaben kommen in echten niederlaendischen Postleitzahlen nie vor. (b) Eine Jahreszahl vor einem echten Buchstabenpaar (PR, HR, ML, DB, SW, HW, VR, AR, BW, VW) ist nur dann keine Postleitzahl, wenn unmittelbar davor ein Satzwort steht (Seit, Ab, Bis, Anfang, Ende, Mitte, Stand, Jahr, Jahres, Jahre, Bereits, Schon) und kein bekannter niederlaendischer Ort folgt (Liste jetzt 42 Orte, dazu Heemstede, Bloemendaal, Zandvoort, Velsen, IJmuiden, Beverwijk, Heemskerk, Castricum, Uitgeest, Bennebroek, Overveen, Santpoort, Hillegom, Lisse). Ohne Satzwort davor bleibt die Form eine Postleitzahl. Ein Kleinbuchstaben-Wort dahinter als weitere Bedingung wurde bewusst nicht verlangt, weil im Deutschen das Folgewort gross geschrieben wird ("PR Abteilung", v2n70). Der Ortsname darf jetzt auch mit "IJ" beginnen (IJmuiden). Mit anderen Zahlen (nicht 19xx/20xx) gilt die Regel unveraendert.
+
+**v2n71, v2n72: Regel.** Die tschechische Postleitzahl-Regel ("120 00 Praha") las "Version 120 00 Dateien" und "Nr. 123 45 Ersatzteile". Neu: kein Treffer, wenn unmittelbar davor (bis drei Leerzeichen oder Doppelpunkt) ein Stichwort fuer Nummern und Zahlenangaben steht: Version, Nr., Nummer, Nummern, Lotto, Lottozahlen, Zahlen, Gewinnzahlen, Ziehung, Artikel, Art., Build, Revision, Los, Ticket, Modell, Typ, Kapitel, Seite, Teil (als eigenes Wort; "Telefonnummer" und "Tel.-Nr." sind davon nicht betroffen). Grund: Die Form "NNN NN Wort" ist ohne Kontext mehrdeutig; mit Nummern-Stichwort davor ist sie keine Postleitzahl. Echte Adressen ("Vinohradska 12, 120 00 Praha", "Masarykova 45, 110 00 Praha 1") bleiben maskiert (v2a99, v2a144).
+
+**v2n73: Regel.** Die tschechische Strassenregel mit der Endung -ova las "Casanova 5" und "Innova 12" als Strasse. -ova gilt jetzt nur noch bei bekannter Strassenform: (a) Namensstamm aus einer Liste ueblicher Prager und Brnoer Strassennamen (Nerud, Svobod, Pasteur, Bezruc, Masaryk, Hus, Smetan, Vodick, Karl, Leger, Wilson, Kapr, Kounic, Roosevelt, Petr u. a., auch ohne Diakritika geschrieben: "Nerudova", "Bezrucova"), (b) Adresskontext unmittelbar davor (Adresa, Adresse, Anschrift, Lieferadresse, Ulice, "Praha" oder "Brno" mit Komma, "Lieferung an <Name>,"), (c) Orientierungsnummer mit Schraegstrich ("Dlouhova 12/3"), (d) tschechische Postleitzahl oder Stadt (Praha, Brno, Ostrava, Plzen, Olomouc, Liberec) hinter der Hausnummer. Die uebrigen Endungen (-ska, -ova mit Akzent, -cka, -ni, -skeho, -eho) bleiben unveraendert. Grund: -ova ist ohne Kontext auch Teil von Produkt- und Eigennamen (Casanova, Innova, Renova, Villanova).
+
+**Berichtigung zu v2n73 (Pruefer C1.3).** Die erste Fassung dieses Absatzes war falsch. (1) Die Stammliste war falsch geschrieben ("Neruda", "Svoboda", "Pasteurov", "Bezrucov" plus "ova" ergaben "Nerudaova" usw.); dadurch blieben "Adresa: Nerudova 12", "Praha 1, Nerudova 12", "Svobodova 12", "Pasteurova 3" und "Bezrucova 3" im Klartext, obwohl v2/main sie maskierte. (2) Die Aussage "die Stadt und ein Name davor werden weiter maskiert" stimmte nicht: "Praha 1" und "Brno" werden nicht maskiert (nur die Hausnummernzeile, jetzt wieder). (3) Weitere reale Strassen ohne Schraegstrich und ohne Postleitzahl (Vodickova, Karlova, Legerova, Wilsonova, Kaprova, Kounicova, Rooseveltova, Petrova) blieben frei; die Stammliste enthaelt jetzt die gaengigsten Prager und Brnoer Strassen. Casanova 5 und Innova 12 bleiben ohne Maskierung (v2n73). Restrisiko (bewusst): eine tschechische Strasse auf -ova mit unbekanntem Stamm, ohne Adresskontext davor, ohne Schraegstrich und ohne Postleitzahl oder Stadt dahinter wird nicht als Strasse erkannt; steht dagegen "Praha", "Brno" oder ein Adresswort davor, wird sie maskiert (auch Produktnamen wie "Brno, Innova 12").
+
+**v2n74: Regel.** Die franzoesische Telefonform "0N NN NN NN NN" (fuenf Zahlenpaare, ohne Stichwort) las "Lottozahlen 05 12 23 34 45" als Telefonnummer. Neu: kein Treffer, wenn unmittelbar davor (bis drei Leerzeichen oder Doppelpunkt) ein Zahlenlisten-Stichwort steht: Lotto, Lottozahlen, Zahlen, Gewinnzahlen, Ziehung sowie Version, Build, Revision, Ticket, Modell, Kapitel. Grund: Zahlenpaare sind kein Merkmal einer Telefonnummer; die Form ohne Stichwort bleibt aber erhalten, weil "Rufen Sie mich unter 06 12 34 56 78 zurueck" (v2a134) eine echte Rufnummer ist.
+
+**Berichtigung zu v2n74 (Pruefer C1.3).** Die erste Fassung nahm auch Nr., Nummer, Nummern, Teil, Typ, Seite, Los, Art. und Artikel in die Ausschlussliste auf. Das liess echte Rufnummern im Klartext: "Sie erreichen Jean unter der Nummer 06 12 34 56 78", "Bitte rufen Sie unter Nr. 06 12 34 56 78 an.", "Mobil Nr. 07 12 34 56 78", "Meine Nummer: 06 12 34 56 78". Diese neun Woerter stehen nicht mehr in der Telefon-Ausschlussliste (Leck-Schutz hat Vorrang; "Nr. 06 12 34 56 78" ist ohne weiteren Kontext eher eine Rufnummer). Die Ausschlussliste der tschechischen Postleitzahl-Regel ("Nr. 123 45 Ersatzteile", v2n72) bleibt unveraendert, weil dort "NNN NN Wort" ohne Kontext mehrdeutig ist. v2n74 braucht nur Lotto, Lottozahlen, Zahlen, Gewinnzahlen, Ziehung. Bewusste Abgrenzung: Eine Zahlenreihe mit fuehrender 0 ohne Zahlenlisten-Stichwort davor (z. B. "Gewinn 06 12 23 34 45") wird weiter als Telefonnummer maskiert. Franzoesische Telefonnummern mit "tel." und "tél." (v2a92, v2a142) sind unveraendert maskiert.
+
+**Nachtrag Pruefer-Reparatur C1.3 (Lecks durch die Ausschlussregeln).** Ein unabhaengiger Pruefer fand, dass drei der Ausschlussregeln echte Angaben im Klartext liessen (18 neue positive Faelle v2a172 bis v2a189, vorher in allen Modi rot, jetzt gruen): (1) -ova-Strassen (v2a172 bis v2a181, siehe Berichtigung zu v2n73), (2) franzoesische Rufnummer nach Nummer-Stichwort (v2a182 bis v2a185, siehe Berichtigung zu v2n74), (3) niederlaendische Postleitzahl in Jahreszahl-Form (v2a186 bis v2a189, siehe v2n69 und v2n70). Zusaetzlich beim Messen gefunden: eine Regel mit Rueckblick ueber unbegrenzte Leerzeichen (zwei hintereinanderstehende Leerzeichen-Wiederholungen) rechnete bei 100.000 Leerzeichen zu lange (Test F5); die Rueckblicke sind auf hoechstens drei Leerzeichen begrenzt.
+
+Restrisiko der Strassenregel mit Gattungswoertern (v2n61 bis v2n68, ausdruecklich): Strassen, die selbst ein Gattungswort sind ("Im Kapitel", "Am Gleis", "Auf der Seite", "Am Raum"), werden ohne Postleitzahl nicht mehr als Anschrift erkannt; mit Postleitzahl dahinter ("Am Gleis 5, 80331 Muenchen") bleibt die Anschrift maskiert. Restrisiko NL-Postleitzahl: nur Orte ausserhalb der Ortsliste, nur mit Buchstabenpaar PR, HR, ML, DB, SW, HW, VR, AR, BW, VW und nur mit einem Satzwort (Seit, Ab, Bis, Anfang, Ende, Mitte, Stand, Jahr u. a.) unmittelbar vor der Jahreszahl; geschaetzt grob 0,05 bis 0,1 Prozent der niederlaendischen Adressen.
+
+Je Fall der Fehlalarm-Faelle, Stand nach dem Nachtrag:
+- v2n61 ("Im Kapitel 3"): bleibt unmaskiert, weil "Kapitel" als Gattungswort nach der Praeposition ausgeschlossen ist.
+- v2n62 ("Auf der Seite 3"): bleibt unmaskiert, "Seite" steht in der Gattungswort-Liste.
+- v2n63 ("In der Klasse 5"): bleibt unmaskiert, "Klasse" steht in der Liste.
+- v2n64 ("Im Quartal 3"): bleibt unmaskiert, "Quartal" steht in der Liste.
+- v2n65 ("In der Abbildung 3"): bleibt unmaskiert, "Abbildung" steht in der Liste.
+- v2n66 ("Im Raum 12"): bleibt unmaskiert, "Raum" steht in der Liste; das Restrisiko "Strasse heisst selbst Raum" gilt nur ohne Postleitzahl.
+- v2n67 ("Auf dem Gleis 5"): bleibt unmaskiert, "Gleis" steht in der Liste.
+- v2n68 ("Zum Schritt 2"): bleibt unmaskiert, "Schritt" steht in der Liste.
+- v2n69 ("Seit 2023 KI Entwicklung"): bleibt unmaskiert, weil "KI" den in niederlaendischen Postleitzahlen unmoeglichen Buchstaben I enthaelt.
+- v2n70 ("Im Jahr 2022 PR Abteilung"): bleibt unmaskiert, weil "PR" ein echtes Paar ist, aber "Jahr" unmittelbar vor der Jahreszahl steht und kein bekannter Ort folgt.
+- v2n71 ("Version 120 00 Dateien"): bleibt unmaskiert, weil "Version" unmittelbar vor der tschechischen Postleitzahl-Form steht.
+- v2n72 ("Nr. 123 45 Ersatzteile"): bleibt unmaskiert, weil "Nr." in der Ausschlussliste der tschechischen Postleitzahl-Regel steht (nicht in der der Telefonregel).
+- v2n73 ("Casanova 5 und Innova 12"): bleibt unmaskiert, weil weder Stammliste noch Adresskontext noch Schraegstrich noch Postleitzahl vorliegen.
+- v2n74 ("Lottozahlen 05 12 23 34 45"): bleibt unmaskiert, weil "Lottozahlen" unmittelbar vor der Zahlenreihe steht.
+
+Bekannte Luecke ausserhalb dieses Zyklus (beim Pruefen aufgefallen, nicht behoben, keine rote Probe im Korpus): die allgemeine Ausschlussliste der niederlaendischen Postleitzahl-Regel (EU, EM, WM, AD, BC, DM, FC, UK, US, TV, PC, IT, CD, GB, AG, CE) gilt fuer alle Zahlen und laesst echte Postleitzahlen wie "1011 AD Amsterdam", "1000 AG Amsterdam" oder "2511 CE Den Haag" im Klartext; der Stand ist identisch mit v2/main. Vorschlag: dieselbe Ortslisten-Ausnahme wie bei den Jahreszahl-Abkuerzungen, zuerst als roter Fall.
+
+**v2n13 (fallback, mit Modell): bewusst offen, E-ORT.** "Das Hotel Alpenblick in Garmisch ...": zwei Ursachen, "Hotel" als Organisationsstichwort der Wortlisten und der Ort Garmisch (Entscheidung E-ORT, Frage F6, Standard "weiter maskieren"). Ein Eingriff beim Stichwort Hotel allein macht den Fall nicht gruen, solange Garmisch maskiert wird; deshalb nicht geaendert (kein Eingriff ohne Wirkung). Bleibt bekannte Luecke.
+
+**Bleibende Fehlalarme als bekannte Luecke (je Fall-Id, Entscheidung, Grund).**
+
+| Fall-Id | Modus | Entscheidung | Grund |
+|---|---|---|---|
+| v2n02 | alle | bewusst offen | "Brahms" ist ein Nachname; ein Ausschluss gaebe echte Personen dieses Namens frei |
+| v2n13 | fallback, ki | bewusst offen (E-ORT) | Hotel-Stichwort plus Ort Garmisch; siehe oben |
+| v2n20 | ki | bewusst offen (Modell) | "Berg Zugspitze": das Modell liefert den Treffer, kein Eingriff in Modelltreffer |
+| v2n21, v2n32, v2n51 | alle | bewusst offen (E-ORT) | Ortsname im Firmennamen; Frage F6 mit Standard "weiter maskieren" |
+| v2n23 | alle | bewusst offen | Weblink im Codebeispiel gilt als Kennung (Leck-Schutz) |
+| v2n29 | fallback | bewusst offen | "Museum Ludwig": Ludwig ist ein Vorname, ohne Satzverstaendnis nicht zuverlaessig |
+| v2n48 | alle | bewusst offen | "Japan" wird als Name gelesen; eine Laenderliste ist ein eigenes Paket |
+| v2n56 | ki | bewusst offen (Modell) | "Deutschen Einheit": das Modell erkennt es, kein Eingriff in Modelltreffer |
+
+### Messung C1.3 (vorher, nachher)
+
+Vorher = Stand nach dem Commit der 14 roten Faelle, vor jeder Regelaenderung; nachher = Ende C1.3 (`npm run eval`, `npm run eval -- --set v2`, `tests/realdocs.test.mjs`).
+
+| Messung | Zielwert Tabelle C1 | vorher | nachher | Urteil |
+|---|---|---|---|---|
+| bisherige 150 positive Faelle, mit Modell | hoechstens 4 | 0 | 0 | erfuellt |
+| bisherige 150 positive Faelle, fallback | hoechstens 12 | 0 | 0 | erfuellt |
+| neue positive Faelle (158), mit Modell | hoechstens 3 Prozent | 0 | 0 | erfuellt |
+| neue positive Faelle, fallback | hoechstens 8 Prozent | 0 | 0 | erfuellt |
+| Synthetik 98 Dokumente (860 Werte), mit Modell | hoechstens 1 Prozent | 0 | 0 | erfuellt |
+| Synthetik 98 Dokumente, fallback | hoechstens 5 Prozent | 0 | 0 | erfuellt |
+| Negativfaelle erste Menge (20) und Fliesstext Synthetik, alle Modi | 0 | 0 | 0 | erfuellt |
+| Negativfaelle zweite Menge (74), wortlisten / fallback / mit Modell | 0 | 20 / 22 / 23 | 6 / 8 / 9 | nicht erfuellt, Rest einzeln begruendet (Tabelle oben) |
+| Synthetik 42 Dokumente (276 Werte), mit Modell / fallback | hoechstens 1 / 11 | 0 / 0 | 0 / 0 | erfuellt |
+| Realdokumente TXT, DOCX, PDF mit Textebene, mit Modell | hoechstens 2 Prozent | 0, 0, 0 von 97 | 0, 0, 0 von 97 | erfuellt |
+| Realdokumente OCR, mit Modell | hoechstens 6 Prozent | 1 von 24 (4,2 Prozent) | 1 von 24 (4,2 Prozent) | erfuellt |
+| Realdokumente im Modus fallback | (ohne Schwelle) | 0, 0, 0, 0 | 0, 0, 0, 0 | - |
+
+Lecks (alle Mengen, alle Modi): unveraendert (Handfaelle erste Menge wortlisten 12, fallback 0, ki 0 (Diagnosemodus wortlisten und Ratsche ki unveraendert); zweite Menge wortlisten 20, fallback 0, ki 0; Synthetik 42: wortlisten 18, fallback 0, ki 0; Synthetik 98: wortlisten 61, fallback 0, ki 0). Es entstand kein neues Leck; die Differenz zur Referenz 1.8.0 (`diff-reference.mjs`, beide Varianten) zeigt keine neue Abweichung durch diesen Durchlauf.
+
+**Abbruchkriterium.** Die Schleife endet mit diesem dritten Durchlauf (hoechstens drei Durchlaeufe in 2.0). Der Durchlauf beseitigte 14 von 22 Fehlalarmen im Modus fallback (64 Prozent, weit ueber der Grenze von 10 Prozent), mit Modell 14 von 23 und im Modus wortlisten 14 von 20. Die Abnahmetabelle ist bis auf die Zeile Negativfaelle der zweiten Menge erfuellt; der Rest (8 im Modus fallback, 9 mit Modell, 6 im Diagnosemodus wortlisten) steht oben einzeln als bewusst offen mit Grund. Die Bestaetigung der Reste durch den Nutzer (Frage F6 zu E-ORT, die Standardantwort gilt bis dahin) steht aus.
+
+**Backlog 5 und 6: nicht bearbeitet, verschoben auf nach 2.1.** (5) OCR-Toleranz in Kennzahlen (Zeichenverwechslungen O/0, l/1) und (6) Soft-Hyphen und Zero-Width mit Offset-Abbildung: in keiner Messmenge ein Fund (kein roter Fall, die OCR-Realdokumente haben kein Leck dieser Art; der einzige OCR-Rest ist der Nachname hinter einem Zeilenumbruch, Dokument 5). Ohne Fund im Korpus keine Regel auf Verdacht (Fehlalarm-Risiko).
+
+**Referenz (Differenztest) und Ausnahme D53.** `node tests/eval/diff-reference.mjs --node` und die Electron-Variante `node tests/eval/diff-reference.mjs` enden beide mit Exit 0. Ursache des Fehlers der Electron-Variante ("ungenutzt: ki/syn12", D53): Dort laeuft das echte Modell und liefert fuer `syn12` den Span "Berliner Allee", die Referenz 1.8.0 (die der Node-Lauf einspielt) hat "Berliner Alle"; die Anschrift wird in der App als ORT statt ADRESSE gefuehrt, es wird nichts lesbar, die Abweichung hat andere Hashes als der Node-Stand, und der Eintrag `ki/syn12` blieb deshalb ungenutzt, waehrend die App-Abweichung unerlaubt blieb. Behebung: Ein Eintrag in `tests/golden/reference-allow.json` darf zusaetzlich einen genehmigten App-Stand `app` (Text-Hash, Zuordnungs-Hash, Anzahl) tragen; `compareItems` wertet ihn nur im App-Modus (Option `app`, gesetzt ohne `--node`), im Node-Modus zaehlt nur der Stand ohne `app`. Beide Staende gelten als "genutzt". Die Referenz `reference-v1.8.json` ist unveraendert.
+
+**Baseline und Ratschen.** `tests/eval/baseline.json` und `tests/eval/baseline-v2.json` bleiben unveraendert: die Messung entspricht bereits den Ratschen (erste Menge: die vier von `tests/eval-v2.test.mjs` fest verlangten Werte ki G-NAME 2, G-NATION 1, G-AUSLAND 1, synthLeaked 1 und wortlisten synthLeaked 18 stehen weiter auf dem Stand 1.8.0, gemessen sind sie in ki 0; die Testdatei ist nicht aenderbar, Vorschlag unveraendert: auf "hoechstens" umstellen und die Baseline auf 0 ziehen); zweite Menge: NEG 6 / 8 / 9 je Modus wortlisten / fallback / ki entsprechen dem gemessenen Stand, die 14 neuen Faelle sind behoben und tragen nichts bei. `tests/golden/baseline.json` unveraendert (keine Aenderung der Golden-Ausgabe). Die Ergebnisdatei `tests/eval/out/result-v2.json` enthaelt den neuen Stand.
 
 ---
 
