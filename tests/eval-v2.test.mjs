@@ -151,12 +151,12 @@ test('CASES_V2: positive Kategorien V2-<Gruppe>, elf Gruppen mit je 5 bis 25 Fae
   for (const [k, v] of Object.entries(by)) assert.ok(v.length >= 5 && v.length <= 25, `${k}: ${v.length} Faelle`);
 });
 
-test('CASES_V2: genau 60 Negativfaelle, insgesamt 80', async () => {
+test('CASES_V2: genau 74 Negativfaelle, insgesamt 94', async () => {
   const c = await casesV2();
   const { CASES } = await import('./eval/cases.mjs');
   const { GDPR } = await import('./eval/cases-gdpr.mjs');
   const neg = c.filter((e) => e[1] === 'NEG');
-  assert.equal(neg.length, 60);
+  assert.equal(neg.length, 74);
   assert.equal([...CASES, ...GDPR].filter((e) => e[1] === 'NEG').length, 20);
   for (const e of neg) assert.deepEqual(e[3], [], e[0] + ': Negativfall ohne Fragmente');
 });
