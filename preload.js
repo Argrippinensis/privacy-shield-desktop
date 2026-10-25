@@ -14,8 +14,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   quitApp: () => ipcRenderer.invoke('quit-app'),
   getAppInfo: () => ipcRenderer.invoke('get-app-info'),
   getLicenses: () => ipcRenderer.invoke('get-licenses'),
-  getAppInfo: () => ipcRenderer.invoke('get-app-info'),
-  getLicenses: () => ipcRenderer.invoke('get-licenses'),
   getSystemStats: () => ipcRenderer.invoke("get-system-stats"),
   takeOpenedFiles: () => ipcRenderer.invoke('take-opened-files'),
   onFilesOpened: (callback) => {

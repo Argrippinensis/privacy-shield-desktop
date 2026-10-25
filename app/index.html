@@ -7,7 +7,11 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #f5f5f5; font-family: system-ui, sans-serif; }
+    body > main { width: 100%; height: 100%; }
     #tool-frame { width: 100%; height: 100%; border: none; }
+    /* D2.1: nur fuer Screenreader sichtbar, einheitlicher Fokusring (2 px Navy, Abstand 2, heller Saum fuer dunklen Grund) */
+    .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    :focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; box-shadow: 0 0 0 5px #fff; }
 
     #update-banner {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -113,14 +117,15 @@
 
     #info-overlay {
       display: none; position: fixed; inset: 0; background: rgba(15,30,48,0.55);
-      z-index: 9997; align-items: center; justify-content: center;
+      z-index: 10000; align-items: center; justify-content: center;
     }
     #info-dialog {
-      background: #fff; color: #1f2933; width: min(640px, 92vw); max-height: 88vh; overflow-y: auto;
-      border-radius: 12px; padding: 28px 32px 24px; box-shadow: 0 16px 48px rgba(0,0,0,0.28);
+      background: #fff; color: #1f2933; width: min(640px, 92vw); max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;
+      border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.28);
       font-size: 13px; line-height: 1.5;
     }
-    #info-dialog .info-head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #e5e5e5; }
+    #info-dialog .info-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 32px 4px; }
+    #info-dialog .info-head { display: flex; align-items: center; gap: 10px; padding: 28px 32px 14px; border-bottom: 1px solid #e5e5e5; flex: none; }
     #info-dialog h2 { font-size: 18px; font-weight: 700; color: #1a3a5c; flex: 1; }
     #info-dialog h3 { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #666; margin: 18px 0 6px; }
     #info-dialog dl { display: grid; grid-template-columns: 150px 1fr; gap: 4px 12px; }
@@ -132,8 +137,8 @@
     #info-dialog a { color: #1a3a5c; text-decoration: underline; }
     #info-dialog details { margin-top: 18px; border: 1px solid #e5e5e5; border-radius: 8px; padding: 8px 12px; }
     #info-dialog summary { cursor: pointer; font-weight: 600; color: #1a3a5c; }
-    #info-dialog pre { margin-top: 8px; max-height: 220px; overflow: auto; white-space: pre-wrap; font-size: 11px; line-height: 1.45; color: #333; background: #fafafa; padding: 8px; border-radius: 6px; }
-    #info-dialog .info-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    #info-dialog pre { margin-top: 8px; max-height: 180px; overflow: auto; white-space: pre-wrap; font-size: 11px; line-height: 1.45; color: #333; background: #fafafa; padding: 8px; border-radius: 6px; }
+    #info-dialog .info-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 14px 32px 22px; border-top: 1px solid #e5e5e5; flex: none; }
     #info-dialog button { font-size: 13px; padding: 8px 18px; border-radius: 7px; cursor: pointer; font-family: inherit; }
     #info-dialog .btn-primary { background: #1a3a5c; color: #fff; border: none; font-weight: 600; }
     #info-dialog .btn-primary:hover { background: #14304e; }
@@ -143,9 +148,12 @@
 </style>
 </head>
 <body>
-  <iframe id="tool-frame" src="privacy-shield.html" allow="clipboard-read; clipboard-write"></iframe>
+  <main id="main">
+    <h1 class="sr-only">PrivacyShield Desktop</h1>
+    <iframe id="tool-frame" title="PrivacyShield Werkzeug" src="privacy-shield.html" allow="clipboard-read; clipboard-write"></iframe>
+  </main>
 
-  <div id="update-banner">
+  <div id="update-banner" role="region" aria-label="Update-Hinweis" aria-live="polite">
     <div class="banner-text">
       <div class="banner-title" id="banner-title"></div>
       <div class="banner-hint" id="banner-hint">Diese Meldung ist nur 3x wegklickbar, danach wird das Update durchgeführt.</div>
@@ -158,15 +166,15 @@
   </div>
 
   <div id="forced-update-overlay">
-    <div class="dialog">
-      <h2>Update erforderlich</h2>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="forced-title">
+      <h2 id="forced-title">Update erforderlich</h2>
       <p id="forced-text"></p>
       <div id="progress-wrap">
         <div id="progress-label">Download... 0%</div>
         <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
       </div>
-      <div id="download-error-msg">Download fehlgeschlagen — bitte versuchen Sie es später erneut.</div>
-      <div id="install-msg">Installation läuft, App wird neu gestartet...</div>
+      <div id="download-error-msg" role="alert">Download fehlgeschlagen — bitte versuchen Sie es später erneut.</div>
+      <div id="install-msg" role="status">Installation läuft, App wird neu gestartet...</div>
       <div class="dialog-actions" id="dialog-actions">
         <button class="btn-force-update" id="btn-force-update" onclick="handleForceUpdate()">Jetzt aktualisieren</button>
         <button class="btn-quit" id="btn-manual" style="display:none" onclick="handleManualDownload()">Manuell herunterladen</button>
@@ -177,16 +185,16 @@
   </div>
 
   <div id="update-status-overlay">
-    <div class="dialog">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="status-title" aria-describedby="status-message">
       <div class="status-icon" id="status-icon"></div>
       <h2 id="status-title">Suche nach Updates...</h2>
-      <p id="status-message">Bitte warten Sie einen Moment.</p>
+      <p id="status-message" role="status">Bitte warten Sie einen Moment.</p>
       <div id="status-progress-wrap">
         <div id="status-progress-label">Download... 0%</div>
         <div id="status-progress-bar-bg"><div id="status-progress-bar-fill"></div></div>
       </div>
-      <div id="status-error-msg" style="display:none;color:#dc2626;font-size:12px;margin-bottom:14px">Download fehlgeschlagen — bitte versuchen Sie es später erneut.</div>
-      <div id="status-install-msg" style="display:none;color:#16a34a;font-size:13px;margin-bottom:14px;font-weight:600">Installation läuft, App wird neu gestartet...</div>
+      <div id="status-error-msg" role="alert" style="display:none;color:#dc2626;font-size:12px;margin-bottom:14px">Download fehlgeschlagen — bitte versuchen Sie es später erneut.</div>
+      <div id="status-install-msg" role="status" style="display:none;color:#16a34a;font-size:13px;margin-bottom:14px;font-weight:600">Installation läuft, App wird neu gestartet...</div>
       <div id="status-actions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="btn-force-update" id="btn-status-update" onclick="handleStatusUpdate()" style="display:none">Jetzt aktualisieren</button>
         <button class="btn-close" onclick="closeStatusDialog()">Schließen</button>
@@ -200,6 +208,7 @@
         <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#1a3a5c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>
         <h2 id="info-title">Über PrivacyShield</h2>
       </div>
+      <div class="info-body">
       <h3>Version und System</h3>
       <dl>
         <dt>Version</dt><dd id="info-version">…</dd>
@@ -222,8 +231,9 @@
       </div>
       <details>
         <summary>Lizenzen</summary>
-        <pre id="info-licenses">Wird geladen…</pre>
+        <pre id="info-licenses" tabindex="0" role="region" aria-label="Lizenztexte">Wird geladen…</pre>
       </details>
+      </div>
       <div class="info-actions">
         <button type="button" class="btn-secondary" onclick="copyDiagnostics(this)">Diagnose kopieren</button>
         <button type="button" class="btn-secondary" onclick="checkForUpdatesManually()">Auf Updates prüfen</button>
@@ -278,6 +288,7 @@
         'Update erforderlich — Diese Version ist veraltet. Bitte aktualisieren Sie auf Version ' +
         version + ', um PrivacyShield weiter zu nutzen.';
       document.getElementById('forced-update-overlay').style.display = 'flex';
+      document.getElementById('btn-force-update').focus();
     }
 
     async function handleLater() {
@@ -413,14 +424,31 @@
       });
     }
 
+    let statusReturnFocus = null;
     function closeStatusDialog() {
       document.getElementById('update-status-overlay').style.display = 'none';
+      if (statusReturnFocus && statusReturnFocus.focus) statusReturnFocus.focus();
+      statusReturnFocus = null;
     }
+    // Update-Dialoge (Status, Pflicht-Update): Tab bleibt im Dialog, Esc schliesst den Status-Dialog
+    document.addEventListener('keydown', function (e) {
+      const st = document.getElementById('update-status-overlay'), fo = document.getElementById('forced-update-overlay');
+      const top = fo.style.display === 'flex' ? fo : (st.style.display === 'flex' ? st : null);
+      if (!top) return;
+      if (e.key === 'Escape' && top === st) { e.preventDefault(); e.stopImmediatePropagation(); closeStatusDialog(); return; }
+      if (e.key !== 'Tab') return;
+      const f = Array.prototype.filter.call(top.querySelectorAll('button:not([disabled])'), function (el) { return el.getClientRects().length > 0; });
+      if (!f.length) return;
+      e.stopImmediatePropagation();
+      if (!top.contains(document.activeElement)) { e.preventDefault(); f[0].focus(); }
+      else if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+    }, true);
 
 
     // Info-Dialog: nur technische Angaben, keine Dokumentinhalte, keine Dateinamen, keine absoluten Pfade
     let infoReturnFocus = null;
-    const INFO_FOCUSABLE = 'button:not([disabled]), a[href], summary';
+    const INFO_FOCUSABLE = 'button:not([disabled]), a[href], summary, [tabindex="0"]';
     function infoText(id, text) { document.getElementById(id).textContent = text; }
     function infoFocusables() {
       return Array.prototype.filter.call(document.querySelectorAll('#info-dialog ' + INFO_FOCUSABLE), function (el) { return el.getClientRects().length > 0; });
@@ -463,9 +491,17 @@
       try { infoText('info-licenses', (await api.getLicenses()) || 'Keine Lizenzdatei gefunden.'); }
       catch (e) { infoText('info-licenses', 'Lizenzen konnten nicht geladen werden.'); }
     }
+    // Hintergrund bei offenem Info-Dialog nicht bedienbar und fuer Screenreader unsichtbar (inert); die Update-Dialoge liegen darueber und bleiben bedienbar
+    function infoBackground(inert) {
+      Array.prototype.forEach.call(document.body.children, function (el) {
+        if (/^(SCRIPT|STYLE|LINK)$/.test(el.tagName) || el.id === 'info-overlay' || el.id === 'update-status-overlay' || el.id === 'forced-update-overlay') return;
+        if (inert) el.setAttribute('inert', ''); else el.removeAttribute('inert');
+      });
+    }
     function openInfoDialog() {
       infoReturnFocus = document.activeElement && document.activeElement.id === 'btn-info' ? document.activeElement : document.getElementById('btn-info');
       document.getElementById('info-overlay').style.display = 'flex';
+      infoBackground(true);
       document.addEventListener('keydown', infoKeydown, true);
       document.getElementById('info-close').focus();
       loadInfoDialog();
@@ -473,6 +509,7 @@
     function closeInfoDialog() {
       document.getElementById('info-overlay').style.display = 'none';
       document.removeEventListener('keydown', infoKeydown, true);
+      infoBackground(false);
       if (infoReturnFocus) infoReturnFocus.focus();
     }
 
@@ -507,7 +544,9 @@
 
     async function checkForUpdatesManually() {
       const overlay = document.getElementById('update-status-overlay');
+      if (overlay.style.display !== 'flex') statusReturnFocus = document.activeElement;
       overlay.style.display = 'flex';
+      overlay.querySelector('.btn-close').focus();
       setStatusIcon('wait');
       document.getElementById('status-title').textContent = 'Suche nach Updates...';
       document.getElementById('status-message').textContent = 'Bitte warten Sie einen Moment.';
@@ -564,14 +603,14 @@
     }
   </script>
 
-<div id="update-check-btn" style="position:fixed;bottom:8px;left:8px;z-index:9998;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);padding:6px 10px;border-radius:6px;display:flex;gap:8px;align-items:center">
+<footer id="update-check-btn" aria-label="Version und Werkzeuge" style="position:fixed;bottom:8px;left:8px;z-index:9998;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);padding:6px 10px;border-radius:6px;display:flex;gap:8px;align-items:center">
   <span style="color:rgba(255,255,255,0.7);font-size:11px;font-family:system-ui,sans-serif" id="version-label">Lade...</span>
   <button onclick="checkForUpdatesManually()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:system-ui,sans-serif">Updates</button>
   <button id="btn-diag" onclick="copyDiagnostics(this)" title="Systeminformationen für Support-Anfragen kopieren (enthält keine Dokumentinhalte)" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:system-ui,sans-serif">Diagnose kopieren</button>
   <button id="btn-info" type="button" onclick="openInfoDialog()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:system-ui,sans-serif">Info</button>
-</div>
+</footer>
 
-<div id="sysstats">RAM — | CPU — | App — MB</div>
+<aside id="sysstats" aria-label="Systemauslastung">RAM — | CPU — | App — MB</aside>
 <script>
 
   // Show version in top-right
