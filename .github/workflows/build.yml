@@ -6,6 +6,11 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      break_model:
+        description: 'Probelauf: Modelldatei nach der Installation loeschen (Windows-Job muss mit klarer Meldung scheitern)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -59,6 +64,48 @@ jobs:
           esac
           echo "Programm: $BIN"
           PS_PACKAGED_BIN="$BIN" $PREFIX npm test
+      # Nur Windows: den echten Installer (NSIS, still) ausfuehren und die installierte App pruefen
+      - name: Windows - Installer still installieren (C:\PS-Test)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Join-Path $PWD 'dist\PrivacyShield-Setup.exe'
+          if (-not (Test-Path $installer)) { throw "Installer fehlt: $installer" }
+          # /D= muss das letzte Argument sein und darf nicht in Anfuehrungszeichen stehen
+          $p = Start-Process -Wait -PassThru -FilePath $installer -ArgumentList '/S','/D=C:\PS-Test'
+          if ($p.ExitCode -ne 0) { throw "Installer-Exitcode $($p.ExitCode)" }
+          # NSIS-Nachlauf: die Datei kann kurz nach Ende des Installers noch fehlen, bis zu 30 s im 1-s-Takt warten
+          $exe = 'C:\PS-Test\PrivacyShield.exe'
+          for ($i = 0; $i -lt 30 -and -not (Test-Path $exe); $i++) { Start-Sleep -Seconds 1 }
+          if (-not (Test-Path $exe)) { throw "Installation fehlgeschlagen: $exe fehlt (auch nach 30 s)" }
+      - name: Windows - Modelldatei der Installation pruefen
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          BREAK_MODEL: ${{ inputs.break_model }}
+        run: |
+          $model = 'C:\PS-Test\resources\app.asar.unpacked\app\models\Xenova\distilbert-base-multilingual-cased-ner-hrl\onnx\model_quantized.onnx'
+          # Probelauf der Pruefung: Datei absichtlich entfernen
+          if ($env:BREAK_MODEL -eq 'true') {
+            Write-Host 'break_model=true: Modelldatei wird geloescht, dieser Lauf muss scheitern'
+            Remove-Item -Force -ErrorAction SilentlyContinue $model
+          }
+          if (-not (Test-Path $model)) { throw "KI-Modell fehlt in der Installation: $model" }
+          $size = (Get-Item $model).Length
+          if ($size -ne 135359829) { throw "KI-Modell in der Installation hat $size statt 135359829 Bytes: $model" }
+          Write-Host "KI-Modell vollstaendig: $size Bytes"
+      - name: Windows - Tests gegen die installierte App
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          PS_PACKAGED_BIN: C:\PS-Test\PrivacyShield.exe
+          PS_INSTALLED: '1'
+          PS_SKIP_EVAL: '1'
+        run: |
+          node --test --test-concurrency=1 tests/installed.test.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'tests/installed.test.mjs fehlgeschlagen (installierte App unvollstaendig)' }
+          node --test --test-concurrency=1 tests/ai-fehler.test.mjs tests/offline-ai.test.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'ai-fehler/offline-ai gegen die installierte App fehlgeschlagen' }
       - uses: actions/upload-artifact@v7
         if: always()
         with:
