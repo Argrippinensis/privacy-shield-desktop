@@ -383,7 +383,7 @@ handle("get-system-stats", () => {
 });
 
 handle('dismiss-update', (event, version) => {
-  if (typeof version !== 'string' || !/^\d+\.\d+\.\d+$/.test(version)) throw invalidArg();
+  if (typeof version !== 'string' || !/^\d+\.\d+\.\d+(-[A-Za-z0-9.]+)?$/.test(version)) throw invalidArg();
   const state = getUpdateState();
   if (state.version !== version) {
     state.version = version;
