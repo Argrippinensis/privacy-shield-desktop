@@ -5,11 +5,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { checkReleaseInputs, REQUIRED_FILES } from '../../scripts/check-release-inputs.mjs';
 
-function fixture() {
+function fixture(version = '2.0.0') {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-release-'));
   fs.mkdirSync(path.join(root, 'dist'));
-  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ version: '2.0.0' }));
-  fs.writeFileSync(path.join(root, 'CHANGELOG.md'), '## [2.0.0] - 2026-10-25\n\n- Test\n');
+  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ version }));
+  fs.writeFileSync(path.join(root, 'CHANGELOG.md'), `## [${version}] - 2026-10-25\n\n- Test\n`);
   for (const file of REQUIRED_FILES) fs.writeFileSync(path.join(root, 'dist', file), 'test');
   return root;
 }
@@ -40,4 +40,25 @@ test('leerer Installer stoppt den Release', (t) => {
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.writeFileSync(path.join(root, 'dist', 'PrivacyShield-Setup.exe'), '');
   assert.throws(() => checkReleaseInputs('v2.0.0', root), /PrivacyShield-Setup.exe/);
+});
+
+test('Vorabversion: Tag v2.0.0-beta.1 passt zu package.json 2.0.0-beta.1 mit datiertem Changelog', (t) => {
+  const root = fixture('2.0.0-beta.1');
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  assert.equal(checkReleaseInputs('v2.0.0-beta.1', root).version, '2.0.0-beta.1');
+});
+
+test('Vorabversion und stabile Version werden nicht vermischt', (t) => {
+  const beta = fixture('2.0.0-beta.1');
+  const stable = fixture('2.0.0');
+  t.after(() => { for (const r of [beta, stable]) fs.rmSync(r, { recursive: true, force: true }); });
+  assert.throws(() => checkReleaseInputs('v2.0.0', beta), /package.json/);
+  assert.throws(() => checkReleaseInputs('v2.0.0-beta.1', stable), /package.json/);
+});
+
+test('Vorabversion ohne datierten Changelog-Abschnitt stoppt den Release', (t) => {
+  const root = fixture('2.0.0-beta.1');
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, 'CHANGELOG.md'), '## [2.0.0] - 2026-10-25\n\n## [Unreleased] (2.0.0-beta.1)\n');
+  assert.throws(() => checkReleaseInputs('v2.0.0-beta.1', root), /CHANGELOG.md/);
 });
