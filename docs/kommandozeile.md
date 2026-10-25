@@ -24,7 +24,7 @@ PrivacyShield --cli --in <Datei|Ordner> --out <Ordner>
 | `--report` | Schreibt zusätzlich `bericht.txt` und `bericht.json` in den Ausgabeordner. |
 | `--map` | Schreibt die verschlüsselte Zuordnung (`.psmap`) genau an diesen Pfad; der Ordner wird angelegt. Braucht eine Passwortquelle. Darf nicht die Eingabedatei sein und nicht im Eingabeordner liegen. |
 | `--password-env` | Name einer Umgebungsvariablen mit dem Passwort (mindestens 10 Zeichen). |
-| `--password-stdin` | Das Passwort wird als eine Zeile von der Standardeingabe gelesen. | Unter Windows liest die gebaute Programmdatei (ein Fenster-Programm) keine Standardeingabe: dort bitte `--password-env` verwenden (Rückgabecode 2 mit Meldung, wenn nichts gelesen wird).
+| `--password-stdin` | Das Passwort wird als eine Zeile von der Standardeingabe gelesen. | Unter Windows hat Electron auch beim Start aus dem Quelltext keine nutzbare Standardeingabe. Dort bitte `--password-env` verwenden (Rückgabecode 2 mit Meldung, wenn nichts gelesen wird).
 | `--fail-on-findings` | Rückgabecode 4, wenn die Gegenprüfung in mindestens einem Dokument mögliche Reste meldet. |
 | `--recursive` | Auch Unterordner des Eingabeordners einlesen. |
 | `--quiet` | Keine Fortschrittsmeldungen (Fehler und Zusammenfassung bleiben). |
