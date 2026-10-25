@@ -1880,12 +1880,12 @@
    "allowed": [],
    "tests": [],
    "accept": [],
-   "status": "offen",
+   "status": "verschoben",
    "attempts": 0,
    "branch": "",
    "commit": "",
    "lease": null,
-   "notes": ""
+   "notes": "Kann-Paket, laut Plan (V2-00-INDEX, Entscheidung D12: Umfang 2.0 = Muss plus Soll) fuer Version 2.1 vorgesehen; nicht Teil von 2.0.0."
   },
   {
    "id": "D4",
