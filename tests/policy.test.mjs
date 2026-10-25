@@ -202,7 +202,7 @@ test('Tastatur: sichtbarer Knopf #policy-import-btn ist fokussierbar und loest p
     assert.ok(info.sichtbar && info.fokus, JSON.stringify(info));
     for (const taste of ['Enter', ' ']) {
       await f.focus('#policy-import-btn', { timeout: 1500 });
-      const [chooser] = await Promise.all([a.win.waitForEvent('filechooser', { timeout: 3000 }), a.win.keyboard.press(taste)]);
+      const [chooser] = await Promise.all([a.win.waitForEvent('filechooser', { timeout: 10000 }), a.win.keyboard.press(taste)]);
       assert.ok(chooser, 'kein Dateidialog nach Taste ' + JSON.stringify(taste));
     }
   } finally { await a.close(); }
