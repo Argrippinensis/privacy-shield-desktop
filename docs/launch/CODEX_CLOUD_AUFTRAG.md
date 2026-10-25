@@ -15,6 +15,44 @@ Zusätzliche ausdrückliche Wünsche:
 
 Die Freigabe umfasst Recherche, reproduzierbare Tests, Änderungen auf isolierten Branches und Draft-PRs. Keine weitere Routine-Rückfrage dafür. Das Privatstellen ist ausdrücklich gewünscht und braucht keine erneute Grundsatzfreigabe. Öffentliches Software-Release, produktiver Website-Deploy und Merge in die Haupt-/Releasebranch benötigen eine gesonderte eindeutige Freigabe des Inhabers. Änderungen immer erst konkret prüfbar vorbereiten. Falls notwendige Zugangsdaten/Rechte fehlen, genau die fehlende Fähigkeit nennen und unabhängig weiterarbeiten.
 
+## 0. Bestätigter Claude-Abschluss und unmittelbarer Startpunkt
+
+Die Abschlussmeldung wurde am 25.10.2026 gegen GitHub geprüft. Lies zuerst [GITHUB_ABGLEICH_2026-10-25.md](GITHUB_ABGLEICH_2026-10-25.md); dort stehen Quellen, Einschränkungen und priorisierte Gegenproben.
+
+**Produkt:** `v2/main` bei `019d84a7bdc8c388492551aba60b962636c7f564`.
+**Plan:** `plan/v2-0` bei `acf692baf407cc00aa65bf3b857e0b3f767c26d4`.
+Beide Hashes sind auf GitHub vorhanden. Falls diese Branches seitdem weitergelaufen sind, neue Änderungen zuerst vergleichen und den tatsächlich gewählten Prüf-SHA festhalten.
+
+Die neue Session kann mit der Prüfung dieser remote vorhandenen Stände beginnen und muss nicht auf Claudes Limit-Reset warten. Zusätzliche nicht gepushte lokale Änderungen sind nicht einsehbar. Produktcode NICHT von `main` (noch 1.8-Stand) oder vom eingefrorenen Code dieser Auftragsbranch prüfen. Die Dokumente dieses Auftrags separat übernehmen.
+
+Verbindlich lesen, auf **plan/v2-0**:
+- `docs/superpowers/plans/2026-10-20-v2-0/V2-FREIGABELISTE-2-0-0.md`
+- `docs/superpowers/plans/2026-10-20-v2-0/V2-STATUS.md`
+- `docs/superpowers/plans/2026-10-20-v2-0/V2-ENTSCHEIDUNGEN.md`
+- `docs/superpowers/plans/2026-10-20-v2-0/V2-FRAGEN.md`
+- `docs/superpowers/plans/2026-10-20-v2-0/loop/V2-QUEUE.json`
+
+Bereits direkt verifiziert:
+- 56 Pflichtpakete fertig, 2 begründet verschoben; 7 zusätzliche Kann-Pakete verschoben.
+- PRs #5/#6/#7 übernommen. Nicht erneut mergen oder dieselben Fixes neu entwickeln.
+- Quellbaum-CI 40210435485 auf Ubuntu und Windows grün. Ubuntu: 1584 bestanden, 0 Fehler, 7 übersprungen, 1 Todo.
+- Build-Probelauf 40210430501 auf Linux, Windows, macOS grün, Release übersprungen. Build-Artefakte referenzieren denselben Produkt-SHA.
+- Version weiterhin 1.8.0, PR #4 nach main offen als Draft. Daraus folgt keine Freigabe zur Veröffentlichung.
+
+**Priorität der unabhängigen Prüfung:**
+1. Importabdeckung: Misch-PDFs und OCR-/Seitengrenzen. Aktuelle Linux-CI: OCR 1/24 Restfunde, Import 24/27, 3 verloren, 1 ungemessen; Mac: 1/25, Import 25/27, 2 verloren, 1 ungemessen. Quellabdeckung separat von Erkennungsleistung bewerten und Plattformunterschiede erklären.
+2. Aussage „nirgends schlechter als 1.8.0“ mit Matrix über alle tatsächlich beanspruchten Modi/Fallmengen/Kategorien und identischen Eingaben prüfen. Restfunde allein widerlegen einen relativen Vergleich nicht; grüne Tests beweisen umgekehrt keine Null-Leck-Garantie. F7 benennt laut Fragenliste Wortlisten-Modus, nicht pauschal jeden Ausfallmodus: tatsächliche Grenzänderung prüfen.
+3. Sichtbare Unvollständigkeit, Exportfreigabe, bekannte Reste und Bericht/Nachweis. Keine erfolgreiche Vollverarbeitung behaupten, wenn Inhalte nicht gelesen wurden.
+4. Native Plattformabdeckung: Der Mac-Probelauf baut beide ZIPs, startet aber nur ARM. Intel-Laufzeit und menschliche Windows-Abnahme bleiben separat zu belegen.
+5. Nicht-atomare CLI-Ausgabe ist bewusst verschoben und lediglich ehrlich dokumentiert; Risikobewertung und konkrete Gegenprobe vor einer neuen Entscheidung.
+6. Produktaussagen („datenschutzkonform“, „Kein Daten-Leakage“), private Verteilung und neue UX-/Nachweiswünsche.
+
+Der angehängte automatische Einwand in Claudes Abschlussmeldung ist als Hypothesenliste zu behandeln. Kritik weder ungeprüft bestätigen noch mit grüner CI abweisen. Fehlende externe Design-Abnahme ist kein automatisches Verbot reversibler UI-Verbesserungen; im Review klar angeben, welche Belege tatsächlich vorliegen.
+
+Bestehende Empfehlungen F6–F9 nicht als ausdrückliche Nutzerantwort ausgeben. Aufgeschobene Maßnahmen sachlich neu bewerten, insbesondere D60/NL-Postleitzahlen. Keine Testfälle entfernen, Testgrenzen lockern oder Referenzausnahmen erweitern, nur um ein grünes Ergebnis zu erhalten. Frühere ausdrückliche Entscheidungen wie F5 respektieren und bei neuem Sicherheitsbefund begründet neu vorlegen.
+
+Zuerst die bestehende Implementierung unabhängig bewerten, dann die zusätzlichen Wünsche (UI, Nachweis, KI/RAM) in einen begrenzten Finalisierungsplan einordnen. Nicht pauschal alle verschobenen 2.1-Pakete wieder eröffnen.
+
 ## 1. Modelle und Zusammenarbeit
 
 1. Astra (`gpt-6-astra`, sofern verfügbar) führt Bestandsaufnahme, Risikoanalyse, Architektur-/UX-Abwägung, Priorisierung und den unabhängigen Abschlussreview durch.
@@ -40,7 +78,7 @@ Zusätzlich: `Argrippinensis/arcangeli.eu` und `Argrippinensis/ReguSafe`, soweit
 
 ### Historische Hinweise, erneut prüfen
 
-Stand der früheren Gegenprüfung war `9b71b9d1b62044c98c40af03a24eb201da0ed9b4`. Am 25.10.2026 war `v2/main` bereits 36 Commits weiter. Alte Befunde nicht blind erneut implementieren.
+Stand der früheren Gegenprüfung war `9b71b9d1b62044c98c40af03a24eb201da0ed9b4`. Der inzwischen bestätigte Endstand ist in Abschnitt 0 festgelegt. Alte Befunde nicht blind erneut implementieren.
 
 PRs:
 - #5: CLI-Tippfehler abweisen; Windows-stdin-Grenze und negative Prüfung.
