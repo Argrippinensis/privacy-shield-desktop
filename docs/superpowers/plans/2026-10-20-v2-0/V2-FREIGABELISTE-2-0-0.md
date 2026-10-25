@@ -16,12 +16,16 @@ Die App 2.0.0 ist fertig gebaut, geprüft und dokumentiert. Alle 58 Pflichtpaket
 | Absichtlicher Fehlerlauf (Modelldatei fehlt) | scheitert wie gewollt auf Windows an genau dem Prüfschritt |
 | Windows-Installation (still installiert, Modelldatei 135.359.829 Bytes, App-Selbstprüfung) | in der CI bestanden |
 | Erkennung gegenüber 1.8.0 (Vergleich mit 645 Referenzfällen) | keine unerlaubten Abweichungen, in beiden Prüfwegen |
-| Fehlende Erkennung (Lecks) mit KI-Modell und im Ausfallmodus | 0 in allen Testmengen; ohne KI nur mit Regeln und Wortlisten: 12 von 150 Handfällen (wie in 1.8.0, nicht schlechter) |
+| Fehlende Erkennung (Lecks), echter Vergleich mit 1.8.0 (selbst gemessen, 2026-10-25) | Handfälle ohne KI: 1.8.0 21 undicht, 2.0.0 12; mit KI: 1.8.0 4, 2.0.0 0. Synthetische Werte (276): ohne KI 18 gegen 18, mit KI 1 gegen 0. Fehlalarme in der ersten Testmenge 0 in allen Modi. Nirgends schlechter |
 | Echte Dokumente (TXT, DOCX, PDF) | 0 von 97 Lecks; gescannte Dokumente (OCR): 1 von 24 |
 | Barrierefreiheit (automatische Prüfung aller Ansichten) | 0 schwere Befunde; Tastatur, Fokus, Kontrast und Zoom geprüft |
 | Unabhängige Prüfung jedes Pakets | gelaufen; gefundene Mängel (u. a. neue Lecks, falsche Überschrift) vor dem Merge behoben |
 
 Umfang: 300 Änderungen seit 1.8.0, 117 Dateien.
+
+**Gesamtsicht Oberfläche (von mir angesehen, 1280 und 900 Pixel):** Willkommensseite, Arbeitsansicht mit Ergebnis, Funde-Leiste und Info-Dialog wirken ruhig, einheitlich und lesbar im Navy-Weiß-Stil, ohne Emojis; Schrift und Hilfstexte sind deutlich besser lesbar als in 1.8.0. Eine Hinweiszeile, die in 1.8.0 am linken Rand klebte, ist jetzt zentriert (mit Test). Bekannt und unverändert gegenüber 1.8.0: Die farbige Markierung im Originaltext kann bei schmalem Fenster um eine Zeile versetzt aussehen (nur Anzeige, die Anonymisierung ist davon nicht betroffen).
+
+**Wortlaut-Hinweis (Ihre Entscheidung, rechtlich heikel):** Die Willkommensseite sagt seit 1.x "100% lokal & datenschutzkonform" und "Kein Daten-Leakage". Das habe ich nicht angefasst (Datenschutztexte entscheiden Sie). Ich empfehle, "datenschutzkonform" als Zusage zu überdenken, weil die Erkennung nie 100 Prozent sicher ist.
 
 ## 3. Was neu ist (Kurzfassung für Anwender)
 
