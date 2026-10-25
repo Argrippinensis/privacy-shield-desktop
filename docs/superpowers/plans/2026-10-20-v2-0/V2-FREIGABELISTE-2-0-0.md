@@ -43,7 +43,7 @@ Umfang: 300 Änderungen seit 1.8.0, 117 Dateien.
 
 ### Oberfläche zur Sichtung durch Sie
 
-Bitte sehen Sie sich die Bilder an (Ordner `artifacts/screenshots-2-0-0/`): Willkommensseite, Arbeitsansicht mit Ergebnis, Funde-Leiste, Info-Dialog, jeweils bei 1280 und 900 Pixel. Die Gestaltung ist von mir und den unabhängigen Prüfern bewertet, die Abnahme der Optik gehört aber Ihnen.
+Bitte sehen Sie sich die Bilder an (Ordner `artifacts/screenshots-2-0-0/`): Willkommensseite, Arbeitsansicht mit Ergebnis, Funde-Leiste, Info-Dialog, jeweils bei 1280 und 900 Pixel. Die Gestaltung ist von mir und den unabhängigen Prüfern bewertet. **Optik-Abnahme durch den Nutzer: erteilt am 2026-10-25 im Chat (Antwort "Optik ist in Ordnung").** Das ist keine Veröffentlichungsfreigabe.
 
 ## 3. Was neu ist (Kurzfassung für Anwender)
 

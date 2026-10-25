@@ -17,3 +17,4 @@ Der Orchestrator darf ohne Einzelbestaetigung: (1) Branches `v2/*` und den Plan-
 | Nr | Datum | Wortlaut des Nutzers (Zitat) | Umfang | Widerrufen am |
 |---|---|---|---|---|
 | V2-1 | 2026-10-20 | "Ja (Empfohlen)" (Antwort auf die Frage nach Dauerfreigabe V2-1) | Dauerfreigabe V2-1 wie oben: Pushes v2/* und Plan-Branch, Entwurfs-PR v2/main gegen main, Arbeitsverzeichnisse ~/projects/ps-v2 und /tmp; ausgenommen Merge nach main, Release, Deploy, Kaeufe, Web-Tool, Loeschen von Releases | |
+| V2-2 | 2026-10-25 | "Optik ist in Ordnung" (Antwort auf die Frage zur Optik-Abnahme von PrivacyShield 2.0.0) | Abnahme der Gestaltung der Oberflaeche (Stand v2/main 019d84a). KEINE Freigabe zur Veroeffentlichung (Gate G1 bleibt offen). | |
