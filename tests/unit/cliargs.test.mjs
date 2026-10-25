@@ -87,11 +87,31 @@ test('parse: --password-stdin mit --map ist gueltig', () => {
   assert.equal(r.opts.passwordStdin, true);
 });
 
-test('parse: unbekannte Schalter (--no-sandbox, --inspect=0, --user-data-dir=...) werden ignoriert', () => {
+test('parse: bekannte Chromium-Schalter (--no-sandbox, --inspect=0, --user-data-dir=...) werden ignoriert', () => {
   const r = C.parse(['p', '--cli', '--no-sandbox', '--inspect=0', '--user-data-dir=/u', '--in', 'a', '--out', 'b']);
   assert.equal(r.code, 0);
   assert.deepEqual(r.errors, []);
   assert.equal(r.opts.in, 'a');
+});
+
+test('parse: vertipptes --profil wird abgelehnt statt mit Standardprofil fortzufahren', () => {
+  const r = C.parse(['p', '--cli', '--in', 'a', '--out', 'b', '--profil', 'strict']);
+  assert.equal(r.code, 2);
+  assert.equal(r.opts.profile, 'standard');
+  assert.match(r.errors.join('\n'), /--profil/);
+});
+
+test('parse: unbekannter eigener Schalter mit Wert wird ohne den Wert gemeldet', () => {
+  const r = C.parse(['p', '--cli', '--in', 'a', '--out', 'b', '--geheim=/vertraulicher/pfad']);
+  assert.equal(r.code, 2);
+  assert.match(r.errors.join('\n'), /--geheim/);
+  assert.equal(r.errors.join('\n').includes('/vertraulicher/pfad'), false);
+});
+
+test('parse: unbekannte Laufzeitoption vor --cli bleibt dem Programmstart vorbehalten', () => {
+  const r = C.parse(['p', '--zukuenftige-electron-option=x', '--cli', '--in', 'a', '--out', 'b']);
+  assert.equal(r.code, 0);
+  assert.deepEqual(r.errors, []);
 });
 
 test('parse: --map allein (ohne Passwortquelle) ist ein Fehler mit code 2', () => {

@@ -12,6 +12,7 @@
     missing: (n) => 'Die Option ' + n + ' fehlt.',
     mapSource: '--map braucht genau eine Passwortquelle: --password-env oder --password-stdin.',
     password: 'Passwoerter nie als Argument, sondern --password-env oder --password-stdin verwenden.',
+    unknown: (n) => 'Unbekannte Option ' + n + '.',
   };
 
   const VALUE = { '--in': 'in', '--out': 'out', '--profile': 'profile', '--ai': 'ai', '--policy': 'policy',
@@ -19,11 +20,15 @@
   const FLAG = { '--report': 'report', '--password-stdin': 'passwordStdin', '--fail-on-findings': 'failOnFindings',
     '--recursive': 'recursive', '--quiet': 'quiet' };
   const PROFILES = ['standard', 'finance', 'medical', 'strict'];
+  // Diese Schalter gehoeren zu Electron/Chromium. Alle anderen unbekannten Schalter nach --cli sind wahrscheinlich Tippfehler.
+  const RUNTIME_FLAGS = new Set(['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--enable-logging']);
+  const RUNTIME_VALUES = new Set(['--inspect', '--remote-debugging-port', '--user-data-dir', '--lang']);
 
   function parse(argv) {
     const args = Array.isArray(argv) ? argv.map(String) : [];
     const rest = args.slice(1);
-    if (!rest.includes('--cli')) return { cli: false, opts: {}, errors: [], code: 0 };
+    const cliAt = rest.indexOf('--cli');
+    if (cliAt < 0) return { cli: false, opts: {}, errors: [], code: 0 };
     const opts = { profile: 'standard', ai: 'auto', report: false, passwordStdin: false,
       failOnFindings: false, recursive: false, quiet: false };
     const errors = [];
@@ -32,9 +37,17 @@
       if (tok.slice(0, 2) !== '--') continue;
       const eq = tok.indexOf('=');
       const name = eq < 0 ? tok : tok.slice(0, eq);
+      if (name === '--cli') continue;
       if (name === '--password' || name === '--passwort') { errors.push(TEXT.password); continue; }
       if (FLAG[name]) { opts[FLAG[name]] = true; continue; }
-      if (!VALUE[name]) continue;
+      if (!VALUE[name]) {
+        if (i < cliAt || RUNTIME_FLAGS.has(name) || RUNTIME_VALUES.has(name)) {
+          if (RUNTIME_VALUES.has(name) && eq < 0 && i + 1 < rest.length && rest[i + 1].slice(0, 2) !== '--') i++;
+          continue;
+        }
+        errors.push(TEXT.unknown(name));
+        continue;
+      }
       let val;
       if (eq >= 0) val = tok.slice(eq + 1);
       else if (i + 1 < rest.length && rest[i + 1].slice(0, 2) !== '--') val = rest[++i];
