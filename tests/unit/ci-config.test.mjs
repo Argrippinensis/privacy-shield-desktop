@@ -135,3 +135,20 @@ test('build.yml: Release-Job ohne neue Berechtigungen oder Actions', { skip: SKI
   assert.deepEqual(job.steps.filter((x) => x.uses).map((x) => x.uses),
     ['actions/checkout@v7', 'actions/setup-node@v7', 'actions/download-artifact@v8']);
 });
+
+test('build.yml: vor dem Veroeffentlichen wird die Vorabversion-Markierung gegen den Tag geprueft', { skip: SKIP_YAML }, () => {
+  const run = stepRun(releaseJob(), /Hochgeladene Dateien pruefen/);
+  const iCheck = run.search(/--json isPrerelease --jq \.isPrerelease/);
+  const iEdit = run.search(/gh release edit/);
+  assert.ok(iCheck >= 0, 'Pruefung der isPrerelease-Markierung fehlt');
+  assert.ok(iEdit >= 0 && iCheck < iEdit, 'Markierung muss VOR gh release edit (Veroeffentlichen) geprueft werden');
+  assert.match(run, /Release bleibt Entwurf: Vorabversion ist nicht als Vorabversion markiert/);
+  assert.match(run, /Release bleibt Entwurf: stabile Version ist als Vorabversion markiert/);
+});
+
+test('build.yml: der latest-Check besteht nicht still bei API-Fehlern (nur 404 gilt als kein stabiles Release)', { skip: SKIP_YAML }, () => {
+  const run = stepRun(releaseJob(), /Download-Links pruefen/);
+  assert.doesNotMatch(run, /releases\/latest"? --jq \.tag_name 2>\/dev\/null \|\| true/, 'stilles || true beim latest-Check');
+  assert.match(run, /HTTP 404/, 'Unterscheidung 404 gegen andere Fehler fehlt');
+  assert.match(run, /Latest-Pruefung nicht moeglich/);
+});

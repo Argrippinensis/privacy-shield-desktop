@@ -174,6 +174,12 @@ jobs:
               exit 1
             fi
           done
+          # Vor dem Veroeffentlichen: Die Markierung als Vorabversion muss zum Tag passen (ein Release laesst sich nicht zurueckziehen)
+          PRE=$(gh release view "$GITHUB_REF_NAME" --json isPrerelease --jq .isPrerelease)
+          case "$GITHUB_REF_NAME" in
+            *-*) [ "$PRE" = "true" ] || { echo "Release bleibt Entwurf: Vorabversion ist nicht als Vorabversion markiert"; exit 1; } ;;
+            *) [ "$PRE" = "false" ] || { echo "Release bleibt Entwurf: stabile Version ist als Vorabversion markiert"; exit 1; } ;;
+          esac
           # Vorabversionen behalten das Prerelease-Flag beim Veroeffentlichen
           case "$GITHUB_REF_NAME" in
             *-*) gh release edit "$GITHUB_REF_NAME" --draft=false --prerelease ;;
@@ -193,7 +199,14 @@ jobs:
                 echo "$f -> HTTP $code"
                 [ "$code" = "200" ] || exit 1
               done
-              LATEST=$(gh api "repos/${REPO}/releases/latest" --jq .tag_name 2>/dev/null || true)
+              # 404 heisst: es gibt noch kein stabiles Release; jeder andere Fehler bricht ab (keine stille Bestaetigung)
+              if LATEST=$(gh api "repos/${REPO}/releases/latest" --jq .tag_name 2>latest.err); then
+                :
+              elif grep -q "HTTP 404" latest.err; then
+                LATEST=""
+              else
+                echo "Latest-Pruefung nicht moeglich:"; cat latest.err; exit 1
+              fi
               echo "Latest ist: ${LATEST:-(kein stabiles Release)}"
               [ "$LATEST" != "$GITHUB_REF_NAME" ] || { echo "Vorabversion ist faelschlich Latest"; exit 1; }
               ;;
