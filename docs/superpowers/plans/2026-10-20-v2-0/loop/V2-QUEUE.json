@@ -1832,10 +1832,10 @@
     "xvfb-run -a node tests/eval/diff-reference.mjs",
     "npm run build:linux && PS_PACKAGED_BIN=dist/linux-unpacked/privacy-shield-desktop xvfb-run -a npm test"
    ],
-   "status": "offen",
+   "status": "fertig",
    "attempts": 0,
    "branch": "",
-   "commit": "",
+   "commit": "7f32877",
    "lease": null,
    "notes": ""
   },
