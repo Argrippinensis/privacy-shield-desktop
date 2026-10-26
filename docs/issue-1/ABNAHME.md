@@ -1,6 +1,6 @@
 # Auftrag arcangeli.eu#1 – Prüfprotokoll
 
-Arbeitsstand zur Abnahme, keine Veröffentlichung, kein Release, kein Merge.
+Erste Übergabe als Draft; die anschließend beauftragte Veröffentlichung und CI-Korrekturen stehen in [FREIGABE.md](FREIGABE.md).
 
 ## Startabgleich (26.10.2026)
 
@@ -72,7 +72,7 @@ npm test
 
 Es wurde kein zweiter vollständiger 25-Minuten-Lauf auf dem finalen Stand behauptet; die korrigierten und nachträglich geänderten Bereiche wurden gezielt vollständig erneut geprüft. Bestehende SKIP/TODOs werden nicht als bestandene Anforderungen gezählt. Das TODO betrifft eine bestehende Whitelist-Eigenschaft im Erkennungskern (248/800 synthetische Fälle), nicht einen neuen behobenen Befund dieses Auftrags.
 
-Der breite Website-Gesamtcheck bleibt offen. Die automatische Freigabeprüfung lehnte den Import der öffentlichen Umgebungs-CA in die persistente Chromium/NSS-Vertrauensdatenbank ab: dauerhafte Erweiterung der TLS-Vertrauensbasis ohne ausdrückliche Autorisierung. Der Import wurde nicht vorgenommen, TLS blieb aktiv. Eine optionale Nutzerfreigabe wurde angefragt und liegt derzeit nicht vor.
+Der breite Website-Gesamtcheck bleibt offen. Die automatische Freigabeprüfung lehnte den Import der öffentlichen Umgebungs-CA in die persistente Chromium/NSS-Vertrauensdatenbank ab: dauerhafte Erweiterung der TLS-Vertrauensbasis ohne ausdrückliche Autorisierung. Der Import wurde nicht vorgenommen, TLS blieb aktiv. In der Fortsetzung wurde die Nutzerfreigabe ausdrücklich erteilt; die Website-Prüfung mit aktivem TLS-Vertrauen besteht inzwischen. Siehe [FREIGABE.md](FREIGABE.md).
 
 Verknüpfte Drafts: [gemeinsame Quelle #8](https://github.com/Argrippinensis/privacy-shield-desktop/pull/8), [Website #2](https://github.com/Argrippinensis/arcangeli.eu/pull/2). Die genaue Quellrevision des ausgelieferten Browserpakets und alle Paketprüfsummen stehen im Website-Protokoll. Beide Hauptbranches blieben unverändert.
 
@@ -89,4 +89,4 @@ Auf **physischem iPhone mit Safari** und **Android mit Chrome**, jeweils Browser
 
 Zusätzlich: echte Desktop-Druckdialoge unter Windows/macOS/Linux und Safari/WebKit-Druckdarstellung prüfen. Automatisierte Chromium-PDFs sind keine Bestätigung physischer Drucker, mobiler Speicherorte oder erfolgreicher Betriebssystem-Downloads. Die Tests bestätigen einzelne Abläufe, keine vollständige Erkennung aller Dokumenttypen.
 
-**Veröffentlichung nur nach gesonderter Nutzerabnahme.** Draft-PRs niemals automatisch mergen, keine Release-Tags setzen.
+Die gesonderte Nutzerfreigabe für Push und Veröffentlichung wurde am 26.10.2026 erteilt. Die Online-Fassung bleibt Beta; ausstehende physische Geräteprüfungen werden nicht als bestanden ausgewiesen.
