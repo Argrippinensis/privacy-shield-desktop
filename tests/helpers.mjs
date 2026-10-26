@@ -87,6 +87,12 @@ export async function toolFrame(win, timeout = 15000) {
 export function captureDownloads(frame) {
   return frame.evaluate(() => {
     window.__dls = [];
+    // Content-only tests intercept the new guarded save-file path as well. Native-dialog
+    // cancellation and revision races are tested separately without this helper.
+    psSaveRun = async (name, content, type, run = psRun) => {
+      if (!psCurrent() || psRun !== run) throw Error('stale');
+      window.__dls.push({ name, blob: new Blob([content], { type }) }); return true;
+    };
     const blobs = new Map();
     const create = URL.createObjectURL.bind(URL);
     URL.createObjectURL = (b) => { const u = create(b); blobs.set(u, b); return u; };

@@ -312,7 +312,8 @@ const MAX_SAVE_B64 = 200 * 1024 * 1024;
 
 handle('save-file', async (event, opts) => {
   if (!opts || typeof opts !== 'object') throw invalidArg();
-  const { defaultName, data, mimeType } = opts;
+  const { defaultName, data, mimeType, runId } = opts;
+  if (runId !== undefined && (typeof runId !== "string" || !/^[a-f0-9-]{36}$/.test(runId))) throw invalidArg();
   if (defaultName !== undefined && (typeof defaultName !== 'string' || defaultName.length > 120 || /[\\/]/.test(defaultName))) throw invalidArg();
   if (typeof data !== 'string' || data.length > MAX_SAVE_B64) throw invalidArg();
   if (typeof mimeType !== 'string' || !Object.prototype.hasOwnProperty.call(SAVE_TYPES, mimeType)) throw invalidArg();
@@ -324,6 +325,12 @@ handle('save-file', async (event, opts) => {
     ]
   });
   if (!result.canceled && result.filePath) {
+    if (runId !== undefined) {
+      try {
+        const frame = event.sender.mainFrame.frames.find(f => f.url.includes('privacy-shield.html'));
+        if (!frame || !await frame.executeJavaScript('psCurrent() && psRun.id === ' + JSON.stringify(runId))) return { success: false, error: 'stale' };
+      } catch { return { success: false, error: 'stale' }; }
+    }
     const buffer = Buffer.from(data, 'base64');
     // K4.fix: Schreibfehler nie als Erfolg melden
     try { fs.writeFileSync(result.filePath, buffer); } catch (e) { return { success: false, error: String(e && e.code || 'write') }; }

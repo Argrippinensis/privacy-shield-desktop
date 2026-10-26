@@ -32,6 +32,9 @@
     r.profileId = str(input.profileId, /^[a-z][a-z0-9_]{0,19}$/, 'profileId');
     if (input.aiMode !== 'auto' && input.aiMode !== 'off') bad('aiMode');
     r.aiMode = input.aiMode;
+    if (input.actualMode !== undefined) r.actualMode = str(input.actualMode, /^(rules|ner)$/, 'actualMode');
+    if (input.modelRevision !== undefined) r.modelRevision = str(input.modelRevision, /^[0-9a-f]{40}$/, 'modelRevision');
+    if (input.fallbackCode !== undefined) r.fallbackCode = str(input.fallbackCode, /^[A-Z_]{1,30}$/, 'fallbackCode');
     if (input.modelId !== undefined) r.modelId = str(input.modelId, /^[A-Za-z0-9._/\-]{1,80}$/, 'modelId');
     r.whitelistSize = int(input.whitelistSize, 100000, 'whitelistSize');
     r.customRuleCount = int(input.customRuleCount, 100000, 'customRuleCount');
@@ -57,6 +60,7 @@
         hoch: int(d.leak.hoch, 1000000, p + '.leak.hoch'),
         mittel: int(d.leak.mittel, 1000000, p + '.leak.mittel'),
       };
+      if (d.leak.released !== undefined) out.leak.released = int(d.leak.released, 1000000, p + ".leak.released");
       totals.documents++;
       totals.chars += out.chars;
       return out;
@@ -72,13 +76,17 @@
     if (rep.localTime !== undefined) L.push('Zeitpunkt (lokal): ' + rep.localTime);
     L.push('Dauer: ' + rep.durationMs + ' ms', 'Profil: ' + rep.profileId, 'KI-Modus: ' + rep.aiMode);
     if (rep.modelId !== undefined) L.push('Modell: ' + rep.modelId);
+    if (rep.actualMode) L.push('Tatsächliche Erkennung: ' + (rep.actualMode === 'ner' ? 'Regeln, Wortlisten und NER-Modell' : 'Regeln und Wortlisten'));
+    if (rep.modelRevision) L.push('Modellrevision: ' + rep.modelRevision);
+    if (rep.fallbackCode) L.push('Fallback: Modell nicht verwendet, Grundcode ' + rep.fallbackCode);
     L.push('Freigaben (Whitelist): ' + rep.whitelistSize, 'Eigene Regeln: ' + rep.customRuleCount);
     for (const d of rep.documents) {
       const sum = Object.values(d.counts).reduce((a, b) => a + b, 0);
       L.push('', 'Dokument ' + d.index, '  Zeichen: ' + d.chars, '  Funde: ' + sum);
       for (const k of Object.keys(d.counts).sort()) L.push('    ' + k + ': ' + d.counts[k]);
-      L.push(d.leak.count === 0 ? '  Gegenprüfung: keine Auffälligkeiten'
+      L.push(d.leak.count === 0 ? '  Gegenprüfung: keine Auffälligkeiten (Regeln/Wortlisten; außerhalb freigegebener Funde; keine Vollständigkeitsgarantie)'
         : '  Gegenprüfung: ' + d.leak.count + ' mögliche Reste (hoch ' + d.leak.hoch + ', mittel ' + d.leak.mittel + ')');
+      if (d.leak.released !== undefined) L.push('  Bewusst freigegebene/ignorierte Funde: ' + d.leak.released);
       L.push('  SHA-256 des Ergebnistextes: ' + d.resultSha256);
     }
     L.push('', 'Gesamt: ' + rep.totals.documents + ' Dokument(e), ' + rep.totals.entities + ' Funde', '',

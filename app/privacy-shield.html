@@ -917,7 +917,7 @@
             </div>
             <div style="flex: 1; min-width: 240px">
               <div style="font-size: 13px; font-weight: 600; color: #111; margin-bottom: 3px">
-                100% lokal &amp; datenschutzkonform
+                Lokale Textverarbeitung · Ergebnis selbst prüfen
               </div>
               <div style="font-size: 12px; color: #666; line-height: 1.6">
                 Alle Verarbeitung erfolgt ausschließlich im Arbeitsspeicher dieser App — kein Datenaustausch mit dem
@@ -1278,7 +1278,7 @@
       </div>
       <div
         style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 12px; justify-content: center"
-        class="r"
+        class="r ps-status-badges"
       >
         <span
           class="category-label"
@@ -1288,7 +1288,7 @@
         <span
           class="category-label"
           style="background: #e8f0fe; color: #1a3a5c; display: inline-flex; align-items: center; gap: 5px"
-          >Kein Daten-Leakage</span
+          >Erkennungsgrenzen beachten</span
         >
         <span
           class="category-label"
@@ -1753,6 +1753,8 @@
                     <button class="btn btn-ghost" style="font-size: 11px; padding: 3px 10px" onclick="cpAnon()">
                       Kopieren
                     </button>
+                    <button class="btn btn-ghost" onclick="psSaveResult()">Pseudonymisierten Text speichern</button>
+                    <button class="btn btn-ghost" onclick="psPreview()">Nachweis drucken / als PDF speichern</button>
                     <button class="btn btn-ghost" id="btn-report" style="font-size: 11px; padding: 3px 10px" onclick="saveReport()">
                       Bericht speichern
                     </button>
@@ -2073,7 +2075,7 @@
             PrivacyShield — Deine Daten, dein Rechner. Null Serverkontakt.
           </p>
           <p class="text-xs text-muted mb-1">
-            Kein Daten-Leakage · Kein Tracking · Keine Datenspeicherung · Flugmodus-tauglich. Alle Verarbeitung erfolgt
+            Erkennungsgrenzen beachten · Kein Tracking · Keine Datenspeicherung · Flugmodus-tauglich. Alle Verarbeitung erfolgt
             ausschließlich lokal auf diesem Rechner — ohne eine einzige Serveranfrage.
           </p>
           <p class="text-xs text-muted">
@@ -2263,6 +2265,7 @@
       </div>
     </div>
     <script src="lib/history.js"></script><script src="lib/review.js"></script><script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script><script src="lib/formats.js"></script><script src="lib/officefmt.js"></script>
+    <script src="ui/build-identity.js"></script><script src="ui/evidence-ui.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
       const PROFILES = PSDetect.PROFILES;
@@ -2270,7 +2273,7 @@
       let openedResume = null; // E2: nach Ende eines Laufs bzw. Hinzufuegens zurueckgestellte "Oeffnen mit"-Dateien abholen
       // K4.fix: Zustandsrevision; jede Aenderung an Ergebnissen/Zuordnung/Dokumentbestand macht die Zuordnung wieder ungespeichert
       let stateRev = 0;
-      function stateTouch() { stateRev++; mapSaved = false; }
+      function stateTouch() { stateRev++; mapSaved = false; psInvalidate(); }
       let store = {},
         cnt = {},
         cvars = [],
@@ -2373,6 +2376,7 @@
           document.getElementById("FT").classList.remove("on");
           document.getElementById("FI").value = "";
           document.getElementById("IT").value = "";
+          psImport = null;
           fundeTextChanged();
           const thumb = document.getElementById("PDFTHUMB");
           if (thumb) thumb.style.display = "none";
@@ -2813,7 +2817,7 @@
         return ok;
       }
       async function prjAddFiles(list) {
-        if (!prj) prj = PSLib.project.create();
+        if (!prj) { psProjectImportFailed = false; prj = PSLib.project.create(); }
         const msgs = [];
         prjBusy = true;
         document.getElementById("PRJPANEL").style.display = "block";
@@ -2825,7 +2829,9 @@
             try { text = await readTextOf(f); } catch (err) { msgs.push(pre + (err && err.fixed ? err.message : "konnte nicht gelesen werden")); continue; }
             if (!text.trim()) { msgs.push(pre + "kein Text gefunden"); continue; }
             try {
-              prjSize.set(PSLib.project.add(prj, { name: f.name, text: text }), f.size);
+              const id = PSLib.project.add(prj, { name: f.name, text: text });
+              psPrjImports.set(id, psImport.kind === "PDF" ? structuredClone(psImport) : { complete: true, kind: "Extrahierter Text", pages: [], warnings: ["Nur extrahierter Text geprüft"] });
+              prjSize.set(id, f.size);
             } catch (err) {
               msgs.push(err && err.code === "LIMIT" ? "Grenze erreicht: höchstens " + prj.limits.docs + " Dokumente und " + Math.round(prj.limits.totalChars / 1048576) + " MB Text je Projekt." : pre + "nicht aufgenommen");
               if (err && err.code === "LIMIT") break;
@@ -2834,11 +2840,12 @@
           }
         } finally { prjBusy = false; }
         if (!prj.docs.length) hidePrj(); else prjRender();
+        psProjectImportFailed = psProjectImportFailed || msgs.length > 0;
         if (msgs.length) toast(msgs.join(" "), "e");
         if (openedResume) setTimeout(openedResume, 0);
       }
       function hidePrj() {
-        prj = null; prjSel = null;
+        prj = null; prjSel = null; prjStale = false; psPrjImports.clear(); psProjectImportFailed = false;
         prjRes.clear(); prjSize.clear();
         document.getElementById("PRJLIST").textContent = ""; // Dokumentliste leeren (S2)
         document.getElementById("PRJPANEL").style.display = "none";
@@ -2898,14 +2905,16 @@
           const err = items.filter((x) => x.status === "fehler").length;
           sum = total + (total === 1 ? " Dokument" : " Dokumente") + ", " + rest + " mit möglichen Resten" + (err ? ", " + err + " mit Fehler" : "");
         } else if (done) sum = done + " von " + total + " Dokumenten fertig" + (prjAborted ? ", abgebrochen" : "");
+        if (psProjectImportFailed && !prjBusy) sum = "Import unvollständig: Für einen Nachweis bitte das Projekt leeren und vollständig neu importieren.";
         if (prjStale && !prjBusy) sum = "Einstellungen geändert: Ergebnisse veraltet, bitte erneut anonymisieren.";
         document.getElementById("PRJSUM").textContent = sum;
         document.getElementById("PRJRUN").disabled = prjBusy || !total;
         document.getElementById("PRJCANCEL").disabled = !prjBusy || !prjAc;
-        document.getElementById("PRJZIP").disabled = prjBusy || prjZipBusy || prjStale || !items.some((x) => x.status === "fertig" && prjRes.has(x.id));
+        document.getElementById("PRJZIP").disabled = prjBusy || prjZipBusy || prjStale || psProjectImportFailed || prjAborted || items.some(x => x.status !== "fertig") || !items.some((x) => x.status === "fertig" && prjRes.has(x.id));
       }
       function prjDel(id) {
         if (prjBusy || prjZipBusy || !prj) return;
+        prjMarkStale();
         const i = prj.docs.findIndex((d) => d.id === id);
         stateTouch();
         PSLib.project.remove(prj, id);
@@ -2944,6 +2953,8 @@
         if (prjBusy || !prj || !prj.docs.length) return;
         if (prjZipBusy) return toast("ZIP wird erstellt, bitte warten", "e");
         if (anonBusy) return toast("Analyse läuft bereits...", "s");
+        psUsedAI = false;
+        const processingSignature = psSignature(true);
         prjBusy = anonBusy = true;
         stateTouch();
         prjAborted = false;
@@ -2980,6 +2991,7 @@
               });
               let leak = null;
               try { const lr = leakScan(r.text); leak = lr.error ? null : lr.count; } catch (e) {}
+              psUsedAI = psUsedAI || (!!nerPipeline && aiCache.key === det);
               prjRes.set(d.id, { text: r.text, leak: leak });
               return r;
             },
@@ -3000,6 +3012,8 @@
           if (prjAgain && prjAborted) prjStale = true; // Abbruch trotz offener Aenderung: Ergebnisse veraltet
           prjRender();
           if (prjSel !== null && prjRes.has(prjSel)) prjShow(prjSel);
+          if (processingSignature !== psSignature(true)) prjStale = true;
+          if (!prjAborted && !prjStale && !prjAgain) psCapture();
           if (prjAgain && !prjAborted && prj) { prjAgain = false; prjRun(); }
           prjAgain = false;
           if (openedResume) setTimeout(openedResume, 0);
@@ -3061,6 +3075,8 @@
         const keep = document.getElementById("PRJKEEP").checked;
         prjZipBusy = true;
         prjRender();
+        if (!psCurrent()) return toast("Projekt unvollständig oder veraltet; erneut verarbeiten", "e");
+        const run = psRun;
         const rev = stateRev;
         try {
           let mapBytes = null;
@@ -3083,13 +3099,16 @@
             const t = prjRes.get(it.id).text;
             const lr = leakScan(t);
             if (lr.error) return toast("Gegenprüfung nicht möglich, ZIP nicht erstellt", "e");
+            const releasedCount = lr.whitelisted + lr.findings.filter(f => lcIgnored.has(f.type + "\u0000" + t.slice(f.start, f.end))).length;
+            lr.findings = lr.findings.filter(f => !lcIgnored.has(f.type + "\u0000" + t.slice(f.start, f.end)));
             const sev = (k) => lr.findings.filter((f) => f.severity === k).length;
-            documents.push({ index: it.index, chars: t.length, counts: prjCounts(t), resultSha256: await shaHex(t), leak: { count: lr.findings.length, hoch: sev("hoch"), mittel: sev("mittel") } });
+            documents.push({ index: it.index, chars: t.length, counts: prjCounts(t), resultSha256: await shaHex(t), leak: { released: releasedCount, count: lr.findings.length, hoch: sev("hoch"), mittel: sev("mittel") } });
           }
           const rep = PSLib.report.build({
             appVersion: APP_VERSION, startedAt: (prjStart || new Date()).toISOString(), localTime: new Date().toLocaleString("de-DE"),
-            durationMs: prjDur, profileId: prjCfg ? prjCfg.p : curProf, aiMode: prjCfg ? prjCfg.a : aiMode(),
-            modelId: nerPipeline ? AI_MODEL_ID : undefined,
+            durationMs: prjDur, profileId: run.profile, aiMode: run.requestedMode,
+            actualMode: run.modelId ? "ner" : "rules", modelRevision: run.modelRevision || undefined, fallbackCode: run.fallbackCode || undefined,
+            modelId: run.modelId || undefined,
             whitelistSize: whitelist.length, customRuleCount: cvars.length + policyRuleCount(), documents: documents,
           });
           const z = new JSZip();
@@ -3102,9 +3121,10 @@
           const out = await z.generateAsync({ type: "uint8array", compression: "DEFLATE" });
           // mapSaved nur, wenn die Datei den ganzen store enthält, nach bestätigtem Schreiben und unverändertem Zustand
           const full = !!mapBytes && Object.keys(prjScope().store).length === Object.keys(store).length;
-          dl("anonymisiert.zip", out, "application/zip").then((ok) => {
+          if (!psCurrent() || psRun !== run) return toast("Projekt inzwischen geändert", "e");
+          psSaveRun("anonymisiert.zip", out, "application/zip", run).then((ok) => {
             if (!ok) return toast("ZIP nicht gespeichert", "e");
-            if (full && rev === stateRev) mapSaved = true;
+            if (full && rev === stateRev) mapSaved = window.parent.electronAPI.platform !== "web" || confirm("ZIP-Download gestartet. Ist die Zuordnung tatsächlich gespeichert?");
             toast(items.length + (items.length === 1 ? " Dokument" : " Dokumente") + " als ZIP gespeichert", "s");
           });
         } catch (err) {
@@ -3130,12 +3150,14 @@
       // Format erkennen und passend auslesen (Fehler mit fester Meldung, nie Rohtext)
       async function readTextOf(file) {
         const F = PSLib.formats, O = PSLib.officefmt;
+        psInvalidate(); psImport = { complete: false, kind: "Import", pages: [], warnings: ["Import läuft oder fehlgeschlagen"] };
         const bytes = new Uint8Array(await file.arrayBuffer());
         const kind = F.detect(file.name, bytes.slice(0, 512));
         const fix = (m) => Object.assign(new Error(m), { fixed: true });
         if (kind === "doc" || kind === "xls" || kind === "ppt")
           throw fix("Dateien im alten ." + kind + "-Format werden nicht unterstützt. Bitte in Word/Excel/PowerPoint als .docx/.xlsx/.pptx speichern.");
         if (kind === "unknown") throw fix("Dateityp nicht erkannt oder Datei beschädigt.");
+        if (["docx", "xlsx", "pptx", "odt", "ods", "odp"].includes(kind) && typeof JSZip === "undefined" || kind === "docx" && typeof mammoth === "undefined") throw fix("Importbibliothek fehlt. Online vorbereiten und erneut laden; kein Dokumentfehler.");
         try {
           if (kind === "pdf") return await exPDF(file);
           if (["docx", "xlsx", "pptx", "odt", "ods", "odp"].includes(kind)) {
@@ -3185,6 +3207,7 @@
         setP(10);
         try {
           const txt = await readTextOf(file);
+          if (psImport.kind !== "PDF") psImport = { complete: true, kind: "Extrahierter Text", pages: [], warnings: ["Geprüft wird nur der extrahierte Text; Formatierung und eingebettete Inhalte separat prüfen."], text: txt };
           setP(100);
           document.getElementById("IT").value = txt;
           fundeTextChanged();
@@ -3211,105 +3234,70 @@
         return (b / 1048576).toFixed(1) + " MB";
       }
       async function exPDF(file) {
-        if (typeof pdfjsLib === "undefined") throw new Error("PDF.js nicht geladen");
+        if (typeof pdfjsLib === "undefined") throw Object.assign(new Error("PDF-Ressourcen fehlen. Online vorbereiten und Seite erneut laden; kein Dokumentfehler."), { fixed: true });
         pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("vendor/pdfjs/pdf.worker.min.js", location.href).href;
+        if (/^https?:$/.test(location.protocol)) {
+          try {
+            const url = new URL("vendor/pdfjs/pdf.worker.min.js", location.href).href;
+            const cache = await caches.open("ps2-import-resources-v1");
+            let resource = await cache.match(url);
+            if (!resource) { resource = await fetch(url); if (!resource.ok) throw Error(); await cache.put(url, resource.clone()); }
+            const workerUrl = URL.createObjectURL(new Blob([await resource.text()], {type: "text/javascript"}));
+            pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(workerUrl);
+            URL.revokeObjectURL(workerUrl);
+          }
+          catch { throw Object.assign(new Error("PDF-Ressourcen offline nicht verfügbar oder Download unterbrochen. Online vorbereiten und erneut laden; kein Dokumentfehler."), { fixed: true }); }
+        }
         const buf = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: buf, isEvalSupported: false }).promise;
-        let out = "";
-        const prog = document.getElementById("aiLoadProgress");
+        const pages = [], texts = [];
+        let worker = null, ocrCount = 0;
+        const fixed = (message) => Object.assign(new Error(message), { fixed: true });
         try {
-          const p1 = await pdf.getPage(1);
-          const thumbCvs = document.getElementById("PDFTHUMB");
-          if (thumbCvs) {
-            const tw = thumbCvs.width,
-              th = thumbCvs.height;
-            const vp0 = p1.getViewport({ scale: 1 });
-            const scale = Math.min(tw / vp0.width, th / vp0.height);
-            const vp = p1.getViewport({ scale: scale });
-            thumbCvs.width = vp.width;
-            thumbCvs.height = vp.height;
-            await p1.render({ canvasContext: thumbCvs.getContext("2d"), viewport: vp }).promise;
-            thumbCvs.style.width = "56px";
-            thumbCvs.style.height = "";
-            thumbCvs.style.display = "block";
+          let requiredOCR = 0;
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const p = await pdf.getPage(i), c = await p.getTextContent(), ops = await p.getOperatorList();
+            if (!c.items.some(it => it.str.trim()) || ops.fnArray.some(op => [pdfjsLib.OPS.paintImageXObject, pdfjsLib.OPS.paintInlineImageXObject, pdfjsLib.OPS.paintImageMaskXObject].includes(op))) requiredOCR++;
           }
-        } catch (e) {}
-        for (let i = 1; i <= pdf.numPages; i++) {
-          setP(Math.round((i / pdf.numPages) * 80));
-          if (prog) prog.textContent = "PDF: Seite " + i + "/" + pdf.numPages;
-          const page = await pdf.getPage(i);
-          const c = await page.getTextContent();
-          let lastY = null;
-          let lastX = null;
-          for (const it of c.items) {
-            const y = Array.isArray(it.transform) ? Math.round(it.transform[5]) : null;
-            const x = Array.isArray(it.transform) ? Math.round(it.transform[4]) : null;
-            const sameRow = lastY !== null && y !== null && Math.abs(y - lastY) <= 2;
-            if (!sameRow && lastY !== null) {
-              out += "\n";
-            } else if (sameRow && lastX !== null && x !== null && x - lastX > 50) {
-              out += "\n";
+          if (requiredOCR > 20) throw fixed("Import abgelehnt: mehr als 20 Seiten benötigen OCR oder Sichtprüfung. Bitte PDF aufteilen; kein Teilergebnis freigegeben.");
+          for (let i = 1; i <= pdf.numPages; i++) {
+            setP(Math.round(i / pdf.numPages * 90));
+            const page = await pdf.getPage(i), content = await page.getTextContent();
+            let text = content.items.map(it => it.str + (it.hasEOL ? "\n" : " ")).join("").trim();
+            // A text layer does not establish that image content on the same page was read.
+            const ops = await page.getOperatorList();
+            const image = ops.fnArray.some(op => [pdfjsLib.OPS.paintImageXObject, pdfjsLib.OPS.paintInlineImageXObject, pdfjsLib.OPS.paintImageMaskXObject].includes(op));
+            let method = "Text";
+            if (!text || image) {
+              const vp = page.getViewport({ scale: 2 }), canvas = document.createElement("canvas");
+              canvas.width = vp.width; canvas.height = vp.height;
+              try {
+                await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+                const pixels = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+                let ink = false;
+                for (let n = 0; n < pixels.length; n += 4) if (pixels[n] < 245 || pixels[n+1] < 245 || pixels[n+2] < 245) { ink = true; break; }
+                if (!ink) method = "Leerseite (gerendert)";
+                else {
+                  if (++ocrCount > 20) throw fixed("Import abgelehnt: mehr als 20 OCR-Seiten. Bitte PDF aufteilen; kein Teilergebnis freigegeben.");
+                  if (!worker) {
+                    if (typeof Tesseract === "undefined") throw fixed("OCR-Ressourcen fehlen. Online vorbereiten und erneut laden; kein Dokumentfehler.");
+                    const abs = p => new URL(p, location.href).href;
+                    try { worker = await Tesseract.createWorker("deu+eng", 1, { workerPath: abs("vendor/tesseract/worker.min.js"), corePath: abs("vendor/tesseract/"), langPath: abs("vendor/tesseract/lang"), workerBlobURL: false, cacheMethod: "none" }); }
+                    catch { throw fixed("OCR-Ressourcen nicht verfügbar oder Download unterbrochen. Online vorbereiten und erneut versuchen."); }
+                  }
+                  let data;
+                  try { ({ data } = await worker.recognize(canvas)); }
+                  catch { throw fixed("OCR abgebrochen. Import unvollständig und abgelehnt; bitte erneut versuchen."); }
+                  if (!data.text.trim() || data.confidence < 40) throw fixed("Import abgelehnt: Seite " + i + " enthält Grafik oder unklaren Scan. Umfang nicht sicher lesbar; bitte separat prüfen.");
+                  text = data.text.trim(); method = "OCR (Erkennungsfehler möglich)";
+                }
+              } finally { canvas.width = canvas.height = 0; }
             }
-            const trimmed = it.str.trim();
-            if (/^[-=]{3,}$/.test(trimmed)) out += "\n";
-            out += it.str;
-            out += it.hasEOL ? "\n" : " ";
-            if (y !== null) lastY = y;
-            if (x !== null) lastX = x + it.str.length * 5;
+            pages.push({ index: i, method }); texts.push(text);
           }
-          out += "\n";
-        }
-        out = out.trim();
-        if (out.length < 50 && pdf.numPages > 0) {
-          if (pdf.numPages > 20) {
-            toast("Gescanntes PDF hat " + pdf.numPages + " Seiten — max. 20 werden per OCR verarbeitet.", "e");
-          }
-          if (prog) prog.textContent = "Gescanntes PDF erkannt — starte OCR...";
-          return await ocrPDF(pdf);
-        }
-        return out;
-      }
-      async function ocrPDF(pdf) {
-        if (typeof Tesseract === "undefined") throw new Error("Tesseract.js nicht geladen");
-        const prog = document.getElementById("aiLoadProgress");
-        let fullText = "";
-        const scale = 2;
-        const maxPages = Math.min(pdf.numPages, 20);
-        let curPage = 1;
-        const abs = (p) => new URL(p, location.href).href;
-        // Ein Worker fuer alle Seiten: Start und Sprachdaten werden nur einmal geladen.
-        const worker = await Tesseract.createWorker("deu+eng", 1, {
-          workerPath: abs("vendor/tesseract/worker.min.js"),
-          corePath: abs("vendor/tesseract/"),
-          langPath: abs("vendor/tesseract/lang"),
-          workerBlobURL: false,
-          cacheMethod: "none",
-          logger: function (m) {
-            if (m.status === "recognizing text" && prog)
-              prog.textContent = "OCR Seite " + curPage + "/" + maxPages + ": " + Math.round(m.progress * 100) + "%";
-          },
-        });
-        try {
-          for (let i = 1; i <= maxPages; i++) {
-            curPage = i;
-            setP(80 + Math.round((i / maxPages) * 15));
-            if (prog) prog.textContent = "OCR: Seite " + i + "/" + maxPages;
-            const page = await pdf.getPage(i);
-            const vp = page.getViewport({ scale: scale });
-            const c = document.createElement("canvas");
-            c.width = vp.width;
-            c.height = vp.height;
-            await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
-            const { data: data } = await worker.recognize(c);
-            fullText += data.text + "\n\n";
-            c.width = c.height = 0;
-            c.remove();
-          }
-        } finally {
-          await worker.terminate();
-        }
-        if (prog) prog.textContent = "";
-        return fullText.trim();
+          psImport = { complete: true, kind: "PDF", pages, warnings: ocrCount ? ["OCR verwendet; Lesereihenfolge und Erkennung manuell prüfen."] : [], text: texts.join("\n\n") };
+          return psImport.text;
+        } finally { if (worker) await worker.terminate(); await pdf.destroy(); if (pdfjsLib.GlobalWorkerOptions.workerPort) { pdfjsLib.GlobalWorkerOptions.workerPort.terminate(); pdfjsLib.GlobalWorkerOptions.workerPort = null; } }
       }
       async function exDOCX(file) {
         if (typeof mammoth === "undefined") throw new Error("Mammoth.js nicht geladen");
@@ -3676,7 +3664,7 @@
       }
       function renderLeakCheck() {
         const band = document.getElementById("LCBAND"), list = document.getElementById("LCLIST"), r = lcLast.res, ok = r.clean;
-        const msg = r.error ? "nicht möglich" : ok ? "keine Auffälligkeiten" : r.count === 1 ? "1 möglicher Rest" : r.count + " mögliche Reste"; const ic = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="' + (ok ? "M3 8.5l3.2 3.2L13 4.5" : "M8 2l6.5 11.5h-13z M8 6.5v3 M8 11.6v.1") + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        const msg = r.error ? "nicht möglich" : ok ? "Regel-/Wortlistenprüfung: keine Auffälligkeiten außerhalb bewusst freigegebener/ignorierter Funde (keine Vollständigkeitsgarantie)" : r.count === 1 ? "1 möglicher Rest" : r.count + " mögliche Reste"; const ic = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="' + (ok ? "M3 8.5l3.2 3.2L13 4.5" : "M8 2l6.5 11.5h-13z M8 6.5v3 M8 11.6v.1") + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         band.style.cssText += ";display:flex;cursor:" + (r.count ? "pointer" : "default") + ";background:" + (ok ? "#ecfdf5;color:#047857" : "#fffbeb;color:#92400e");
         band.innerHTML = ic + "<span>Gegenprüfung: " + msg + "</span>"; band.setAttribute("aria-label", "Gegenprüfung: " + msg + (r.count ? " (Liste ein- oder ausklappen)" : "")); if (!r.count) list.style.display = "none";
         band.setAttribute("aria-expanded", list.style.display === "none" ? "false" : "true"); const bt = (fn, i, t) => '<button type="button" class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="' + fn + "(" + i + ')">' + t + "</button>";
@@ -3700,10 +3688,12 @@
       // Bericht ohne personenbezogene Werte: nur Zaehler, Einstellungen und Pruefsumme
       async function saveReport() {
         const t = document.getElementById("AT").value;
-        if (!t || !repStart) return toast("Kein Text vorhanden", "e");
+        if (!psCurrent()) return toast("Ergebnis veraltet oder unvollständig. Bitte erneut verarbeiten.", "e");
+        const run = psRun;
         try {
-          const counts = {};
-          Object.values(store).forEach((d) => { counts[d.t] = (counts[d.t] || 0) + 1; });
+          const record = run.documents[prj ? prj.docs.findIndex(d => d.id === prjSel) : 0];
+          if (!record || record.text !== t) return toast("Dokument auswählen und erneut prüfen", "e");
+          const counts = { ...record.counts };
           const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
           const sha = Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
           if (!lcLast || lcLast.at !== t || lcLast.res.error) runLeakCheck();
@@ -3712,13 +3702,14 @@
           const sev = (k) => (lr.findings.filter((f) => f.severity === k).length);
           const rep = PSLib.report.build({
             appVersion: APP_VERSION, startedAt: repStart.toISOString(), localTime: new Date().toLocaleString("de-DE"),
-            durationMs: repDur, profileId: curProf, aiMode: aiMode(),
-            modelId: nerPipeline ? AI_MODEL_ID : undefined,
+            durationMs: repDur, profileId: run.profile, aiMode: run.requestedMode,
+            actualMode: run.modelId ? "ner" : "rules", modelRevision: run.modelRevision || undefined, fallbackCode: run.fallbackCode || undefined,
+            modelId: run.modelId || undefined,
             whitelistSize: whitelist.length, customRuleCount: cvars.length + policyRuleCount(),
-            documents: [{ index: 1, chars: t.length, counts: counts, resultSha256: sha, leak: { count: lr.count, hoch: sev("hoch"), mittel: sev("mittel") } }],
+            documents: [{ index: record.index, chars: t.length, counts: counts, resultSha256: sha, leak: { released: record.check.released, count: lr.count, hoch: sev("hoch"), mittel: sev("mittel") } }],
           });
-          dl("bericht.txt", PSLib.report.toText(rep), "text/plain");
-          toast("Bericht gespeichert", "s");
+          if (!psCurrent() || psRun !== run) return toast("Ergebnis inzwischen geändert", "e");
+          await psSaveRun("bericht.txt", PSLib.report.toText(rep), "text/plain", run);
         } catch (err) {
           toast("Bericht nicht möglich: " + err.message, "e");
         }
@@ -3731,6 +3722,8 @@
         // K1.fix: im Projektmodus gemeinsamer Zustand, daher immer das ganze Projekt neu rechnen (kein veralteter Altstand)
         if (prj && prjRes.size) return prjRun();
         anonBusy = true;
+        psUsedAI = false;
+        const processingSignature = psSignature(true);
         stateTouch();
         repStart = new Date(); repDur = 0;
         lcIgnored = new Set();
@@ -3738,6 +3731,7 @@
         if (btn) btn.disabled = true;
         try {
           await anonCore();
+          if (processingSignature !== psSignature(true)) { psInvalidate(); toast("Eingabe oder Einstellungen während Verarbeitung geändert; erneut verarbeiten", "e"); }
           if (repStart) repDur = Date.now() - repStart.getTime();
         } catch (e) {
           repStart = null;
@@ -3798,6 +3792,7 @@
             aiSpans: aiCache.key === det ? aiCache.spans : null,
             state: { store, cnt },
           });
+          psUsedAI = !!nerPipeline && aiCache.key === det;
           store = r.state.store; cnt = r.state.cnt;
           stateTouch();
           const txt = r.text;
@@ -3816,6 +3811,7 @@
           );
           runLeakCheck();
           fundeAfterAnon();
+          psCapture();
         } catch (err) {
           repStart = null;
           toast("Fehler: " + err.message, "e");
@@ -4070,15 +4066,18 @@
           e.map(([t, d]) => '"' + t + '","' + d.v.replace(/"/g, '""') + '","' + d.t + '","' + d.m + '"').join("\n");
         mapAfterSave(dl("privacyshield_mapping.csv", csv, "text/csv"), stateRev, "Mapping exportiert", "Mapping nicht gespeichert");
       }
-      function cpAnon() {
+      async function cpAnon() {
         const t = document.getElementById("AT").value;
         if (!t) {
           toast("Kein Text vorhanden", "e");
           return;
         }
-        navigator.clipboard.writeText(t).then(() => toast("Kopiert", "s"));
+        if (!psCurrent()) return toast("Ergebnis veraltet; erneut verarbeiten", "e");
+        try { await psCopy(t); toast("Kopiert", "s"); }
+        catch { const field = document.getElementById("AT"); field.focus(); field.select(); toast("Kopieren nicht erlaubt. Ergebnis ist markiert: bitte manuell kopieren.", "e"); }
       }
       function dlRes() {
+        if (!psCurrent()) return toast("Ergebnis veraltet; erneut verarbeiten", "e");
         const t = document.getElementById("RT").value;
         if (!t) {
           toast("Kein Ergebnis vorhanden", "e");
@@ -4101,8 +4100,9 @@
         p.then((ok) => {
           if (!ok) return toast(failMsg, "e");
           if (rev !== stateRev) return toast("Gespeichert, aber die Zuordnung hat sich inzwischen geändert. Bitte erneut speichern.", "e");
-          mapSaved = true;
-          toast(okMsg, "s");
+          const browser = window.parent.electronAPI && window.parent.electronAPI.platform === "web";
+          mapSaved = !browser || confirm("Download gestartet. Haben Sie die Zuordnungsdatei tatsächlich gespeichert? Erst dann bestätigen.");
+          toast(browser ? "Download gestartet; Speicherung bitte prüfen" : okMsg, "s");
         });
       }
       function dl(name, c, type) {
@@ -4122,6 +4122,7 @@
       function clearAll() {
         if (prjBusy || prjZipBusy) return toast(prjBusy ? "Projektlauf läuft, bitte zuerst abbrechen" : "ZIP wird erstellt, bitte warten", "e");
         if (!confirm("Alles zurücksetzen?")) return;
+        psImport = null; psProjectImportFailed = false;
         ["IT", "AT", "AR", "RT"].forEach((id) => (document.getElementById(id).value = ""));
         store = {};
         cnt = {};
@@ -4169,13 +4170,13 @@
         el._t = setTimeout(() => el.classList.remove("on"), 3500);
       }
       function copyAndOpenAI(url) {
+        if (!psCurrent()) return toast("Ergebnis veraltet; erneut verarbeiten", "e");
         const txt = document.getElementById("AT").value;
         if (!txt.trim()) {
           toast("Noch kein anonymisierter Text vorhanden", "e");
           return;
         }
-        navigator.clipboard
-          .writeText(txt)
+        psCopy(txt)
           .then(function () {
             toast("Text kopiert — KI-Dienst wird geöffnet", "s");
             window.open(url, "_blank", "noopener");
@@ -4242,6 +4243,7 @@
         return c;
       }
       function fundeTextChanged() {
+        psInvalidate();
         fundeDirty = true;
         if (!fundeOpen) return;
         clearTimeout(_fundeTxt);
@@ -4429,6 +4431,7 @@
       // Konfiguration geaendert (Profil, Entitaeten, Markierungen, Regeln): bei offener Leiste sofort neu aufbauen
       let _fundeCfg = null;
       function fundeConfigChanged() {
+        psInvalidate();
         if (!fundeOpen) { fundeDirty = true; return; }
         clearTimeout(_fundeCfg);
         _fundeCfg = setTimeout(() => { fundeDirty = true; renderFunde(); }, 120);
@@ -4931,6 +4934,7 @@
         reader.readAsText(file, "UTF-8");
       }
       function exportPDF() {
+        if (!psCurrent()) return toast("Ergebnis veraltet; erneut verarbeiten", "e");
         const txt = document.getElementById("RT").value;
         if (!txt.trim()) {
           toast("Kein fertiggestelltes Dokument vorhanden", "e");

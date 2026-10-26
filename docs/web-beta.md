@@ -15,7 +15,7 @@ Web-Tool (`/tools/privacyshield-redesigned.html`) bleibt unveraendert.
   schmale Breiten; der Update-Knopf der Fusszeile bleibt als Versionsanzeige, ist aber nicht bedienbar; tote
   Testdokument-Links entfallen. Jedes Original in der Ersetzungsliste muss im Werkzeug stehen (Test).
 - `scripts/build-web-beta.mjs`: baut `dist-web-beta/` (nicht eingecheckt). Das Werkzeug `privacy-shield.html` wird
-  byteidentisch aus `app/` kopiert, ebenso `lib/` (nur die vom Werkzeug geladenen Dateien, keine CLI-Module), `css/`,
+  byteidentisch aus `app/` kopiert, ebenso `lib/` und `ui/` (nur die vom Werkzeug geladenen Dateien, keine CLI-Module), `css/`,
   `vendor/` (ohne .map/.md). `ner-worker.js` entsteht aus `app/ner-worker.js` durch gezielten Textersatz (Modell von
   huggingface.co, Browser-Cache, auf den Commit aus `scripts/vendor.lock.json` gepinnt; Laufzeit bleibt lokal). Aendert
   sich die Quelle so, dass ein Ersatz nicht mehr greift, bricht der Bau ab. Kein Modell im Bau.
@@ -30,7 +30,7 @@ node scripts/build-web-beta.mjs # -> dist-web-beta/ (oder --out <Ordner>)
 xvfb-run -a node --test --test-concurrency=1 tests/web-beta.test.mjs
 ```
 
-Der Bau nennt Dateizahl und Gesamtgroesse (ca. 40 MiB, 37 Dateien) und bricht ab bei einer Datei ab 25 MiB oder
+Der Bau nennt Dateizahl und Gesamtgroesse (ca. 36 MiB, 38 Dateien) und bricht ab bei einer Datei ab 25 MiB oder
 mehr als 2000 Dateien (Grenzen von Cloudflare Pages). Der Test baut in ein Temp-Verzeichnis, serviert es ohne
 COOP/COEP und oeffnet es in Electron ohne preload; Netzzugriffe ausser 127.0.0.1 sind gesperrt, Anfragen an
 huggingface.co werden protokolliert und abgebrochen (Standard-Erkennung muss dann laufen).
@@ -40,7 +40,7 @@ huggingface.co werden protokolliert und abgebrochen (Standard-Erkennung muss dan
 Der Inhalt von `dist-web-beta/` kommt in den Unterordner `tools/privacyshield-2-beta/` des Website-Repos; die URL ist
 `https://arcangeli.eu/tools/privacyshield-2-beta/` (MIT abschliessendem Schraegstrich: die Huelle laedt ihre Dateien
 relativ, ohne Schraegstrich waeren die Pfade falsch). Die Huelle nutzt sonst nur die absoluten Links
-`/tools/privacyshield-redesigned.html` und `/desktop/#beta`. Dort nichts von Hand aendern; bei jeder neuen Version neu
+`/tools/privacyshield-redesigned.html` und `/desktop/#neu`. Dort nichts von Hand aendern; bei jeder neuen Version neu
 bauen und den Ordner ersetzen.
 
 Noetig auf der Website:
@@ -66,3 +66,18 @@ Hinweise:
   Kopfzeile "arcangeli.eu - PrivacyShield" des Werkzeugs ausgeblendet (die Huelle hat eine eigene Leiste).
 - Auf Geraeten mit unter 6 GB gemeldetem Arbeitsspeicher startet die KI nicht automatisch (Hinweis des Werkzeugs);
   sie laesst sich dann im KI-Bereich manuell laden. Beim ersten Besuch ist sie ohnehin aus.
+
+
+## Verarbeitungsnachweis und Laufbindung (Issue arcangeli.eu#1)
+
+Die gemeinsame GUI-Ergänzung liegt in `app/ui/evidence-ui.js`. `scripts/build-identity.mjs`
+erzeugt `app/ui/build-identity.js` aus den benannten gemeinsamen Quellen und der festen
+Modellrevision im Vendor-Lock. Start, Tests, Paketbau und Browserbau erneuern diese Identität.
+Keine handgepflegte Regelversionsnummer. Das Browserpaket enthält exakt dieselben UI- und
+Erkennungsquellen wie der Desktop. Prüfprotokoll, Beispiele und Geräteabnahme:
+[docs/issue-1/ABNAHME.md](issue-1/ABNAHME.md).
+
+Der PDF-Worker wird bei erfolgreicher Vorbereitung in `ps2-import-resources-v1` abgelegt.
+Das ist kein vollständiger Offline-Cache für OCR oder KI: deren Ressourcen werden bei Bedarf
+separat geprüft/geladen. Beim Löschen der Websitedaten kann diese Bereitschaft wieder entfallen.
+Die alte stabile Webfassung besitzt ihre eigene Service-Worker-Cachefamilie.
