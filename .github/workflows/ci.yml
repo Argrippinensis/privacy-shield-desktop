@@ -36,6 +36,12 @@ jobs:
           key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
       - run: npm ci
       - run: npm run fetch-vendor
+      - name: Install Chromium (Linux)
+        if: runner.os == 'Linux'
+        run: npx playwright-core install --with-deps chromium
+      - name: Install Chromium (Windows)
+        if: runner.os == 'Windows'
+        run: npx playwright-core install chromium
       - name: Unit-Tests
         run: npm run test:unit
       # Erkennungsqualitaet ist plattformunabhaengig und dauert lange: nur unter Linux messen

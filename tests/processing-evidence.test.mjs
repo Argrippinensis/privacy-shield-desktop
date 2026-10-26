@@ -7,6 +7,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright-core';
+import { pdfText } from './pdf-text.mjs';
 const root = process.cwd(), artifacts = path.join(root, 'docs/issue-1/examples');
 const mime = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.wasm':'application/wasm','.gz':'application/gzip'};
 let browser, server, page, f, base;
@@ -19,7 +20,7 @@ test.before(async () => {
     if (!fs.existsSync(file)) return res.writeHead(404).end();
     res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream'); fs.createReadStream(file).pipe(res);
   }); await new Promise(r=>server.listen(0,'127.0.0.1',r)); base = 'http://127.0.0.1:'+server.address().port;
-  browser = await chromium.launch({executablePath:process.env.PS_CHROMIUM || '/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+  browser = await chromium.launch({executablePath:process.env.PS_CHROMIUM || undefined,headless:true,args:['--no-sandbox']});
 });
 test.after(async()=>{await browser?.close(); await new Promise(r=>server?.close(r));});
 async function fresh() {
@@ -72,7 +73,7 @@ test('F2 and evidence: all setting groups, hashing race, immutable model history
     const name=confirmed?'confirmed':'unconfirmed';fs.writeFileSync(path.join(artifacts,name+'.json'),JSON.stringify(data.e,null,2)+'\n');
     const print=await browser.newPage();await print.setContent('<style>@page{size:A4;margin:16mm}pre{font:10pt/1.35 sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}</style><pre></pre>');await print.locator('pre').evaluate((el,text)=>el.textContent=text,data.text);
     await print.pdf({path:path.join(artifacts,name+'.pdf'),preferCSSPageSize:true});await print.close();
-    const extracted=execFileSync('pdftotext',[path.join(artifacts,name+'.pdf'),'-'],{encoding:'utf8'});
+    const extracted=await pdfText(path.join(artifacts,name+'.pdf'));
     for(const expected of [data.e.id,data.e.documents[0].result.sha256,data.e.humanReview,'Pseudonymisierung'])assert.ok(extracted.includes(expected));
     for(const secret of ['Erika Schulz','text@example.invalid','SECRET_FILENAME','SECRET_RULE'])assert.ok(!extracted.includes(secret)&&!JSON.stringify(data.e).includes(secret));
   }

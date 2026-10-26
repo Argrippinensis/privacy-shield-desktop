@@ -91,7 +91,13 @@ async function browser({ hf, userData: vorhanden } = {}) {
   return {
     app, win, errors, userData,
     requests: () => app.evaluate(() => globalThis.__psReq.map((r) => ({ ...r }))),
-    async close() { await app.evaluate(({ app }) => app.exit(0)).catch(() => {}); if (!vorhanden) fs.rmSync(userData, { recursive: true, force: true }); },
+    async close() {
+      const child = app.process();
+      const exited = child.exitCode !== null ? Promise.resolve() : new Promise(resolve => child.once('exit', resolve));
+      await app.evaluate(({ app }) => app.exit(0)).catch(() => {});
+      await exited;
+      if (!vorhanden) fs.rmSync(userData, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    },
   };
 }
 
