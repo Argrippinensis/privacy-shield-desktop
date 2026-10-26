@@ -47,6 +47,23 @@ function ersetze(text, von, nach, quelle) {
   return text.replace(von, () => nach);
 }
 
+// KI-Worker fuer den Browser aus der Desktop-Quelle erzeugen (gezielter Textersatz). Zeilenenden werden auf LF vereinheitlicht:
+// Ein Windows-Checkout mit CRLF darf den Ersatz nicht scheitern lassen, und die Ausgabe bleibt plattformunabhaengig gleich.
+export function erzeugeWorker(quellText, REV) {
+  let worker = String(quellText).replace(/\r\n/g, '\n');
+  const W = 'app/ner-worker.js';
+  worker = ersetze(worker, '// Die Seite bleibt waehrend der Analyse bedienbar; Modell und Laufzeit kommen\n// ausschliesslich aus der Installation (app/models, app/vendor), nie aus dem Netz.', '// BROWSER-VARIANTE (aus app/ner-worker.js erzeugt, nicht von Hand aendern): Die Seite bleibt waehrend der\n// Analyse bedienbar; die Laufzeit kommt lokal (vendor/), das Modell einmalig von Hugging Face (dann im Browser-Cache).', W);
+  worker = ersetze(worker, 'env.allowRemoteModels = false;', 'env.allowRemoteModels = true;', W);
+  worker = ersetze(worker, 'env.allowLocalModels = true;', 'env.allowLocalModels = false;', W);
+  worker = ersetze(worker, /env\.localModelPath = [^\n]*\n/.exec(worker)?.[0] ?? 'env.localModelPath = ', '', W);
+  worker = ersetze(worker, 'env.useBrowserCache = false;', 'env.useBrowserCache = true;', W);
+  // Modell auf den geprueften Commit festlegen (kein "main": eine spaetere Aenderung bei Hugging Face greift nicht)
+  worker = ersetze(worker, "dtype: 'q8',", `revision: '${REV}',\n          dtype: 'q8',`, W);
+  if (/localModelPath/.test(worker)) fehler('localModelPath ist nach dem Ersatz noch in ner-worker.js');
+  if (!worker.includes("env.backends.onnx.wasm.wasmPaths = new URL('vendor/transformers/', BASE).href;")) fehler('wasmPaths-Zeile in ner-worker.js hat sich geaendert');
+  return worker;
+}
+
 function bauen(OUT) {
   const lies = (rel) => {
     const f = path.join(ROOT, rel);
@@ -101,17 +118,7 @@ function bauen(OUT) {
   if (!onnx || onnx.size !== MODELL_BYTES) fehler(`vendor.lock.json: model_quantized.onnx hat ${onnx && onnx.size} statt ${MODELL_BYTES} Bytes`);
 
   // KI-Worker: Modell kommt im Browser von Hugging Face (und aus dem Browser-Zwischenspeicher), Laufzeit bleibt lokal
-  let worker = lies('app/ner-worker.js').toString('utf8');
-  const W = 'app/ner-worker.js';
-  worker = ersetze(worker, '// Die Seite bleibt waehrend der Analyse bedienbar; Modell und Laufzeit kommen\n// ausschliesslich aus der Installation (app/models, app/vendor), nie aus dem Netz.', '// BROWSER-VARIANTE (aus app/ner-worker.js erzeugt, nicht von Hand aendern): Die Seite bleibt waehrend der\n// Analyse bedienbar; die Laufzeit kommt lokal (vendor/), das Modell einmalig von Hugging Face (dann im Browser-Cache).', W);
-  worker = ersetze(worker, 'env.allowRemoteModels = false;', 'env.allowRemoteModels = true;', W);
-  worker = ersetze(worker, 'env.allowLocalModels = true;', 'env.allowLocalModels = false;', W);
-  worker = ersetze(worker, /env\.localModelPath = [^\n]*\n/.exec(worker)?.[0] ?? 'env.localModelPath = ', '', W);
-  worker = ersetze(worker, 'env.useBrowserCache = false;', 'env.useBrowserCache = true;', W);
-  // Modell auf den geprueften Commit festlegen (kein "main": eine spaetere Aenderung bei Hugging Face greift nicht)
-  worker = ersetze(worker, "dtype: 'q8',", `revision: '${REV}',\n          dtype: 'q8',`, W);
-  if (/localModelPath/.test(worker)) fehler('localModelPath ist nach dem Ersatz noch in ner-worker.js');
-  if (!worker.includes("env.backends.onnx.wasm.wasmPaths = new URL('vendor/transformers/', BASE).href;")) fehler('wasmPaths-Zeile in ner-worker.js hat sich geaendert');
+  const worker = erzeugeWorker(lies('app/ner-worker.js').toString('utf8'), REV);
   lege('ner-worker.js', worker);
   lege(MARKER, 'Ordner wurde von scripts/build-web-beta.mjs erzeugt und darf von ihm ueberschrieben werden.\n');
 
@@ -156,4 +163,9 @@ function main() {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
+// Direktaufruf erkennen: argv[1] ist der Pfad wie uebergeben (kann ein Symlink sein, z. B. /var auf macOS), import.meta.url der aufgeloeste.
+function istDirektaufruf() {
+  if (!process.argv[1]) return false;
+  try { return fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url)); } catch (e) { return false; }
+}
+if (istDirektaufruf()) main();
