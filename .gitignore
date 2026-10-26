@@ -10,3 +10,4 @@ release/
 app/vendor/
 app/models/
 app/vendor-manifest.json
+dist-web-beta/

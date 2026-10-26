@@ -140,7 +140,7 @@ test('2 Shim deckt jede in preload.js freigegebene Funktion und jedes Ereignis a
   const v = await api.getAppVersion();
   assert.match(v, /^\d+\.\d+\.\d+(-[A-Za-z0-9.]+)?$/);
   assert.equal(v, VERSION);
-  assert.deepEqual(await api.takeOpenedFiles(), []);
+  assert.deepEqual(Array.from(await api.takeOpenedFiles()), []); // Array stammt aus dem vm-Kontext
   const as = await api.checkAssets(false);
   assert.equal(as.ok, true);
   const st = await api.getSystemStats();
@@ -162,7 +162,7 @@ test('3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in 
     await f.waitForFunction(([s, v]) => document.querySelector(s).textContent.trim() === 'v' + v, [sel, VERSION], { timeout: 10000 });
     const kopf = await a.win.evaluate(() => ({
       titel: document.title,
-      text: document.body.innerText,
+      text: document.body.textContent.replace(/\s+/g, ' '),
       links: [...document.querySelectorAll('a')].map((l) => l.getAttribute('href')),
       iframe: { id: document.getElementById('tool-frame').id, title: document.getElementById('tool-frame').title },
     }));
@@ -185,13 +185,14 @@ test('4 Handy-Breite 390x844: kein horizontales Scrollen, Hauptbedienelemente si
     await a.app.evaluate(({ BrowserWindow }) => { BrowserWindow.getAllWindows()[0].setContentSize(390, 844); });
     await a.win.waitForFunction(() => window.innerWidth === 390, null, { timeout: 5000 });
     const f = await toolFrame(a.win);
+    await f.evaluate(() => loadTestDoc()); // Arbeitsbereich zeigen (vorher ist er ausgeblendet)
     await a.win.waitForTimeout(500);
     const masse = await a.win.evaluate(() => {
       const fr = document.getElementById('tool-frame');
       const d = fr.contentDocument.documentElement;
       return {
         schale: { sw: document.documentElement.scrollWidth, iw: window.innerWidth },
-        tool: { sw: d.scrollWidth, iw: fr.contentWindow.innerWidth },
+        tool: { sw: Math.max(d.scrollWidth, fr.contentDocument.body.scrollWidth), iw: fr.contentWindow.innerWidth }, // body.scrollWidth: das Werkzeug blendet Ueberlaenge mit overflow-x hidden aus
         rahmen: fr.getBoundingClientRect().toJSON(),
         hoehe: window.innerHeight,
       };
@@ -200,8 +201,7 @@ test('4 Handy-Breite 390x844: kein horizontales Scrollen, Hauptbedienelemente si
     assert.ok(masse.tool.sw <= masse.tool.iw, 'Werkzeug scrollt horizontal: ' + JSON.stringify(masse.tool));
     assert.ok(masse.rahmen.width <= 390 && masse.rahmen.height > 400, 'Iframe-Mass: ' + JSON.stringify(masse.rahmen));
     assert.ok(masse.rahmen.bottom <= masse.hoehe + 1, 'Iframe ragt unten heraus');
-    // Werkzeug starten und Bedienelemente pruefen
-    await f.evaluate(() => loadTestDoc());
+    // Bedienelemente pruefen
     await f.waitForSelector('#ANONBTN', { state: 'visible', timeout: 10000 });
     for (const sel of ['#FI', '#ANONBTN']) {
       const b = await f.evaluate((s) => {
