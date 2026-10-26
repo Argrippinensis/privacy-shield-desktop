@@ -1810,7 +1810,7 @@
                 <div class="tool-panel-body" style="padding: 12px">
                   <p style="font-size: 12px; color: #666; margin-bottom: 10px; line-height: 1.5">
                     Klicke auf eine Schaltfläche — der anonymisierte Text wird in die Zwischenablage kopiert und der
-                    KI-Dienst öffnet sich im Standard-Browser.
+                    KI-Dienst lässt sich bevorzugt als App öffnen. In der nächsten Ansicht wählen Sie App oder Webzugang.
                   </p>
                   <div style="display: flex; flex-wrap: wrap; gap: 8px">
                     <button
@@ -2265,7 +2265,7 @@
       </div>
     </div>
     <script src="lib/history.js"></script><script src="lib/review.js"></script><script src="lib/hygiene.js"></script><script src="lib/psmap.js"></script><script src="lib/project.js"></script><script src="lib/formats.js"></script><script src="lib/officefmt.js"></script>
-    <script src="ui/build-identity.js"></script><script src="ui/evidence-ui.js"></script>
+    <script src="ui/build-identity.js"></script><script src="ui/evidence-ui.js"></script><script src="ui/local-status.js"></script>
     <script>
       const ENTS = PSDetect.ENTS;
       const PROFILES = PSDetect.PROFILES;
@@ -4173,20 +4173,7 @@
       }
       function copyAndOpenAI(url) {
         if (!psCurrent()) return toast("Ergebnis veraltet; erneut verarbeiten", "e");
-        const txt = document.getElementById("AT").value;
-        if (!txt.trim()) {
-          toast("Noch kein anonymisierter Text vorhanden", "e");
-          return;
-        }
-        psCopy(txt)
-          .then(function () {
-            toast("Text kopiert — KI-Dienst wird geöffnet", "s");
-            window.open(url, "_blank", "noopener");
-          })
-          .catch(function () {
-            window.open(url, "_blank", "noopener");
-            toast("Bitte Text manuell einfügen", "e");
-          });
+        psServiceDialog(url);
       }
       function updTokenCount() {
         const txt = document.getElementById("AT").value;

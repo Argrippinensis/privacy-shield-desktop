@@ -107,6 +107,8 @@
     checkForUpdates: function () { return Promise.resolve({ updateAvailable: false, currentVersion: VERSION }); },
     checkAssets: function () { return Promise.resolve({ manifest: false, ok: true, missing: [], wrongSize: [], corrupt: [], appRoot: '' }); },
     copyText: copyText,
+    // Native launching in the browser uses a direct user-activated link in the shared UI.
+    openAIService: function () { return Promise.reject(new Error('Direkten App-Link verwenden')); },
     getUpdateMode: function () { return Promise.resolve({ manual: true }); },
     openDownloadPage: function () { return Promise.resolve(); },
     quitApp: function () { return Promise.resolve(); },

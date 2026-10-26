@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   checkAssets: (deep) => ipcRenderer.invoke('check-assets', !!deep),
   copyText: (text) => ipcRenderer.invoke('copy-text', text),
+  openAIService: (service, preferApp) => ipcRenderer.invoke('open-ai-service', service, preferApp),
   getUpdateMode: () => ipcRenderer.invoke('get-update-mode'),
   openDownloadPage: () => ipcRenderer.invoke('open-download-page'),
   quitApp: () => ipcRenderer.invoke('quit-app'),

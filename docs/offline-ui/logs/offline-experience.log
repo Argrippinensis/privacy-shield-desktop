@@ -1,0 +1,14 @@
+✔ Browser: first visit has no automatic preparation or model download; explicit preparation preserves unrelated caches (3041.198883ms)
+✔ Browser: full restart offline, text processing, actual scanned PDF OCR, DOCX and evidence without server requests (2872.204904ms)
+✔ Browser: optional pinned model preparation avoids loading a session; after offline restart actual model runs (8552.92674ms)
+✔ Browser: cache deletion revokes readiness; incomplete download never becomes ready and preserves other tools and model (3485.289711ms)
+✔ Browser: mobile layout and reduced motion; AI destination links carry no text and stale results block handoff (3330.125964ms)
+✔ Desktop: offline status verified from installed resources; app handler preferred, missing handler and failure fall back to fixed web URLs (1336.580686ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23087.051583

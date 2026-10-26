@@ -4,6 +4,7 @@
 // Der Bau ist deterministisch (sortierte Reihenfolge, keine Zeitstempel im Inhalt).
 import fs from 'node:fs';
 import os from 'node:os';
+import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -98,6 +99,9 @@ function bauen(OUT) {
   if (!shim.includes('__PS_VERSION__')) fehler('Platzhalter __PS_VERSION__ fehlt in web/browser-api.js');
   lege('browser-api.js', shim.split('__PS_VERSION__').join(VERSION));
   lege('tool-anpassung.js', lies('web/tool-anpassung.js'));
+  lege('offline-controller.js', lies('web/offline-controller.js'));
+  lege('app-icon.png', lies('assets/icon.png'));
+  lege('manifest.webmanifest', JSON.stringify({ name: 'PrivacyShield Online', short_name: 'PrivacyShield', id: './', start_url: './', scope: './', display: 'standalone', background_color: '#fcfdfc', theme_color: '#195b40', icons: [{ src: 'app-icon.png', sizes: '512x512', type: 'image/png', purpose: 'any' }] }) + '\n');
 
   // Werkzeug unveraendert; lib/ nur, was das Werkzeug per <script> laedt (keine CLI-Module)
   const werkzeug = lies('app/privacy-shield.html');
@@ -122,6 +126,11 @@ function bauen(OUT) {
   // KI-Worker: Modell kommt im Browser von Hugging Face (und aus dem Browser-Zwischenspeicher), Laufzeit bleibt lokal
   const worker = erzeugeWorker(lies('app/ner-worker.js').toString('utf8'), REV);
   lege('ner-worker.js', worker);
+  const offlineFiles = [...dateien.entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([path, bytes]) => ({ path, size: bytes.length, sha256: crypto.createHash('sha256').update(bytes).digest('hex') }));
+  const offlineId = crypto.createHash('sha256').update(JSON.stringify(offlineFiles)).digest('hex');
+  const model = modellDateien.map(f => ({ url: f.url, size: f.size, sha256: f.sha256 }));
+  lege('offline-data.js', 'self.PS_OFFLINE = ' + JSON.stringify({ cache: 'ps2-beta-static-' + offlineId, files: offlineFiles, model }) + ';\n');
+  lege('offline-worker.js', '// Package ' + offlineId + '\n' + lies('web/offline-worker.js').toString('utf8'));
   lege(MARKER, 'Ordner wurde von scripts/build-web-beta.mjs erzeugt und darf von ihm ueberschrieben werden.\n');
 
   // Jede lokal eingebundene Datei des Werkzeugs muss im Bau liegen
