@@ -67,9 +67,26 @@
       var f = document.getElementById('tool-frame');
       var l = document.getElementById('loading');
       // Das Werkzeug bleibt unveraendert. Sein Arbeitsbereich hat aber ein Inline-Raster (280px + 1fr), das die eigene
-      // Schmalansicht (max-width 960px) aushebelt; am Handy waere die rechte Spalte abgeschnitten. Nur das Raster
-      // wird darum zur Laufzeit im (gleichen Ursprung) Iframe auf eine Spalte gestellt.
-      var CSS = '@media (max-width: 960px) { .ws-grid { grid-template-columns: minmax(0, 1fr) !important; } }';
+      // Schmalansicht (max-width 960px) aushebelt; am Handy waere die rechte Spalte abgeschnitten. Das Raster
+      // und, nur bei schmaler Breite, einige Layoutregeln werden darum zur Laufzeit im (gleichen Ursprung) Iframe ergaenzt.
+      var CSS = [
+        '@media (max-width: 960px) { .ws-grid { grid-template-columns: minmax(0, 1fr) !important; } }',
+        // Handy: nur schmale Breiten. Schrittleiste 2x2, Kopfzeilen und Knopfreihen umbrechend, Knoepfe mindestens 40 px hoch,
+        // zweispaltige Raster einspaltig, Seitenraender kleiner, die Kopfzeile des Werkzeugs entfaellt (die Huelle hat eine).
+        '@media (max-width: 600px) {',
+        '  header > nav.nav-glass { display: none !important; }',
+        '  #main { padding-top: 0 !important; }',
+        '  #WS { padding-left: 12px !important; padding-right: 12px !important; }',
+        '  .steps-bar { display: grid !important; grid-template-columns: 1fr 1fr; }',
+        '  .step-tab { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px !important; border-right: 0 !important; border-bottom: 1px solid #e5e5e5; }',
+        '  .step-tab:nth-child(odd) { border-right: 1px solid #e5e5e5 !important; }',
+        '  .step-tab:nth-child(n+3) { border-bottom: 0; }',
+        '  .tool-panel-header { flex-wrap: wrap; gap: 8px 10px; }',
+        '  .tool-panel-header > div { display: flex; flex-wrap: wrap; gap: 8px !important; }',
+        '  [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: minmax(0, 1fr) !important; }',
+        '  .btn, .btn-accent, .btn-ghost, .btn-outline, .btn-primary { min-height: 40px !important; }',
+        '}'
+      ].join('\n');
       function anpassen() {
         try {
           var d = f.contentDocument;

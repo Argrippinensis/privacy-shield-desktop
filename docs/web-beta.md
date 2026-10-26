@@ -41,6 +41,9 @@ Hinweise:
 - Die Huelle stellt das Raster des Arbeitsbereichs (`.ws-grid`) zur Laufzeit im Iframe auf eine Spalte um, weil ein
   Inline-Stil des Werkzeugs dessen eigene Schmalansicht aushebelt; die Datei `privacy-shield.html` selbst bleibt
   unveraendert.
+- Fuer schmale Breiten (max. 600 px) ergaenzt die Huelle weitere Regeln im Iframe: Schrittleiste als 2x2-Raster,
+  Panel-Kopfzeilen und Knopfreihen umbrechend, Knoepfe mindestens 40 px hoch, zweispaltige Raster einspaltig und die
+  Kopfzeile "arcangeli.eu - PrivacyShield" des Werkzeugs ausgeblendet (die Huelle hat eine eigene Leiste).
 - Links im Werkzeug auf `../tests/privacy-shield-testdokument-*.pdf` zeigen im Browser-Bau ins Leere (Testdokumente
   sind nicht Teil des Baus).
 - Auf Geraeten mit unter 6 GB gemeldetem Arbeitsspeicher startet die KI nicht automatisch (Hinweis des Werkzeugs);
