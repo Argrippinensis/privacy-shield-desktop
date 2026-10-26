@@ -338,7 +338,8 @@ test('7 Kopieren legt den anonymisierten Text in die Zwischenablage (oder ruft e
     const echt = await a.app.evaluate(({ clipboard }) => clipboard.readText());
     const shim = await a.win.evaluate(async () => { await window.electronAPI.copyText('probe-text'); return window.__kopiert; });
     assert.deepEqual(shim, ['probe-text'], 'Shim copyText nicht aufrufbar');
-    if (echt) assert.equal(echt, text, 'Zwischenablage enthaelt nicht den anonymisierten Text');
+    // Windows liefert die Zwischenablage mit \r\n: Zeilenenden vor dem Vergleich angleichen
+    if (echt) assert.equal(echt.replace(/\r\n/g, '\n'), text.replace(/\r\n/g, '\n'), 'Zwischenablage enthaelt nicht den anonymisierten Text');
     else console.error('Hinweis: Zwischenablage in dieser Umgebung nicht lesbar; Ersatzpruefung ueber den Shim');
   } finally { await a.close(); }
 });
