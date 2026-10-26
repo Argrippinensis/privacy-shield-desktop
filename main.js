@@ -366,7 +366,7 @@ handle('get-app-version', () => app.getVersion());
 handle('open-ai-service', async (event, service, preferApp) => {
   const targets = {
     chatgpt: { web: 'https://chatgpt.com/', app: 'chatgpt://' },
-    claude: { web: 'https://claude.ai/new', app: 'claude://new' },
+    claude: { web: 'https://claude.ai/new', app: 'claude://claude.ai/new' },
     gemini: { web: 'https://gemini.google.com/app' }
   };
   if (!Object.hasOwn(targets, service) || typeof preferApp !== 'boolean') throw invalidArg();

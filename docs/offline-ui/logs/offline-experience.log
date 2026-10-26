@@ -1,9 +1,9 @@
-✔ Browser: first visit has no automatic preparation or model download; explicit preparation preserves unrelated caches (3041.198883ms)
-✔ Browser: full restart offline, text processing, actual scanned PDF OCR, DOCX and evidence without server requests (2872.204904ms)
-✔ Browser: optional pinned model preparation avoids loading a session; after offline restart actual model runs (8552.92674ms)
-✔ Browser: cache deletion revokes readiness; incomplete download never becomes ready and preserves other tools and model (3485.289711ms)
-✔ Browser: mobile layout and reduced motion; AI destination links carry no text and stale results block handoff (3330.125964ms)
-✔ Desktop: offline status verified from installed resources; app handler preferred, missing handler and failure fall back to fixed web URLs (1336.580686ms)
+✔ Browser: first visit has no automatic preparation or model download; explicit preparation preserves unrelated caches (3195.542089ms)
+✔ Browser: full restart offline, text processing, actual scanned PDF OCR, DOCX and evidence without server requests (2912.443026ms)
+✔ Browser: optional pinned model preparation avoids loading a session; after offline restart actual model runs (9014.517926ms)
+✔ Browser: cache deletion revokes readiness; incomplete download never becomes ready and preserves other tools and model (3573.25619ms)
+✔ Browser: mobile layout and reduced motion; AI destination links carry no text and stale results block handoff (3163.769875ms)
+✔ Desktop: offline status verified from installed resources; app handler preferred, missing handler and failure fall back to fixed web URLs (1131.423776ms)
 ℹ tests 6
 ℹ suites 0
 ℹ pass 6
@@ -11,4 +11,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 23087.051583
+ℹ duration_ms 23595.211691

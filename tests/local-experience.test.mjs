@@ -167,7 +167,7 @@ test('Desktop: offline status verified from installed resources; app handler pre
       app.getApplicationNameForProtocol = name;
       return {urls,invalid,failedLaunches};
     });
-    assert.deepEqual(r.urls,['chatgpt://','claude://new','https://chatgpt.com/','https://gemini.google.com/app']); assert.deepEqual(r.invalid,[true,true,true]); assert.deepEqual(r.failedLaunches,['claude://new','https://claude.ai/new']);
+    assert.deepEqual(r.urls,['chatgpt://','claude://claude.ai/new','https://chatgpt.com/','https://gemini.google.com/app']); assert.deepEqual(r.invalid,[true,true,true]); assert.deepEqual(r.failedLaunches,['claude://claude.ai/new','https://claude.ai/new']);
     assert.deepEqual(await a.app.evaluate(() => globalThis.__psBlocked),[]);
   } finally { await a.close(); }
 });
