@@ -503,3 +503,20 @@ test('11 Bauskript: gefaehrliche --out-Ziele werden abgelehnt, nichts wird geloe
   const leer = path.join(aussen, 'leer'); fs.mkdirSync(leer);
   assert.equal(lauf(leer), 0, 'leerer Ordner');
 });
+
+test('12 Bauskript: Worker-Ersatz mit CRLF-Quelle (Windows-Checkout) und Aufruf ueber einen Symlink-Pfad (macOS-Temp-Ordner)', async () => {
+  const bau = await import(pathToFileURL(BAU).href);
+  assert.equal(typeof bau.erzeugeWorker, 'function', 'erzeugeWorker ist exportiert');
+  const quelle = fs.readFileSync(path.join(ROOT, 'app', 'ner-worker.js'), 'utf8').replace(/\r\n/g, '\n');
+  const lf = bau.erzeugeWorker(quelle, 'abc123');
+  const crlf = bau.erzeugeWorker(quelle.replace(/\n/g, '\r\n'), 'abc123');
+  assert.equal(crlf, lf, 'CRLF-Quelle ergibt denselben Worker wie LF-Quelle');
+  assert.ok(lf.includes('env.allowRemoteModels = true;') && lf.includes("revision: 'abc123'") && !/localModelPath/.test(lf));
+  assert.ok(!lf.includes('\r'), 'der erzeugte Worker hat nur LF-Zeilenenden (plattformunabhaengig, deterministisch)');
+  // Aufruf ueber einen Symlink: process.argv[1] ist der Symlink-Pfad, import.meta.url der aufgeloeste (auf macOS ist /var ein Symlink auf /private/var)
+  const dir = fs.mkdtempSync(path.join(tmp, 'symlink-'));
+  try { fs.symlinkSync(path.join(ROOT, 'scripts'), path.join(dir, 's'), 'dir'); } catch (e) { return; } // Windows ohne Symlink-Recht: nur der Worker-Teil gilt
+  const ziel = path.join(dir, 'out');
+  execFileSync(process.execPath, [path.join(dir, 's', 'build-web-beta.mjs'), '--out', ziel], { encoding: 'utf8', stdio: 'pipe' });
+  assert.ok(fs.existsSync(path.join(ziel, 'index.html')), 'Bau ueber den Symlink-Pfad hat tatsaechlich gebaut (nicht stillschweigend nichts getan)');
+});
