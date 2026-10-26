@@ -247,6 +247,8 @@ test('D32: Dokument nach dem Lauf entfernen, dann ZIP: .psmap-Nutzlast und Ergeb
     await runAll(f, 3);
     await f.locator('#PRJPANEL button.prj-del').nth(1).click();
     await waitItems(f, 2);
+    assert.equal(await f.locator("#PRJZIP").isDisabled(), true, "Entfernen muss den Export sperren");
+    await runAll(f, 2); // Changed project requires a new complete run.
     const zip = await makeZip(f);
     const p = await psmap.decrypt(await zip.file('zuordnung.psmap').async('uint8array'), PW);
     const payload = JSON.stringify(p);

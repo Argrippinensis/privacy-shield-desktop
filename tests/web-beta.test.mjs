@@ -91,7 +91,13 @@ async function browser({ hf, userData: vorhanden } = {}) {
   return {
     app, win, errors, userData,
     requests: () => app.evaluate(() => globalThis.__psReq.map((r) => ({ ...r }))),
-    async close() { await app.close().catch(() => {}); if (!vorhanden) fs.rmSync(userData, { recursive: true, force: true }); },
+    async close() {
+      const child = app.process();
+      const exited = child.exitCode !== null ? Promise.resolve() : new Promise(resolve => child.once('exit', resolve));
+      await app.evaluate(({ app }) => app.exit(0)).catch(() => {});
+      await exited;
+      if (!vorhanden) fs.rmSync(userData, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    },
   };
 }
 
@@ -118,7 +124,7 @@ test('1 Bau: exakte Dateiliste, byteidentische Kopien, Browser-Worker mit Pin, G
   const dateien = alleDateien(out);
   // erwartete Liste (Allowlist): Huelle, Shim, Anpassung, Worker, Werkzeug, Hinweise, Markerdatei, css, lib (nur geladene), vendor (ohne .map/.md)
   const vendor = alleDateien(path.join(ROOT, 'app', 'vendor')).filter((f) => !/\.(map|md)$/.test(f)).map((f) => 'vendor/' + f);
-  const erwartet = ['.web-beta-build', 'THIRD_PARTY_NOTICES.md', 'browser-api.js', 'css/tailwind.css', 'index.html', ...LIB, 'ner-worker.js', 'privacy-shield.html', 'tool-anpassung.js', ...vendor].sort();
+  const erwartet = ['.web-beta-build', 'THIRD_PARTY_NOTICES.md', 'browser-api.js', 'css/tailwind.css', 'index.html', ...LIB, 'ui/build-identity.js', 'ui/evidence-ui.js', 'ner-worker.js', 'privacy-shield.html', 'tool-anpassung.js', ...vendor].sort();
   assert.deepEqual(dateien, erwartet, 'Dateiliste des Baus weicht von der Allowlist ab');
   const gleich = (rel, quelle) => assert.equal(hash(path.join(out, rel)), hash(path.join(ROOT, quelle)), rel + ' muss byteidentisch zu ' + quelle + ' sein');
   gleich('privacy-shield.html', 'app/privacy-shield.html');
@@ -193,18 +199,18 @@ test('3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in 
       iframe: { id: document.getElementById('tool-frame').id, title: document.getElementById('tool-frame').title },
     }));
     assert.match(kopf.text, /PrivacyShield 2\.0 Beta \(Browser\)/);
-    assert.match(kopf.text, /Zur stabilen Version/);
-    assert.match(kopf.text, /Desktop-Version/);
+    assert.match(kopf.text, /Alte stabile Webfassung/);
+    assert.match(kopf.text, /Desktop 2.0/);
     assert.ok(kopf.links.includes('/tools/privacyshield-redesigned.html'));
-    assert.ok(kopf.links.includes('/desktop/#beta'));
+    assert.ok(kopf.links.includes('/desktop/#neu'));
     assert.equal(kopf.iframe.title, 'PrivacyShield Werkzeug');
-    assert.ok(kopf.text.includes('Vorabversion zum Ausprobieren, nicht für wichtige Dokumente. Ihre Dokumente bleiben im Browser; nur das KI-Modell wird einmalig aus dem Internet geladen.'), 'Zusammenfassung des Hinweises');
+    assert.ok(kopf.text.includes('Vorabversion zum Ausprobieren, nicht für wichtige Dokumente. Ihre Dokumente bleiben im Browser; Bibliotheken und optional das KI-Modell werden separat geladen.'), 'Zusammenfassung des Hinweises');
     for (const satz of [
       'Ihre Dokumente werden ausschließlich in Ihrem Browser verarbeitet und weder an uns noch an Dritte gesendet.',
       'ca. 135 MB, besser im WLAN',
       'von huggingface.co',
       'Dabei erfährt Hugging Face Ihre IP-Adresse, aber keine Inhalte.',
-      'Safari löscht es nach 7 Tagen ohne Nutzung.',
+      'Browser können zwischengespeicherte Ressourcen eigenständig löschen.',
       'Ohne Modell arbeitet die Standard-Erkennung (Regeln und Wortlisten).',
       'Eigene Regeln werden ebenfalls in den Websitedaten dieses Browsers gespeichert.',
       'Flugmodus-tauglich, Kein Serverkontakt und ohne Internet gelten für die Desktop-Version',
@@ -337,7 +343,7 @@ test('7 Kopieren legt den anonymisierten Text in die Zwischenablage (oder ruft e
     await a.win.waitForTimeout(800);
     const echt = await a.app.evaluate(({ clipboard }) => clipboard.readText());
     const shim = await a.win.evaluate(async () => { await window.electronAPI.copyText('probe-text'); return window.__kopiert; });
-    assert.deepEqual(shim, ['probe-text'], 'Shim copyText nicht aufrufbar');
+    assert.deepEqual(shim, [text, 'probe-text'], 'Shim copyText nicht aufrufbar');
     // Windows liefert die Zwischenablage mit \r\n: Zeilenenden vor dem Vergleich angleichen
     if (echt) assert.equal(echt.replace(/\r\n/g, '\n'), text.replace(/\r\n/g, '\n'), 'Zwischenablage enthaelt nicht den anonymisierten Text');
     else console.error('Hinweis: Zwischenablage in dieser Umgebung nicht lesbar; Ersatzpruefung ueber den Shim');
@@ -411,6 +417,9 @@ test('9 Erster Besuch: Hinweis aufgeklappt, KI aus (ps_ai_mode=off), danach eing
     assert.deepEqual((await a.requests()).filter((x) => x.hf).map((x) => x.url), [], 'keine huggingface-Anfrage ohne Einschalten');
     // zweiter Besuch (Neuladen): eingeklappt; eine vorhandene Einstellung wird nicht ueberschrieben
     await f.evaluate(() => localStorage.setItem('ps_ai_mode', 'auto'));
+    // This test covers persisted preferences. Reload with an already backed-up map;
+    // actual unsaved reload handling is exercised in real Chromium in processing-evidence.test.mjs.
+    await f.evaluate(() => { mapSaved = true; psSyncProtection(); });
     await a.win.reload({ waitUntil: 'load' });
     const f2 = await toolFrame(a.win);
     assert.equal(await a.win.evaluate(() => document.getElementById('hinweis').open), false, 'Hinweis beim zweiten Besuch eingeklappt');
@@ -478,7 +487,7 @@ test('11 Bauskript: gefaehrliche --out-Ziele werden abgelehnt, nichts wird geloe
   fs.writeFileSync(path.join(aussen, 'canary.txt'), 'bleibt');
   const fake = path.join(aussen, 'projekt');
   fs.mkdirSync(path.join(fake, 'scripts'), { recursive: true });
-  for (const [von, nach] of [['scripts/build-web-beta.mjs', 'scripts/build-web-beta.mjs'], ['scripts/vendor.lock.json', 'scripts/vendor.lock.json'], ['package.json', 'package.json'], ['THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_NOTICES.md']]) fs.copyFileSync(path.join(ROOT, von), path.join(fake, nach));
+  for (const [von, nach] of [['scripts/build-identity.mjs', 'scripts/build-identity.mjs'], ['scripts/build-web-beta.mjs', 'scripts/build-web-beta.mjs'], ['scripts/vendor.lock.json', 'scripts/vendor.lock.json'], ['package.json', 'package.json'], ['THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_NOTICES.md']]) fs.copyFileSync(path.join(ROOT, von), path.join(fake, nach));
   fs.symlinkSync(path.join(ROOT, 'app'), path.join(fake, 'app'));
   fs.symlinkSync(path.join(ROOT, 'web'), path.join(fake, 'web'));
   const lauf = (ziel, env = {}) => {

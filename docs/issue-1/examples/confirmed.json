@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "id": "12d104ca-fc3f-4fbb-9c3a-c8551a613797",
+  "created": "2026-10-26T17:59:16.329Z",
+  "timezone": "UTC",
+  "clock": "Zeitangabe dieses Geräts",
+  "product": "PrivacyShield",
+  "version": "2.0.0",
+  "coreSha256": "7f13940c8808dd31a0b66d25dc08ac5f2ef2d10347b53e0251bd1c48c59dd73c",
+  "operation": "Pseudonymisierung",
+  "profile": "standard",
+  "categories": [
+    "email",
+    "iban",
+    "card",
+    "device",
+    "account",
+    "geo",
+    "intlid",
+    "bic",
+    "phone",
+    "money",
+    "date",
+    "taxid",
+    "org",
+    "addr",
+    "vehicle",
+    "name",
+    "ip"
+  ],
+  "mode": "Regeln und Wortlisten",
+  "modelId": null,
+  "modelRevision": null,
+  "fallback": null,
+  "documentCount": 1,
+  "counting": "Ersetzte Vorkommen je Kategorie im Ergebnis; wörtliche Originalplatzhalter ausgeschlossen",
+  "documents": [
+    {
+      "index": 1,
+      "inputChars": 81,
+      "import": {
+        "complete": true,
+        "kind": "Manuelle Texteingabe",
+        "pages": [],
+        "warnings": [
+          "Umfang bezieht sich auf den eingegebenen Text."
+        ]
+      },
+      "replacements": {
+        "NAME": 1,
+        "EMAIL": 2
+      },
+      "check": {
+        "mechanism": "Regeln und Wortlisten ohne KI; keine Vollständigkeitsgarantie",
+        "remaining": 0,
+        "released": 0,
+        "error": false
+      },
+      "result": {
+        "encoding": "UTF-8",
+        "format": "Pseudonymisierter Ergebnistext, unverändert; kein BOM",
+        "sha256": "6afccaee29d7e94690ce342abcbb5f87b8e529691b6dc776968e344b032c691c"
+      }
+    }
+  ],
+  "humanReview": "Sichtprüfung vom Nutzer bestätigt",
+  "notice": "Dieser Nachweis dokumentiert den angegebenen lokalen Pseudonymisierungsschritt mit PrivacyShield. Er bestätigt weder die vollständige Entfernung aller personenbezogenen Informationen noch die DSGVO-Konformität weiterer Verarbeitungsschritte. Kein DSGVO-Zertifikat, externes Audit oder Echtheitsnachweis. SHA-256 ist eine Prüfsumme, keine digitale Signatur."
+}

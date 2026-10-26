@@ -4,6 +4,7 @@
 // Der Bau ist deterministisch (sortierte Reihenfolge, keine Zeitstempel im Inhalt).
 import fs from 'node:fs';
 import os from 'node:os';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -65,6 +66,7 @@ export function erzeugeWorker(quellText, REV) {
 }
 
 function bauen(OUT) {
+  execFileSync(process.execPath, ['scripts/build-identity.mjs'], { cwd: ROOT });
   const lies = (rel) => {
     const f = path.join(ROOT, rel);
     if (!fs.existsSync(f)) fehler('Quelle fehlt: ' + rel + (rel.startsWith('app/vendor') ? ' (npm run fetch-vendor ausfuehren)' : ''));
@@ -101,7 +103,7 @@ function bauen(OUT) {
   const werkzeug = lies('app/privacy-shield.html');
   lege('privacy-shield.html', werkzeug);
   const html = werkzeug.toString('utf8');
-  const libs = [...new Set([...html.matchAll(/<script src="(lib\/[A-Za-z0-9_-]+\.js)"/g)].map((m) => m[1]))];
+  const libs = [...new Set([...html.matchAll(/<script src="((?:lib|ui)\/[A-Za-z0-9_-]+\.js)"/g)].map((m) => m[1]))];
   if (libs.length < 10) fehler('Zu wenige lib-Skripte im Werkzeug gefunden (' + libs.length + '): Format geaendert?');
   for (const l of libs) lege(l, lies('app/' + l));
   kopiereBaum('app/css', 'css');

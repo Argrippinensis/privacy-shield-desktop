@@ -109,6 +109,9 @@ test('Fuenf Textdateien, Abbruch nach dem ersten Dokument: eins fertig, vier war
     await f.waitForTimeout(1500);
     assert.equal(await countStatus(f, 'fertig'), 1);
     assert.equal(await countStatus(f, 'wartet'), 4);
+    assert.equal(await f.evaluate(() => psCurrent()), false);
+    assert.equal(await f.locator('#PRJZIP').isDisabled(), true);
+    assert.equal(await f.evaluate(async () => { try { await psEvidence(); return false; } catch { return true; } }), true);
   } finally { await a.close(); }
 });
 

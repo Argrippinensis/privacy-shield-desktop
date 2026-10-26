@@ -1,2 +1,6 @@
 # Referenzdateien muessen auf allen Systemen byte-gleich sein (Hashes im Differenztest)
 tests/golden/** text eol=lf
+
+# PDF fixtures and examples must retain their exact bytes on Windows, too.
+tests/fixtures/issue-1/*.pdf binary
+docs/issue-1/examples/*.pdf binary

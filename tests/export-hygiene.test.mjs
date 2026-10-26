@@ -16,6 +16,7 @@ test('PDF-Export: keine Originalnamen, kein Autor, Titel gesetzt', async () => {
     const orig = 'Mueller_Zebrafink_Kuendigung';
     await setFiles(f, [{ name: orig + '.txt', mimeType: 'text/plain', buffer: Buffer.from('Hallo Welt aus Datei', 'utf8') }]);
     await f.waitForFunction(() => document.getElementById('IT').value.includes('Hallo Welt'), null, { timeout: 15000 });
+    await f.evaluate(() => anon()); // Export requires a successful current run.
     await captureDownloads(f);
     // jsPDF-save() abfangen (liefert die Bytes des PDFs, ohne Dateidialog); Anker-Downloads werden ebenfalls erfasst
     const got = await f.evaluate(async () => {
@@ -66,12 +67,16 @@ test('dl() gibt die Blob-URL nach __PS_REVOKE_MS frei', async () => {
   } finally { await a.close(); }
 });
 
-test('Zwischenablage-Inventar: writeText nur in copyAIErrorDetails, cpAnon, copyAndOpenAI; copyText( nur in copyAIErrorDetails', () => {
+test('Zwischenablage-Inventar: GUI verwendet gemeinsamen Kopierweg, Diagnose bleibt separat', () => {
   const funcs = [...HTML.matchAll(/function\s+(\w+)\s*\(/g)].map((m) => ({ name: m[1], at: m.index }));
   const enclosing = (idx) => { let n = null; for (const fn of funcs) if (fn.at < idx) n = fn.name; return n; };
   const where = (re) => [...HTML.matchAll(re)].map((m) => enclosing(m.index));
-  assert.deepEqual(where(/\bwriteText\s*\(/g).sort(), ['copyAIErrorDetails', 'copyAndOpenAI', 'cpAnon']);
+  assert.deepEqual(where(/\bwriteText\s*\(/g).sort(), ['copyAIErrorDetails']);
   assert.deepEqual(where(/\bcopyText\s*\(/g), ['copyAIErrorDetails']);
+  const ui = fs.readFileSync(path.join(ROOT, 'app/ui/evidence-ui.js'), 'utf8');
+  assert.equal((ui.match(/\bwriteText\s*\(/g) || []).length, 1);
+  assert.equal((ui.match(/\bcopyText\s*\(/g) || []).length, 1);
+  for (const name of ['cpAnon', 'copyAndOpenAI']) { const start = HTML.indexOf('function ' + name + '('); assert.ok(HTML.slice(start, start + 850).includes('psCopy(')); }
 });
 
 // Fenster per close() schliessen; liefert Zaehler der Dialog-Aufrufe

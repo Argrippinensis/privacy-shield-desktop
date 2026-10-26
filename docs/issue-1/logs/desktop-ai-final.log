@@ -1,0 +1,21 @@
+✔ KI-Start schlaegt fehl: Modelldatei fehlt -> Ursache sichtbar, Standard-Erkennung laeuft (1756.714645ms)
+✔ KI-Start schlaegt fehl: Modelldatei unvollstaendig (abgeschnitten) -> Ursache sichtbar, Standard-Erkennung laeuft (2207.90594ms)
+✔ KI-Start schlaegt fehl: Modelldatei fehlt und kein Manifest (nur Fehlermeldung des Laders) -> Ursache sichtbar, Standard-Erkennung laeuft (1788.678736ms)
+✔ Fehlerklassen: Speicher, Netzwerk, Laufzeit werden erkannt; Details enthalten Code und Meldung (919.858773ms)
+✔ "Erneut versuchen" startet das Modell nach einem Fehlschlag; kein Dauer-Neuversuch bei jeder Analyse (3187.188599ms)
+✔ Leere Datei (0 Bytes, z. B. nur online in OneDrive) wird erklaert statt stumm angezeigt (830.127377ms)
+✔ Standard: Modell startet erst bei der ersten Analyse und liefert das KI-Ergebnis (4497.884266ms)
+✔ Ausgeschaltet: kein Modell, Ergebnis der Standard-Erkennung (4280.47161ms)
+  App-Speicher MB: mit Modell 1273 | nach Leerlauf-Entladen 632
+✔ Leerlauf: Modell wird entladen (Speicher sinkt) und bei Bedarf identisch neu geladen (8607.399229ms)
+✔ Einstellung aus v1.7 wird uebernommen: "aiModelLoaded=false" bedeutet aus (847.697942ms)
+✔ F2 native save dialog: changed revision never writes an evidence file; cancel does not succeed (4193.848014ms)
+✔ evidence records actual local NER use and keeps model history after unloading (3551.240798ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 37534.177343

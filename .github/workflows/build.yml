@@ -50,6 +50,8 @@ jobs:
             app/models
           key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
       - run: npm run fetch-vendor
+      - name: Install Chromium for browser regressions
+        run: npx playwright-core install chromium
       - run: npx electron-builder ${{ matrix.build_flag }} --publish never
       # Das gebaute (entpackte) Programm testen, bevor es in ein Release geht
       - name: Tests gegen das gebaute Programm
