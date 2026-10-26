@@ -2,9 +2,10 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex">
   <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:,">
   <title>PrivacyShield 2.0 Beta (Browser)</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,11 +23,14 @@
     .bar nav a:hover { text-decoration-color: #fff; }
 
     .note { flex: none; background: #eef2f6; border-bottom: 1px solid #d6dee7; font-size: 13px; line-height: 1.5; color: #334155; padding: 0 16px; }
-    .note summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; gap: 8px; list-style: none; font-weight: 600; color: #1a3a5c; }
+    .note summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; gap: 8px; list-style: none; font-weight: 400; color: #1a3a5c; }
+    .note summary strong { font-weight: 600; }
     .note summary::-webkit-details-marker { display: none; }
     .note summary::after { content: "Mehr"; margin-left: auto; font-weight: 400; font-size: 12px; color: #1a3a5c; text-decoration: underline; text-underline-offset: 3px; flex: none; }
     .note[open] summary::after { content: "Weniger"; }
-    .note p { padding: 0 0 12px; max-width: 70ch; }
+    .note summary > span { padding: 8px 0; display: block; }
+    .note-text { max-height: 28dvh; max-height: 28vh; overflow-y: auto; padding-bottom: 6px; }
+    .note p { padding: 0 0 8px; max-width: 70ch; }
 
     .stage { position: relative; flex: 1 1 auto; min-height: 0; background: #fff; }
     #tool-frame { display: block; width: 100%; height: 100%; border: none; background: #fff; }
@@ -43,6 +47,18 @@
   </style>
   <!-- Bruecke vor dem Werkzeug: das Iframe greift ueber window.parent.electronAPI darauf zu -->
   <script src="browser-api.js"></script>
+  <script src="tool-anpassung.js"></script>
+  <script>
+    // Erster Besuch: Hinweis aufgeklappt (Zustand der Huelle unter psweb_*), und die KI-Erkennung ist zunaechst AUS,
+    // damit nichts (135 MB) ohne Zutun geladen wird. Eine schon vorhandene Einstellung des Werkzeugs bleibt unberuehrt.
+    // Muss vor dem Iframe laufen: das Werkzeug liest ps_ai_mode beim Start.
+    var PSWEB_ERSTER_BESUCH = true;
+    try {
+      PSWEB_ERSTER_BESUCH = localStorage.getItem('psweb_hinweis_gesehen') === null;
+      if (PSWEB_ERSTER_BESUCH) localStorage.setItem('psweb_hinweis_gesehen', '1');
+      if (localStorage.getItem('ps_ai_mode') === null) localStorage.setItem('ps_ai_mode', 'off');
+    } catch (e) { /* Speicher gesperrt: Hinweis bleibt aufgeklappt, das Werkzeug meldet es selbst */ }
+  </script>
 </head>
 <body>
   <div id="app">
@@ -54,11 +70,16 @@
       </nav>
     </header>
     <details class="note" id="hinweis">
-      <summary>Vorabversion zum Ausprobieren, nicht für wichtige Dokumente.</summary>
-      <p>Ihre Dokumente werden im Browser verarbeitet und nicht an uns gesendet. Beim ersten Start der KI-Erkennung wird das Sprachmodell (ca. 135 MB) einmalig von huggingface.co geladen und im Browser zwischengespeichert; ohne Modell arbeitet die Standard-Erkennung (Regeln und Wortlisten).</p>
+      <summary><span><strong>Vorabversion zum Ausprobieren, nicht für wichtige Dokumente.</strong> Ihre Dokumente bleiben im Browser; nur das KI-Modell wird einmalig aus dem Internet geladen.</span></summary>
+      <div class="note-text">
+        <p>Ihre Dokumente werden ausschließlich in Ihrem Browser verarbeitet und weder an uns noch an Dritte gesendet.</p>
+        <p>Die KI-Erkennung ist zunächst ausgeschaltet. Sie schalten sie mit dem Häkchen im Panel „KI-Erkennung“ ein. Dann lädt Ihr Browser das Sprachmodell (ca. 135 MB, besser im WLAN) von huggingface.co. Dabei erfährt Hugging Face Ihre IP-Adresse, aber keine Inhalte. Das Modell wird danach in den Websitedaten dieses Browsers abgelegt und lässt sich in den Browsereinstellungen löschen; Safari löscht es nach 7 Tagen ohne Nutzung. Ohne Modell arbeitet die Standard-Erkennung (Regeln und Wortlisten).</p>
+        <p>Eigene Regeln werden ebenfalls in den Websitedaten dieses Browsers gespeichert.</p>
+        <p>Aussagen im Werkzeug wie Flugmodus-tauglich, Kein Serverkontakt und ohne Internet gelten für die Desktop-Version; im Browser gelten sie erst, wenn Seite und Modell einmal geladen sind.</p>
+      </div>
     </details>
     <main class="stage">
-      <iframe id="tool-frame" title="PrivacyShield Werkzeug" src="privacy-shield.html" allow="clipboard-read; clipboard-write"></iframe>
+      <iframe id="tool-frame" title="PrivacyShield Werkzeug" src="privacy-shield.html" allow="clipboard-write"></iframe>
       <div id="loading" role="status">PrivacyShield wird geladen ...</div>
     </main>
   </div>
@@ -66,38 +87,13 @@
     (function () {
       var f = document.getElementById('tool-frame');
       var l = document.getElementById('loading');
-      // Das Werkzeug bleibt unveraendert. Sein Arbeitsbereich hat aber ein Inline-Raster (280px + 1fr), das die eigene
-      // Schmalansicht (max-width 960px) aushebelt; am Handy waere die rechte Spalte abgeschnitten. Das Raster
-      // und, nur bei schmaler Breite, einige Layoutregeln werden darum zur Laufzeit im (gleichen Ursprung) Iframe ergaenzt.
-      var CSS = [
-        '@media (max-width: 960px) { .ws-grid { grid-template-columns: minmax(0, 1fr) !important; } }',
-        // Handy: nur schmale Breiten. Schrittleiste 2x2, Kopfzeilen und Knopfreihen umbrechend, Knoepfe mindestens 40 px hoch,
-        // zweispaltige Raster einspaltig, Seitenraender kleiner, die Kopfzeile des Werkzeugs entfaellt (die Huelle hat eine).
-        '@media (max-width: 600px) {',
-        '  header > nav.nav-glass { display: none !important; }',
-        '  #main { padding-top: 0 !important; }',
-        '  #WS { padding-left: 12px !important; padding-right: 12px !important; }',
-        '  .steps-bar { display: grid !important; grid-template-columns: 1fr 1fr; }',
-        '  .step-tab { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px !important; border-right: 0 !important; border-bottom: 1px solid #e5e5e5; }',
-        '  .step-tab:nth-child(odd) { border-right: 1px solid #e5e5e5 !important; }',
-        '  .step-tab:nth-child(n+3) { border-bottom: 0; }',
-        '  .tool-panel-header { flex-wrap: wrap; gap: 8px 10px; }',
-        '  .tool-panel-header > div { display: flex; flex-wrap: wrap; gap: 8px !important; }',
-        '  [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: minmax(0, 1fr) !important; }',
-        '  .btn, .btn-accent, .btn-ghost, .btn-outline, .btn-primary { min-height: 40px !important; }',
-        '}'
-      ].join('\n');
-      function anpassen() {
-        try {
-          var d = f.contentDocument;
-          if (!d || !d.head || d.getElementById('ps-beta-schmal')) return;
-          var st = d.createElement('style');
-          st.id = 'ps-beta-schmal';
-          st.textContent = CSS;
-          d.head.appendChild(st);
-        } catch (e) { /* anderer Ursprung: nichts tun */ }
+      // Beim ersten Besuch aufgeklappt, danach eingeklappt
+      if (PSWEB_ERSTER_BESUCH) document.getElementById('hinweis').open = true;
+      // Das Werkzeug bleibt unveraendert; Texte und Layout werden zur Laufzeit im (gleichen Ursprung) Iframe angepasst
+      function fertig() {
+        try { PSWebAnpassung.anwenden(f.contentDocument); } catch (e) { /* anderer Ursprung: nichts tun */ }
+        l.hidden = true;
       }
-      function fertig() { anpassen(); l.hidden = true; }
       f.addEventListener('load', fertig);
       if (f.contentDocument && f.contentDocument.readyState === 'complete' && f.contentWindow.location.href !== 'about:blank') fertig();
     })();
