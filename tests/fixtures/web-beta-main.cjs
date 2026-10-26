@@ -17,7 +17,7 @@ app.whenReady().then(() => {
     try { host = new URL(details.url).hostname; } catch (e) { host = ''; }
     const lokal = host === '127.0.0.1';
     const hf = istHF(host);
-    globalThis.__psReq.push({ url: details.url, host, lokal, hf });
+    globalThis.__psReq.push({ url: details.url, host, lokal, hf, method: details.method, body: !!(details.uploadData && details.uploadData.length) });
     cb({ cancel: !(lokal || (hf && HF_DURCHLASSEN)) });
   });
   const win = new BrowserWindow({ width: 1280, height: 800, show: true, webPreferences: { contextIsolation: true, nodeIntegration: false } });

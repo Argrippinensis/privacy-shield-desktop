@@ -9,6 +9,7 @@ import path from 'node:path';
 import http from 'node:http';
 import vm from 'node:vm';
 import crypto from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { ROOT, toolFrame } from './helpers.mjs';
@@ -23,6 +24,7 @@ const MAX_DATEI = 25 * 1024 * 1024;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.wasm': 'application/wasm', '.md': 'text/markdown; charset=utf-8', '.gz': 'application/gzip', '.pdf': 'application/pdf', '.png': 'image/png', '.svg': 'image/svg+xml' };
 
 let tmp, out, out2, server, baseUrl;
+const nichtGefunden = []; // lokale Pfade, die der Testserver nicht kennt (jeder Eintrag ist ein Fehler)
 
 function bauen(ziel) {
   return execFileSync(process.execPath, [BAU, '--out', ziel], { cwd: ROOT, encoding: 'utf8' });
@@ -44,7 +46,7 @@ function serve(dir) {
       try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch (e) { res.writeHead(400).end(); return; }
       if (p.endsWith('/')) p += 'index.html';
       const f = path.join(dir, p);
-      if (!f.startsWith(dir + path.sep) || !fs.existsSync(f) || !fs.statSync(f).isFile()) { res.writeHead(404).end('nicht gefunden'); return; }
+      if (!f.startsWith(dir + path.sep) || !fs.existsSync(f) || !fs.statSync(f).isFile()) { nichtGefunden.push(p); res.writeHead(404).end('nicht gefunden'); return; }
       res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
       fs.createReadStream(f).pipe(res);
     });
@@ -65,9 +67,9 @@ after(async () => {
   if (tmp) fs.rmSync(tmp, { recursive: true, force: true });
 });
 
-// Startet den Browser-Ersatz (Electron ohne preload) auf dem Testserver.
-async function browser({ hf } = {}) {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-webbeta-ud-'));
+// Startet den Browser-Ersatz (Electron ohne preload) auf dem Testserver. userData: vorhandenes Profil weiterverwenden.
+async function browser({ hf, userData: vorhanden } = {}) {
+  const userData = vorhanden || fs.mkdtempSync(path.join(os.tmpdir(), 'ps-webbeta-ud-'));
   const app = await _electron.launch({
     executablePath: electronPath,
     args: [path.join(ROOT, 'tests', 'fixtures', 'web-beta-main.cjs'), '--no-sandbox', `--user-data-dir=${userData}`],
@@ -79,39 +81,63 @@ async function browser({ hf } = {}) {
     await win.waitForLoadState('load');
   } catch (e) {
     await app.close().catch(() => {});
-    fs.rmSync(userData, { recursive: true, force: true });
+    if (!vorhanden) fs.rmSync(userData, { recursive: true, force: true });
     throw e;
   }
   const errors = [];
-  win.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-  win.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  win.on('pageerror', (e) => errors.push({ typ: 'pageerror', text: e.message, url: '' }));
+  win.on('console', (m) => { if (m.type() === 'error') errors.push({ typ: 'console', text: m.text(), url: (m.location() && m.location().url) || '' }); });
+  nichtGefunden.length = 0;
   return {
-    app, win, errors,
+    app, win, errors, userData,
     requests: () => app.evaluate(() => globalThis.__psReq.map((r) => ({ ...r }))),
-    async close() { await app.close().catch(() => {}); fs.rmSync(userData, { recursive: true, force: true }); },
+    async close() { await app.close().catch(() => {}); if (!vorhanden) fs.rmSync(userData, { recursive: true, force: true }); },
   };
 }
 
-// Erwartete Fehlermeldungen, wenn das Modell nicht erreichbar ist (Fixture bricht huggingface.co ab)
-const ERWARTET = /NER-Modell konnte nicht geladen werden|Failed to load resource|net::ERR_|Failed to fetch|huggingface/i;
-const unerwartet = (errors) => errors.filter((e) => e.startsWith('pageerror') || !ERWARTET.test(e));
+const istHF = (h) => /(^|\.)(huggingface\.co|hf\.co)$/.test(h);
+// Erlaubt sind nur Fehler, die zum nicht erreichbaren Modell gehoeren (Meldung des Werkzeugs oder URL bei huggingface/hf.co).
+function unerwartet(errors) {
+  return errors.filter((e) => {
+    if (e.typ === 'pageerror') return true;
+    if (/NER-Modell konnte nicht geladen werden/.test(e.text)) return false;
+    try { if (e.url && istHF(new URL(e.url).hostname)) return false; } catch (x) { /* keine URL */ }
+    return true;
+  }).map((e) => e.typ + ': ' + e.text + (e.url ? ' [' + e.url + ']' : ''));
+}
+const keine404 = () => assert.deepEqual([...nichtGefunden], [], 'lokale Pfade nicht gefunden (404)');
 
-test('1 Bau: erwartete Dateien, unveraenderte Kopie des Werkzeugs, Browser-Worker, Groessen, deterministisch', () => {
+// Haekchen "KI-Erkennung verwenden" im Werkzeug einschalten (Klick wie ein Nutzer)
+const kiEinschalten = (f) => f.evaluate(() => { loadTestDoc(); const t = document.getElementById('aiAutoToggle'); t.click(); return t.checked; });
+
+// Vom Werkzeug per <script> geladene lib-Dateien (ohne CLI- und Leser-Module, die es im Browser nicht gibt)
+const LIB = ['placeholder', 'coref', 'leakcheck', 'marks', 'report', 'policy', 'detect', 'history', 'review', 'hygiene', 'psmap', 'project', 'formats', 'officefmt'].map((n) => 'lib/' + n + '.js');
+const MODELL_REV = 'c2a4dbf593c57f47004c5bc2d3770d311aee9c43';
+
+test('1 Bau: exakte Dateiliste, byteidentische Kopien, Browser-Worker mit Pin, Groessen, deterministisch', () => {
   const dateien = alleDateien(out);
-  for (const f of ['index.html', 'browser-api.js', 'privacy-shield.html', 'ner-worker.js', 'THIRD_PARTY_NOTICES.md', 'css/tailwind.css', 'vendor/transformers/transformers.min.js', 'vendor/pdfjs/pdf.min.js']) {
-    assert.ok(dateien.includes(f), 'fehlt im Bau: ' + f);
-  }
-  for (const f of fs.readdirSync(path.join(ROOT, 'app', 'lib')).filter((n) => n.endsWith('.js'))) assert.ok(dateien.includes('lib/' + f), 'lib fehlt: ' + f);
-  assert.equal(hash(path.join(out, 'privacy-shield.html')), hash(path.join(ROOT, 'app', 'privacy-shield.html')), 'privacy-shield.html muss byteidentisch sein');
+  // erwartete Liste (Allowlist): Huelle, Shim, Anpassung, Worker, Werkzeug, Hinweise, Markerdatei, css, lib (nur geladene), vendor (ohne .map/.md)
+  const vendor = alleDateien(path.join(ROOT, 'app', 'vendor')).filter((f) => !/\.(map|md)$/.test(f)).map((f) => 'vendor/' + f);
+  const erwartet = ['.web-beta-build', 'THIRD_PARTY_NOTICES.md', 'browser-api.js', 'css/tailwind.css', 'index.html', ...LIB, 'ner-worker.js', 'privacy-shield.html', 'tool-anpassung.js', ...vendor].sort();
+  assert.deepEqual(dateien, erwartet, 'Dateiliste des Baus weicht von der Allowlist ab');
+  const gleich = (rel, quelle) => assert.equal(hash(path.join(out, rel)), hash(path.join(ROOT, quelle)), rel + ' muss byteidentisch zu ' + quelle + ' sein');
+  gleich('privacy-shield.html', 'app/privacy-shield.html');
+  gleich('THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_NOTICES.md');
+  gleich('css/tailwind.css', 'app/css/tailwind.css');
+  for (const f of [...LIB, ...vendor]) gleich(f, 'app/' + f);
   const worker = fs.readFileSync(path.join(out, 'ner-worker.js'), 'utf8');
   assert.match(worker, /env\.allowRemoteModels = true/);
   assert.match(worker, /env\.allowLocalModels = false/);
   assert.match(worker, /env\.useBrowserCache = true/);
   assert.doesNotMatch(worker, /localModelPath/);
   assert.match(worker, /wasmPaths = new URL\('vendor\/transformers\/'/, 'wasmPaths bleibt lokal');
+  assert.match(worker, new RegExp("revision: '" + MODELL_REV + "'"), 'Modell ist auf den Commit gepinnt');
+  const lock = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'vendor.lock.json'), 'utf8'));
+  assert.ok(lock.files.filter((f) => f.dest.startsWith('models/')).every((f) => f.url.includes('/resolve/' + MODELL_REV + '/')), 'Pin passt zu vendor.lock.json');
   const shell = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
   assert.match(shell, /<meta name="robots" content="noindex"/);
-  assert.ok(!dateien.some((f) => f.startsWith('models/')), 'kein Modell im Bau');
+  assert.match(shell, /allow="clipboard-write"/);
+  assert.doesNotMatch(shell, /clipboard-read|viewport-fit/);
   assert.ok(dateien.length <= 2000, 'zu viele Dateien: ' + dateien.length);
   for (const f of dateien) assert.ok(fs.statSync(path.join(out, f)).size < MAX_DATEI, 'Datei zu gross: ' + f);
   // zweimal gebaut: gleiche Dateiliste, gleiche Pruefsummen
@@ -157,7 +183,7 @@ test('3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in 
   try {
     const f = await toolFrame(a.win);
     assert.ok(f.url().includes('privacy-shield.html'));
-    const sel = 'button[title="Nach Updates suchen"]';
+    const sel = '#PS-VERSION-LABEL';
     await f.waitForSelector(sel, { state: 'attached', timeout: 10000 });
     await f.waitForFunction(([s, v]) => document.querySelector(s).textContent.trim() === 'v' + v, [sel, VERSION], { timeout: 10000 });
     const kopf = await a.win.evaluate(() => ({
@@ -172,10 +198,22 @@ test('3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in 
     assert.ok(kopf.links.includes('/tools/privacyshield-redesigned.html'));
     assert.ok(kopf.links.includes('/desktop/#beta'));
     assert.equal(kopf.iframe.title, 'PrivacyShield Werkzeug');
-    assert.match(kopf.text, /nicht für wichtige Dokumente/);
-    assert.match(kopf.text, /135 MB/);
-    assert.match(kopf.text, /huggingface\.co/);
+    assert.ok(kopf.text.includes('Vorabversion zum Ausprobieren, nicht für wichtige Dokumente. Ihre Dokumente bleiben im Browser; nur das KI-Modell wird einmalig aus dem Internet geladen.'), 'Zusammenfassung des Hinweises');
+    for (const satz of [
+      'Ihre Dokumente werden ausschließlich in Ihrem Browser verarbeitet und weder an uns noch an Dritte gesendet.',
+      'ca. 135 MB, besser im WLAN',
+      'von huggingface.co',
+      'Dabei erfährt Hugging Face Ihre IP-Adresse, aber keine Inhalte.',
+      'Safari löscht es nach 7 Tagen ohne Nutzung.',
+      'Ohne Modell arbeitet die Standard-Erkennung (Regeln und Wortlisten).',
+      'Eigene Regeln werden ebenfalls in den Websitedaten dieses Browsers gespeichert.',
+      'Flugmodus-tauglich, Kein Serverkontakt und ohne Internet gelten für die Desktop-Version',
+      'KI-Erkennung',
+    ]) assert.ok(kopf.text.includes(satz), 'Langtext fehlt: ' + satz);
+    // Das Werkzeug blendet den Update-Knopf nicht als Knopf ein: die Version bleibt, ist aber nicht bedienbar
+    assert.equal(await f.evaluate(() => document.getElementById('PS-VERSION-LABEL').disabled), true);
     assert.deepEqual(unerwartet(a.errors), []);
+    keine404();
   } finally { await a.close(); }
 });
 
@@ -199,7 +237,7 @@ test('4 Handy-Breite 390x844: kein horizontales Scrollen, Hauptbedienelemente si
     });
     assert.ok(masse.schale.sw <= masse.schale.iw, 'Huelle scrollt horizontal: ' + JSON.stringify(masse.schale));
     assert.ok(masse.tool.sw <= masse.tool.iw, 'Werkzeug scrollt horizontal: ' + JSON.stringify(masse.tool));
-    assert.ok(masse.rahmen.width <= 390 && masse.rahmen.height > 400, 'Iframe-Mass: ' + JSON.stringify(masse.rahmen));
+    assert.ok(masse.rahmen.width <= 390 && masse.rahmen.height > 300, 'Iframe-Mass: ' + JSON.stringify(masse.rahmen));
     assert.ok(masse.rahmen.bottom <= masse.hoehe + 1, 'Iframe ragt unten heraus');
     // Bedienelemente pruefen
     await f.waitForSelector('#ANONBTN', { state: 'visible', timeout: 10000 });
@@ -230,7 +268,7 @@ test('4 Handy-Breite 390x844: kein horizontales Scrollen, Hauptbedienelemente si
   } finally { await a.close(); }
 });
 
-test('5 Ende-zu-Ende ohne Modell: Platzhalter, Rueckuebersetzung, Seite bleibt bedienbar', async () => {
+test('5 Ende-zu-Ende ohne Modell (Standard beim ersten Besuch): Platzhalter, Rueckuebersetzung', async () => {
   const a = await browser();
   try {
     const f = await toolFrame(a.win);
@@ -247,30 +285,42 @@ test('5 Ende-zu-Ende ohne Modell: Platzhalter, Rueckuebersetzung, Seite bleibt b
     // Rueckuebersetzung stellt das Original her
     const zurueck = await f.evaluate(() => { document.getElementById('AR').value = document.getElementById('AT').value; deanon(); return document.getElementById('RT').value; });
     assert.equal(zurueck, original);
-    // Modell nicht erreichbar: erwarteter Fall, die Seite bleibt bedienbar
-    await a.win.waitForTimeout(1500);
-    const bedienbar = await f.evaluate(async () => {
-      document.getElementById('IT').value = 'Maria Beispiel schreibt an max.muster@example.com';
-      aiCache = { key: null, spans: [] };
-      await anon();
-      return document.getElementById('AT').value;
-    });
-    assert.match(bedienbar, /\{\{EMAIL_1\}\}/);
     assert.deepEqual(unerwartet(a.errors), []);
+    keine404();
   } finally { await a.close(); }
 });
 
-test('6 Netzpolitik: nur 127.0.0.1 und huggingface.co/hf.co, keine anderen Hosts', async () => {
+test('6 Netzpolitik: erster Besuch ohne huggingface-Anfrage; nach Einschalten der KI nur GET an das gepinnte Modell, Standard-Erkennung laeuft weiter', async () => {
   const a = await browser();
   try {
     const f = await toolFrame(a.win);
     await f.evaluate(async () => { loadTestDoc(); aiCache = { key: null, spans: [] }; await anon(); });
-    await a.win.waitForTimeout(2000);
-    const log = await a.requests();
+    await a.win.waitForTimeout(1500);
+    let log = await a.requests();
     assert.ok(log.length > 10, 'Anfragen protokolliert: ' + log.length);
-    const fremd = log.filter((r) => !r.lokal && !r.hf).map((r) => r.url);
+    assert.deepEqual(log.filter((r) => !r.lokal).map((r) => r.url), [], 'beim ersten Besuch geht nichts ausser 127.0.0.1 hinaus');
+    // KI einschalten (Haekchen): jetzt versucht der Browser das Modell zu laden; das Fixture bricht es ab
+    assert.equal(await kiEinschalten(f), true);
+    const r = await f.evaluate(async () => { aiCache = { key: null, spans: [] }; await anon(); return document.getElementById('AT').value; });
+    await a.win.waitForTimeout(2500);
+    log = await a.requests();
+    const fremd = log.filter((x) => !x.lokal && !x.hf).map((x) => x.url);
     assert.deepEqual(fremd, [], 'Anfragen an fremde Hosts');
-    for (const r of log.filter((x) => x.hf)) assert.match(r.host, /(^|\.)(huggingface\.co|hf\.co)$/);
+    const hf = log.filter((x) => x.hf);
+    assert.ok(hf.length > 0, 'nach dem Einschalten startet der Modell-Ladeversuch');
+    for (const x of hf) {
+      assert.equal(x.method, 'GET', 'nur GET: ' + x.url);
+      assert.equal(x.body, false, 'kein Body: ' + x.url);
+      assert.match(x.host, /(^|\.)(huggingface\.co|hf\.co)$/);
+      if (x.host === 'huggingface.co') {
+        const pfad = new URL(x.url).pathname;
+        assert.ok(pfad.startsWith('/Xenova/distilbert-base-multilingual-cased-ner-hrl/'), 'Pfad ausserhalb des Modells: ' + pfad);
+        assert.ok(pfad.includes('/resolve/' + MODELL_REV + '/'), 'nicht auf den Commit gepinnt: ' + pfad);
+      }
+    }
+    assert.match(r, /\{\{EMAIL_1\}\}/, 'Standard-Erkennung laeuft trotz fehlendem Modell');
+    assert.deepEqual(unerwartet(a.errors), []);
+    keine404();
   } finally { await a.close(); }
 });
 
@@ -343,3 +393,113 @@ for (const [breite, hoehe] of [[390, 844], [360, 740]]) {
     } finally { await a.close(); }
   });
 }
+
+test('9 Erster Besuch: Hinweis aufgeklappt, KI aus (ps_ai_mode=off), danach eingeklappt und KI-Einstellung bleibt', async () => {
+  const a = await browser();
+  try {
+    const f = await toolFrame(a.win);
+    assert.equal(await a.win.evaluate(() => document.getElementById('hinweis').open), true, 'Hinweis beim ersten Besuch aufgeklappt');
+    const schluessel = await a.win.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('psweb_')));
+    assert.ok(schluessel.length >= 1, 'Zustand der Huelle unter psweb_*: ' + schluessel);
+    assert.ok(await a.win.evaluate(() => /KI-Erkennung/.test(document.getElementById('hinweis').textContent)), 'Hinweis nennt die KI-Erkennung');
+    assert.equal(await f.evaluate(() => localStorage.getItem('ps_ai_mode')), 'off');
+    await f.evaluate(() => loadTestDoc());
+    assert.equal(await f.evaluate(() => document.getElementById('aiAutoToggle').checked), false, 'Haekchen KI-Erkennung ist aus');
+    await f.evaluate(async () => { await anon(); });
+    await a.win.waitForTimeout(1000);
+    assert.deepEqual((await a.requests()).filter((x) => x.hf).map((x) => x.url), [], 'keine huggingface-Anfrage ohne Einschalten');
+    // zweiter Besuch (Neuladen): eingeklappt; eine vorhandene Einstellung wird nicht ueberschrieben
+    await f.evaluate(() => localStorage.setItem('ps_ai_mode', 'auto'));
+    await a.win.reload({ waitUntil: 'load' });
+    const f2 = await toolFrame(a.win);
+    assert.equal(await a.win.evaluate(() => document.getElementById('hinweis').open), false, 'Hinweis beim zweiten Besuch eingeklappt');
+    assert.equal(await f2.evaluate(() => localStorage.getItem('ps_ai_mode')), 'auto', 'vorhandene Einstellung bleibt');
+    assert.deepEqual(unerwartet(a.errors), []);
+    keine404();
+  } finally { await a.close(); }
+});
+
+const norm = (t) => String(t).replace(/\s+/g, ' ').trim();
+const textKnoten = (frame) => frame.evaluate(() => {
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (/^(SCRIPT|STYLE|NOSCRIPT)$/.test(n.parentElement.tagName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
+  const t = []; for (let n = w.nextNode(); n; n = w.nextNode()) t.push(n.nodeValue);
+  return t.join(' ');
+});
+
+test('10 Irrefuehrende Aussagen des Werkzeugs werden in der Huelle ersetzt (Originalsaetze existieren im Tool)', async () => {
+  const anp = require(path.join(ROOT, 'web', 'tool-anpassung.js'));
+  assert.ok(Array.isArray(anp.TEXTE) && anp.TEXTE.length >= 10, 'Ersetzungsliste');
+  const quelle = norm(fs.readFileSync(path.join(ROOT, 'app', 'privacy-shield.html'), 'utf8'));
+  for (const r of anp.TEXTE) assert.ok(quelle.includes(norm(r.von)), 'Originalsatz existiert nicht (mehr) im Tool: ' + r.von);
+  for (const must of ['Kein Datenaustausch mit dem Internet', 'Flugmodus', 'Kein Serverkontakt', 'ohne eine einzige Serveranfrage', 'funktioniert ohne Internet', 'neu installieren', 'Virenschutz']) {
+    assert.ok(anp.TEXTE.some((r) => r.von.includes(must)), 'keine Ersetzung fuer: ' + must);
+  }
+  const a = await browser();
+  try {
+    const f = await toolFrame(a.win);
+    await f.evaluate(() => loadTestDoc());
+    await a.win.waitForTimeout(500);
+    const text = norm(await textKnoten(f));
+    for (const r of anp.TEXTE.filter((x) => !x.dyn)) {
+      assert.ok(!text.includes(norm(r.von)), 'noch sichtbar: ' + r.von);
+      assert.ok(text.includes(norm(r.nach)), 'Ersatz fehlt: ' + r.nach);
+    }
+    assert.doesNotMatch(text, /Flugmodus|Serverkontakt|Server-Kontakte|ohne Internet|aus der Installation|neu installieren|Virenschutz/, 'Rest irrefuehrender Aussagen');
+    // Update-Knopf der Fusszeile: nicht bedienbar; tote Testdokument-Links: nicht sichtbar
+    assert.equal(await f.evaluate(() => { const b = document.getElementById('PS-VERSION-LABEL'); return b.disabled && !b.getAttribute('title'); }), true);
+    assert.equal(await f.evaluate(() => [...document.querySelectorAll('a[href^="../tests/"]')].every((l) => l.getBoundingClientRect().width === 0)), true, 'Links ../tests/*.pdf ausgeblendet');
+    // Dynamische Texte: Text beim Einschalten der KI und Fehlertexte (Modelldatei fehlt/beschaedigt)
+    await kiEinschalten(f);
+    const ki = await f.evaluate(() => document.getElementById('aiDefaultText').textContent);
+    assert.doesNotMatch(ki, /ca\. 2 Sekunden/);
+    assert.match(ki, /135 MB/);
+    const grund = await f.evaluate(async () => {
+      const e = await diagnoseAIError(new Error('Could not locate file: 404'));
+      document.getElementById('aiErrorReason').textContent = e.reason;
+      await new Promise((r) => setTimeout(r, 300));
+      return document.getElementById('aiErrorReason').textContent;
+    });
+    assert.doesNotMatch(grund, /neu installieren|Virenschutz|Installation/);
+    assert.match(grund, /Seite neu laden/);
+    assert.deepEqual(unerwartet(a.errors), []);
+    keine404();
+  } finally { await a.close(); }
+});
+
+test('11 Bauskript: gefaehrliche --out-Ziele werden abgelehnt, nichts wird geloescht (nur Wegwerf-Verzeichnisse)', async () => {
+  const bau = await import(pathToFileURL(BAU).href);
+  assert.equal(typeof bau.pruefeZiel, 'function', 'pruefeZiel ist exportiert');
+  const root = '/tmp/ps-fiktiv/projekt', home = '/tmp/ps-fiktiv-home';
+  for (const schlecht of ['/', root, '/tmp/ps-fiktiv', '/tmp', home]) assert.throws(() => bau.pruefeZiel(schlecht, { root, home }), undefined, 'abgelehnt: ' + schlecht);
+  assert.doesNotThrow(() => bau.pruefeZiel(path.join(root, 'dist-web-beta'), { root, home }));
+  // Ablauf ueber die Kommandozeile mit einem fiktiven Projektordner (Symlinks auf app/ und web/; nur Wegwerf-Pfade)
+  const aussen = fs.mkdtempSync(path.join(tmp, 'sicher-'));
+  fs.writeFileSync(path.join(aussen, 'canary.txt'), 'bleibt');
+  const fake = path.join(aussen, 'projekt');
+  fs.mkdirSync(path.join(fake, 'scripts'), { recursive: true });
+  for (const [von, nach] of [['scripts/build-web-beta.mjs', 'scripts/build-web-beta.mjs'], ['scripts/vendor.lock.json', 'scripts/vendor.lock.json'], ['package.json', 'package.json'], ['THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_NOTICES.md']]) fs.copyFileSync(path.join(ROOT, von), path.join(fake, nach));
+  fs.symlinkSync(path.join(ROOT, 'app'), path.join(fake, 'app'));
+  fs.symlinkSync(path.join(ROOT, 'web'), path.join(fake, 'web'));
+  const lauf = (ziel, env = {}) => {
+    try { execFileSync(process.execPath, [path.join(fake, 'scripts', 'build-web-beta.mjs'), '--out', ziel], { encoding: 'utf8', stdio: 'pipe', env: { ...process.env, ...env } }); return 0; } catch (e) { return e.status || 1; }
+  };
+  const heim = fs.mkdtempSync(path.join(tmp, 'heim-'));
+  fs.writeFileSync(path.join(heim, 'canary.txt'), 'bleibt');
+  const fremd = fs.mkdtempSync(path.join(tmp, 'fremd-'));
+  fs.writeFileSync(path.join(fremd, 'canary.txt'), 'bleibt');
+  assert.notEqual(lauf(fake), 0, '--out = Projektordner');
+  assert.ok(fs.existsSync(path.join(fake, 'package.json')), 'Projektordner unversehrt');
+  assert.notEqual(lauf(aussen), 0, '--out = Vorfahr des Projektordners');
+  assert.ok(fs.existsSync(path.join(aussen, 'canary.txt')), 'Vorfahr unversehrt');
+  assert.notEqual(lauf(heim, { HOME: heim, USERPROFILE: heim }), 0, '--out = Home-Verzeichnis');
+  assert.ok(fs.existsSync(path.join(heim, 'canary.txt')), 'Home unversehrt');
+  assert.notEqual(lauf(fremd), 0, '--out = vorhandener fremder Ordner ohne Marker');
+  assert.ok(fs.existsSync(path.join(fremd, 'canary.txt')), 'fremder Ordner unversehrt');
+  // Erlaubt: neuer Ordner, leerer Ordner, frueherer Bau (Marker)
+  const neu = path.join(aussen, 'neu');
+  assert.equal(lauf(neu), 0, 'neuer Ordner');
+  assert.ok(fs.existsSync(path.join(neu, '.web-beta-build')), 'Markerdatei');
+  assert.equal(lauf(neu), 0, 'erneuter Bau ueber Marker');
+  const leer = path.join(aussen, 'leer'); fs.mkdirSync(leer);
+  assert.equal(lauf(leer), 0, 'leerer Ordner');
+});
