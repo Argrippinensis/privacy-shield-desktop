@@ -30,7 +30,7 @@ node scripts/build-web-beta.mjs # -> dist-web-beta/ (oder --out <Ordner>)
 xvfb-run -a node --test --test-concurrency=1 tests/web-beta.test.mjs
 ```
 
-Der Bau nennt Dateizahl und Gesamtgroesse (ca. 36 MiB, 38 Dateien) und bricht ab bei einer Datei ab 25 MiB oder
+Der Bau nennt Dateizahl und Gesamtgroesse (ca. 39,6 MiB, 39 Dateien) und bricht ab bei einer Datei ab 25 MiB oder
 mehr als 2000 Dateien (Grenzen von Cloudflare Pages). Der Test baut in ein Temp-Verzeichnis, serviert es ohne
 COOP/COEP und oeffnet es in Electron ohne preload; Netzzugriffe ausser 127.0.0.1 sind gesperrt, Anfragen an
 huggingface.co werden protokolliert und abgebrochen (Standard-Erkennung muss dann laufen).

@@ -56,7 +56,25 @@ node build.js
 npm test
 ```
 
-Ergebnisse werden nach Abschluss der Läufe ergänzt. Die vollständige Suite enthält bestehende TODOs; diese werden nicht als bestandene Anforderungen gezählt.
+### Ausgeführte Läufe und Ergebnisse
+
+- `npm test` vollständig ausgeführt: **1.624 Tests, 1.609 bestanden, 7 fehlgeschlagen, 7 bestehende SKIP, 1 bestehendes TODO**, Dauer rund 25,5 Minuten. Dieser Langlauf begann während der Umsetzung und ist **kein grüner Abschlusslauf**. Rohprotokoll: [full-suite-intermediate.log](logs/full-suite-intermediate.log).
+- Die sieben Fehlstände wurden anschließend korrigiert und die betroffenen kompletten Testdateien erneut ausgeführt: **61/61 bestanden**. Enthalten: Exporthygiene, Gegenprüfung, Regeln/Policy, native Nachweisspeicherung, Projekt/ZIP, Bericht und Browser-Beta. [affected-regressions-final.log](logs/affected-regressions-final.log).
+- Einordnung der sieben Fehlstände: zwei ältere Exporttests mussten aktuelle Verarbeitung bzw. den nun gemeinsamen Clipboard-Weg berücksichtigen; drei Gegenprüfungs-Texttests wurden durch die präzisere Formulierung wieder kompatibel; die GUI-Berichtserzeugung wurde auf historische erlaubte Moduswerte korrigiert; der Projektlöschtest prüft jetzt ausdrücklich die Sperre und den erforderlichen neuen Lauf. Sicherheits-/Datenschutzanforderungen wurden nicht abgeschwächt.
+- Echte zusätzliche Chromium-Regressionen: **10/10 bestanden**, einschließlich tatsächlicher OCR, Offline-/Cachefälle, Hauptknopf-Kopieren, Rahmenlinks, Reload, Hash-Rennen, Projektrevisionen, PDF-/JSON-Ausgaben und laufbezogenem Fallbackgrund. [chromium-final.log](logs/chromium-final.log).
+- Nach der abschließenden Fallback-Korrektur zusätzlich **12/12 Desktop-/KI-Tests bestanden**, einschließlich tatsächlichem lokalem NER-Lauf, Entladen, fehlendem Modell und Speicher-/Speicherdialog-Fällen. [desktop-ai-final.log](logs/desktop-ai-final.log).
+- Echter Projektabbruch mit verweigertem Nachweis/ZIP: **1/1 bestanden**. [project-abort-final.log](logs/project-abort-final.log).
+- Wiederholung der F1-Fälle mit den fest eingecheckten PDF-Fixtures nach der Schlusskorrektur: **1/1 bestanden**, mit tatsächlicher OCR. [pdf-fixtures-final.log](logs/pdf-fixtures-final.log).
+- Berichtsschema und Konfigurationsprüfungen: **53/53 bestanden**. [report-schema-final.log](logs/report-schema-final.log).
+- PDF-Beispiele: PDF-Text mit `pdftotext` unabhängig extrahiert; UTF-8-Ergebnishash unabhängig nachgerechnet; `pdfinfo` bestätigt je eine A4-Seite; PNG-Rendering visuell auf Graustufen, Umlaute, lange Kennungen und Ränder geprüft. Beispiel-Kernidentität stimmt mit der erzeugten Quellenidentität überein.
+- Browserbau: **39 Dateien, rund 39,6 MiB**, kein Modell im Paket; wiederholter Bau deterministisch (bestehender Buildtest), Website-Kopie bytegleich, Paketdateien per SHA-256 überprüft.
+- Website: `node build.js` bestanden; echter Worker-Test **1/1 bestanden**. Breiter Console-Check **nicht bestanden** (11 Seiten, insbesondere CDN-Fehler `ERR_CERT_AUTHORITY_INVALID`). Separater Smoke-Test: Startseite, PrivacyShield und Yield-Curve bestanden; RAG/SAA/Systemic-Risk scheiterten an Ressourcen-/3D-/Timeoutfehlern. Diese unbeteiligten Tools wurden nicht umgebaut.
+
+Es wurde kein zweiter vollständiger 25-Minuten-Lauf auf dem finalen Stand behauptet; die korrigierten und nachträglich geänderten Bereiche wurden gezielt vollständig erneut geprüft. Bestehende SKIP/TODOs werden nicht als bestandene Anforderungen gezählt. Das TODO betrifft eine bestehende Whitelist-Eigenschaft im Erkennungskern (248/800 synthetische Fälle), nicht einen neuen behobenen Befund dieses Auftrags.
+
+Der breite Website-Gesamtcheck bleibt offen. Die automatische Freigabeprüfung lehnte den Import der öffentlichen Umgebungs-CA in die persistente Chromium/NSS-Vertrauensdatenbank ab: dauerhafte Erweiterung der TLS-Vertrauensbasis ohne ausdrückliche Autorisierung. Der Import wurde nicht vorgenommen, TLS blieb aktiv. Eine optionale Nutzerfreigabe wurde angefragt und liegt derzeit nicht vor.
+
+Verknüpfte Drafts: [gemeinsame Quelle #8](https://github.com/Argrippinensis/privacy-shield-desktop/pull/8), [Website #2](https://github.com/Argrippinensis/arcangeli.eu/pull/2). Die genaue Quellrevision des ausgelieferten Browserpakets und alle Paketprüfsummen stehen im Website-Protokoll. Beide Hauptbranches blieben unverändert.
 
 ## Offene manuelle Abnahmen vor Veröffentlichung
 
