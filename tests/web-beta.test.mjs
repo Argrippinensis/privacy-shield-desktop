@@ -292,3 +292,54 @@ test('7 Kopieren legt den anonymisierten Text in die Zwischenablage (oder ruft e
     else console.error('Hinweis: Zwischenablage in dieser Umgebung nicht lesbar; Ersatzpruefung ueber den Shim');
   } finally { await a.close(); }
 });
+
+// Handy-Layout: alle Bedienelemente im sichtbaren Bereich. Liefert die Liste der Verstoesse (leer = in Ordnung).
+// Geprueft werden Schaltflaechen, Eingabefelder, Auswahllisten, Links und die vier Schrittreiter im Arbeitsbereich:
+// vollstaendig innerhalb der Fensterbreite UND innerhalb jedes abschneidenden Vorfahren (overflow hidden); Elemente in
+// Scrollbereichen (overflow auto/scroll) gelten als erreichbar. Dazu: keine Inhalte, die in Kopfzeilen, Panels und der
+// Schrittleiste ueber den eigenen Rand laufen, und Schaltflaechen der Klasse btn mindestens 40 px hoch.
+function layoutProbe(frame) {
+  return frame.evaluate(() => {
+    const iw = window.innerWidth, probs = [];
+    const name = (el) => (el.id ? '#' + el.id : el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.split(/\s+/)[0] : '')) + ' "' + (el.textContent || el.value || '').replace(/\s+/g, ' ').trim().slice(0, 28) + '"';
+    const sichtbar = (el) => { const cs = getComputedStyle(el), r = el.getBoundingClientRect(); return cs.visibility !== 'hidden' && cs.display !== 'none' && r.width > 0 && r.height > 0 && +cs.opacity > 0; };
+    const ausgenommen = (el) => !!el.closest('#FUNDE, #FUNDEBTN, #TOAST, .sr-only, .skip-link');
+    const inScroller = (el) => { for (let a = el.parentElement; a && a !== document.documentElement; a = a.parentElement) if (/^(auto|scroll)$/.test(getComputedStyle(a).overflowX)) return true; return false; };
+    for (const el of document.querySelectorAll('#WS button, #WS input:not([type=hidden]):not([type=file]), #WS select, #WS textarea, #WS a[href], #WS .step-tab')) {
+      if (!sichtbar(el) || ausgenommen(el) || inScroller(el)) continue;
+      const r = el.getBoundingClientRect();
+      if (r.left < -0.5 || r.right > iw + 0.5) { probs.push('ausserhalb Fenster: ' + name(el) + ' L' + Math.round(r.left) + ' R' + Math.round(r.right)); continue; }
+      for (let a = el.parentElement; a && a !== document.documentElement; a = a.parentElement) {
+        if (!/^(hidden|clip)$/.test(getComputedStyle(a).overflowX)) continue;
+        const ar = a.getBoundingClientRect();
+        if (r.left < ar.left - 1 || r.right > ar.right + 1) { probs.push('abgeschnitten von ' + name(a) + ': ' + name(el) + ' R' + Math.round(r.right) + ' > ' + Math.round(ar.right)); break; }
+      }
+      if (el.tagName === 'BUTTON' && /\bbtn/.test(String(el.className)) && r.height < 39.5) probs.push('zu niedrig (' + Math.round(r.height) + ' px): ' + name(el));
+    }
+    for (const el of document.querySelectorAll('#WS .steps-bar, #WS .step-tab, #WS .tool-panel, #WS .tool-panel-header')) {
+      if (!sichtbar(el) || ausgenommen(el)) continue;
+      if (el.scrollWidth > el.clientWidth + 1) probs.push('Inhalt laeuft ueber: ' + name(el) + ' scrollWidth ' + el.scrollWidth + ' > ' + el.clientWidth);
+    }
+    const sw = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth);
+    if (sw > iw) probs.push('Seite scrollt horizontal: ' + sw + ' > ' + iw);
+    return [...new Set(probs)];
+  });
+}
+
+for (const [breite, hoehe] of [[390, 844], [360, 740]]) {
+  test(`8 Handy-Layout ${breite}x${hoehe}: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich`, async () => {
+    const a = await browser();
+    try {
+      await a.app.evaluate(({ BrowserWindow }, [w, h]) => { BrowserWindow.getAllWindows()[0].setContentSize(w, h); }, [breite, hoehe]);
+      await a.win.waitForFunction((w) => window.innerWidth === w, breite, { timeout: 5000 });
+      const f = await toolFrame(a.win);
+      // Arbeitsbereich mit anonymisiertem Testdokument und Rueckuebersetzung (alle Panels sichtbar)
+      await f.evaluate(async () => { loadTestDoc(); aiCache = { key: null, spans: [] }; await anon(); document.getElementById('AR').value = document.getElementById('AT').value; deanon(); });
+      await a.win.waitForTimeout(800);
+      assert.equal(await f.evaluate(() => document.querySelectorAll('.step-tab').length), 4);
+      const probs = await layoutProbe(f);
+      assert.deepEqual(probs, [], `${breite}x${hoehe}:\n  ` + probs.join('\n  '));
+      assert.equal(await a.win.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'Huelle scrollt horizontal');
+    } finally { await a.close(); }
+  });
+}
