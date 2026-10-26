@@ -1,6 +1,8 @@
-# PrivacyShield Desktop 2.0.0: Freigabeliste (Stand 2026-10-25)
+# PrivacyShield Desktop 2.0.0: Freigabeliste (erstellt 2026-10-25, Stand 2026-10-26: VERÖFFENTLICHT)
 
-Diese Liste ist für Sie geschrieben, ohne Fachsprache. Es ist **nichts veröffentlicht**. Die Version in der App steht weiter auf 1.8.0. Ich veröffentliche erst nach Ihrem schriftlichen "Ja, 2.0.0 veröffentlichen".
+Diese Liste ist für Sie geschrieben, ohne Fachsprache.
+
+**Stand 2026-10-26:** Auf Ihr schriftliches "Ja. 2.0.0. veröffentlichen" hin ist 2.0.0 veröffentlicht (Tag `v2.0.0`, bei GitHub "Latest"). Die Nachkontrolle meldet "Alles in Ordnung", einschließlich eines echten Updates von 1.8.0 auf 2.0.0. Die Website (Desktop-Seite, Startseite, Browser-Seite) ist auf Ihre Freigabe hin aktualisiert, das bestehende Web-Tool ist unverändert. **Noch offen sind nur Ihre Schritte:** die Windows-Handprüfung (Abschnitt 5, Punkt 1), der Test am Handy und die Antwort, über welchen Kanal die Feedback-Bubble Rückmeldungen schicken soll (GitHub Issues oder E-Mail). Der Text unten ist der Stand vor der Veröffentlichung und bleibt zur Nachvollziehbarkeit erhalten.
 
 ## 1. Ergebnis in einem Satz
 
@@ -80,7 +82,7 @@ Details: `CHANGELOG.md`, `docs/benutzerhandbuch.md`.
 - **Unsigniert:** Windows kann bei der Installation eine SmartScreen-Warnung zeigen. Signierung ist für 2.1 vorgesehen und kostenpflichtig (nur auf Ihre Entscheidung).
 - **pdf.js bleibt bei 3.11.174** (Ihre Entscheidung F5, Schutzmaßnahmen: 30-MB-Grenze, kein Netz, kein Skript-Auswerten). Transformers.js 4 bleibt aus.
 - **Manipulierte DOCX-Datei** kann das Programm verlangsamen oder abstürzen lassen (nur Verfügbarkeit, kein Datenabfluss).
-- **Veröffentlichungsablauf:** Der neue Release-Job (nur bei einem Tag, mit Prüfung aller fünf Installationsdateien und Veröffentlichung erst nach Kontrolle) wurde noch **nie echt ausgeführt**, weil er nur bei einem Tag läuft. Die Prüfskripte sind getestet. Falls er beim ersten Mal hakt, bleibt das Release ein Entwurf, nichts Halbes wird sichtbar.
+- **Veröffentlichungsablauf:** Der neue Release-Job (nur bei einem Tag, mit Prüfung aller fünf Installationsdateien und Veröffentlichung erst nach Kontrolle) lief erstmals bei der Beta und bei 2.0.0 und hat beide Male sauber funktioniert. Die Prüfskripte sind getestet. Falls er beim ersten Mal hakt, bleibt das Release ein Entwurf, nichts Halbes wird sichtbar.
 - **Windows-Passwort über Standardeingabe** geht nicht (siehe F9).
 - Offen für 2.1: CLI schreibt Ausgaben nicht atomar (bei Schreibfehler können Teilergebnisse bleiben, Code 6, dokumentiert), englische Oberfläche, dunkles Design, tragbare Version, Signierung, Web-Tool mit gemeinsamem Kern.
 
@@ -92,7 +94,7 @@ Details: `CHANGELOG.md`, `docs/benutzerhandbuch.md`.
 4. `scripts/verify-release.mjs v2.0.0 --upgrade-from v1.8.0 --deep` und Sie führen den Update-Test aus.
 5. Rückfall: Release nie löschen, bei Problemen 2.0.1; bei schwerem Fehler auf Vorab-Version zurückstufen.
 
-Die Website (arcangeli.eu) wird **nicht** angefasst (Ihre Entscheidung vom 12.10.). Download-Seite und Website-Texte sind ein eigener Schritt nach Ihrer Freigabe.
+Website (arcangeli.eu): Das war vor der Veröffentlichung geplant als eigener Schritt nach Ihrer Freigabe. Er ist inzwischen mit Ihrer Freigabe geschehen (nur Desktop-Seite, Startseite und die neue Browser-Beta-Seite; das bestehende Web-Tool ist unverändert).
 
 ## 8. Zusammenarbeit mit GPT
 
