@@ -3,7 +3,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   saveFile: (options) => ipcRenderer.invoke('save-file', options),
   openFile: () => ipcRenderer.invoke('open-file'),
-  saveMetadata: (data) => ipcRenderer.invoke('save-metadata', { data }),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   dismissUpdate: (version) => ipcRenderer.invoke('dismiss-update', version),
   startDownload: () => ipcRenderer.invoke('start-download'),
@@ -13,7 +12,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getUpdateMode: () => ipcRenderer.invoke('get-update-mode'),
   openDownloadPage: () => ipcRenderer.invoke('open-download-page'),
   quitApp: () => ipcRenderer.invoke('quit-app'),
+  getAppInfo: () => ipcRenderer.invoke('get-app-info'),
+  getLicenses: () => ipcRenderer.invoke('get-licenses'),
   getSystemStats: () => ipcRenderer.invoke("get-system-stats"),
+  takeOpenedFiles: () => ipcRenderer.invoke('take-opened-files'),
+  onFilesOpened: (callback) => {
+    ipcRenderer.on('files-opened', () => callback());
+  },
   onUpdateAvailable: (callback) => {
     ipcRenderer.on('update-available', (event, data) => callback(data));
   },
@@ -31,3 +36,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   platform: process.platform
 });
+
+// Kommandozeilenmodus (E1.w): nur fuer die versteckte Seite app://ps/cli.html; der Hauptprozess antwortet zusaetzlich nur im CLI-Modus.
+if (location.protocol === 'app:' && location.pathname === '/cli.html') {
+  contextBridge.exposeInMainWorld('psCli', {
+    nextFile: () => ipcRenderer.invoke('cli-next-file'),
+    result: (msg) => ipcRenderer.invoke('cli-result', msg)
+  });
+}

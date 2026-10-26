@@ -22,7 +22,7 @@ jobs:
       matrix:
         os: [ubuntu-24.04, windows-2022]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: ${{ matrix.os == 'windows-2022' && 45 || 30 }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -36,6 +36,8 @@ jobs:
           key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
       - run: npm ci
       - run: npm run fetch-vendor
+      - name: Unit-Tests
+        run: npm run test:unit
       # Erkennungsqualitaet ist plattformunabhaengig und dauert lange: nur unter Linux messen
       - name: Tests (Linux, mit Erkennungsqualitaet)
         if: runner.os == 'Linux'
@@ -44,6 +46,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           PS_SKIP_EVAL: '1'
+        timeout-minutes: 40
         run: npm test
       - name: Ergebnisse der Erkennungsmessung sichern
         if: always() && runner.os == 'Linux'

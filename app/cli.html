@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>PrivacyShield Kommandozeile</title>
+</head>
+<body>
+  <!-- Verstecktes Fenster des Kommandozeilenmodus: keine Oberflaeche. Der Hauptprozess reicht Dateien herein (cli-next-file) und
+       nimmt Ergebnisse entgegen (cli-result); Pfade, Passwoerter, psmap und Bericht bleiben im Hauptprozess. -->
+  <script src="vendor/pdfjs/pdf.min.js"></script>
+  <script src="vendor/mammoth/mammoth.browser.min.js"></script>
+  <script src="vendor/jszip/jszip.min.js"></script>
+  <script src="lib/placeholder.js"></script><script src="lib/coref.js"></script><script src="lib/leakcheck.js"></script><script src="lib/policy.js"></script>
+  <script src="lib/detect.js"></script><script src="lib/project.js"></script><script src="lib/formats.js"></script><script src="lib/officefmt.js"></script>
+  <script src="lib/reader.js"></script><script src="lib/ner.js"></script><script src="lib/cliplan.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const api = window.psCli;
+      const send = (m) => api.result(m);
+
+      async function shaHex(s) {
+        const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+        return Array.from(new Uint8Array(h), (b) => b.toString(16).padStart(2, '0')).join('');
+      }
+
+      async function main() {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('vendor/pdfjs/pdf.worker.min.js', location.href).href;
+        const reader = PSLib.reader.create({ pdfjsLib: pdfjsLib, mammoth: mammoth, JSZip: JSZip });
+        let r = await api.nextFile();
+        const cfg = r.config;
+        const total = r.total;
+        const prj = PSLib.project.create();
+        const src = [];
+        // 1. Dateien lesen und ins Projekt aufnehmen (gemeinsamer Platzhalterraum)
+        while (r.file) {
+          const f = r.file;
+          let text;
+          try { text = await reader.readText(f.name, f.data); }
+          catch (e) { return send({ type: 'read-error', index: f.index, code: (e && e.code) || 'CORRUPT' }); }
+          if (!text.trim()) return send({ type: 'read-error', index: f.index, code: 'NO_TEXT' });
+          try { PSLib.project.add(prj, { name: String(f.index), text: text }); }
+          catch (e) { return send({ type: 'read-error', index: f.index, code: e && e.code === 'LIMIT' ? (prj.docs.length >= PSLib.project.LIMITS.docs ? 'LIMIT' : 'LIMIT_CHARS') : 'CORRUPT' }); }
+          src.push({ chars: text.length, sha: await shaHex(text) });
+          send({ type: 'beat' });
+          r = await api.nextFile();
+        }
+        // 2. KI laden (nur bei --ai auto); kein stilles Zurueckfallen auf Wortlisten
+        let ner = null;
+        if (cfg.ai === 'auto') {
+          try { ner = await PSLib.ner.createPipeline(cfg.modelId, new URL('ner-worker.js', location.href).href); }
+          catch (e) { return send({ type: 'ai-error' }); }
+        }
+        // 3. Anonymisieren und Gegenpruefung
+        const profile = PSDetect.PROFILES.find((p) => p.id === cfg.profile);
+        const off = cfg.firstPassOff || [];
+        const ents = profile.ents.filter((e) => off.indexOf(e) < 0);
+        const policy = cfg.policy;
+        const policySpans = (text, prof) => (policy && policy.rules.length ? PSLib.policy.toSpans(policy, PSDetect.normalizeForDetection(text), prof) : []);
+        const allEnts = PSDetect.ENTS.map((e) => e.id);
+        let k = 0;
+        const out = await PSLib.project.run(prj, {
+          profile: cfg.profile,
+          anonymize: async (text, o) => {
+            const idx = ++k;
+            const extra = policySpans(text, cfg.profile);
+            let aiSpans = null;
+            if (ner) {
+              const det = PSDetect.normalizeForDetection(text);
+              const plain = PSDetect.maskHard(det, { ents: ents, cvars: [], extraSpans: policySpans(det, cfg.profile) }).replace(/\x00/g, ' ');
+              aiSpans = await PSLib.ner.collectSpans(plain, ner, PSDetect.isStopword, () => send({ type: 'beat' }));
+            }
+            const res = PSDetect.anonymize(text, {
+              ents: ents, cvars: [], extraSpans: extra, whitelist: [], released: [], wordlists: true,
+              aiSpans: aiSpans, state: o.state, reserved: o.reserved,
+            });
+            // Gegenpruefung: Erkennung ein zweites Mal ueber das Ergebnis (alle Typen, ohne Freigaben)
+            const lr = PSLib.leakcheck.scan(res.text, {
+              detect: (t) => PSDetect.detect(t, { ents: allEnts, cvars: [], extraSpans: policySpans(t, cfg.profile), whitelist: [], wordlists: true, aiSpans: null }),
+              whitelist: [], released: [],
+            });
+            if (lr.error) throw new Error('LEAK');
+            const sev = (s) => lr.findings.filter((f) => f.severity === s).length;
+            await send({
+              type: 'doc', index: idx, text: res.text,
+              leak: { count: lr.findings.length, hoch: sev('hoch'), mittel: sev('mittel') },
+              srcChars: src[idx - 1].chars, srcSha256: src[idx - 1].sha,
+            });
+            return res;
+          },
+        });
+        if (ner && ner.worker) ner.worker.terminate();
+        if (out.results.length !== total || out.results.some((x) => x.status !== 'fertig')) return send({ type: 'fail' });
+        return send({ type: 'done', state: { store: out.state.store, cnt: out.state.cnt }, aiLoaded: !!ner });
+      }
+
+      main().catch(() => { send({ type: 'fail' }); });
+    })();
+  </script>
+</body>
+</html>

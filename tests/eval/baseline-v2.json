@@ -1,0 +1,56 @@
+{
+  "wortlisten": {
+    "cases": {
+      "V2-IDENT": 8,
+      "V2-KONTAKT": 0,
+      "V2-GERAET": 0,
+      "V2-STANDORT": 7,
+      "V2-NUMMER": 0,
+      "V2-PERSON": 3,
+      "V2-ART9": 1,
+      "V2-ART10": 0,
+      "V2-FORM": 1,
+      "V2-AUSLAND": 0,
+      "V2-SECRET": 0,
+      "NEG": 6
+    },
+    "synthLeaked": 61,
+    "synthTotal": 860
+  },
+  "fallback": {
+    "cases": {
+      "V2-IDENT": 0,
+      "V2-KONTAKT": 0,
+      "V2-GERAET": 0,
+      "V2-STANDORT": 0,
+      "V2-NUMMER": 0,
+      "V2-PERSON": 0,
+      "V2-ART9": 0,
+      "V2-ART10": 0,
+      "V2-FORM": 0,
+      "V2-AUSLAND": 0,
+      "V2-SECRET": 0,
+      "NEG": 8
+    },
+    "synthLeaked": 0,
+    "synthTotal": 860
+  },
+  "ki": {
+    "cases": {
+      "V2-IDENT": 0,
+      "V2-KONTAKT": 0,
+      "V2-GERAET": 0,
+      "V2-STANDORT": 0,
+      "V2-NUMMER": 0,
+      "V2-PERSON": 0,
+      "V2-ART9": 0,
+      "V2-ART10": 0,
+      "V2-FORM": 0,
+      "V2-AUSLAND": 0,
+      "V2-SECRET": 0,
+      "NEG": 9
+    },
+    "synthLeaked": 0,
+    "synthTotal": 860
+  }
+}

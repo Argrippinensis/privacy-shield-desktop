@@ -9,13 +9,22 @@ und werden mit der Installation ausgeliefert (keine Nachladung aus dem Internet)
 | electron-updater | siehe `package.json` | MIT | https://www.electron.build |
 | Transformers.js (inkl. ONNX Runtime Web) | 3.5.2 | Apache-2.0 / MIT | https://github.com/huggingface/transformers.js |
 | pdf.js | 3.11.174 | Apache-2.0 | https://github.com/mozilla/pdf.js |
-| mammoth.js | 1.6.0 | BSD-2-Clause | https://github.com/mwilliamson/mammoth.js |
-| JSZip | 3.10.1 | MIT oder GPL-3.0-or-later (hier: MIT) | https://github.com/Stuk/jszip |
-| jsPDF | 2.5.1 | MIT | https://github.com/parallax/jsPDF |
-| Tesseract.js | 5.1.1 | Apache-2.0 | https://github.com/naptha/tesseract.js |
-| Tesseract.js Core | 5.1.1 | Apache-2.0 | https://github.com/naptha/tesseract.js-core |
+| mammoth.js | 1.13.0 | BSD-2-Clause | https://github.com/mwilliamson/mammoth.js |
+| JSZip | 3.10.2 | MIT oder GPL-3.0-or-later (hier: MIT) | https://github.com/Stuk/jszip |
+| jsPDF | 4.2.1 | MIT | https://github.com/parallax/jsPDF |
+| Tesseract.js | 7.0.0 | Apache-2.0 | https://github.com/naptha/tesseract.js |
+| Tesseract.js Core | 7.0.0 | Apache-2.0 | https://github.com/naptha/tesseract.js-core |
 | Tesseract-Sprachdaten deu, eng (best_int) | 4.0.0 | Apache-2.0 | https://github.com/tesseract-ocr/tessdata_best |
 | Tailwind CSS (nur beim Bau, erzeugt `app/css/tailwind.css`) | 3.4.17 | MIT | https://tailwindcss.com |
+
+## Nur Entwicklung (Tests), wird nicht ausgeliefert
+
+| Komponente | Version | Lizenz | Quelle |
+|---|---|---|---|
+| axe-core (Entwicklungsabhaengigkeit fuer die Barrierefreiheits-Tests) | 4.14.0 | MPL-2.0 | https://github.com/dequelabs/axe-core |
+
+axe-core liegt nur in `node_modules` (`devDependencies`) und wird weder in das Programm noch in den Installer aufgenommen
+(`build.files` in `package.json` enthaelt `node_modules` nicht).
 
 ## KI-Modell zur Erkennung von Namen, Organisationen und Orten
 

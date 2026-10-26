@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:,">
+  <title>PrivacyShield 2.0 Beta (Browser)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #f5f5f5; color: #1f2933; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    /* Spalte: Leiste, Hinweis, Werkzeug (fuellt den Rest der Hoehe; dvh beachtet die Adressleiste am Handy) */
+    #app { display: flex; flex-direction: column; width: 100%; height: 100vh; height: 100dvh; }
+    :focus-visible { outline: 2px solid #1a3a5c; outline-offset: 2px; box-shadow: 0 0 0 5px #fff; }
+    .bar :focus-visible { outline-color: #fff; box-shadow: 0 0 0 4px #1a3a5c; }
+
+    .bar { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 20px; background: #1a3a5c; color: #fff; padding: 4px 16px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+    .bar h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.01em; line-height: 1.3; padding: 8px 0; }
+    .bar h1 span { font-weight: 400; opacity: 0.8; }
+    .bar nav { display: flex; flex-wrap: wrap; column-gap: 4px; }
+    .bar nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; color: #fff; font-size: 13px; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.45); text-underline-offset: 3px; }
+    .bar nav a:hover { text-decoration-color: #fff; }
+
+    .note { flex: none; background: #eef2f6; border-bottom: 1px solid #d6dee7; font-size: 13px; line-height: 1.5; color: #334155; padding: 0 16px; }
+    .note summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; gap: 8px; list-style: none; font-weight: 400; color: #1a3a5c; }
+    .note summary strong { font-weight: 600; }
+    .note summary::-webkit-details-marker { display: none; }
+    .note summary::after { content: "Mehr"; margin-left: auto; font-weight: 400; font-size: 12px; color: #1a3a5c; text-decoration: underline; text-underline-offset: 3px; flex: none; }
+    .note[open] summary::after { content: "Weniger"; }
+    .note summary > span { padding: 8px 0; display: block; }
+    .note-text { max-height: 28dvh; max-height: 28vh; overflow-y: auto; padding-bottom: 6px; }
+    .note p { padding: 0 0 8px; max-width: 70ch; }
+
+    .stage { position: relative; flex: 1 1 auto; min-height: 0; background: #fff; }
+    #tool-frame { display: block; width: 100%; height: 100%; border: none; background: #fff; }
+    #loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 12px; background: #fff; color: #475569; font-size: 14px; pointer-events: none; }
+    #loading::before { content: ""; width: 18px; height: 18px; border: 2px solid #cbd5e1; border-top-color: #1a3a5c; border-radius: 50%; animation: drehen 0.9s linear infinite; }
+    #loading[hidden] { display: none; }
+    @keyframes drehen { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #loading::before { animation: none; } }
+    @media (max-width: 520px) {
+      .bar { padding-top: 2px; padding-bottom: 2px; }
+      .bar h1 { font-size: 14px; padding: 6px 0 0; width: 100%; }
+      .bar nav { width: 100%; margin-left: -10px; }
+    }
+  </style>
+  <!-- Bruecke vor dem Werkzeug: das Iframe greift ueber window.parent.electronAPI darauf zu -->
+  <script src="browser-api.js"></script>
+  <script src="tool-anpassung.js"></script>
+  <script>
+    // Erster Besuch: Hinweis aufgeklappt (Zustand der Huelle unter psweb_*), und die KI-Erkennung ist zunaechst AUS,
+    // damit nichts (135 MB) ohne Zutun geladen wird. Eine schon vorhandene Einstellung des Werkzeugs bleibt unberuehrt.
+    // Muss vor dem Iframe laufen: das Werkzeug liest ps_ai_mode beim Start.
+    var PSWEB_ERSTER_BESUCH = true;
+    try {
+      PSWEB_ERSTER_BESUCH = localStorage.getItem('psweb_hinweis_gesehen') === null;
+      if (PSWEB_ERSTER_BESUCH) localStorage.setItem('psweb_hinweis_gesehen', '1');
+      if (localStorage.getItem('ps_ai_mode') === null) localStorage.setItem('ps_ai_mode', 'off');
+    } catch (e) { /* Speicher gesperrt: Hinweis bleibt aufgeklappt, das Werkzeug meldet es selbst */ }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <header class="bar">
+      <h1>PrivacyShield 2.0 Beta <span>(Browser)</span></h1>
+      <nav aria-label="Weitere Versionen">
+        <a href="/tools/privacyshield-redesigned.html">Zur stabilen Version</a>
+        <a href="/desktop/#beta">Desktop-Version</a>
+      </nav>
+    </header>
+    <details class="note" id="hinweis">
+      <summary><span><strong>Vorabversion zum Ausprobieren, nicht für wichtige Dokumente.</strong> Ihre Dokumente bleiben im Browser; nur das KI-Modell wird einmalig aus dem Internet geladen.</span></summary>
+      <div class="note-text">
+        <p>Ihre Dokumente werden ausschließlich in Ihrem Browser verarbeitet und weder an uns noch an Dritte gesendet.</p>
+        <p>Die KI-Erkennung ist zunächst ausgeschaltet. Sie schalten sie mit dem Häkchen im Panel „KI-Erkennung“ ein. Dann lädt Ihr Browser das Sprachmodell (ca. 135 MB, besser im WLAN) von huggingface.co. Dabei erfährt Hugging Face Ihre IP-Adresse, aber keine Inhalte. Das Modell wird danach in den Websitedaten dieses Browsers abgelegt und lässt sich in den Browsereinstellungen löschen; Safari löscht es nach 7 Tagen ohne Nutzung. Ohne Modell arbeitet die Standard-Erkennung (Regeln und Wortlisten).</p>
+        <p>Eigene Regeln werden ebenfalls in den Websitedaten dieses Browsers gespeichert.</p>
+        <p>Aussagen im Werkzeug wie Flugmodus-tauglich, Kein Serverkontakt und ohne Internet gelten für die Desktop-Version; im Browser gelten sie erst, wenn Seite und Modell einmal geladen sind.</p>
+      </div>
+    </details>
+    <main class="stage">
+      <iframe id="tool-frame" title="PrivacyShield Werkzeug" src="privacy-shield.html" allow="clipboard-write"></iframe>
+      <div id="loading" role="status">PrivacyShield wird geladen ...</div>
+    </main>
+  </div>
+  <script>
+    (function () {
+      var f = document.getElementById('tool-frame');
+      var l = document.getElementById('loading');
+      // Beim ersten Besuch aufgeklappt, danach eingeklappt
+      if (PSWEB_ERSTER_BESUCH) document.getElementById('hinweis').open = true;
+      // Das Werkzeug bleibt unveraendert; Texte und Layout werden zur Laufzeit im (gleichen Ursprung) Iframe angepasst
+      function fertig() {
+        try { PSWebAnpassung.anwenden(f.contentDocument); } catch (e) { /* anderer Ursprung: nichts tun */ }
+        l.hidden = true;
+      }
+      f.addEventListener('load', fertig);
+      if (f.contentDocument && f.contentDocument.readyState === 'complete' && f.contentWindow.location.href !== 'about:blank') fertig();
+    })();
+  </script>
+</body>
+</html>
