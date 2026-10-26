@@ -46,7 +46,7 @@ async function importPdf(bytes) {return f.evaluate(async b=>{try {const text=awa
 test('F1: native, mixed, scan, blank, unclear graphic and corrupt real PDFs',async()=>{
   await fresh();
   for(const kind of ['native','mixed','scan','blank','graphic']) {
-    const bytes=await pdf(kind);fs.mkdirSync('tests/fixtures/issue-1',{recursive:true});fs.writeFileSync('tests/fixtures/issue-1/'+kind+'.pdf',Buffer.from(bytes));
+    const bytes=Array.from(fs.readFileSync('tests/fixtures/issue-1/'+kind+'.pdf'));
     const r=await importPdf(bytes);
     if(kind==='graphic')assert.match(r.error,/Grafik|unklar/);
     else {assert.equal(r.coverage.complete,true);if(kind==='mixed'){assert.match(r.text,/text@example.invalid/);assert.match(r.text,/scan@example.invalid/);assert.equal(r.coverage.pages.length,2);}if(kind==='scan')assert.match(r.text,/scan@example.invalid/);if(kind==='blank')assert.match(r.coverage.pages[0].method,/Leerseite/);}
@@ -133,4 +133,10 @@ test('F3 reload/tab close and aborted download confirmation retain unsaved prote
   await f.evaluate(async()=>{const c=window.confirm;window.confirm=()=>false;mapAfterSave(Promise.resolve(true),stateRev,'ok','failed');await new Promise(r=>setTimeout(r,0));window.confirm=c;});assert.equal(await f.evaluate(()=>psMapUnsaved()),true);
   await f.evaluate(()=>{mapSaved=true;psSyncProtection();});assert.equal(await f.evaluate(()=>psUnloadActive),false);
   await f.evaluate(()=>{stateTouch();psSyncProtection();});assert.equal(await f.evaluate(()=>psUnloadActive),true);
+});
+
+test('fallback reason belongs to the completed run, including memory hint after a previous unrelated error',async()=>{
+  await fresh();await f.evaluate(()=>{setAIMode('auto');aiFailedAt=0;lastAIError={code:'NETWORK',reason:'Previous unrelated error'};checkMemoryHint=async()=>true;});await run();
+  const e=await f.evaluate(()=>psEvidence());assert.match(e.fallback,/Arbeitsspeicher/);assert.ok(!e.fallback.includes('Previous'));assert.equal(e.modelId,null);
+  await f.evaluate(()=>{lastAIError={reason:'Later error'};});assert.equal((await f.evaluate(()=>psEvidence())).fallback,e.fallback);
 });

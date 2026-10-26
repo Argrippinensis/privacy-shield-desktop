@@ -2953,7 +2953,7 @@
         if (prjBusy || !prj || !prj.docs.length) return;
         if (prjZipBusy) return toast("ZIP wird erstellt, bitte warten", "e");
         if (anonBusy) return toast("Analyse läuft bereits...", "s");
-        psUsedAI = false;
+        psUsedAI = false; psRunFallback = null;
         const processingSignature = psSignature(true);
         prjBusy = anonBusy = true;
         stateTouch();
@@ -3392,10 +3392,12 @@
       }
       // Vor jeder Analyse: Modell bei Bedarf laden, ausser bei wenig Arbeitsspeicher
       async function ensureAIReady() {
-        if (aiMode() !== "auto" || nerPipeline || aiLoading) return;
-        if (Date.now() - aiFailedAt < 60000) return;
-        if (await checkMemoryHint()) return;
+        if (aiMode() !== "auto" || nerPipeline) return;
+        if (aiLoading) { psRunFallback = { code: "LOADING", reason: "Modell wird noch geladen; dieser Lauf verwendet Regeln und Wortlisten." }; return; }
+        if (Date.now() - aiFailedAt < 60000) { psRunFallback = { code: lastAIError?.code || "NOT_AVAILABLE", reason: "Nach fehlgeschlagenem Modellstart vorübergehend Standard-Erkennung: " + (lastAIError?.reason || "Modell nicht verfügbar") }; return; }
+        if (await checkMemoryHint()) { psRunFallback = { code: "MEMORY", reason: "Modell wegen geringem gemeldeten Arbeitsspeicher nicht automatisch gestartet." }; return; }
         await loadAIModel();
+        if (!nerPipeline) psRunFallback = { code: lastAIError?.code || "NOT_AVAILABLE", reason: lastAIError?.reason || "Modellstart für diesen Lauf fehlgeschlagen." };
       }
       function scheduleAIIdleUnload() {
         clearTimeout(aiIdleTimer);
@@ -3722,7 +3724,7 @@
         // K1.fix: im Projektmodus gemeinsamer Zustand, daher immer das ganze Projekt neu rechnen (kein veralteter Altstand)
         if (prj && prjRes.size) return prjRun();
         anonBusy = true;
-        psUsedAI = false;
+        psUsedAI = false; psRunFallback = null;
         const processingSignature = psSignature(true);
         stateTouch();
         repStart = new Date(); repDur = 0;

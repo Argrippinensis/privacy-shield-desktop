@@ -1,5 +1,5 @@
 // GUI evidence: only the explicit fields in psEvidence may leave process memory.
-let psRun = null, psImport = null, psProjectImportFailed = false, psHuman = false, psPreviewNode = null, psUsedAI = false;
+let psRun = null, psImport = null, psProjectImportFailed = false, psHuman = false, psPreviewNode = null, psUsedAI = false, psRunFallback = null;
 const psPrjImports = new Map();
 function psInvalidate() { psRun = null; psHuman = false; if (psPreviewNode) { psPreviewNode.remove(); psPreviewNode = null; } }
 function psSignature(configOnly = false) {
@@ -31,10 +31,10 @@ function psCapture() {
   if (checks.some(c => c.error)) return;
   psHuman = false;
   psRun = { id: crypto.randomUUID(), created: new Date().toISOString(), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    requestedMode: aiMode(), fallbackCode: !psUsedAI && aiMode() !== "off" ? (lastAIError?.code || "NOT_AVAILABLE") : null,
+    requestedMode: aiMode(), fallbackCode: !psUsedAI && aiMode() !== "off" ? (psRunFallback?.code || "NOT_AVAILABLE") : null,
     profile: curProf, categories: activeEntIds().slice(), mode: psUsedAI ? 'Regeln, Wortlisten und NER-Modell' : 'Regeln und Wortlisten',
     modelId: psUsedAI ? AI_MODEL_ID : null, modelRevision: psUsedAI ? PS_BUILD.modelRevision : null,
-    fallback: !psUsedAI && aiMode() !== 'off' ? (lastAIError ? lastAIError.reason : 'Modell für diesen Lauf nicht verfügbar') : null,
+    fallback: !psUsedAI && aiMode() !== 'off' ? (psRunFallback?.reason || 'Modell für diesen Lauf nicht verfügbar') : null,
     version: APP_VERSION, core: PS_BUILD.coreSha256,
     documents: results.map((text, i) => ({ text, index: i + 1, inputChars: docs[i].text.length, coverage: structuredClone(coverage[i]), counts: prjCounts(text), check: checks[i] })), signature: psSignature() };
 }
