@@ -1,7 +1,9 @@
 // Genuine shared UI/model, no original employment documents and no external service launched.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import http from 'node:http';import path from 'node:path';import {execFileSync} from 'node:child_process';import {chromium} from 'playwright-core';
 import {launchApp,toolFrame} from './helpers.mjs';
-const text=fs.readFileSync(new URL('./fixtures/employment/synthetic-contract.txt',import.meta.url),'utf8');
+// Textarea values use LF even when Git checks the fixture out as CRLF on Windows.
+// Compare the exact UI input; pure-core tests separately cover original line endings.
+const text=fs.readFileSync(new URL('./fixtures/employment/synthetic-contract.txt',import.meta.url),'utf8').replace(/\r\n/g,'\n');
 function verify(out){for(const s of ['apoBank','apoBalance','Bank der Gesundheit','Apotheker','Ärztebank','Arztebank','Beispiel-Straße','Düsseldorf','Tarifgruppe C2','Berufsjahr 1','Team II','39 h','30 Urlaubstage','6 Monate','2 Jahre','Bachelor of Arts'])assert.ok(!out.includes(s),'unmasked '+s);for(const s of ['Probezeit','Befristung','Freistellung','Arbeitsverhältnis','Geschäftsgeheimnisse','§ 8','§ 23 GeschGehG'])assert.ok(out.includes(s),'readability: '+s);}
 for(const model of [false,true])test('Desktop: synthetic contract, current evidence and exact roundtrip with real NER='+model,{timeout:120000},async()=>{
   const a=await launchApp({offline:true});try{
