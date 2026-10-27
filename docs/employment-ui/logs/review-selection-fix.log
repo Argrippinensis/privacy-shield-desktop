@@ -1,0 +1,43 @@
+✔ Desktop: synthetic contract, current evidence and exact roundtrip with real NER=false (1423.53175ms)
+✔ Desktop: synthetic contract, current evidence and exact roundtrip with real NER=true (5377.890806ms)
+✔ Desktop: actual provider link launches immediately and uses only fixed service IDs (1406.138846ms)
+✔ Mobile browser: first click requests direct app link before clipboard finishes; explicit web fallback, no prompt URL or second modal (2844.283833ms)
+✔ New optional review categories follow the explicit selection; existing comprehensive checks remain active (861.209736ms)
+✔ F2 native save dialog: changed revision never writes an evidence file; cancel does not succeed (4318.370168ms)
+✔ evidence records actual local NER use and keeps model history after unloading (3687.019745ms)
+✔ Seitenleiste #FUNDE laesst sich ueber toggleFunde und den Knopf #FUNDEBTN ein- und ausklappen (1191.665587ms)
+✔ Liste zeigt den Eintrag NAME "Anton Beispiel" mit Platzhalter, Wert und der Zaehlung der Erkennung (1051.786045ms)
+✔ Wert freigeben: #AT enthaelt ihn im Klartext, Gegenpruefung zaehlt ihn als Freigabe und nicht als Fund (1336.612178ms)
+✔ Freigabe von "Berlin" (ORT) gibt "Berliner Allee 5" nicht frei (exakter Vergleich statt Teilzeichenfolge) (1506.155862ms)
+✔ Erneutes Maskieren stellt den Platzhalter wieder her (1849.441714ms)
+✔ Reload der Seite verwirft den Zustand: keine Freigaben, keine Funde, nichts in Speicher oder Ablage (1626.366527ms)
+✔ fund-jump markiert die erste Fundstelle in #IT, Fokus bleibt am Eintrag (1083.04477ms)
+✔ fund-jump scrollt #IT zur ersten Fundstelle in einem langen Text (1139.846498ms)
+✔ Originalwert ist nur in der Seitenleiste sichtbar, nicht in Ergebnis, Gegenpruefung und Bericht (970.929604ms)
+✔ Gruppenschalter "alle dieses Typs" gibt alle Eintraege eines Typs frei und maskiert sie wieder, andere Typen bleiben unberuehrt (1584.887256ms)
+✔ Zaehlung der Liste fuer rund 6.000 Entitaeten dauert unter 300 ms (1254.435806ms)
+✔ N1 clearAll bei geschlossener Leiste: released leer, Liste ohne Eintraege, Abzeichen leer (1425.100954ms)
+✔ N2a Freigabe klicken und sofort zuruecksetzen: kein Fehler-Toast "Kein Text vorhanden" (1861.640727ms)
+✔ N2b Freigabe klicken, sofort zuruecksetzen, neuen Text einfuegen: keine automatische Anonymisierung (1804.510164ms)
+✔ N3a Projektmodus: Leiste zeigt nach Dokumentwechsel die Funde des aktuellen Dokuments (2611.630989ms)
+✔ N3b Projektmodus: Freigabe gilt in beiden Dokumenten (2769.997902ms)
+✔ N4 fund-jump nach manuellem Bearbeiten von #IT (Text davor eingefuegt): Auswahl trifft weiter den Wert (1821.368102ms)
+✔ N5 Liste ist nach Konfigurationsaenderung aktuell: ausgeschaltete Entitaet verschwindet nach Schliessen und Oeffnen (1249.20799ms)
+✔ N6a Entscheidung waehrend ZIP-Erstellung markiert Projektergebnisse als veraltet (2052.653437ms)
+✔ N6b Entscheidung waehrend laufendem Projektlauf: Ergebnisse veraltet oder erneuter Lauf vorgemerkt (1998.886184ms)
+✔ N7 Freigabe ohne vorherige Anonymisierung (#AT leer) startet keine Anonymisierung (2020.975835ms)
+✔ N8 Sicherheit: Fundwert mit HTML und Anfuehrungszeichen erzeugt kein Element und zerstoert data-key nicht (1345.827209ms)
+✔ N9a Gross-/Kleinschreibung: Freigabe von "Zwiebelbaum" gibt "zwiebelbaum" nicht frei (1333.88745ms)
+✔ N9b Typbindung: Freigabe { ORG, Berlin } gibt den ORT "Berlin" nicht frei (1359.831723ms)
+✔ N10a Tastatur: Enter und Leertaste am fund-toggle schalten, Fokus bleibt am selben Eintrag (1577.914259ms)
+✔ N10b aria: Gruppenschalter traegt ein aria-label mit dem Typ, #FUNDELIST ist keine aria-live-Region (945.024765ms)
+✔ N11 Originalwert steht weder in Toasts noch in der Diagnose-Kopie noch in Dateinamen von Downloads (2361.208108ms)
+✔ N12 Persistenz: localStorage und sessionStorage enthalten schon VOR dem Reload keinen Fundwert (2062.656029ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65983.279167

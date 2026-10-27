@@ -3658,7 +3658,7 @@
       // Gegenpruefung: Erkennung ein zweites Mal ueber das Ergebnis (alle Typen, ohne Freigaben)
       function leakScan(at) {
         const mk = PSLib.marks.toCvars(manualMarks);
-        return PSLib.leakcheck.scan(at, { detect: (t) => PSDetect.detect(t, { ents: ENTS.map((e) => e.id), cvars: cvars.concat(mk), extraSpans: policySpans(t), whitelist: [], wordlists: localAIMode, aiSpans: null }), whitelist: whitelist, released: released });
+        return PSLib.leakcheck.scan(at, { detect: (t) => PSDetect.detect(t, { ents: ENTS.filter((e) => e.on || !["employment", "identity"].includes(e.id)).map((e) => e.id), cvars: cvars.concat(mk), extraSpans: policySpans(t), whitelist: [], wordlists: localAIMode, aiSpans: null }), whitelist: whitelist, released: released });
       }
       function runLeakCheck() { const at = document.getElementById("AT").value;
         const r = leakScan(at);

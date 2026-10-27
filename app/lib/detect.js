@@ -2042,7 +2042,7 @@
           }
         }
         for (const x of extraSpans) pass1.push(Object.assign({}, x));
-        if (activeEnts.has("org")) pass1.push(...EMP.employerSpans(text));
+        if (activeEnts.has("org")) for (const span of EMP.employerSpans(text)) pass1.push(span);
         for (const e of ENTS) {
           if (!activeEnts.has(e.id) || !HARD_ENT_IDS.has(e.id)) continue;
           for (const srcRx of e.rx) {

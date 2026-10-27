@@ -40,3 +40,15 @@ test('Mobile browser: first click requests direct app link before clipboard fini
   }finally{await c.close();}}
  }finally{await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));}
 });
+
+
+test('New optional review categories follow the explicit selection; existing comprehensive checks remain active',async()=>{
+ const a=await launchApp({offline:true});try{const f=await toolFrame(a.win);const r=await f.evaluate(()=>{
+   setAIMode('off');applyProfile(PROFILES.find(p=>p.id==='standard'));
+   const standard=leakScan('Herrn 39 h');const legacy=leakScan('synthetic@example.invalid');
+   applyProfile(PROFILES.find(p=>p.id==='employment'));
+   const contract=leakScan('Herrn 39 h');
+   return {standard,legacy,contract};
+ });assert.ok(!r.standard.findings.some(x=>['MERKMAL','KONDITION'].includes(x.type)));assert.ok(r.contract.findings.some(x=>x.type==='MERKMAL'));assert.ok(r.contract.findings.some(x=>x.type==='KONDITION'));assert.ok(r.legacy.findings.some(x=>x.type==='EMAIL'));
+ }finally{await a.close();}
+});
