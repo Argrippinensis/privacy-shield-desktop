@@ -117,14 +117,14 @@ const keine404 = () => assert.deepEqual([...nichtGefunden], [], 'lokale Pfade ni
 const kiEinschalten = (f) => f.evaluate(() => { loadTestDoc(); const t = document.getElementById('aiAutoToggle'); t.click(); return t.checked; });
 
 // Vom Werkzeug per <script> geladene lib-Dateien (ohne CLI- und Leser-Module, die es im Browser nicht gibt)
-const LIB = ['placeholder', 'coref', 'leakcheck', 'marks', 'report', 'policy', 'detect', 'history', 'review', 'hygiene', 'psmap', 'project', 'formats', 'officefmt'].map((n) => 'lib/' + n + '.js');
+const LIB = ['ai-services', 'employment', 'placeholder', 'coref', 'leakcheck', 'marks', 'report', 'policy', 'detect', 'history', 'review', 'hygiene', 'psmap', 'project', 'formats', 'officefmt'].map((n) => 'lib/' + n + '.js');
 const MODELL_REV = 'c2a4dbf593c57f47004c5bc2d3770d311aee9c43';
 
 test('1 Bau: exakte Dateiliste, byteidentische Kopien, Browser-Worker mit Pin, Groessen, deterministisch', () => {
   const dateien = alleDateien(out);
   // erwartete Liste (Allowlist): Huelle, Shim, Anpassung, Worker, Werkzeug, Hinweise, Markerdatei, css, lib (nur geladene), vendor (ohne .map/.md)
   const vendor = alleDateien(path.join(ROOT, 'app', 'vendor')).filter((f) => !/\.(map|md)$/.test(f)).map((f) => 'vendor/' + f);
-  const erwartet = ['.web-beta-build', 'THIRD_PARTY_NOTICES.md', 'browser-api.js', 'css/tailwind.css', 'index.html', ...LIB, 'ui/build-identity.js', 'ui/evidence-ui.js', 'ner-worker.js', 'privacy-shield.html', 'tool-anpassung.js', ...vendor].sort();
+  const erwartet = ['.web-beta-build', 'THIRD_PARTY_NOTICES.md', 'browser-api.js', 'css/tailwind.css', 'index.html', ...LIB, 'ui/build-identity.js', 'ui/evidence-ui.js', 'ui/local-status.js', 'offline-controller.js', 'offline-data.js', 'offline-worker.js', 'manifest.webmanifest', 'app-icon.png', 'ner-worker.js', 'privacy-shield.html', 'tool-anpassung.js', ...vendor].sort();
   assert.deepEqual(dateien, erwartet, 'Dateiliste des Baus weicht von der Allowlist ab');
   const gleich = (rel, quelle) => assert.equal(hash(path.join(out, rel)), hash(path.join(ROOT, quelle)), rel + ' muss byteidentisch zu ' + quelle + ' sein');
   gleich('privacy-shield.html', 'app/privacy-shield.html');
@@ -213,7 +213,7 @@ test('3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in 
       'Browser können zwischengespeicherte Ressourcen eigenständig löschen.',
       'Ohne Modell arbeitet die Standard-Erkennung (Regeln und Wortlisten).',
       'Eigene Regeln werden ebenfalls in den Websitedaten dieses Browsers gespeichert.',
-      'Flugmodus-tauglich, Kein Serverkontakt und ohne Internet gelten für die Desktop-Version',
+      'Browser-App einschließlich PDF/OCR ausdrücklich offline vorbereiten',
       'KI-Erkennung',
     ]) assert.ok(kopf.text.includes(satz), 'Langtext fehlt: ' + satz);
     // Das Werkzeug blendet den Update-Knopf nicht als Knopf ein: die Version bleibt, ist aber nicht bedienbar
@@ -487,6 +487,8 @@ test('11 Bauskript: gefaehrliche --out-Ziele werden abgelehnt, nichts wird geloe
   fs.writeFileSync(path.join(aussen, 'canary.txt'), 'bleibt');
   const fake = path.join(aussen, 'projekt');
   fs.mkdirSync(path.join(fake, 'scripts'), { recursive: true });
+  fs.mkdirSync(path.join(fake, 'assets'), { recursive: true });
+  fs.copyFileSync(path.join(ROOT, 'assets/icon.png'), path.join(fake, 'assets/icon.png'));
   for (const [von, nach] of [['scripts/build-identity.mjs', 'scripts/build-identity.mjs'], ['scripts/build-web-beta.mjs', 'scripts/build-web-beta.mjs'], ['scripts/vendor.lock.json', 'scripts/vendor.lock.json'], ['package.json', 'package.json'], ['THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_NOTICES.md']]) fs.copyFileSync(path.join(ROOT, von), path.join(fake, nach));
   fs.symlinkSync(path.join(ROOT, 'app'), path.join(fake, 'app'));
   fs.symlinkSync(path.join(ROOT, 'web'), path.join(fake, 'web'));

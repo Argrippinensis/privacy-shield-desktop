@@ -1,0 +1,13 @@
+✔ Desktop: synthetic contract, current evidence and exact roundtrip with real NER=false (1360.751298ms)
+✔ Desktop: synthetic contract, current evidence and exact roundtrip with real NER=true (4586.008106ms)
+✔ Desktop: actual provider link launches immediately and uses only fixed service IDs (1263.685568ms)
+✔ Mobile browser: first click requests direct app link before clipboard finishes; explicit web fallback, no prompt URL or second modal (3235.752567ms)
+✔ New optional review categories follow the explicit selection; existing comprehensive checks remain active (929.143072ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11691.926125

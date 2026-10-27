@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "id": "b8648c3d-1482-45e5-99ab-7f755489b8bc",
+  "created": "2026-10-27T07:40:05.520Z",
+  "timezone": "UTC",
+  "clock": "Zeitangabe dieses Geräts",
+  "product": "PrivacyShield",
+  "version": "2.0.1",
+  "coreSha256": "b8e00c13f515a7963fd59f8af10eba5aae10474bdd126759a9ea595388d1ba1c",
+  "operation": "Pseudonymisierung",
+  "profile": "employment",
+  "categories": [
+    "email",
+    "iban",
+    "card",
+    "device",
+    "account",
+    "geo",
+    "intlid",
+    "bic",
+    "phone",
+    "employment",
+    "identity",
+    "money",
+    "date",
+    "taxid",
+    "org",
+    "addr",
+    "vehicle",
+    "name",
+    "ip"
+  ],
+  "mode": "Regeln und Wortlisten",
+  "modelId": null,
+  "modelRevision": null,
+  "fallback": null,
+  "documentCount": 1,
+  "counting": "Ersetzte Vorkommen je Kategorie im Ergebnis; wörtliche Originalplatzhalter ausgeschlossen",
+  "documents": [
+    {
+      "index": 1,
+      "inputChars": 673,
+      "import": {
+        "complete": true,
+        "kind": "Manuelle Texteingabe",
+        "pages": [],
+        "warnings": [
+          "Umfang bezieht sich auf den eingegebenen Text."
+        ]
+      },
+      "replacements": {
+        "ORG": 4,
+        "ADRESSE": 1,
+        "ORT": 1,
+        "DATUM": 1,
+        "NAME": 1,
+        "MERKMAL": 1,
+        "KONDITION": 7,
+        "BETRAG": 1
+      },
+      "check": {
+        "mechanism": "Regeln und Wortlisten ohne KI; keine Vollständigkeitsgarantie",
+        "remaining": 2,
+        "released": 0,
+        "error": false
+      },
+      "result": {
+        "encoding": "UTF-8",
+        "format": "Pseudonymisierter Ergebnistext, unverändert; kein BOM",
+        "sha256": "ee35e7b2f47fe545ccdff8b69670ae663513ec30806428abbe5de20c54809f39"
+      }
+    }
+  ],
+  "humanReview": "Menschliche Sichtprüfung: nicht bestätigt",
+  "notice": "Dieser Nachweis dokumentiert den angegebenen lokalen Pseudonymisierungsschritt mit PrivacyShield. Er bestätigt weder die vollständige Entfernung aller personenbezogenen Informationen noch die DSGVO-Konformität weiterer Verarbeitungsschritte. Kein DSGVO-Zertifikat, externes Audit oder Echtheitsnachweis. SHA-256 ist eine Prüfsumme, keine digitale Signatur."
+}

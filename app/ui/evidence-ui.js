@@ -111,7 +111,7 @@ function psSyncProtection() {
 function psGuardNavigation(e) {
   if (!window.parent.electronAPI || window.parent.electronAPI.platform !== "web") return;
   const link = e.target.closest('a[href]');
-  if (!link || link.hasAttribute('download') || link.getAttribute('href').startsWith('#') || !psMapUnsaved()) return;
+  if (!link || link.dataset.psService === 'true' || link.hasAttribute('download') || link.getAttribute('href').startsWith('#') || !psMapUnsaved()) return;
   e.preventDefault();
   const dlg = document.createElement('dialog'), p = document.createElement('p'); dlg.setAttribute('aria-label', 'Ungesicherte Zuordnung');
   p.textContent = 'Ungesicherte Zuordnung: Ohne Datei können Platzhalter nicht zurückübersetzt werden. Ein gestarteter Download bestätigt keine Speicherung.'; dlg.append(p);

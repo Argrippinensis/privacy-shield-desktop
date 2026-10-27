@@ -362,6 +362,26 @@ handle('open-file', async () => {
 
 handle('get-app-version', () => app.getVersion());
 
+// Only fixed destinations, never document text, prompts or caller-provided URLs.
+handle('open-ai-service', async (event, service, preferApp) => {
+  const target = require('./app/lib/ai-services.js').get(service);
+  if (!target || typeof service !== 'string' || target.id !== service || typeof preferApp !== 'boolean') throw invalidArg();
+  const launch = async (url) => {
+    if (process.env.PS_BLOCK_EXTERNAL === '1') globalThis.__psExternal.push(url);
+    else await shell.openExternal(url);
+  };
+  if (preferApp && target.desktop) {
+    try {
+      if (app.getApplicationNameForProtocol(target.desktop)) {
+        await launch(target.desktop);
+        return { destination: 'app' };
+      }
+    } catch { /* No registered handler or launch failed: use the explicit web fallback. */ }
+  }
+  await launch(target.web);
+  return { destination: 'web' };
+});
+
 // Speicher der gesamten App (Haupt-, Renderer-, GPU- und Hilfsprozesse) in MB.
 // process.memoryUsage() misst nur den Hauptprozess und zeigte so fast nichts an (ca. 7 MB statt ueber 1 GB).
 function getAppMemoryMB() {

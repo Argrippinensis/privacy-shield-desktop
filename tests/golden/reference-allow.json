@@ -619,5 +619,37 @@
   "outSha256": "a33f1521f1f45ab68eb785c37dc5fbad10607e4953d51df0e5478ea73b8f045a",
   "storeSha256": "7101550a0e4545a498f219cb31d5a5a1ee689944a194cde287db1116c01adf4d",
   "entities": 6
+ },
+ {
+  "mode": "w0",
+  "key": "gb02",
+  "reason": "Arbeitsvertrags-/Merkmalskorrektur: im bewusst maximalen Profil wird zusätzlich die Anrede Herr maskiert; Name Becker und sämtliche bisher geschützten Werte bleiben geschützt.",
+  "outSha256": "7168b3bca17fe3fb85d5c65130c489ead439fa33df4e96187f014ea26d9d8be2",
+  "storeSha256": "77fb3bca0ccb1a445538166226187e31fc6044f9ddced54adcc956d88f21098d",
+  "entities": 5
+ },
+ {
+  "mode": "w0",
+  "key": "golden-sample",
+  "reason": "Ortskorrektur: Hamburg in der Unterschriftszeile Ort, Datum wird nun auch ohne Wortlisten maskiert; ausschließlich zusätzlicher Schutz, keine Offenlegung.",
+  "outSha256": "557b5fae5d11d6dc584fcbb5f48f961c5a243abdfa1f404944bd67153d57bb9a",
+  "storeSha256": "5e242184136340ce0ca2d9750089dc96c430ffb61f22ed6c3f7ca82574a989ad",
+  "entities": 17
+ },
+ {
+  "mode": "w1",
+  "key": "gb02",
+  "reason": "Arbeitsvertrags-/Merkmalskorrektur: im bewusst maximalen Profil wird zusätzlich die Anrede Herr maskiert; Name Becker und sämtliche bisher geschützten Werte bleiben geschützt.",
+  "outSha256": "7168b3bca17fe3fb85d5c65130c489ead439fa33df4e96187f014ea26d9d8be2",
+  "storeSha256": "77fb3bca0ccb1a445538166226187e31fc6044f9ddced54adcc956d88f21098d",
+  "entities": 5
+ },
+ {
+  "mode": "ki",
+  "key": "gb02",
+  "reason": "Arbeitsvertrags-/Merkmalskorrektur: im bewusst maximalen Profil wird zusätzlich die Anrede Herr maskiert; Name Becker und sämtliche bisher geschützten Werte bleiben geschützt.",
+  "outSha256": "7168b3bca17fe3fb85d5c65130c489ead439fa33df4e96187f014ea26d9d8be2",
+  "storeSha256": "77fb3bca0ccb1a445538166226187e31fc6044f9ddced54adcc956d88f21098d",
+  "entities": 5
  }
 ]

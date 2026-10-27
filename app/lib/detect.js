@@ -2,9 +2,9 @@
 // Die Bloecke Daten/Regeln/Profile, Wortlisten-Erkennung, Kern und Platzhaltervergabe sind aus app/privacy-shield.html (1.8.0)
 // kopiert; Funktionskoerper unveraendert. Parametrisiert wird nur ueber opts (siehe detect/anonymize unten).
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(require('./coref.js'), require('./placeholder.js'));
-  else { root.PSLib = root.PSLib || {}; root.PSLib.detect = root.PSDetect = factory(root.PSLib.coref, root.PSLib.placeholder); }
-})(typeof self !== 'undefined' ? self : this, function (COREF, PH) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./coref.js'), require('./placeholder.js'), require('./employment.js'));
+  else { root.PSLib = root.PSLib || {}; root.PSLib.detect = root.PSDetect = factory(root.PSLib.coref, root.PSLib.placeholder, root.PSLib.employment); }
+})(typeof self !== 'undefined' ? self : this, function (COREF, PH, EMP) {
   'use strict';
   // Kontext des laufenden (synchronen) Aufrufs; wird in detect()/anonymize() gesetzt und danach geleert
   let store = {},
@@ -212,6 +212,24 @@
           ],
         },
         {
+          id: "employment", lbl: "Vertragskonditionen", desc: "Tarifgruppe, Berufsjahr, Team, Arbeitszeit, Urlaub, Probezeit und Befristungsdauer", col: "#7c3aed", on: false, pfx: "KONDITION",
+          rx: [
+            /\b((?:Tarif|Entgelt|Vergütungs|Gehalts)gruppe[ \t]+[A-Z]{0,3}[ \t]?\d{1,3}[a-z]?|Berufsjahr[ \t]+\d{1,2}|Team[ \t]+(?:[IVX]{1,6}|\d{1,3}))(?![\p{L}\p{N}_])/gu,
+            /(?<![\p{L}\p{N}_])(\d{1,2}(?:[.,]\d{1,2})?[ \t]*(?:h|Std\.?|Stunden)(?:[ \t]*(?:pro|je|in der)[ \t]+Woche)?)(?![\p{L}\p{N}_])/gu,
+            /\b(\d{1,2}[ \t]+(?:Urlaubs|Erholungsurlaubs)tage(?:n)?)(?![\p{L}\p{N}_])/giu,
+            /\b(\d{1,3}[ \t]+(?:Monate?|Jahre?)(?:n)?)(?=[ \t]+(?:Probezeit|Befristung|befristet))/giu,
+            /(?<=\b(?:Probezeit|Befristung|befristet)(?:[ \t]+(?:von|für|beträgt|auf))?[ \t:]{1,20})(\d{1,3}[ \t]+(?:Monate?|Jahre?)(?:n)?)/giu,
+          ],
+        },
+        {
+          id: "identity", lbl: "Anrede & Qualifikation", desc: "Geschlechtsbezogene Anrede und akademischer Abschluss als indirekte Hinweise", col: "#a16207", on: false, pfx: "MERKMAL",
+          rx: [
+            /(?<![\p{L}\p{N}_])(Herrn?|Frau|Hr\.|Fr\.)(?![\p{L}\p{N}_])/gu,
+            /\b((?:Bachelor|Master)[ \t]+of[ \t]+(?:Arts|Science|Laws|Engineering|Education)(?:[ \t]*\([BM]\.[A-Za-z]\.\))?)(?![\p{L}\p{N}_])/gu,
+            /(?<![\p{L}\p{N}_])([BM]\.(?:A|Sc|Eng|Ed)\.)(?![\p{L}\p{N}_])/gu,
+          ],
+        },
+        {
           id: "money",
           lbl: "Geldbeträge",
           desc: "EUR, USD, CHF, GBP",
@@ -290,6 +308,8 @@
           on: true,
           pfx: "ADRESSE",
           rx: [
+            /(?<![\p{L}\p{N}_])([\p{Lu}][\p{L}]{1,30}(?:-[\p{Lu}][\p{L}]{1,30}){1,4}-(?:Straße|Strasse|Weg|Platz|Allee)[ \t]+\d{1,4}[a-z]?)(?![\p{L}\p{N}_])/gu,
+
             /(?=[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ])(?<=(?:Geburtsort|Wohnort|Standort|Einsatzort|Tatort)[ \t]{0,1000}[:=][ \t]{0,1000})([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœA-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ.\- ]{2,40}?)(?=[,;\n]|$)/g,
             /(\b\d{1,4}[a-z]?,?[ \t]+(?:rue|avenue|boulevard|av\.|bd|impasse|chemin|place|quai|allée)[ \t]+(?:de[ \t]+(?:la[ \t]+|l')?|du[ \t]+|des[ \t]+|d')?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ']+(?:(?:[ \t]+|-)(?:(?:de|du|des|la|le|les|sur)[ \t]+)?[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ']+){0,3})/g,
             /(\b(?:via|viale|piazza|corso|vicolo)[ \t]+[A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][a-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ' \-]{2,30}?[ \t]+\d{1,4}[a-z]?)/g,
@@ -1365,6 +1385,12 @@
           note: "",
         },
         {
+          id: "employment", lbl: "Arbeitsvertrag", badge: "", desc: "Wie Standard, zusätzlich Konditionen, Team, Anrede und Abschluss. Paragrafen und allgemeine Vertragsbegriffe bleiben lesbar.",
+          ents: ["email", "iban", "card", "bic", "phone", "money", "date", "taxid", "addr", "vehicle", "device", "account", "geo", "intlid", "org", "name", "ip", "employment", "identity"],
+          tags: ["+ Tarifgruppe", "+ Konditionen", "+ Team", "+ Anrede & Abschluss"],
+          note: "Arbeitgebervarianten, Logos, Dateinamen und Unterschriften selbst prüfen. Bekannte Aliaslisten sind nicht vollständig; eigene Markierungen ergänzen.",
+        },
+        {
           id: "finance",
           lbl: "Finanzen & Recht",
           badge: "",
@@ -1778,6 +1804,8 @@
         STANDORT: 2,
         TEL: 2,
         BETRAG: 2,
+        KONDITION: 2,
+        MERKMAL: 2,
         DATUM: 2,
         KENNNR: 2,
         PARAGRAF: 2,
@@ -1788,8 +1816,8 @@
         NAME: 5,
         ORT: 5,
       };
-      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip", "card", "vehicle", "device", "account", "geo", "intlid"]);
-      const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med", "sensitive"]);
+      const HARD_ENT_IDS = new Set(["email", "iban", "bic", "phone", "money", "date", "taxid", "paragraf", "ip", "card", "vehicle", "device", "account", "geo", "intlid", "employment"]);
+      const SOFT_ENT_IDS = new Set(["org", "addr", "name", "role", "med", "sensitive", "identity"]);
       function isWhitelisted(v) {
         return whitelist.some(function (w) {
           return w && v.toLowerCase().includes(w.toLowerCase());
@@ -2014,6 +2042,7 @@
           }
         }
         for (const x of extraSpans) pass1.push(Object.assign({}, x));
+        if (activeEnts.has("org")) for (const span of EMP.employerSpans(text)) pass1.push(span);
         for (const e of ENTS) {
           if (!activeEnts.has(e.id) || !HARD_ENT_IDS.has(e.id)) continue;
           for (const srcRx of e.rx) {
@@ -2036,7 +2065,7 @@
                 pfx: e.pfx,
                 col: e.col,
                 id: e.id,
-                prio: ENT_PRIO[e.pfx] !== undefined ? ENT_PRIO[e.pfx] : 5,
+                prio: e.id === "identity" && /^(?:Herrn?|Frau|Hr\.|Fr\.)$/.test(val) ? 6 : ENT_PRIO[e.pfx] !== undefined ? ENT_PRIO[e.pfx] : 5,
                 meth: "Regex (Pass 1)",
               });
             }
@@ -2075,7 +2104,7 @@
                 pfx: e.pfx,
                 col: e.col,
                 id: e.id,
-                prio: ENT_PRIO[e.pfx] !== undefined ? ENT_PRIO[e.pfx] : 5,
+                prio: e.id === "identity" && /^(?:Herrn?|Frau|Hr\.|Fr\.)$/.test(val) ? 6 : ENT_PRIO[e.pfx] !== undefined ? ENT_PRIO[e.pfx] : 5,
                 meth: "Regex (Pass 2)",
               });
             }
@@ -2190,6 +2219,10 @@
             console.error("Lokale KI-Erkennung (nicht fatal):", err);
           }
         }
+        if (activeEnts.has("addr")) {
+          const city = new RegExp("(?<![A-Za-zÄÖÜäöüß])(" + LOCAL_CITY_ALT + ")(?=[ \t]*,[ \t]*(?:den[ \t]+)?\\d{1,2}\\.\\d{1,2}\\.(?:19|20)\\d{2})", "g");
+          for (const m of text.matchAll(city)) pass2.push({start:m.index,end:m.index+m[0].length,pfx:"ORT",col:"#3b82f6",id:"addr",prio:3,meth:"Ort in Datumszeile"});
+        }
         return postProcessSpans(text, p1.concat(pass2));
       }
       function resolveSpanOverlaps(spans) {
@@ -2213,7 +2246,7 @@
             const j = cont[c];
             if (i === j || gone[j]) continue;
             const b = all[j];
-            if (b.prio >= a.prio) continue;
+            if (b.prio >= a.prio || b.meth === "Arbeitgeber-Variante (öffentliche Aliasliste)") continue;
             if (a.start >= b.start && a.end <= b.end) {
               a.start = b.start;
               a.end = b.end;
@@ -2258,6 +2291,12 @@
       // Obergrenze (Zeichen) fuer Namensspannen beim Verlaengern; schuetzt vor quadratischem Aufwand bei Endlosfolgen grossgeschriebener Woerter.
       const MAX_NAME_SPAN = 120;
       function postProcessSpans(text, cands) {
+        // Automatic labels are evidence, not authority: generic contract words and legal citations
+        // are not people, firms or money. Explicit user rules/marks remain authoritative.
+        cands = cands.filter(s => s.id === "custom" || s.prio === 0 || s.meth === "Manuelle Markierung" ||
+          !(["NAME", "ORG", "BETRAG"].includes(s.pfx) && EMP.isLegalReference(text.slice(s.start,s.end))) &&
+          !(s.pfx === "NAME" && !hasAnredeBefore(text,s.start) && EMP.isGenericLabel(text.slice(s.start,s.end))) &&
+          !(s.pfx === "ORG" && /^GeschGehG$/i.test(text.slice(s.start,s.end))));
         // Ueberlange Namensketten: der Rest ab der Abbruchstelle wird als eigener Treffer weitergefuehrt (je Anfang nur einmal),
         // damit kein Teil der Kette ungeschwaerzt bleibt.
         const nameStarts = new Set();
@@ -2368,7 +2407,7 @@
           }
           if (s.pfx === "IBAN" && /^[A-Za-z]{2}\d{2}/.test(val) && !isValidIBANFormat(val)) return false;
           // Ausdrueckliche Nutzermarkierung: keine Plausibilitaetsfilter (Namensform, Ueberschrift)
-          if (s.meth === "Manuelle Markierung") return true;
+          if (s.meth === "Manuelle Markierung" || s.meth === "Arbeitgeber-Variante (öffentliche Aliasliste)") return true;
           if (s.pfx === "NAME" && !okName(val, hasAnredeBefore(text, s.start))) return false;
           if (s.pfx === "ORG" && ORG_LEGAL_ONLY.test(val)) return false;
           if (s.pfx === "ORT" && SW.has(val)) return false;
@@ -2419,6 +2458,7 @@
       function normalizeForDetection(t) {
         return t
           .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, " ")
+          .replace(/[\u2010\u2011]/g, "-")
           .replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
       }
       function smartSuffix(val, pfx) {

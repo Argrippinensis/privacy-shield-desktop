@@ -1,0 +1,73 @@
+A11Y-BILANZ | Willkommen | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Willkommen", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1598.459494ms)
+A11Y-BILANZ | Willkommen | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Willkommen", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1289.794184ms)
+A11Y-BILANZ | Arbeitsbereich leer | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Arbeitsbereich leer", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1679.275528ms)
+A11Y-BILANZ | Arbeitsbereich leer | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Arbeitsbereich leer", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1177.997485ms)
+A11Y-BILANZ | Mit Ergebnis | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Mit Ergebnis", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1810.09887ms)
+A11Y-BILANZ | Mit Ergebnis | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Mit Ergebnis", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1529.875429ms)
+A11Y-BILANZ | Gegenprüfungsliste | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Gegenprüfungsliste", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1560.793772ms)
+A11Y-BILANZ | Gegenprüfungsliste | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Gegenprüfungsliste", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1309.532536ms)
+A11Y-BILANZ | Prüfansicht | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Prüfansicht", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1953.934821ms)
+A11Y-BILANZ | Prüfansicht | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Prüfansicht", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1363.484748ms)
+A11Y-BILANZ | Passwortdialog | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Passwortdialog", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1601.758438ms)
+A11Y-BILANZ | Passwortdialog | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Passwortdialog", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1295.439849ms)
+A11Y-BILANZ | Info-Dialog | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Info-Dialog", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1376.579046ms)
+A11Y-BILANZ | Info-Dialog | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Info-Dialog", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1304.472599ms)
+A11Y-BILANZ | Projektliste | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Projektliste", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1445.082131ms)
+A11Y-BILANZ | Projektliste | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Projektliste", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1254.999698ms)
+A11Y-BILANZ | Eigene Regeln | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Eigene Regeln", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (2294.732965ms)
+A11Y-BILANZ | Eigene Regeln | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Eigene Regeln", Frame Hülle: 0 Verstöße mit Impact serious oder critical (2101.059755ms)
+A11Y-BEWEGUNG | Willkommen | Werkzeug | geprüft 1674 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Willkommen", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (916.551457ms)
+A11Y-BEWEGUNG | Willkommen | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Willkommen", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (884.896422ms)
+A11Y-BEWEGUNG | Arbeitsbereich leer | Werkzeug | geprüft 2115 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Arbeitsbereich leer", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (878.816666ms)
+A11Y-BEWEGUNG | Arbeitsbereich leer | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Arbeitsbereich leer", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (900.496883ms)
+A11Y-BEWEGUNG | Mit Ergebnis | Werkzeug | geprüft 3171 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Mit Ergebnis", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (962.52889ms)
+A11Y-BEWEGUNG | Mit Ergebnis | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Mit Ergebnis", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (988.381929ms)
+A11Y-BEWEGUNG | Info-Dialog | Werkzeug | geprüft 1674 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Info-Dialog", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (950.167687ms)
+A11Y-BEWEGUNG | Info-Dialog | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Info-Dialog", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (967.216391ms)
+A11Y-ZOOM | Willkommen | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Willkommen", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1412.905324ms)
+A11Y-ZOOM | Arbeitsbereich leer | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Arbeitsbereich leer", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1452.108307ms)
+A11Y-ZOOM | Mit Ergebnis | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Mit Ergebnis", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1592.248945ms)
+A11Y-ZOOM | Prüfansicht | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Prüfansicht", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1785.807894ms)
+✔ Browser: first visit has no automatic preparation or model download; explicit preparation preserves unrelated caches (2981.719795ms)
+✔ Browser: full restart offline, text processing, actual scanned PDF OCR, DOCX and evidence without server requests (2478.973152ms)
+✔ Browser: optional pinned model preparation avoids loading a session; after offline restart actual model runs (8545.345185ms)
+✔ Browser: mobile layout and reduced motion; AI destination links carry no text and stale results block handoff (2898.666018ms)
+✔ Desktop: offline status verified from installed resources; app handler preferred, missing handler and failure fall back to fixed web URLs (1076.98593ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 60425.408073

@@ -1,0 +1,17 @@
+SYNTHETISCHER TEST – kein echter Arbeitsvertrag
+{{ORG_4}}
+{{ADRESSE_1}}
+{{ORT_1}}, {{DATUM_1}}
+
+An {{NAME_1}}, {{MERKMAL_1}}
+Einsatz im {{KONDITION_7}}, {{KONDITION_6}}, {{KONDITION_5}}.
+Die regelmäßige Arbeitszeit beträgt {{KONDITION_4}}.
+Der Anspruch beträgt {{KONDITION_3}}.
+Vereinbart sind {{KONDITION_2}} Probezeit und {{KONDITION_1}} Befristung.
+Die interne GBV {{ORG_3}} gilt ergänzend.
+
+Befristung, Probezeit, Freistellung, Arbeitsverhältnis und Geschäftsgeheimnisse
+richten sich nach § 8 und § 23 GeschGehG. Die fiktive Vergütung beträgt {{BETRAG_1}}.
+
+{{ORG_2}}
+– und {{ORG_1}}

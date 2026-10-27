@@ -1,0 +1,25 @@
+✔ Employment profile covers employer fragments, conditions and qualifications; wordlists=false (42.271409ms)
+✔ Employment profile covers employer fragments, conditions and qualifications; wordlists=true (7.045443ms)
+✔ Standard fixes identifying employer/address variants but leaves optional employment conditions selected by the user (5.429759ms)
+✔ Isolated generic fragments are not treated as the known employer without a strong brand or full-name anchor (1.299045ms)
+✔ All-caps repeated employer headers and split legal names are masked independently of the NER model (0.880235ms)
+✔ An NER model labelling generic contract language or laws as names/organizations cannot remove that language (8.641378ms)
+✔ Paragraphs are not money, including erroneous model labels; real euro and dollar values remain protected (2.411795ms)
+✔ Masking the salutation never leaves the surname Aydin behind (0.702431ms)
+✔ Masking the salutation never leaves the surname Befristung behind (0.508053ms)
+✔ Masking the salutation never leaves the surname Probezeit behind (0.516175ms)
+✔ Masking the salutation never leaves the surname Freistellung behind (0.563756ms)
+✔ Date-line city remains protected even when NER provides an empty result (0.402537ms)
+✔ Hyphenated street names with nonbreaking hyphens keep exact offsets and roundtrip (0.378882ms)
+✔ Explicit manual marks still protect a generic contract word (0.775038ms)
+✔ Employer opt-out and exact whitelist remain effective (0.200327ms)
+✔ Additional categories are in both public profiles and parser options (0.115952ms)
+✔ Eight fixed destinations have no prompt/text or arbitrary caller URL; Android uses matching app package and web fallback (0.343389ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 144.738634

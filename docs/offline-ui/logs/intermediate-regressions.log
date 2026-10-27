@@ -1,0 +1,286 @@
+A11Y-BILANZ | Willkommen | Werkzeug | serious/critical: label-content-name-mismatch(serious):1 | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✖ axe vollständig: Ansicht "Willkommen", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1449.448547ms)
+A11Y-BILANZ | Willkommen | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Willkommen", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1305.617012ms)
+A11Y-BILANZ | Arbeitsbereich leer | Werkzeug | serious/critical: label-content-name-mismatch(serious):1 | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✖ axe vollständig: Ansicht "Arbeitsbereich leer", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1564.409269ms)
+A11Y-BILANZ | Arbeitsbereich leer | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Arbeitsbereich leer", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1302.040563ms)
+A11Y-BILANZ | Mit Ergebnis | Werkzeug | serious/critical: label-content-name-mismatch(serious):1 | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✖ axe vollständig: Ansicht "Mit Ergebnis", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1825.242089ms)
+A11Y-BILANZ | Mit Ergebnis | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Mit Ergebnis", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1388.52536ms)
+A11Y-BILANZ | Gegenprüfungsliste | Werkzeug | serious/critical: label-content-name-mismatch(serious):1 | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✖ axe vollständig: Ansicht "Gegenprüfungsliste", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1487.005344ms)
+A11Y-BILANZ | Gegenprüfungsliste | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Gegenprüfungsliste", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1337.627055ms)
+A11Y-BILANZ | Prüfansicht | Werkzeug | serious/critical: label-content-name-mismatch(serious):1 | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✖ axe vollständig: Ansicht "Prüfansicht", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (2074.140833ms)
+A11Y-BILANZ | Prüfansicht | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Prüfansicht", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1690.323568ms)
+A11Y-BILANZ | Passwortdialog | Werkzeug | serious/critical: label-content-name-mismatch(serious):1 | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✖ axe vollständig: Ansicht "Passwortdialog", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1786.912727ms)
+A11Y-BILANZ | Passwortdialog | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Passwortdialog", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1303.160138ms)
+A11Y-BILANZ | Info-Dialog | Werkzeug | serious/critical: label-content-name-mismatch(serious):1 | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✖ axe vollständig: Ansicht "Info-Dialog", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1468.115962ms)
+A11Y-BILANZ | Info-Dialog | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Info-Dialog", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1344.061568ms)
+A11Y-BILANZ | Projektliste | Werkzeug | serious/critical: label-content-name-mismatch(serious):1 | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✖ axe vollständig: Ansicht "Projektliste", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1686.407228ms)
+A11Y-BILANZ | Projektliste | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Projektliste", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1520.406748ms)
+A11Y-BILANZ | Eigene Regeln | Werkzeug | serious/critical: label-content-name-mismatch(serious):1 | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✖ axe vollständig: Ansicht "Eigene Regeln", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (2578.196997ms)
+A11Y-BILANZ | Eigene Regeln | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Eigene Regeln", Frame Hülle: 0 Verstöße mit Impact serious oder critical (2133.362207ms)
+A11Y-BEWEGUNG | Willkommen | Werkzeug | geprüft 1674 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Willkommen", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1039.181027ms)
+A11Y-BEWEGUNG | Willkommen | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Willkommen", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (962.98477ms)
+A11Y-BEWEGUNG | Arbeitsbereich leer | Werkzeug | geprüft 2115 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Arbeitsbereich leer", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1021.155859ms)
+A11Y-BEWEGUNG | Arbeitsbereich leer | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Arbeitsbereich leer", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1071.742143ms)
+A11Y-BEWEGUNG | Mit Ergebnis | Werkzeug | geprüft 3171 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Mit Ergebnis", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1144.587329ms)
+A11Y-BEWEGUNG | Mit Ergebnis | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Mit Ergebnis", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1035.977508ms)
+A11Y-BEWEGUNG | Info-Dialog | Werkzeug | geprüft 1674 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Info-Dialog", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1099.310527ms)
+A11Y-BEWEGUNG | Info-Dialog | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Info-Dialog", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1105.612599ms)
+A11Y-ZOOM | Willkommen | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Willkommen", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1514.668309ms)
+A11Y-ZOOM | Arbeitsbereich leer | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Arbeitsbereich leer", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1552.663046ms)
+A11Y-ZOOM | Mit Ergebnis | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Mit Ergebnis", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1648.083021ms)
+A11Y-ZOOM | Prüfansicht | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Prüfansicht", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1692.563924ms)
+✔ Browser: first visit has no automatic preparation or model download; explicit preparation preserves unrelated caches (3195.33735ms)
+✔ Browser: full restart offline, text processing, actual scanned PDF OCR, DOCX and evidence without server requests (3356.19134ms)
+✔ Browser: optional pinned model preparation avoids loading a session; after offline restart actual model runs (9001.987509ms)
+✔ Browser: mobile layout and reduced motion; AI destination links carry no text and stale results block handoff (3191.391848ms)
+✔ Desktop: offline status verified from installed resources; app handler preferred, missing handler and failure fall back to fixed web URLs (1184.467178ms)
+✔ 1 Bau: exakte Dateiliste, byteidentische Kopien, Browser-Worker mit Pin, Groessen, deterministisch (415.526156ms)
+✔ 2 Shim deckt jede in preload.js freigegebene Funktion und jedes Ereignis ab (2.79125ms)
+✔ 3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in der Fusszeile (921.293002ms)
+✔ 4 Handy-Breite 390x844: kein horizontales Scrollen, Hauptbedienelemente sichtbar (1478.284111ms)
+✔ 5 Ende-zu-Ende ohne Modell (Standard beim ersten Besuch): Platzhalter, Rueckuebersetzung (934.258332ms)
+✔ 6 Netzpolitik: erster Besuch ohne huggingface-Anfrage; nach Einschalten der KI nur GET an das gepinnte Modell, Standard-Erkennung laeuft weiter (5192.061345ms)
+✔ 7 Kopieren legt den anonymisierten Text in die Zwischenablage (oder ruft ersatzweise den Shim) (1839.905305ms)
+✔ 8 Handy-Layout 390x844: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich (1716.698896ms)
+✔ 8 Handy-Layout 360x740: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich (1730.507761ms)
+✔ 9 Erster Besuch: Hinweis aufgeklappt, KI aus (ps_ai_mode=off), danach eingeklappt und KI-Einstellung bleibt (2148.582356ms)
+✔ 10 Irrefuehrende Aussagen des Werkzeugs werden in der Huelle ersetzt (Originalsaetze existieren im Tool) (1755.861927ms)
+✔ 11 Bauskript: gefaehrliche --out-Ziele werden abgelehnt, nichts wird geloescht (nur Wegwerf-Verzeichnisse) (641.964691ms)
+✔ 12 Bauskript: Worker-Ersatz mit CRLF-Quelle (Windows-Checkout) und Aufruf ueber einen Symlink-Pfad (macOS-Temp-Ordner) (155.570333ms)
+ℹ tests 48
+ℹ suites 0
+ℹ pass 39
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 84350.665569
+
+✖ failing tests:
+
+test at tests/a11y.test.mjs:193:5
+✖ axe vollständig: Ansicht "Willkommen", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1449.448547ms)
+  AssertionError [ERR_ASSERTION]: axe-Verstösse (serious/critical) in Ansicht "Willkommen", Frame Werkzeug: 1 Regeln, 1 Knoten
+    label-content-name-mismatch (serious): 1 Knoten
+      .ps-local-pill
+  Nur gezählt, kein Fehler: moderate/minor in den WCAG-Tags: keine; best-practice-Lauf: keine
+  
+  1 !== 0
+  
+      at file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:204:16
+      at async mitAnsicht (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:125:12)
+      at async TestContext.<anonymous> (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:194:7)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/a11y.test.mjs:193:5
+✖ axe vollständig: Ansicht "Arbeitsbereich leer", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1564.409269ms)
+  AssertionError [ERR_ASSERTION]: axe-Verstösse (serious/critical) in Ansicht "Arbeitsbereich leer", Frame Werkzeug: 1 Regeln, 1 Knoten
+    label-content-name-mismatch (serious): 1 Knoten
+      .ps-local-pill
+  Nur gezählt, kein Fehler: moderate/minor in den WCAG-Tags: keine; best-practice-Lauf: keine
+  
+  1 !== 0
+  
+      at file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:204:16
+      at async mitAnsicht (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:125:12)
+      at async TestContext.<anonymous> (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:194:7)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/a11y.test.mjs:193:5
+✖ axe vollständig: Ansicht "Mit Ergebnis", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1825.242089ms)
+  AssertionError [ERR_ASSERTION]: axe-Verstösse (serious/critical) in Ansicht "Mit Ergebnis", Frame Werkzeug: 1 Regeln, 1 Knoten
+    label-content-name-mismatch (serious): 1 Knoten
+      .ps-local-pill
+  Nur gezählt, kein Fehler: moderate/minor in den WCAG-Tags: keine; best-practice-Lauf: aria-allowed-role:1
+  
+  1 !== 0
+  
+      at file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:204:16
+      at async mitAnsicht (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:125:12)
+      at async TestContext.<anonymous> (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:194:7)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/a11y.test.mjs:193:5
+✖ axe vollständig: Ansicht "Gegenprüfungsliste", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1487.005344ms)
+  AssertionError [ERR_ASSERTION]: axe-Verstösse (serious/critical) in Ansicht "Gegenprüfungsliste", Frame Werkzeug: 1 Regeln, 1 Knoten
+    label-content-name-mismatch (serious): 1 Knoten
+      .ps-local-pill
+  Nur gezählt, kein Fehler: moderate/minor in den WCAG-Tags: keine; best-practice-Lauf: aria-allowed-role:1
+  
+  1 !== 0
+  
+      at file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:204:16
+      at async mitAnsicht (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:125:12)
+      at async TestContext.<anonymous> (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:194:7)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/a11y.test.mjs:193:5
+✖ axe vollständig: Ansicht "Prüfansicht", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (2074.140833ms)
+  AssertionError [ERR_ASSERTION]: axe-Verstösse (serious/critical) in Ansicht "Prüfansicht", Frame Werkzeug: 1 Regeln, 1 Knoten
+    label-content-name-mismatch (serious): 1 Knoten
+      .ps-local-pill
+  Nur gezählt, kein Fehler: moderate/minor in den WCAG-Tags: keine; best-practice-Lauf: aria-allowed-role:1
+  
+  1 !== 0
+  
+      at file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:204:16
+      at async mitAnsicht (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:125:12)
+      at async TestContext.<anonymous> (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:194:7)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/a11y.test.mjs:193:5
+✖ axe vollständig: Ansicht "Passwortdialog", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1786.912727ms)
+  AssertionError [ERR_ASSERTION]: axe-Verstösse (serious/critical) in Ansicht "Passwortdialog", Frame Werkzeug: 1 Regeln, 1 Knoten
+    label-content-name-mismatch (serious): 1 Knoten
+      .ps-local-pill
+  Nur gezählt, kein Fehler: moderate/minor in den WCAG-Tags: keine; best-practice-Lauf: aria-allowed-role:1
+  
+  1 !== 0
+  
+      at file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:204:16
+      at async mitAnsicht (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:125:12)
+      at async TestContext.<anonymous> (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:194:7)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/a11y.test.mjs:193:5
+✖ axe vollständig: Ansicht "Info-Dialog", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1468.115962ms)
+  AssertionError [ERR_ASSERTION]: axe-Verstösse (serious/critical) in Ansicht "Info-Dialog", Frame Werkzeug: 1 Regeln, 1 Knoten
+    label-content-name-mismatch (serious): 1 Knoten
+      .ps-local-pill
+  Nur gezählt, kein Fehler: moderate/minor in den WCAG-Tags: keine; best-practice-Lauf: keine
+  
+  1 !== 0
+  
+      at file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:204:16
+      at async mitAnsicht (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:125:12)
+      at async TestContext.<anonymous> (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:194:7)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/a11y.test.mjs:193:5
+✖ axe vollständig: Ansicht "Projektliste", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1686.407228ms)
+  AssertionError [ERR_ASSERTION]: axe-Verstösse (serious/critical) in Ansicht "Projektliste", Frame Werkzeug: 1 Regeln, 1 Knoten
+    label-content-name-mismatch (serious): 1 Knoten
+      .ps-local-pill
+  Nur gezählt, kein Fehler: moderate/minor in den WCAG-Tags: keine; best-practice-Lauf: keine
+  
+  1 !== 0
+  
+      at file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:204:16
+      at async mitAnsicht (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:125:12)
+      at async TestContext.<anonymous> (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:194:7)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/a11y.test.mjs:193:5
+✖ axe vollständig: Ansicht "Eigene Regeln", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (2578.196997ms)
+  AssertionError [ERR_ASSERTION]: axe-Verstösse (serious/critical) in Ansicht "Eigene Regeln", Frame Werkzeug: 1 Regeln, 1 Knoten
+    label-content-name-mismatch (serious): 1 Knoten
+      .ps-local-pill
+  Nur gezählt, kein Fehler: moderate/minor in den WCAG-Tags: keine; best-practice-Lauf: keine
+  
+  1 !== 0
+  
+      at file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:204:16
+      at async mitAnsicht (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:125:12)
+      at async TestContext.<anonymous> (file:///workspace/privacy-shield-desktop/tests/a11y.test.mjs:194:7)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

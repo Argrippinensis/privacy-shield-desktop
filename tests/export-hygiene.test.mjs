@@ -76,7 +76,7 @@ test('Zwischenablage-Inventar: GUI verwendet gemeinsamen Kopierweg, Diagnose ble
   const ui = fs.readFileSync(path.join(ROOT, 'app/ui/evidence-ui.js'), 'utf8');
   assert.equal((ui.match(/\bwriteText\s*\(/g) || []).length, 1);
   assert.equal((ui.match(/\bcopyText\s*\(/g) || []).length, 1);
-  for (const name of ['cpAnon', 'copyAndOpenAI']) { const start = HTML.indexOf('function ' + name + '('); assert.ok(HTML.slice(start, start + 850).includes('psCopy(')); }
+  for (const name of ['cpAnon']) { const start = HTML.indexOf('function ' + name + '('); assert.ok(HTML.slice(start, start + 850).includes('psCopy(')); }
 });
 
 // Fenster per close() schliessen; liefert Zaehler der Dialog-Aufrufe
@@ -228,4 +228,11 @@ test('D30: haengender Renderer bei ungespeicherter Zuordnung, "Abbrechen": Fenst
     assert.equal(await winCount(a.app), 1, 'Fenster wurde trotz "Abbrechen" geschlossen');
     assert.equal(await dlgCount(a.app), 1);
   } finally { await a.close(); }
+});
+
+test('AI handoff checks the current result and uses the clipboard only in its explicit dialog', () => {
+  const dialog = fs.readFileSync('app/ui/local-status.js', 'utf8');
+  assert.match(HTML, /function copyAndOpenAI[\s\S]*?psCurrent\(\)[\s\S]*?psServiceDialog\(url\)/);
+  assert.match(dialog, /await psCopy\(document.getElementById\('AT'\).value\)/);
+  assert.doesNotMatch(dialog, /encodeURIComponent\(document.getElementById/);
 });

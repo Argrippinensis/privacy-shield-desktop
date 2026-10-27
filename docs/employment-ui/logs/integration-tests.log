@@ -1,0 +1,91 @@
+A11Y-BILANZ | Willkommen | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Willkommen", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1389.00357ms)
+A11Y-BILANZ | Willkommen | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Willkommen", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1205.884285ms)
+A11Y-BILANZ | Arbeitsbereich leer | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Arbeitsbereich leer", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1444.382487ms)
+A11Y-BILANZ | Arbeitsbereich leer | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Arbeitsbereich leer", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1103.574114ms)
+A11Y-BILANZ | Mit Ergebnis | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Mit Ergebnis", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1453.796068ms)
+A11Y-BILANZ | Mit Ergebnis | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Mit Ergebnis", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1197.509621ms)
+A11Y-BILANZ | Gegenprüfungsliste | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Gegenprüfungsliste", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1371.477069ms)
+A11Y-BILANZ | Gegenprüfungsliste | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Gegenprüfungsliste", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1102.810452ms)
+A11Y-BILANZ | Prüfansicht | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Prüfansicht", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1597.649385ms)
+A11Y-BILANZ | Prüfansicht | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Prüfansicht", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1239.695981ms)
+A11Y-BILANZ | Passwortdialog | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Passwortdialog", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1472.787989ms)
+A11Y-BILANZ | Passwortdialog | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Passwortdialog", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1142.729636ms)
+A11Y-BILANZ | Info-Dialog | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Info-Dialog", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1244.796279ms)
+A11Y-BILANZ | Info-Dialog | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Info-Dialog", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1190.970299ms)
+A11Y-BILANZ | Projektliste | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Projektliste", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1351.715259ms)
+A11Y-BILANZ | Projektliste | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Projektliste", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1244.955676ms)
+A11Y-BILANZ | Eigene Regeln | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Eigene Regeln", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (2394.141622ms)
+A11Y-BILANZ | Eigene Regeln | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Eigene Regeln", Frame Hülle: 0 Verstöße mit Impact serious oder critical (2130.336981ms)
+A11Y-BEWEGUNG | Willkommen | Werkzeug | geprüft 1725 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Willkommen", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (906.27016ms)
+A11Y-BEWEGUNG | Willkommen | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Willkommen", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (961.251535ms)
+A11Y-BEWEGUNG | Arbeitsbereich leer | Werkzeug | geprüft 2208 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Arbeitsbereich leer", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (979.74948ms)
+A11Y-BEWEGUNG | Arbeitsbereich leer | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Arbeitsbereich leer", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (992.194513ms)
+A11Y-BEWEGUNG | Mit Ergebnis | Werkzeug | geprüft 3264 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Mit Ergebnis", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1017.591557ms)
+A11Y-BEWEGUNG | Mit Ergebnis | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Mit Ergebnis", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (984.983571ms)
+A11Y-BEWEGUNG | Info-Dialog | Werkzeug | geprüft 1725 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Info-Dialog", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1037.767206ms)
+A11Y-BEWEGUNG | Info-Dialog | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Info-Dialog", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (954.175896ms)
+A11Y-ZOOM | Willkommen | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Willkommen", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1398.404905ms)
+A11Y-ZOOM | Arbeitsbereich leer | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Arbeitsbereich leer", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1421.694152ms)
+A11Y-ZOOM | Mit Ergebnis | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Mit Ergebnis", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1539.510871ms)
+A11Y-ZOOM | Prüfansicht | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Prüfansicht", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1615.343238ms)
+✔ Desktop: synthetic contract, current evidence and exact roundtrip with real NER=false (1218.650612ms)
+✔ Desktop: synthetic contract, current evidence and exact roundtrip with real NER=true (4034.308318ms)
+✔ Desktop: actual provider link launches immediately and uses only fixed service IDs (1140.806733ms)
+✔ Mobile browser: first click requests direct app link before clipboard finishes; explicit web fallback, no prompt URL or second modal (2894.305311ms)
+✔ Browser: first visit has no automatic preparation or model download; explicit preparation preserves unrelated caches (3024.764762ms)
+✔ Browser: full restart offline, text processing, actual scanned PDF OCR, DOCX and evidence without server requests (2576.969898ms)
+✔ Browser: optional pinned model preparation avoids loading a session; after offline restart actual model runs (7684.839161ms)
+✔ Browser: cache deletion revokes readiness; incomplete download never becomes ready and preserves other tools and model (3293.168256ms)
+✔ Browser: mobile layout and reduced motion; AI destination links carry no text and stale results block handoff (2857.678516ms)
+✔ Desktop: offline status verified from installed resources; app handler preferred, missing handler and failure fall back to fixed web URLs (1070.030614ms)
+✔ 1 Bau: exakte Dateiliste, byteidentische Kopien, Browser-Worker mit Pin, Groessen, deterministisch (313.209251ms)
+✔ 2 Shim deckt jede in preload.js freigegebene Funktion und jedes Ereignis ab (2.410113ms)
+✔ 3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in der Fusszeile (767.65796ms)
+✔ 4 Handy-Breite 390x844: kein horizontales Scrollen, Hauptbedienelemente sichtbar (1262.406506ms)
+✔ 5 Ende-zu-Ende ohne Modell (Standard beim ersten Besuch): Platzhalter, Rueckuebersetzung (779.550002ms)
+✔ 6 Netzpolitik: erster Besuch ohne huggingface-Anfrage; nach Einschalten der KI nur GET an das gepinnte Modell, Standard-Erkennung laeuft weiter (4903.440748ms)
+✔ 7 Kopieren legt den anonymisierten Text in die Zwischenablage (oder ruft ersatzweise den Shim) (1723.443909ms)
+✔ 8 Handy-Layout 390x844: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich (1723.592241ms)
+✔ 8 Handy-Layout 360x740: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich (1578.077763ms)
+✔ 9 Erster Besuch: Hinweis aufgeklappt, KI aus (ps_ai_mode=off), danach eingeklappt und KI-Einstellung bleibt (2087.621971ms)
+✔ 10 Irrefuehrende Aussagen des Werkzeugs werden in der Huelle ersetzt (Originalsaetze existieren im Tool) (1579.62752ms)
+✔ 11 Bauskript: gefaehrliche --out-Ziele werden abgelehnt, nichts wird geloescht (nur Wegwerf-Verzeichnisse) (537.456425ms)
+✔ 12 Bauskript: Worker-Ersatz mit CRLF-Quelle (Windows-Checkout) und Aufruf ueber einen Symlink-Pfad (macOS-Temp-Ordner) (136.714105ms)
+ℹ tests 53
+ℹ suites 0
+ℹ pass 53
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 87669.345271
