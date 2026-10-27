@@ -84,13 +84,16 @@ test('Regression Datenverlust: manuelle Markierung ueberlebt anon() und deanon()
 test('Annotieren-Modus: tokenizeAnnotateWord laesst IT unveraendert und legt eine Markierung an', async () => {
   const { a, f } = await startApp();
   try {
-    const orig = 'Der Kunde Zwiebelbaum meldet sich.';
+    // Deliberately unrecognized lowercase value: an existing automatic entity now
+    // toggles release instead of creating the duplicate this regression forbids.
+    const orig = 'intern gilt zzqyyk als code.';
     await setIT(f, orig);
+    assert.equal(await f.evaluate(() => fundeSpans(document.getElementById('IT').value).some(e => e.start <= 12 && e.end > 12)), false);
     const n0 = await f.evaluate(() => (typeof manualMarks !== 'undefined' && manualMarks.items ? manualMarks.items.length : -1));
-    await f.evaluate(() => tokenizeAnnotateWord(10, 'Zwiebelbaum', 'NAME', '#f59e0b'));
+    await f.evaluate(() => tokenizeAnnotateWord(12, 'zzqyyk', 'NAME', '#f59e0b'));
     assert.equal(await val(f, '#IT'), orig);
     const items = await f.evaluate(() => manualMarks.items);
     assert.equal(items.length, n0 + 1);
-    assert.ok(items.some((i) => i.value === 'Zwiebelbaum' && i.pfx === 'NAME'), JSON.stringify(items));
+    assert.ok(items.some((i) => i.value === 'zzqyyk' && i.pfx === 'NAME'), JSON.stringify(items));
   } finally { await a.close(); }
 });

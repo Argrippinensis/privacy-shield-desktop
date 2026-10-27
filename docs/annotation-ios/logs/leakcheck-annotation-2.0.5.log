@@ -1,0 +1,17 @@
+✔ desktop: automatic whole entities release/remask without duplicate marks and keep evidence honest (2885.94196ms)
+✔ desktop: manual marks release, undo, redo and normalized duplicate prevention through real controls (2993.377652ms)
+✔ web: automatic whole entities release/remask without duplicate marks and keep evidence honest (2258.539772ms)
+✔ web: manual marks release, undo, redo and normalized duplicate prevention through real controls (2727.869078ms)
+✔ Gegenpruefung: sauberes Ergebnis zeigt gruenes Band "keine Auffaelligkeiten" (2343.99647ms)
+✔ Gegenpruefung: absichtlich verfehlter Wert wird gemeldet und per "Maskieren" behoben (2450.205375ms)
+✔ Gegenpruefung: Whitelist-Freigabe unterdrueckt den Fund und wird gezaehlt (922.497724ms)
+✔ Regression Datenverlust: manuelle Markierung ueberlebt anon() und deanon() stellt den Text her (896.255905ms)
+✔ Annotieren-Modus: tokenizeAnnotateWord laesst IT unveraendert und legt eine Markierung an (875.078185ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19732.659413

@@ -1,8 +1,8 @@
-# PrivacyShield 2.0.4 – Annotation, iOS-Anleitung und Update-Hinweise
+# PrivacyShield 2.0.5 – Annotation, iOS-Anleitung und Update-Hinweise
 
 ## Abgleich und Versionskette
 
-Source main b27dbdbbdedd7908c622341f086cbbb2d6ece539, aufbauend auf dem vollständig auf Linux/Windows geprüften Source-Stand 4784af90e012ff56a35d444a4004a72c5bb40e49 (PR #13). Website main 74a10b6993ee67107d84d2549cab6c785b693ec8; der noch unveröffentlichte Website-PR #10 wird auf denselben finalen Stand gebracht. Die Tags v2.0.2 und v2.0.3 bleiben unverändert, beide Desktop-Builds wurden nicht veröffentlicht. GitHub Latest bleibt bis zur erfolgreichen Freigabe v2.0.1. Finales Ziel ist 2.0.4 auf beiden Oberflächen und allen Installern.
+Source main b27dbdbbdedd7908c622341f086cbbb2d6ece539, aufbauend auf dem vollständig auf Linux/Windows geprüften Source-Stand 4784af90e012ff56a35d444a4004a72c5bb40e49 (PR #13). Website main 74a10b6993ee67107d84d2549cab6c785b693ec8; der noch unveröffentlichte Website-PR #10 wird auf denselben finalen Stand gebracht. Die Tags v2.0.2 und v2.0.3 bleiben unverändert, beide Desktop-Builds wurden nicht veröffentlicht. GitHub Latest bleibt bis zur erfolgreichen Freigabe v2.0.1. Finales Ziel ist 2.0.5 auf beiden Oberflächen und allen Installern.
 
 ## Änderungen
 
@@ -20,8 +20,12 @@ Der vom Nutzer zurückgezogene Veraltet-Hinweis bleibt unverändert. Es gibt kei
 - 93/93 Layout-/Barrierefreiheits-/Browser-/Präsentationsprüfungen einschließlich unverändert exakt 1280×800, 200 % Zoom, 360/390-Pixel-Mobilbreiten, fünf Logos, Pause und reduzierter Bewegung. Nach letzter Anordnungsänderung gezielte Präsentations-/Offline-Prüfung erneut.
 - 24/24 Nachweis-/Arbeitsvertrag-/Offline-Prüfungen: echte lokale NER, Scan-OCR, Browser komplett schließen und ohne Netz neu öffnen, optionales gepinntes Modell wirklich offline ausführen, Cache-Reparatur sowie native Speicher-/Revisionsgrenzen.
 - Ganze Unit-Suite: 1142 Tests, 1139 bestanden, 0 Fehler, 2 bekannte Skips und 1 bestehendes TODO. Das bestehende Whitelist-TODO bleibt ausdrücklich sichtbar.
-- Aktueller synthetischer Arbeitsvertragsnachweis 2.0.4: Ergebnis-SHA-256 unabhängig nachgerechnet, tatsächlicher PDF-Text mit Kennung/Hash gelesen und eine A4-Seite bestätigt. Generator unter scripts/generate-presentation-example.mjs; PDF/JSON/Ergebnis unter docs/presentation-ui/examples/; aktuelle UI-Vorschau im Unterordner examples/. Persönliche Sichtprüfung ist nicht vorausgewählt, Stempel rein grafisch und ausdrücklich keine digitale Signatur.
+- Aktueller synthetischer Arbeitsvertragsnachweis 2.0.5: Ergebnis-SHA-256 unabhängig nachgerechnet, tatsächlicher PDF-Text mit Kennung/Hash gelesen und eine A4-Seite bestätigt. Generator unter scripts/generate-presentation-example.mjs; PDF/JSON/Ergebnis unter docs/presentation-ui/examples/; aktuelle UI-Vorschau im Unterordner examples/. Persönliche Sichtprüfung ist nicht vorausgewählt, Stempel rein grafisch und ausdrücklich keine digitale Signatur.
 
 Vollständige Source-CI, schnelle ARM-/Intel-Mac-Präsentationsprüfung und alle drei gebauten Programme einschließlich echter Windows-Installation werden an den endgültigen Revisionen im PR dokumentiert. Veröffentlichung nur mit erfolgreicher Source-CI für den exakten Tag-Commit und vollständigen Paketprüfungen. Danach echte GitHub-Latest-/Datei-/Prüfsummen- und öffentliche HTTPS-/Offline-/Versionsprüfung. Manuell verbleiben echte Mobilgeräte/App-Öffnung, VoiceOver, Papierausdruck und Prüfung des eigenen Originalvertrags.
 
 Finaler Verarbeitungs-Kern: `b0ca1f25ffb79902b011acf14a240fc9f3f5a144a06f6db1083388d04015a5c6`. Nach letzter Oberflächenanordnung erneut 24/24 Annotations-/Präsentations-/CI-Konfigurationsprüfungen sowie 9/9 Präsentations-/Ressourcenprüfungen erfolgreich. Den Nachweis mit der finalen Kennung, Version und Prüfsumme neu erzeugt; eine A4-Seite bestätigt.
+
+Vollständige Source-CI des nicht veröffentlichten Tags v2.0.4: Linux 1700 Tests, 1691 bestanden, eine veraltete Assertion in leakcheck.test.mjs fehlgeschlagen (zusätzliche Markierung für schon automatisch erkannten Wert erwartet), 7 bekannte Skips, 1 TODO. Release vor Veröffentlichung abgebrochen. Die betreffende Prüfung nutzt nun einen nachweislich unerkannten Kleinbuchstabenwert und behält die Anforderungen an Originaltext, Kategorie und genau eine neue Markierung. Die separaten Desktop-/Browser-Prüfungen für automatische Werte, Freigabe und Duplikatvermeidung bleiben unverändert. Neues unveränderliches Ziel v2.0.5.
+
+Nach dieser Korrektur: 9/9 vollständige Leakcheck- und neue Annotationsprüfungen erfolgreich, beide Desktop-/Browser-Wege und Datenverlust-Gegenprüfung enthalten. Rohprotokoll logs/leakcheck-annotation-2.0.5.log. Synthetischen Nachweis mit 2.0.5 neu erzeugt, Ergebnis-SHA und tatsächliche PDF-Kennung geprüft, eine A4-Seite. Produktkern und alle Produktdateien gegenüber v2.0.4 unverändert.
