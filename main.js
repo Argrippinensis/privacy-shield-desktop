@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell, protocol, session, clipboard } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, protocol, session, clipboard, powerMonitor } = require('electron');
 const path = require("path")
 const os = require("os");
 const { autoUpdater } = require('electron-updater');
@@ -206,6 +206,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
+    // CI needs exact viewports even when a Mac runner exposes a smaller virtual display.
+    enableLargerThanScreen: process.env.PS_TEST_VIEWPORT === '1' && process.env.PS_BLOCK_EXTERNAL === '1',
     minWidth: 800,
     minHeight: 600,
     title: 'PrivacyShield',
@@ -510,6 +512,30 @@ handle('start-download', async () => {
   }
 });
 
+// Manual installers still need release notifications when electron-updater cannot
+// install them (notably .deb). Only public release metadata uses this isolated session.
+let manualCheckPending = null;
+function checkUpdateFeed() {
+  if (!MANUAL_UPDATE || (!app.isPackaged && process.env.PS_FORCE_DEV_UPDATE !== '1')) return autoUpdater.checkForUpdates();
+  if (manualCheckPending) return manualCheckPending;
+  manualCheckPending = (async () => {
+    const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 15000);
+    try {
+      const url = process.env.PS_UPDATE_FEED ? new URL('release.json', process.env.PS_UPDATE_FEED.replace(/\/?$/, '/')).href : 'https://api.github.com/repos/Argrippinensis/privacy-shield-desktop/releases/latest';
+      const response = await session.fromPartition('ps-update-metadata').fetch(url, {signal:controller.signal,headers:{Accept:'application/vnd.github+json','User-Agent':'PrivacyShield/'+app.getVersion()}});
+      if(!response.ok)throw Error('Versionsprüfung nicht erreichbar (HTTP '+response.status+').');
+      const release = await response.json(), semver=require('semver');
+      const version=typeof release.tag_name==='string'?release.tag_name.replace(/^v/,''):'';
+      if(release.draft!==false||release.prerelease!==false||!semver.valid(version)||semver.prerelease(version))throw Error('Keine gültige veröffentlichte stabile Version erhalten.');
+      const info={version,releaseNotes:plainNotes(release.body)};
+      autoUpdater.emit(semver.gt(version,app.getVersion())?'update-available':'update-not-available',info);
+      return info;
+    } catch(error) { autoUpdater.emit('error',error);throw error; }
+    finally { clearTimeout(timer);manualCheckPending=null; }
+  })();
+  return manualCheckPending;
+}
+
 handle('check-for-updates', () => {
   return new Promise((resolve) => {
     let settled = false;
@@ -558,9 +584,7 @@ handle('check-for-updates', () => {
     autoUpdater.once('update-not-available', onUpdateNotAvailable);
     autoUpdater.once('error', onError);
 
-    autoUpdater.checkForUpdates().catch((err) => {
-      console.log('checkForUpdates threw:', err.message);
-    });
+    checkUpdateFeed().catch(() => {});
   });
 });
 
@@ -569,9 +593,17 @@ handle('quit-app', () => {
 });
 
 function setupAutoUpdater() {
-  setTimeout(() => {
-    autoUpdater.checkForUpdates().catch(() => {});
-  }, 5000);
+  let checking=false,lastCheck=0;
+  async function backgroundCheck(force=false){
+    if(checking||downloadActive||(!force&&Date.now()-lastCheck<15*60*1000))return;
+    checking=true;lastCheck=Date.now();
+    try{await checkUpdateFeed();}catch{/* offline: keep working quietly */}finally{checking=false;}
+  }
+  const startup=setTimeout(()=>backgroundCheck(true),5000);
+  const periodic=setInterval(()=>backgroundCheck(),30*60*1000);periodic.unref();
+  const resume=()=>backgroundCheck(true);powerMonitor.on('resume',resume);
+  const focus=()=>backgroundCheck();app.on('browser-window-focus',focus);
+  app.once('will-quit',()=>{clearTimeout(startup);clearInterval(periodic);powerMonitor.removeListener('resume',resume);app.removeListener('browser-window-focus',focus);});
 
   autoUpdater.on('update-available', (info) => {
     updateInfo = info;

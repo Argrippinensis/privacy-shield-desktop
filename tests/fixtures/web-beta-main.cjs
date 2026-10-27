@@ -20,7 +20,7 @@ app.whenReady().then(() => {
     globalThis.__psReq.push({ url: details.url, host, lokal, hf, method: details.method, body: !!(details.uploadData && details.uploadData.length) });
     cb({ cancel: !(lokal || (hf && HF_DURCHLASSEN)) });
   });
-  const win = new BrowserWindow({ width: 1280, height: 800, show: true, webPreferences: { contextIsolation: true, nodeIntegration: false } });
+  const win = new BrowserWindow({ enableLargerThanScreen: true, width: 1280, height: 800, show: true, webPreferences: { contextIsolation: true, nodeIntegration: false } });
   win.loadURL(URL_ZIEL);
 });
 

@@ -31,7 +31,7 @@ jobs:
           - os: windows-2022
             build_flag: --win
             artifact_name: windows
-          - os: macos-14
+          - os: macos-15
             build_flag: --mac
             artifact_name: macos
     runs-on: ${{ matrix.os }}
@@ -129,11 +129,16 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      actions: read
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+      - name: Source-CI fuer exakt den getaggten Commit bestaetigen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-source-ci.mjs
       - uses: actions/download-artifact@v8
         with:
           pattern: builds-*

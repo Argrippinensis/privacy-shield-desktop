@@ -46,3 +46,26 @@ test('Ohne gespeicherte Ablehnungen erscheint nur das Banner mit Zaehler', { ski
     assert.match(await a.win.textContent('#btn-later'), /Später \(3×\)/);
   } finally { await a.close(); await srv.close(); }
 });
+
+
+test('Manual installer receives a real version notice even when installer feeds are unavailable',async()=>{
+ const srv=await startUpdateServer({metadataOnly:true,notes:'Neu: Markierungen lassen sich freigeben.'});
+ const a=await launchApp({env:{PS_FORCE_DEV_UPDATE:'1',PS_FORCE_MANUAL_UPDATE:'1',PS_UPDATE_FEED:srv.url}});
+ try{
+  await toolFrame(a.win);await a.win.waitForFunction(()=>getComputedStyle(document.getElementById('update-banner')).display==='flex',null,{timeout:20000});
+  assert.match(await a.win.textContent('#banner-title'),/99\.0\.0/);assert.match(await a.win.textContent('#banner-notes'),/Markierungen/);
+  assert.ok(srv.hits.some(x=>x.startsWith('/release.json')));assert.equal(await css(a.win,'forced-update-overlay'),'none');
+  await a.win.click('#btn-update');assert.deepEqual(await a.app.evaluate(()=>globalThis.__psExternal),['https://arcangeli.eu/desktop/']);
+ }finally{await a.close();await srv.close();}
+});
+test('A connection restored after a failed check gives a version notice without interrupting work',async()=>{
+ const srv=await startUpdateServer({metadataOnly:true,available:false});
+ const a=await launchApp({env:{PS_FORCE_DEV_UPDATE:'1',PS_FORCE_MANUAL_UPDATE:'1',PS_UPDATE_FEED:srv.url}});
+ try{
+  const f=await toolFrame(a.win);await f.evaluate(()=>{startApp();document.getElementById('IT').value='Ungespeicherte synthetische Arbeit';});
+  await a.win.waitForTimeout(6000);assert.ok(srv.hits.some(x=>x.startsWith('/release.json')));assert.equal(await css(a.win,'update-banner'),'none');
+  srv.setAvailable(true);await a.win.evaluate(()=>window.dispatchEvent(new Event('online')));
+  await a.win.waitForFunction(()=>getComputedStyle(document.getElementById('update-banner')).display==='flex',null,{timeout:20000});
+  assert.equal(await f.inputValue('#IT'),'Ungespeicherte synthetische Arbeit');assert.equal(await css(a.win,'forced-update-overlay'),'none');
+ }finally{await a.close();await srv.close();}
+});

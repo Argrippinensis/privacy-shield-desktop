@@ -1,0 +1,13 @@
+✔ Manueller Modus: Hinweis statt Zwangs-Dialog, Download-Seite oeffnet im Browser (6045.989148ms)
+✔ Automatischer Modus: nach 3x Spaeter kommt der Pflicht-Dialog, bei Fehlschlag gibt es einen Ausweg (5558.112836ms)
+✔ Ohne gespeicherte Ablehnungen erscheint nur das Banner mit Zaehler (5454.739163ms)
+✔ Manual installer receives a real version notice even when installer feeds are unavailable (5509.301279ms)
+✔ A connection restored after a failed check gives a version notice without interrupting work (7172.616272ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 30020.023869

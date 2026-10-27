@@ -1679,8 +1679,12 @@
                     line-height: 1.5;
                   "
                 >
-                  Klicke auf <strong>erkannte Daten (farbig markiert)</strong> um sie zu anonymisieren, oder klicke auf
-                  <strong>beliebige Wörter</strong> um eigene Markierungen zu setzen.
+                  <strong>Farbig markiert:</strong> klicken zum Freigeben. <strong>Freigegeben:</strong> erneut klicken zum Maskieren.
+                  Unmarkierte Wörter: Kategorie wählen. Gleiche Werte derselben Kategorie gelten gemeinsam.
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+                    <button type="button" class="btn btn-ghost" id="ANUNDO" onclick="fundeStep(false)" style="min-height:44px">Rückgängig</button>
+                    <button type="button" class="btn btn-ghost" id="ANREDO" onclick="fundeStep(true)" style="min-height:44px">Wiederholen</button>
+                  </div>
                 </div>
                 <div class="input-wrapper" id="ITWRAP" style="position: relative; background: #fff; border-radius: 8px">
                   <div id="HLMIRROR" class="highlight-mirror" aria-hidden="true"></div>
@@ -4198,11 +4202,15 @@
       let fundeAll = [], fundeF = { cat: "", doubt: false, q: "" }, fundeV = null, fundeVwin = "", fundeStatFlip = false, fundeOptSig = null;
       const fundeHist = PSLib.history.create({ limit: 100 }), FUNDE_VIRT = 500, FUNDE_LI = 64, FUNDE_GH = 40, FUNDE_CHUNK = 20;
       function fundeState() { return { whitelist: whitelist, released: released, marks: manualMarks }; }
-      function fundeMac() { try { return window.parent.electronAPI.platform === "darwin"; } catch (x) { return false; /* ohne Bruecke */ } }
+      function fundeMac() {
+        try { const platform=window.parent.electronAPI.platform;if(platform!=="web")return platform==="darwin"; } catch(x) {}
+        return /Mac|iPhone|iPad|iPod/i.test(navigator.platform||navigator.userAgent);
+      }
       function fundeBtns() {
         const u = document.getElementById("FUNDEUNDO"), r = document.getElementById("FUNDEREDO");
         if (u) u.setAttribute("aria-disabled", fundeHist.canUndo() ? "false" : "true");
         if (r) r.setAttribute("aria-disabled", fundeHist.canRedo() ? "false" : "true");
+        for(const [id,enabled] of [["ANUNDO",fundeHist.canUndo()],["ANREDO",fundeHist.canRedo()]]){const b=document.getElementById(id);if(b){b.disabled=!enabled;b.setAttribute("aria-disabled",String(!enabled));}}
       }
       // Stand als Schnappschuss ablegen, wenn er vom aktuellen abweicht (eine Aenderung = ein Schnappschuss)
       function fundeRecord() {
@@ -4402,6 +4410,7 @@
         });
         fundeRecord();
         renderFunde();
+        if(annotateActive)buildAnnotateOverlay();
         fundeSay((release ? "Freigegeben: " : "Maskiert: ") + entries.length + (entries.length === 1 ? " Wert" : " Werte"));
         clearTimeout(_fundeDeb);
         _fundeDeb = setTimeout(fundeApply, 300);
@@ -4451,7 +4460,7 @@
         });
         // Kuerzel: nur bei offener Leiste und nicht in Eingabefeldern (dort gilt die Textbearbeitung des Browsers)
         document.addEventListener("keydown", (ev) => {
-          if (!fundeOpen || ev.defaultPrevented) return;
+          if ((!fundeOpen && !annotateActive) || ev.defaultPrevented) return;
           if (ev.key === "Escape" && document.getElementById("FUNDE").contains(document.activeElement)) { ev.preventDefault(); toggleFunde(false); return; }
           const mac = fundeMac();
           if (ev.altKey || !(mac ? ev.metaKey && !ev.ctrlKey : ev.ctrlKey && !ev.metaKey)) return;
@@ -4664,102 +4673,60 @@
       function refreshAnnotate() {
         if (annotateActive) buildAnnotateOverlay();
       }
+      function annotateValueKey(value) {
+        return PSDetect.normalizeForDetection(String(value)).normalize("NFC").toLowerCase();
+      }
+      function annotateFreed(value, pfx) {
+        return fundeIsReleased(pfx, value) || whitelist.some((w) => value.toLowerCase().includes(String(w).toLowerCase()));
+      }
       function buildAnnotateOverlay() {
-        const text = document.getElementById("IT").value;
-        const overlay = document.getElementById("ANOVERLAY");
-        overlay.innerHTML = "";
-        if (!text.trim()) {
-          overlay.innerHTML =
-            "<div style=\"color: var(--ps-muted);text-align:center;padding:40px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;\">Kein Text vorhanden.<br>Füge Text ein oder lade eine Datei hoch.</div>";
-          return;
+        const text = document.getElementById("IT").value, overlay = document.getElementById("ANOVERLAY");
+        const scroll = overlay.scrollTop, focusStart = overlay.contains(document.activeElement) ? document.activeElement.dataset.start : null;
+        overlay.replaceChildren();
+        if (!text.trim()) { overlay.textContent = "Kein Text vorhanden. Füge Text ein oder lade eine Datei hoch."; return; }
+        const entities = fundeSpans(text).map((e) => ({ start:e.start, end:e.end, pfx:e.pfx, color:e.col || "#1a3a5c" }));
+        for (const match of text.matchAll(new RegExp(PSLib.placeholder.TOKEN_SOURCE, "g"))) entities.push({start:match.index,end:match.index+match[0].length,token:true});
+        entities.sort((a,b) => a.start-b.start || b.end-a.end);
+        let position = 0;
+        function clickable(value, start, entity) {
+          const span = document.createElement("span"); span.textContent = value; span.dataset.start = String(start);
+          span.style.cssText = "display:inline;border-radius:4px;padding:2px 3px;cursor:pointer;overflow-wrap:anywhere;";
+          if (entity?.token) { span.style.cursor="default"; span.style.cssText += "background:#d1fae5;color:#065f46"; span.title="Bereits anonymisiert"; overlay.append(span); return; }
+          span.setAttribute("role","button"); span.tabIndex=0;
+          if (entity) {
+            const freed = annotateFreed(value,entity.pfx); span.dataset.pfx=entity.pfx; span.dataset.released=String(freed);
+            span.style.background=freed?"#f0f2f4":entity.color+"33";
+            if(freed)span.style.textDecoration="underline dotted #728078";
+            span.title=entity.pfx+" · "+(freed?"Freigegeben – klicken zum Maskieren":"Markiert – klicken zum Freigeben")+" (gleiche Werte gemeinsam)";
+            span.setAttribute("aria-pressed",String(!freed));
+            span.setAttribute("aria-label",value+": "+(freed?"wieder maskieren":"Freigabe umschalten"));
+          } else { span.title="Klicken zum Markieren"; span.setAttribute("aria-label",value+": Kategorie zum Markieren wählen"); }
+          const activate=()=>entity?tokenizeAnnotateWord(start,value,entity.pfx,entity.color):showAnnotatePopup(start,value);
+          span.addEventListener("click",activate);span.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();activate();}});
+          overlay.append(span);
         }
-        const entities = collectEntities(text).map(function (s) {
-          return { start: s.start, end: s.end, type: s.id, color: s.col, label: s.pfx, pfx: s.pfx };
-        });
-        const tokenRx = new RegExp(PSLib.placeholder.TOKEN_SOURCE, "g");
-        let tMatch;
-        while ((tMatch = tokenRx.exec(text)) !== null) {
-          entities.push({
-            start: tMatch.index,
-            end: tMatch.index + tMatch[0].length,
-            type: "token",
-            color: "#10b981",
-            label: "Bereits anonymisiert",
-            pfx: "",
-          });
-        }
-        entities.sort(function (a, b) {
-          return a.start - b.start;
-        });
-        const merged = [];
-        for (const e of entities) {
-          if (merged.length > 0 && e.start < merged[merged.length - 1].end) continue;
-          merged.push(e);
-        }
-        const wordRx = /(\S+)(\s*)/g;
-        let wm;
-        while ((wm = wordRx.exec(text)) !== null) {
-          const word = wm[1];
-          const spaces = wm[2];
-          const wStart = wm.index;
-          const ent = merged.find(function (e) {
-            return wStart >= e.start && wStart < e.end;
-          });
-          const isToken = PSLib.placeholder.isToken(word);
-          const span = document.createElement("span");
-          span.style.cssText = "display:inline-block;padding:2px 4px;border-radius:4px;transition:all .15s;";
-          span.textContent = word;
-          if (isToken) {
-            span.style.cssText += "cursor:default;background:#d1fae5;color:#065f46;font-weight:600;";
-            span.title = "Bereits anonymisiert";
-          } else if (ent) {
-            span.style.cssText += "cursor:pointer;background:" + ent.color + "33;";
-            span.title = ent.label + " — Klicken zum Anonymisieren";
-            span.dataset.start = wStart;
-            span.dataset.pfx = ent.pfx;
-            span.dataset.col = ent.color;
-            span.addEventListener("mouseenter", function () {
-              span.style.background = ent.color + "55";
-              span.style.transform = "scale(1.05)";
-              span.style.zIndex = "2";
-              span.style.position = "relative";
-            });
-            span.addEventListener("mouseleave", function () {
-              span.style.background = ent.color + "33";
-              span.style.transform = "scale(1)";
-              span.style.zIndex = "";
-              span.style.position = "";
-            });
-            span.addEventListener("click", function () {
-              tokenizeAnnotateWord(parseInt(span.dataset.start), word, span.dataset.pfx, span.dataset.col);
-            });
-          } else {
-            span.style.cssText += "cursor:pointer;";
-            span.title = "Klicken zum Anonymisieren";
-            span.dataset.start = wStart;
-            span.addEventListener("mouseenter", function () {
-              span.style.background = "#f0f0f0";
-              span.style.transform = "scale(1.05)";
-              span.style.zIndex = "2";
-              span.style.position = "relative";
-            });
-            span.addEventListener("mouseleave", function () {
-              span.style.background = "";
-              span.style.transform = "scale(1)";
-              span.style.zIndex = "";
-              span.style.position = "";
-            });
-            span.addEventListener("click", function () {
-              showAnnotatePopup(parseInt(span.dataset.start), word);
-            });
+        function plain(value, start) {
+          for (const match of value.matchAll(/(\S+)|(\s+)/g)) {
+            if(match[1])clickable(match[0],start+match.index);else overlay.append(document.createTextNode(match[0]));
           }
-          overlay.appendChild(span);
-          if (spaces) overlay.appendChild(document.createTextNode(spaces));
         }
+        for(const entity of entities){
+          if(entity.start<position)continue;
+          plain(text.slice(position,entity.start),position);
+          clickable(text.slice(entity.start,entity.end),entity.start,entity);position=entity.end;
+        }
+        plain(text.slice(position),position);overlay.scrollTop=scroll;
+        if(focusStart!==null)overlay.querySelector('[data-start="'+focusStart+'"]')?.focus({preventScroll:true});
       }
       function tokenizeAnnotateWord(start, word, pfx, color) {
-        if (word.startsWith("{{") && word.endsWith("}}")) return;
-        addManualMark(word, pfx);
+        if (PSLib.placeholder.isToken(word)) return;
+        const text=document.getElementById("IT").value;
+        const entity=fundeSpans(text).find(e=>start>=e.start&&start<e.end);
+        if(!entity)return addManualMark(word,pfx);
+        const value=text.slice(entity.start,entity.end),freed=annotateFreed(value,entity.pfx);
+        if(freed&&whitelist.some(w=>value.toLowerCase().includes(String(w).toLowerCase())))return toast("Dieser Wert steht auf der Freigabeliste. Entferne dort den Eintrag, um ihn wieder zu maskieren.","e");
+        fundeDecide([{type:entity.pfx,value}],!freed);buildAnnotateOverlay();
+        toast(freed?"Wert wird wieder maskiert":"Wert freigegeben – gleiche Werte dieser Kategorie bleiben im Klartext","s");
       }
       function showAnnotatePopup(start, word) {
         closePopup();
@@ -4771,6 +4738,7 @@
         document.getElementById("AMPCUSTOM").style.display = "none";
         document.getElementById("AMPCUSTOM").value = "";
         document.getElementById("AMPERROR").style.display = "none";
+        document.querySelector('#AMP button[onclick*="selectAnnotateType"]').focus();
       }
       function selectAnnotateType(type, pfx, color) {
         const popup = document.getElementById("AMP");
@@ -4798,15 +4766,32 @@
         addManualMark(word, pfx);
       }
       function addManualMark(word, pfx) {
-        const ok = PSLib.marks.add(manualMarks, { value: word, pfx: pfx }); if (ok) { buildAnnotateOverlay(); fundeRecord(); fundeConfigChanged(); }
-        toast(ok ? "Markiert als " + pfx + ": wird beim Anonymisieren ersetzt" : "Dieser Wert kann nicht markiert werden", ok ? "s" : "e");
+        const text=document.getElementById("IT").value,key=annotateValueKey(word);
+        const existing=fundeSpans(text).find(e=>annotateValueKey(text.slice(e.start,e.end))===key);
+        if(existing){
+          const value=text.slice(existing.start,existing.end);
+          if(annotateFreed(value,existing.pfx))return tokenizeAnnotateWord(existing.start,value,existing.pfx,existing.col);
+          toast("Bereits als "+existing.pfx+" markiert – zum Freigeben auf die Markierung klicken","s");return false;
+        }
+        if(manualMarks.items.some(e=>annotateValueKey(e.value)===key)){toast("Dieser Wert ist bereits manuell markiert","s");return false;}
+        const ok=PSLib.marks.add(manualMarks,{value:word,pfx});
+        if(ok){fundeRecord();fundeConfigChanged();buildAnnotateOverlay();}
+        toast(ok?"Markiert als "+pfx+": wird beim Anonymisieren ersetzt":"Bitte einen gültigen Wert und eine Kategorie wählen",ok?"s":"e");return ok;
       }
       function closePopup() {
         const popup = document.getElementById("AMP");
         const backdrop = document.getElementById("AMPBACKDROP");
         if (popup) popup.style.display = "none";
         if (backdrop) backdrop.style.display = "none";
+        if(popup?.dataset.start)document.querySelector('#ANOVERLAY [data-start="'+popup.dataset.start+'"]')?.focus({preventScroll:true});
       }
+      document.getElementById("AMP").addEventListener("keydown",e=>{
+        if(e.key==="Escape"){e.preventDefault();e.stopPropagation();closePopup();return;}
+        if(e.key!=="Tab")return;
+        const controls=[...e.currentTarget.querySelectorAll('button,input')].filter(n=>!n.disabled&&getComputedStyle(n).display!=="none");
+        if(e.shiftKey&&document.activeElement===controls[0]){e.preventDefault();controls.at(-1)?.focus();}
+        else if(!e.shiftKey&&document.activeElement===controls.at(-1)){e.preventDefault();controls[0]?.focus();}
+      });
       const TEST_DOC = `ANWALTSSCHREIBEN — EILT SEHR\n\nRechtsanwaltskanzlei Dr. Hans Schneider & Partner mbB\nFachanwälte für Gesellschaftsrecht, Kapitalmarktrecht, Steuerrecht\nLeopoldstraße 47, 80802 München\nTel.: 089 / 12345-0 · Fax: 089 / 12345-100\nE-Mail: kanzlei@schneider-partner.de\n\nAn das\nAmtsgericht München\nMaxburgstraße 1, 80333 München\n\nMünchen, den 15.03.2026\nAktenzeichen: 17 O 2847/26\n\nIn der Rechtssache\n\nBlauwasser Capital AG (HRB 98765 AG München) — Klägerin —\nvertreten durch Dr. Hans Schneider, Fachanwalt für Gesellschaftsrecht\n\ngegen\n\nProf. Dr. Markus Blauwasser, Vorstand\nDr. Julia Schneider-Finkbeiner, geb. 23.05.1978 — Beklagte —\n\nBetreff: Investment-Memorandum · Geschäftsgeheimnisgesetz (GeschGehG)\n\nI. Sachverhalt\n\nMandant ist die Blauwasser Capital AG mit Sitz Am Stadtpark 15, 81927 München.\n\nDie Beklagte ist unter folgender Adresse erreichbar:\nGartenstraße 12b, 80807 München\n\nIm Folgenden wird dargestellt, in welchem Rahmen und in welcher Höhe der Schaden\nin Aussicht gestellt wurde. Der Vertragsschluss erfolgte am 10.01.2025.\n\nSchreiben vom 15.03.2026 zur Korrespondenz Vermögensverwaltung:\nSteuerbescheinigung Nr. 2024-STB-4477 · Wertpapierabrechnung Q1/2026\nVertraulichkeitshinweis: Dieses Schreiben ist vertraulich.\n\nII. Beteiligte Personen\n\nName            | Geburtsdatum | Funktion\n----------------|-------------|----------\nProf. Dr. Markus Blauwasser | 03.07.1968 | Vorstand\nKarl Thomas Huber | 12.07.1965 | Geschäftsführer\nAnna Kovac      | 17.03.1982 | Zeugin\nHans-Georg Finkbeiner | 29.11.1975 | Prozessvertreter\n\nPartei 1: Mandant Huber\nPerson: Vorstand Global Compliance GmbH\nFachanwalt: Dr. Thomas Karl, Steuerrecht\n\nIII. Finanzdaten\n\nBankverbindung Klägerin:\nIBAN: DE89 3704 0044 0532 0130 00\nBIC: HYVEDEMMXXX\nKreditinstitut: UniCredit Bank AG\n\nIBAN: DE23 7015 0000 0060 2305 71\nBIC: SSKMDEMMXXX\nKreditinstitut: Stadtsparkasse München\n\nIBAN: DE92 2004 1155 0521 5020 00\nBIC: BYLADEM1KMS\n\nIBAN: DE35 3007 0024 0154 0640 00\nBIC: CMCIDEDDXXX\n\nIBAN: DE68 1001 0010 0050 6703 00\nBIC: PBNKDEFFXXX\n\nSteuerdaten:\nSteuernummer: 143/157/12345\nUSt-IdNr.: DE297418293\nSteuerberater-Nr. 82741/2020\n\nWertpapiere:\nWKN A2XYZ1 — Blauwasser Capital AG (XETRA)\nISIN DE000A2XYZ10\n\nIV. Schadensberechnung\n\nGesamtschaden: 2.500.000,00 EUR\nZinsen (§ 288 BGB): 125.000,00 EUR\nHonorar (§ 14 RVG): 34.862,50 EUR\n\nHuber Vermögensverwaltung GmbH & Co. KG: Schaden 1.250.000,00 EUR.\n\nV. Rechtliche Grundlagen\n\n§ 126a BGB (Schriftform) · GeschGehG § 4 · § 14 RVG\n\nMit freundlichen Grüßen\n\nDr. Hans Schneider\nRechtsanwalt · Fachanwalt für Gesellschaftsrecht\nTel.: 089 / 12345-22 · Mobil: +49 171 234 5678\nE-Mail: h.schneider@schneider-partner.de`;
       const TEST_DOC_MED = `PRIVACYSHIELD TESTDOKUMENT — MEDIZIN & PFLEGE\n================================================\nFiktives Demodokument — alle Personen, Daten und\nInstitutionen sind frei erfunden.\n================================================\n\nKLINIKUM MÜNCHEN-NORD — UNIVERSITÄTSKLINIKUM\nChefarzt: Prof. Dr. med. Thomas Berger\nKlinik für Innere Medizin und Kardiologie\nTristanstraße 25, 80807 München\nTel.: 089 / 3400-0 · Fax: 089 / 3400-4999\nE-Mail: info@klinikum-muenchen-nord.de\n\n------------------------------------------------\n                        \tARZTBRIEF — ENTLASSUNGSBERICHT\n                        \tStation 4B — Kardiologische Überwachung\n------------------------------------------------\n\nPatient:          \tKarl Friedrich Maier\ngeboren am:       \t14.08.1955 in Nürnberg\nwohnhaft:         \tRosenheimer Straße 78, 81667 München\nKrankenversicherung: \tAOK Bayern · Versicherten-Nr. A123456789\nKV-Karte-Nr.:     \tK1234567890\nBetriebsstätten-Nr.: \t123456789\n\nEinweisung:       \tDr. med. Claudia Wagner, Hausarztpraxis Dr. Wagner\n                    \tIsartalstraße 12, 80469 München\n                    \tTel.: 089 / 2345-0 · E-Mail: praxis@dr-wagner.de\n\nAufnahmedatum:    \t01.06.2026, 14:30 Uhr\nEntlassdatum:     \t10.06.2026, 10:00 Uhr\nStation:          \t4B / Zimmer 412\nBehandelnder Arzt:\tOberarzt Dr. med. Stefan Müller, Facharzt für Kardiologie\n                    \tMobil: +49 172 9876543 · E-Mail: s.mueller@klinikum-muenchen-nord.de\n\nNotfallkontakt:   \tMaria Maier, Ehefrau\n                    \tMobil: +49 151 23456789\n                    \tE-Mail: maria.maier@email.de\n\n------------------------------------------------\nDIAGNOSEN (ICD-10-GM)\n------------------------------------------------\n\nHauptdiagnose:\n  I25.13 \tVerschluss eines Koronargefäßes, Z. n. akutem Myokardinfarkt (Vorderwand)\n\nNebendiagnosen:\n  I10.90 \tArterielle Hypertonie\n  E11.91 \tDiabetes mellitus Typ 2, nicht insulinpflichtig\n  I48.0  \tVorhofflimmern, paroxysmal\n  E78.5  \tHyperlipidämie, nicht näher bezeichnet\n  Z92.2  \tZustand nach Gabe von Acetylsalicylsäure-Allergie\n\n------------------------------------------------\nMEDIKATION BEI ENTLASSUNG\n------------------------------------------------\n\n1. Restex 100 mg 1-0-0-0  (ASS 100)\n   N3 - PZN 01234567 - Apotheke: Sonnen-Apotheke, Rosenheimer Str. 82\n\n2. Metoprololsuccinat 47,5 mg 1-0-0-0\n   N2 - PZN 02345678\n\n3. Simvastatin 40 mg 0-0-0-1\n   N2 - PZN 03456789\n\n4. Ramipril 5 mg 1-0-0-0\n   N2 - PZN 04567890\n\n5. Metformin 850 mg 1-0-1-0\n   N3 - PZN 05678901\n\n6. Apixaban 5 mg 1-0-1-0 (Eliquis)\n   N2 - PZN 06789012\n\nAllergien:\n  - Acetylsalicylsäure (ASS) → Urtikaria, Quincke-Ödem\n  - Penicillin V → Anaphylaktischer Schock (02/2019, Intensivstation)\n  - Kontrastmittel (jodhaltig) → Hautausschlag, Juckreiz\n\n------------------------------------------------\nLABORWERTE BEI ENTLASSUNG (10.06.2026)\n------------------------------------------------\n\nParameter            \tWert     \tReferenzbereich\nHb                   \t12,8 g/dl\t13,5–17,5\nLeukozyten           \t7,2 G/l  \t4,0–10,0\nThrombozyten         \t189 G/l  \t150–400\nKreatinin            \t1,1 mg/dl\t0,7–1,2\neGFR                 \t62 ml/min\t> 90\nHbA1c                \t7,4 %    \t4,8–5,9\nLDL-Cholesterin      \t115 mg/dl\t< 100\nNT-proBNP            \t1.240 pg/ml\t< 125\nINR                  \t1,1      \t< 1,2\nTroponin T (hs)      \t15 ng/l  \t< 14\n\nBlutgruppe: A Rhesus positiv\n\n------------------------------------------------\nEPIKRISE / ZUSAMMENFASSUNG\n------------------------------------------------\n\nHerr Karl Friedrich Maier, 70 Jahre, wurde am 01.06.2026 notfallmäßig\nvia Rettungsdienst (RTW, NAW Rudolf Weber, Notarzt Dr. Johann Fischer)\nmit akutem Vorderwandinfarkt (STEMI) aufgenommen.\n\nSofortige Herzkatheter-Untersuchung (Dr. med. Stefan Müller):\n  - Verschluss des R. interventricularis anterior (RIVA) proximal\n  - DES-Implantation (Xience Pro 3,5×28 mm) in RIVA\n\nEchokardiographie (Dr. med. Laura Schmidt, 04.06.2026):\n  - LV-EF 40–45% (leichtgradig eingeschränkt)\n\nSozialanamnese:\n  - Verheiratet, 2 Kinder (Anna Maier, geboren 12.03.1988; Felix Maier,\n    geboren 25.07.1991)\n  - Beruf: Selbstständiger Steuerberater (Kanzlei Maier & Partner,\n    Steuerberatungsgesellschaft mbB, Rosenheimer Str. 78, 81667 München)\n\n  - Überweisung an Dr. med. Sabine Klein, Fachärztin für Psychosomatik,\n    Rindermarkt 5, 80331 München (Tel.: 089 / 5678-0)\n\nPflegebericht (Pflegefachkraft Sabine Wagner):\n  - Ernährung: diabetesgerechte Kost (Konsum diabetologisch: Maria Schmidt,\n    Diätassistentin, Diabetologische Schwerpunktpraxis Dr. Wagner)\n  - Entlassung nach Hause, Versorgung durch Ehefrau Maria Maier\n\n------------------------------------------------\nMEDIZINISCHE GERÄTE / HILFSMITTEL\n------------------------------------------------\n\nPatienteneigene Geräte:\n  - Insulinpumpe: Medtronic MiniMed 780G (Seriennummer SN-2025-4711)\n  - Schrittmacher: Medtronic Azure XT DR (SR-Nr. MDT-AZ-48291-2024)\n    Implantation: 15.09.2024, Klinikum München-Nord (Prof. Dr. Thomas Berger)\n\n------------------------------------------------\nEMPFOHLENE KONTROLLUNTERSUCHUNGEN\n------------------------------------------------\n\n17.06.2026\tHausarzt (Dr. Claudia Wagner) — Wundkontrolle Zugang Leiste\n24.06.2026\tKardiologische Kontrolle (Klinikum München-Nord, Dr. Stefan Müller)\n15.07.2026\tPsychokardiologie (Dr. Sabine Klein)\n\n------------------------------------------------\nABSCHLUSS / UNTERSCHRIFTEN\n------------------------------------------------\n\nOberarzt Dr. med. Stefan Müller\nFacharzt für Kardiologie, Internist\nKlinikum München-Nord\nDatum: 10.06.2026`;
       function loadTestDoc() {

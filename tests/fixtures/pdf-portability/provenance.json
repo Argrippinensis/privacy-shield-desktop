@@ -1,0 +1,13 @@
+{
+  "run": "https://github.com/Argrippinensis/privacy-shield-desktop/actions/runs/40554039251",
+  "source": "5729064355d0732879dc3a59f2da45196a53f866",
+  "version": "2.0.2",
+  "platform": "macos-15-intel",
+  "id": "373287ae-7e4c-4132-a5d1-c74e88412567",
+  "coreSha256": "a8870f775f50b7b1a1256f814861e1e0aaa1b3a665b9e13d9a62114bafed2a70",
+  "resultSha256": "7cf6abe7e598afc03d95e6ba83bcd94c80d99e69bcc42b74e7baa71c7deab608",
+  "files": {
+    "mac-proof.pdf": "694748b309cee12d89b0e1eff60a1f774080ef30dc2a4677c38127ab892bdd18",
+    "mac-long.pdf": "49156770fb88e724e068a66adff922009f36c58a5f1f668774e68458fe77d06d"
+  }
+}

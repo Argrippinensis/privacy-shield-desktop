@@ -1,0 +1,55 @@
+name: Presentation portability
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - app/**
+      - main.js
+      - tests/helpers.mjs
+      - tests/fixtures/web-beta-main.cjs
+      - tests/annotation-toggle.test.mjs
+      - tests/updater.test.mjs
+      - tests/web-beta.test.mjs
+      - tests/a11y*.test.mjs
+      - tests/viewport.test.mjs
+      - tests/pdf-text*.mjs
+      - tests/fixtures/pdf-portability/**
+      - tests/presentation-ui.test.mjs
+      - tests/processing-evidence.test.mjs
+      - .github/workflows/pdf-portability.yml
+permissions:
+  contents: read
+concurrency:
+  group: pdf-portability-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  mac-pdf:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15-intel, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+      - uses: actions/cache@v6
+        with:
+          path: |
+            app/vendor
+            app/models
+          key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
+      - run: npm run fetch-vendor
+      - run: npx playwright-core install chromium
+      - name: Actual desktop viewports, annotations, updates and printed evidence
+        env:
+          PS_PDF_ARTIFACTS: ${{ github.workspace }}/artifacts/pdf-portability
+        run: node --test --test-concurrency=1 tests/viewport.test.mjs tests/pdf-text.test.mjs tests/presentation-ui.test.mjs tests/processing-evidence.test.mjs tests/annotation-toggle.test.mjs tests/updater.test.mjs tests/a11y.test.mjs tests/a11y-struktur.test.mjs tests/web-beta.test.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mac-presentation-${{ matrix.os }}
+          path: artifacts/pdf-portability

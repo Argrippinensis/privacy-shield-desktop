@@ -3,7 +3,29 @@
 Format: ein Abschnitt je Version, Überschrift `## [x.y.z] - JJJJ-MM-TT`. Der Release-Workflow übernimmt den Abschnitt
 der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.Y.Z").
 
+## [2.0.5] - 2026-10-27
+
+- Annotieren schaltet erkannte und manuell markierte Werte gezielt zwischen Maskieren und Freigeben um. Ganze erkannte Begriffe bleiben zusammen; gleiche Werte derselben Kategorie gelten gemeinsam. Rückgängig/Wiederholen und Tastaturbedienung werden unterstützt. Wiederholte oder gleichwertige Markierungen erzeugen keine zusätzlichen Regeln.
+- Deutlichere Flugmodus-Anleitung im Stil eines iPhone-Kontrollzentrums: Wischgeste, Flugmodus und zusätzliches Ausschalten von WLAN. Reine Illustration mit Pause/reduzierter Bewegung; der echte Ressourcenstatus bleibt separat ermittelt.
+- Desktop-Update-Hinweise auch für manuelle Installationen ohne automatischen Installer; erneute Prüfung nach Netzrückkehr, Aufwachen und regelmäßig im Hintergrund. Ausschließlich öffentliche Versionsmetadaten, keine Dokumentinhalte.
+- Korrekte Mac-PDF-Auswertung und echte Größen-/Zoomprüfung auch auf kleineren virtuellen Testbildschirmen. Die geometrischen Anforderungen bleiben unverändert. Native Tests weiterhin auf Windows, Mac und Linux.
+- Beinhaltet die aktuellen lokalen Anbieterlogos und den gestalteten Verarbeitungsnachweis. Die Desktop-Builds 2.0.2 und 2.0.3 wurden nicht veröffentlicht.
+
+## [2.0.4] - 2026-10-27
+
+Dieser Build wurde nicht veröffentlicht; ersetzt durch 2.0.5. Die vollständige CI fand eine ältere Annotation-Prüfung, die eine doppelte manuelle Markierung eines automatisch erkannten Werts verlangte. Der Test verwendet jetzt einen nachweislich unerkannten Wert; der separate automatische Freigabe-/Wiedermaskierungstest bleibt bestehen. Produktverhalten unverändert.
+
+## [2.0.3] - 2026-10-27
+
+Dieser Desktop-Build wurde nicht veröffentlicht; ersetzt durch 2.0.5.
+
+- Aktuelle Online-Beta als Browser-Haupteinstieg, mit sichtbarer Paketversion und Hinweis auf mögliche Fehler und nötige Ergebniskontrolle.
+- Lokale Anbieterlogos, animierte Flugmodus-Anleitung und gestalteter Verarbeitungsnachweis aus dem nicht veröffentlichten Build 2.0.2 übernommen.
+- Plattformunabhängige Prüfung der echten PDF-Druckausgabe; zusätzliche gezielte Mac-Prüfung und aufbewahrte synthetische Druckdateien.
+
 ## [2.0.2] - 2026-10-27
+
+Dieser Build wurde nicht als Desktop-Release veröffentlicht; ersetzt durch 2.0.3.
 
 - Lokale Logos für ChatGPT, Claude, Gemini, Grok und DeepSeek.
 - Animierte Flugmodus-Anleitung mit ehrlichem Ressourcenstatus, Pause und reduzierter Bewegung; kein Zugriff auf Betriebssystemeinstellungen.

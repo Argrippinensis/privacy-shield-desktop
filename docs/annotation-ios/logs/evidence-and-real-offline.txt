@@ -1,0 +1,32 @@
+✔ Desktop: synthetic contract, current evidence and exact roundtrip with real NER=false (1665.585845ms)
+✔ Desktop: synthetic contract, current evidence and exact roundtrip with real NER=true (6416.569859ms)
+✔ Desktop: actual provider link launches immediately and uses only fixed service IDs (1659.541905ms)
+✔ Mobile browser: first click requests direct app link before clipboard finishes; explicit web fallback, no prompt URL or second modal (3836.268657ms)
+✔ New optional review categories follow the explicit selection; existing comprehensive checks remain active (1249.82475ms)
+✔ Browser: first visit has no automatic preparation or model download; explicit preparation preserves unrelated caches (4117.787953ms)
+✔ Browser: full restart offline, text processing, actual scanned PDF OCR, DOCX and evidence without server requests (4447.917471ms)
+✔ Browser: optional pinned model preparation avoids loading a session; after offline restart actual model runs (13253.78682ms)
+✔ Browser: cache deletion revokes readiness; incomplete download never becomes ready and preserves other tools and model (5391.354087ms)
+✔ Browser: mobile layout and reduced motion; AI destination links carry no text and stale results block handoff (4288.042545ms)
+✔ Desktop: offline status verified from installed resources; app handler preferred, missing handler and failure fall back to fixed web URLs (1746.052595ms)
+✔ F2 native save dialog: changed revision never writes an evidence file; cancel does not succeed (5729.460209ms)
+✔ evidence records actual local NER use and keeps model history after unloading (3845.122367ms)
+✔ F1: native, mixed, scan, blank, unclear graphic and corrupt real PDFs (28607.138699ms)
+✔ F2 and evidence: all setting groups, hashing race, immutable model history, private allowlist and PDF/JSON examples (10805.390261ms)
+✔ F6: actual main button with denied and absent API; manual fallback without unhandled rejection (3270.885005ms)
+✔ F3: outer link, stay/download/cancel and deliberate navigation; conditional beforeunload (1477.957795ms)
+✔ F5: missing PDF worker resource differs from damaged document; prepared offline import (1242.433864ms)
+✔ project revision: edits/removal/partial imports block proof, successful complete project yields neutral indexes (917.965036ms)
+✔ released findings remain explicit; preview confirmation resets on relevant changes; print button opens same text (1308.08232ms)
+✔ F5 cache removal and download interruption remain resource failures (1173.557066ms)
+✔ F3 reload/tab close and aborted download confirmation retain unsaved protection (4091.524607ms)
+✔ F3 browser warning is ready after rendering a mapping without waiting for polling (4036.077556ms)
+✔ fallback reason belongs to the completed run, including memory hint after a previous unrelated error (903.534439ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 117284.712275

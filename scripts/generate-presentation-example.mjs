@@ -1,0 +1,21 @@
+// Reproducible current-version evidence from a synthetic employment fixture only.
+import fs from 'node:fs';import path from 'node:path';import http from 'node:http';import crypto from 'node:crypto';import assert from 'node:assert/strict';import {fileURLToPath} from 'node:url';import {execFileSync} from 'node:child_process';import {chromium} from 'playwright-core';import {pdfText,pdfPageCount} from '../tests/pdf-text.mjs';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),dist=path.join(root,'dist-web-beta'),out=path.join(root,'docs/presentation-ui/examples');
+const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
+execFileSync(process.execPath,['scripts/build-web-beta.mjs'],{cwd:root});fs.mkdirSync(out,{recursive:true});
+const shots=process.env.PS_EXAMPLE_SCREENSHOTS?path.resolve(process.env.PS_EXAMPLE_SCREENSHOTS):null;if(shots)fs.mkdirSync(shots,{recursive:true});
+const mime={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.wasm':'application/wasm'};
+const server=http.createServer((req,res)=>{const name=new URL(req.url,'http://local').pathname;const file=path.join(dist,name.endsWith('/')?name+'index.html':name);if(!file.startsWith(dist+path.sep)||!fs.existsSync(file))return res.writeHead(404).end();res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');fs.createReadStream(file).pipe(res);});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));let browser;
+try{
+ browser=await chromium.launch({executablePath:process.env.PS_CHROMIUM||undefined,args:['--no-sandbox']});const p=await browser.newPage();await p.goto('http://127.0.0.1:'+server.address().port+'/');const f=await(await p.$('#tool-frame')).contentFrame();await f.waitForFunction(()=>typeof psEvidence==='function');
+ await f.evaluate(()=>{startApp();setAIMode('off');});await f.locator('#ps-contract-review summary').click();await f.getByRole('button',{name:'Profil Arbeitsvertrag verwenden',exact:true}).click();await f.fill('#IT',fs.readFileSync(path.join(root,'tests/fixtures/employment/synthetic-contract.txt'),'utf8'));await f.evaluate(()=>anon());
+ const proof=await f.evaluate(()=>psEvidence()),result=await f.inputValue('#AT');assert.equal(proof.version,version);assert.equal(proof.profile,'employment');assert.equal(proof.documents[0].result.sha256,crypto.createHash('sha256').update(result,'utf8').digest('hex'));assert.ok(!JSON.stringify(proof).includes('apoBank'));
+ const html=await f.evaluate(e=>{const content=document.createElement('div');content.append(psEvidenceView(e));return content.innerHTML;},proof);
+ fs.writeFileSync(path.join(out,'verarbeitungsnachweis.json'),JSON.stringify(proof,null,2)+'\n');fs.writeFileSync(path.join(out,'pseudonymisiertes-ergebnis.txt'),result,'utf8');
+ const print=await browser.newPage({viewport:{width:794,height:1123}});await print.setContent('<!doctype html><html lang="de"><head><title>Verarbeitungsnachweis · PrivacyShield</title></head><body>'+html+'</body></html>');const pdf=path.join(out,'verarbeitungsnachweis.pdf');await print.pdf({path:pdf,preferCSSPageSize:true});assert.equal(await pdfPageCount(pdf),1);
+ const extracted=await pdfText(pdf);for(const value of [proof.id,proof.documents[0].result.sha256,'ReguSafe','nicht bestätigt'])assert.ok(extracted.includes(value),value);assert.ok(!extracted.includes('apoBank'));
+ if(shots){await print.emulateMedia({media:'print'});await print.screenshot({path:path.join(shots,'privacyshield-proof-'+version+'.png'),fullPage:true});await p.setViewportSize({width:390,height:844});await f.locator('.ps-local-pill').click();await f.getByRole('button',{name:'Animation anhalten',exact:true}).click();await p.screenshot({path:path.join(shots,'privacyshield-flight-'+version+'.png')});}
+ await f.evaluate(()=>{psLeaving=true;psSyncProtection();});
+ console.log(JSON.stringify({version:proof.version,core:proof.coreSha256,profile:proof.profile,hashMatches:true,noOriginalValuesInEvidence:true,pdfTextVerified:true,pdfPages:1,humanReview:proof.humanReview},null,2));
+}finally{await browser?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
