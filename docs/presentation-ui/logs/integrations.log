@@ -1,0 +1,48 @@
+✔ Desktop: synthetic contract, current evidence and exact roundtrip with real NER=false (1540.63628ms)
+✔ Desktop: synthetic contract, current evidence and exact roundtrip with real NER=true (4619.062149ms)
+✔ Desktop: actual provider link launches immediately and uses only fixed service IDs (1344.00238ms)
+✔ Mobile browser: first click requests direct app link before clipboard finishes; explicit web fallback, no prompt URL or second modal (3478.130924ms)
+✔ New optional review categories follow the explicit selection; existing comprehensive checks remain active (1026.634115ms)
+✔ Browser: first visit has no automatic preparation or model download; explicit preparation preserves unrelated caches (3060.152213ms)
+✔ Browser: full restart offline, text processing, actual scanned PDF OCR, DOCX and evidence without server requests (3281.895391ms)
+✔ Browser: optional pinned model preparation avoids loading a session; after offline restart actual model runs (9771.029261ms)
+✔ Browser: cache deletion revokes readiness; incomplete download never becomes ready and preserves other tools and model (4589.072386ms)
+✔ Browser: mobile layout and reduced motion; AI destination links carry no text and stale results block handoff (3598.327805ms)
+✔ Desktop: offline status verified from installed resources; app handler preferred, missing handler and failure fall back to fixed web URLs (1202.314961ms)
+✔ Five local provider marks and an honest airplane tutorial support pause, reduced motion and narrow screens (1590.312917ms)
+✔ Branded preview and actual print view preserve JSON identity/hash, honest seal and one readable A4 page (1972.538942ms)
+✔ Long reports retain their last document across pages and user labels stay inert text (1725.097195ms)
+✔ F2 native save dialog: changed revision never writes an evidence file; cancel does not succeed (4813.285821ms)
+✔ evidence records actual local NER use and keeps model history after unloading (3955.173766ms)
+✔ F1: native, mixed, scan, blank, unclear graphic and corrupt real PDFs (26427.422011ms)
+✔ F2 and evidence: all setting groups, hashing race, immutable model history, private allowlist and PDF/JSON examples (12207.522248ms)
+✔ F6: actual main button with denied and absent API; manual fallback without unhandled rejection (3799.703801ms)
+✔ F3: outer link, stay/download/cancel and deliberate navigation; conditional beforeunload (1675.962576ms)
+✔ F5: missing PDF worker resource differs from damaged document; prepared offline import (1474.621226ms)
+✔ project revision: edits/removal/partial imports block proof, successful complete project yields neutral indexes (1120.344057ms)
+✔ released findings remain explicit; preview confirmation resets on relevant changes; print button opens same text (1625.788857ms)
+✔ F5 cache removal and download interruption remain resource failures (1361.647473ms)
+✔ F3 reload/tab close and aborted download confirmation retain unsaved protection (4069.632695ms)
+✔ F3 browser warning is ready after rendering a mapping without waiting for polling (4433.26185ms)
+✔ fallback reason belongs to the completed run, including memory hint after a previous unrelated error (1041.833482ms)
+✔ 1 Bau: exakte Dateiliste, byteidentische Kopien, Browser-Worker mit Pin, Groessen, deterministisch (454.31032ms)
+✔ 2 Shim deckt jede in preload.js freigegebene Funktion und jedes Ereignis ab (2.564374ms)
+✔ 3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in der Fusszeile (1030.325329ms)
+✔ 4 Handy-Breite 390x844: kein horizontales Scrollen, Hauptbedienelemente sichtbar (1618.975682ms)
+✔ 5 Ende-zu-Ende ohne Modell (Standard beim ersten Besuch): Platzhalter, Rueckuebersetzung (960.367441ms)
+✔ 6 Netzpolitik: erster Besuch ohne huggingface-Anfrage; nach Einschalten der KI nur GET an das gepinnte Modell, Standard-Erkennung laeuft weiter (5118.840215ms)
+✔ 7 Kopieren legt den anonymisierten Text in die Zwischenablage (oder ruft ersatzweise den Shim) (1665.242264ms)
+✔ 8 Handy-Layout 390x844: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich (1639.439314ms)
+✔ 8 Handy-Layout 360x740: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich (1651.48782ms)
+✔ 9 Erster Besuch: Hinweis aufgeklappt, KI aus (ps_ai_mode=off), danach eingeklappt und KI-Einstellung bleibt (2159.864616ms)
+✔ 10 Irrefuehrende Aussagen des Werkzeugs werden in der Huelle ersetzt (Originalsaetze existieren im Tool) (1719.143499ms)
+✔ 11 Bauskript: gefaehrliche --out-Ziele werden abgelehnt, nichts wird geloescht (nur Wegwerf-Verzeichnisse) (628.315292ms)
+✔ 12 Bauskript: Worker-Ersatz mit CRLF-Quelle (Windows-Checkout) und Aufruf ueber einen Symlink-Pfad (macOS-Temp-Ordner) (178.624523ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 132414.794294

@@ -4,7 +4,7 @@
   const api = () => window.parent.electronAPI;
   const web = () => api()?.platform === 'web';
   const el = (tag, text) => { const n = document.createElement(tag); if (text) n.textContent = text; return n; };
-  let trigger, title, subtitle, dialog, refreshTimer;
+  let trigger, title, subtitle, flightHint, dialog, refreshTimer, motionPaused = false;
   const style = el('style');
   style.textContent = `
     .ps-local-pill{position:fixed;bottom:max(14px,env(safe-area-inset-bottom));left:max(14px,env(safe-area-inset-left));z-index:80;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 28px);min-height:48px;padding:9px 15px;border:1px solid #d5e3db;border-radius:24px;background:rgba(250,253,251,.96);box-shadow:0 4px 20px #163c2412;color:#18352a;text-align:left;font:12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;backdrop-filter:blur(14px)}
@@ -16,10 +16,16 @@
     @media(prefers-reduced-motion:reduce){.ps-local-orbit{animation:none}}
     @media print{.ps-local-pill{display:none!important}}
   `;
+  style.textContent += `
+    body{padding-bottom:140px!important}html{scroll-padding-bottom:140px}.ps-local-pill{gap:13px}.ps-flight-symbol{position:relative;width:38px;height:44px;flex:none;display:block}.ps-flight-symbol svg{width:38px;height:44px;overflow:visible}.ps-flight-symbol .ps-local-orbit{position:absolute;right:-1px;bottom:1px;width:6px;height:6px}.ps-flight-panel{transform-origin:50% 50%;animation:ps-panel 7s ease-in-out infinite}.ps-flight-plane{animation:ps-plane 7s ease-in-out infinite;transform-origin:center}.ps-flight-caption{font-size:10px!important;color:#365849!important;margin:2px 0}.ps-flight-guide{display:flex;gap:20px;align-items:center;padding:14px;background:#f0f5f2;border-radius:16px;margin:14px 0}.ps-flight-guide svg{width:90px;height:140px;flex:none}.ps-flight-guide p{font-size:12px;margin:5px 0}.ps-flight-guide small{display:block;color:#526159;font-size:10px}.ps-flight-tile{animation:ps-tile 7s ease-in-out infinite}.ps-motion-paused .ps-local-orbit,.ps-motion-paused .ps-flight-panel,.ps-motion-paused .ps-flight-plane,.ps-motion-paused .ps-flight-tile{animation:none!important}
+    @keyframes ps-panel{0%,12%,96%,100%{transform:translateY(-5px);opacity:.3}32%,80%{transform:translateY(0);opacity:1}}@keyframes ps-plane{0%,30%,100%{transform:translate(0,0)}48%,76%{transform:translate(2px,-2px)}}@keyframes ps-tile{0%,35%,100%{fill:#d7ded9}48%,80%{fill:#d98a25}}
+    @media(prefers-reduced-motion:reduce){.ps-flight-panel,.ps-flight-plane,.ps-flight-tile{animation:none!important}.ps-flight-tile{fill:#d98a25}}
+    @media(max-width:520px){.ps-flight-guide{gap:12px;padding:12px}.ps-flight-guide svg{width:62px;height:104px}.ps-flight-guide p{font-size:11px;line-height:1.5}}
+  `;
   document.head.append(style);
   function modal(name) {
     const d = el('dialog'); d.className = 'ps-local-dialog'; d.setAttribute('aria-label', name);
-    d.append(el('h2', name)); document.body.append(d); return d;
+    const heading=el('h2',name);heading.tabIndex=-1;heading.autofocus=true;d.append(heading); document.body.append(d); return d;
   }
   function button(d, text, action) { const b = el('button', text); b.type = 'button'; b.onclick = action; d.append(b); return b; }
   async function status() {
@@ -34,6 +40,7 @@
     try {
       const s = await status();
       title.textContent = 'Verarbeitung auf diesem Gerät';
+      if (flightHint) flightHint.textContent = s.core ? 'Flugmodus jederzeit selbst einschalten' : 'Erst offline vorbereiten · dann Flugmodus';
       subtitle.textContent = (navigator.onLine ? 'Gerät meldet online' : 'Gerät meldet offline') + ' · ' + (s.core ? (s.model ? 'Inkl. KI offline vorbereitet' : 'Basis offline vorbereitet') : 'Offline prüfen');
       if (dialog?.open) {
         dialog.querySelector('[data-core]').textContent = 'Text, PDF/OCR, Word & Nachweis: ' + (s.core ? 'offline vorbereitet' : 'noch nicht vollständig vorbereitet');
@@ -48,6 +55,10 @@
     if (dialog?.open) return;
     dialog = modal('Ihre Daten bleiben hier');
     dialog.append(el('p', 'PrivacyShield verarbeitet Dokumente lokal auf Ihrem Gerät. Dokumenttexte und Zuordnungen werden von PrivacyShield nicht an uns oder KI-Anbieter übertragen.'));
+    const guide=el('section');guide.className='ps-flight-guide';guide.setAttribute('aria-label','Flugmodus-Anleitung');
+    guide.innerHTML='<svg viewBox="0 0 90 140" aria-hidden="true"><rect x="8" y="2" width="74" height="136" rx="17" fill="#263e33"/><rect x="12" y="6" width="66" height="128" rx="13" fill="#e7eee9"/><rect x="32" y="10" width="26" height="5" rx="3" fill="#263e33"/><path d="M67 22v16m-4-4 4 4 4-4" stroke="#638272" stroke-width="2" fill="none"/><g class="ps-flight-panel"><rect x="20" y="46" width="50" height="64" rx="12" fill="#c5d2c9"/><circle class="ps-flight-tile" cx="34" cy="64" r="10" fill="#d98a25"/><path d="m28 64 11-5-3 5 3 5-11-5Z" fill="#fff"/><circle cx="56" cy="64" r="9" fill="#e6ece8"/><circle cx="34" cy="90" r="9" fill="#e6ece8"/><circle cx="56" cy="90" r="9" fill="#e6ece8"/><path d="M29 90q5-6 10 0m-8 2q3-3 6 0" stroke="#72877b" fill="none"/></g><rect x="32" y="126" width="26" height="3" rx="2" fill="#638272"/></svg>';
+    const instructions=el('div');instructions.append(el('strong','Offline. Auch im Flugmodus.'),el('p','iPhone: oben rechts nach unten wischen → Kontrollzentrum → Flugmodus. WLAN zusätzlich ausschalten.'),el('p','Android/Windows: Flugmodus in den Schnelleinstellungen. Mac: WLAN und weitere Netzverbindungen ausschalten.'),el('small','Illustration · kein Gerätestatus. Browser zuerst vollständig offline vorbereiten.'));guide.append(instructions);dialog.append(guide);
+    const pause=button(dialog,'Animation anhalten',()=>{motionPaused=!motionPaused;document.body.classList.toggle('ps-motion-paused',motionPaused);pause.textContent=motionPaused?'Animation abspielen':'Animation anhalten';pause.setAttribute('aria-pressed',String(motionPaused));});pause.setAttribute('aria-pressed',String(motionPaused));pause.textContent=motionPaused?'Animation abspielen':'Animation anhalten';
     for (const key of ['core', 'model', 'detail']) { const p = el('p', 'Wird geprüft …'); p.dataset[key] = ''; if (key !== 'detail') p.className = 'ps-local-row'; dialog.append(p); }
     dialog.append(el('p', 'Flugmodus ist ein zusätzlicher Schutz: Schalten Sie auch WLAN und mobile Daten aus. PrivacyShield kann den Flugmodus weder erkennen noch einschalten. ChatGPT, Claude und Gemini sind separate Online-Dienste; erst Ihr bewusstes Einfügen oder Teilen übergibt ihnen den Text.'));
     const out = el('output'); out.setAttribute('role', 'status'); dialog.append(out);
@@ -139,7 +150,7 @@
       // Browser: the anchor's own default action opens the app in the original click.
     }
     for (const s of PSLib.aiServices.services) {
-      const a=el('a','→ '+s.name); a.href=PSLib.aiServices.appURL(s.id,platform()); a.target='_blank'; a.rel='noopener noreferrer'; a.dataset.psService='true'; a.dataset.psAi=s.id; a.className='btn btn-ghost'; a.style.cssText='font-size:12px;min-height:44px;display:inline-flex;align-items:center'; a.onclick=e=>launch(e,s);
+      const a=el('a',s.name), logo=PSLib.brand.icon(s.id);if(logo){logo.dataset.psProviderLogo=s.id;a.prepend(logo);} a.href=PSLib.aiServices.appURL(s.id,platform()); a.target='_blank'; a.rel='noopener noreferrer'; a.dataset.psService='true'; a.dataset.psAi=s.id; a.className='btn btn-ghost'; a.style.cssText='font-size:12px;min-height:44px;display:inline-flex;align-items:center;gap:8px'; a.onclick=e=>launch(e,s);
       (s.more?more:box).append(a);
     }
     if (navigator.share) {
@@ -163,8 +174,8 @@
   window.addEventListener('DOMContentLoaded', () => {
     installServices(); installContractReview();
     trigger = el('button'); trigger.type = 'button'; trigger.className = 'ps-local-pill'; trigger.setAttribute('aria-haspopup', 'dialog'); trigger.title = 'Offline-Status und Ressourcen anzeigen'; if (!web()) trigger.style.bottom = 'max(52px, env(safe-area-inset-bottom))';
-    const dot = el('span'); dot.className = 'ps-local-orbit'; dot.setAttribute('aria-hidden', 'true');
-    const text = el('span'); title = el('strong', 'Verarbeitung auf diesem Gerät'); subtitle = el('small', 'Offline-Bereitschaft wird geprüft'); text.append(title, subtitle); trigger.append(dot, text); trigger.onclick = showStatus; document.body.append(trigger);
+    const dot = el('span'); dot.className = 'ps-flight-symbol'; dot.setAttribute('aria-hidden', 'true');dot.innerHTML='<svg viewBox="0 0 38 44"><rect x="2" y="1" width="33" height="41" rx="10" fill="#e6eee8"/><g class="ps-flight-panel"><rect x="7" y="10" width="23" height="25" rx="7" fill="#c8d8ce"/><circle class="ps-flight-tile" cx="18.5" cy="22.5" r="9" fill="#d98a25"/><path class="ps-flight-plane" d="m12 23 13-6-4 6 4 5-13-5Z" fill="#fff"/></g></svg><span class="ps-local-orbit"></span>';
+    const text = el('span'); title = el('strong', 'Verarbeitung auf diesem Gerät');flightHint=el('small','Flugmodus · Anleitung & Vorbereitung');flightHint.className='ps-flight-caption'; subtitle = el('small', 'Offline-Bereitschaft wird geprüft'); text.append(title,flightHint,subtitle); trigger.append(dot, text); trigger.onclick = showStatus; document.body.append(trigger);
     refresh();
     // Check storage again after foregrounding; no polling/download while hidden or during an analysis.
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
