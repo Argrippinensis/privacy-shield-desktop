@@ -1,0 +1,27 @@
+✔ Browser: first visit has no automatic preparation or model download; explicit preparation preserves unrelated caches (2628.757995ms)
+✔ Browser: full restart offline, text processing, actual scanned PDF OCR, DOCX and evidence without server requests (2702.57347ms)
+✔ Browser: optional pinned model preparation avoids loading a session; after offline restart actual model runs (8762.884257ms)
+✔ Browser: cache deletion revokes readiness; incomplete download never becomes ready and preserves other tools and model (3656.17003ms)
+✔ Browser: mobile layout and reduced motion; AI destination links carry no text and stale results block handoff (3274.144461ms)
+✔ Desktop: offline status verified from installed resources; app handler preferred, missing handler and failure fall back to fixed web URLs (1115.714855ms)
+✔ 1 Bau: exakte Dateiliste, byteidentische Kopien, Browser-Worker mit Pin, Groessen, deterministisch (399.990915ms)
+✔ 2 Shim deckt jede in preload.js freigegebene Funktion und jedes Ereignis ab (2.468879ms)
+✔ 3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in der Fusszeile (908.127588ms)
+✔ 4 Handy-Breite 390x844: kein horizontales Scrollen, Hauptbedienelemente sichtbar (1323.121957ms)
+✔ 5 Ende-zu-Ende ohne Modell (Standard beim ersten Besuch): Platzhalter, Rueckuebersetzung (868.691374ms)
+✔ 6 Netzpolitik: erster Besuch ohne huggingface-Anfrage; nach Einschalten der KI nur GET an das gepinnte Modell, Standard-Erkennung laeuft weiter (4997.653782ms)
+✔ 7 Kopieren legt den anonymisierten Text in die Zwischenablage (oder ruft ersatzweise den Shim) (1734.399042ms)
+✔ 8 Handy-Layout 390x844: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich (1700.552373ms)
+✔ 8 Handy-Layout 360x740: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich (1687.454431ms)
+✔ 9 Erster Besuch: Hinweis aufgeklappt, KI aus (ps_ai_mode=off), danach eingeklappt und KI-Einstellung bleibt (2039.246964ms)
+✔ 10 Irrefuehrende Aussagen des Werkzeugs werden in der Huelle ersetzt (Originalsaetze existieren im Tool) (1598.895695ms)
+✔ 11 Bauskript: gefaehrliche --out-Ziele werden abgelehnt, nichts wird geloescht (nur Wegwerf-Verzeichnisse) (585.610025ms)
+✔ 12 Bauskript: Worker-Ersatz mit CRLF-Quelle (Windows-Checkout) und Aufruf ueber einen Symlink-Pfad (macOS-Temp-Ordner) (147.293847ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 41016.482508

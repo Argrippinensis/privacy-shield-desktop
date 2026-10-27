@@ -1,9 +1,10 @@
 // Laufzeit-Anpassung des Werkzeugs in der Browser-Huelle (privacy-shield.html selbst bleibt unveraendert).
-// Die Huelle ruft anwenden(iframe.contentDocument) nach dem Laden auf. Drei Dinge:
+// Die Huelle ruft anwenden(iframe.contentDocument) nach dem Laden auf:
 //  1. Aussagen, die nur fuer die Desktop-Version gelten (Flugmodus, kein Serverkontakt, Installation), werden in den
 //     Textknoten durch browser-taugliche Formulierungen ersetzt (auch fuer spaeter eingefuegte Texte).
 //  2. Layoutregeln fuer schmale Breiten (Handy) und fuer den Browser (Update-Knopf, tote Testdokument-Links).
 //  3. Der Update-Knopf der Fusszeile bleibt als Versionsanzeige, ist aber nicht bedienbar.
+//  4. Ungesicherte Zuordnungen schuetzen, sobald die UI sie anzeigt (nicht erst beim Polling).
 // Pflege: jedes "von" muss woertlich (Leerraum beliebig) im Werkzeug stehen; tests/web-beta.test.mjs prueft das.
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -106,9 +107,16 @@
     var tote = doc.querySelectorAll('a[href^="../tests/"]');
     for (var i = 0; i < tote.length; i++) if (tote[i].parentElement) tote[i].parentElement.style.display = 'none';
     knoten(doc.body);
+    function schutzAktualisieren() {
+      if (doc.defaultView && typeof doc.defaultView.psSyncProtection === 'function') doc.defaultView.psSyncProtection();
+    }
+    schutzAktualisieren();
     var MO = doc.defaultView && doc.defaultView.MutationObserver;
     if (!MO) return;
     new MO(function (muts) {
+      // Mutation observers run before the next user action/navigation can overtake the polling timer.
+      // psSyncProtection itself adds a listener only while an unsaved mapping actually exists.
+      schutzAktualisieren();
       for (var j = 0; j < muts.length; j++) {
         var m = muts[j];
         if (m.type === 'characterData') knoten(m.target);
