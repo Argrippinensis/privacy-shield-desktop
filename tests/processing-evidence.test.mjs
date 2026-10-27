@@ -73,9 +73,9 @@ test('F2 and evidence: all setting groups, hashing race, immutable model history
   fs.writeFileSync(path.join(artifacts, 'pseudonymisiertes-ergebnis.txt'), await f.inputValue('#AT'), 'utf8');
   // Both outputs are derived from exactly the same allowlist, and independently extracted below.
   for(const confirmed of [false,true]) {
-    const data=await f.evaluate(async confirmed=>{psHuman=confirmed;const e=await psEvidence();return {e,text:psEvidenceText(e)};},confirmed);
+    const data=await f.evaluate(async confirmed=>{psHuman=confirmed;const e=await psEvidence();const content=document.createElement('div');content.append(psEvidenceView(e));return {e,html:content.innerHTML};},confirmed);
     const name=confirmed?'confirmed':'unconfirmed';fs.writeFileSync(path.join(artifacts,name+'.json'),JSON.stringify(data.e,null,2)+'\n');
-    const print=await browser.newPage();await print.setContent('<style>@page{size:A4;margin:16mm}pre{font:10pt/1.35 sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}</style><pre></pre>');await print.locator('pre').evaluate((el,text)=>el.textContent=text,data.text);
+    const print=await browser.newPage();await print.setContent('<!doctype html><html lang="de"><head><title>Verarbeitungsnachweis · PrivacyShield</title></head><body>'+data.html+'</body></html>');
     await print.pdf({path:path.join(artifacts,name+'.pdf'),preferCSSPageSize:true});await print.close();
     const extracted=await pdfText(path.join(artifacts,name+'.pdf'));
     for(const expected of [data.e.id,data.e.documents[0].result.sha256,data.e.humanReview,'Pseudonymisierung'])assert.ok(extracted.includes(expected));
@@ -119,7 +119,7 @@ test('released findings remain explicit; preview confirmation resets on relevant
   await fresh();await f.evaluate(()=>whitelist.push('text@example.invalid'));await run();
   const e=await f.evaluate(()=>psEvidence());assert.ok(e.documents[0].check.released>=2);
   await f.evaluate(()=>psPreview());const cb=f.locator('dialog input[type=checkbox]');assert.equal(await cb.isChecked(),false);await cb.check();
-  assert.match(await f.locator('dialog pre').textContent(),/Sichtprüfung vom Nutzer bestätigt/);
+  assert.match(await f.locator('dialog [data-ps-evidence-content]').textContent(),/Sichtprüfung vom Nutzer bestätigt/);
   await f.evaluate(()=>{window.__prints=[];const append=document.body.append.bind(document.body);document.body.append=(...nodes)=>{append(...nodes);for(const n of nodes)if(n.tagName==='IFRAME')n.contentWindow.print=()=>window.__prints.push(n.contentDocument.body.textContent);};});
   await f.getByRole('button',{name:'Drucken / als PDF speichern',exact:true}).click();await f.waitForFunction(()=>window.__prints.length===1);assert.match(await f.evaluate(()=>window.__prints[0]),/bewusst freigegeben\/ignoriert: 2/);
   await f.getByRole('button',{name:'Schließen',exact:true}).click();await f.fill('#IT','Neu');assert.equal(await f.evaluate(()=>psHuman),false);assert.equal(await f.evaluate(()=>psCurrent()),false);

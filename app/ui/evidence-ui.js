@@ -72,19 +72,18 @@ async function psPreview() {
     dlg.style.cssText = 'max-width:800px;width:90%;max-height:90vh;overflow:auto;padding:24px';
     dlg.setAttribute('aria-label', 'Verarbeitungsnachweis – Vorschau');
     const title = document.createElement('h2'); title.textContent = 'Verarbeitungsnachweis – Vorschau';
-    const pre = document.createElement('pre'); pre.style.cssText = 'white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 sans-serif'; pre.textContent = psEvidenceText(e);
+    const pre = document.createElement('div'); pre.append(psEvidenceView(e));
     const label = document.createElement('label'), cb = document.createElement('input'); cb.type = 'checkbox';
     label.append(cb, ' Ich habe das Ergebnis und den Importumfang persönlich geprüft.');
-    cb.onchange = async () => { psHuman = cb.checked; try { pre.textContent = psEvidenceText(await psEvidence(run)); } catch (err) { toast(err.message, 'e'); } };
+    cb.onchange = async () => { psHuman = cb.checked; try { pre.replaceChildren(psEvidenceView(await psEvidence(run))); } catch (err) { toast(err.message, 'e'); } };
     function button(text, action) { const b = document.createElement('button'); b.textContent = text; b.className = 'btn btn-ghost'; b.onclick = action; return b; }
     const print = button('Drucken / als PDF speichern', async () => {
       try {
         const evidence = await psEvidence(run);
         const frame = document.createElement('iframe'); frame.title = 'Druckansicht Verarbeitungsnachweis';
         frame.style.cssText = 'position:fixed;width:1px;height:1px;bottom:0'; document.body.append(frame);
-        const doc = frame.contentDocument, style = doc.createElement('style'), content = doc.createElement('pre');
-        style.textContent = '@page{size:A4;margin:16mm}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:10pt/1.35 sans-serif;color:#000}';
-        content.textContent = psEvidenceText(evidence); doc.head.append(style); doc.body.append(content);
+        const doc = frame.contentDocument; doc.title = 'Verarbeitungsnachweis · PrivacyShield'; doc.documentElement.lang = 'de';
+        doc.body.append(psEvidenceView(evidence,doc));
         if (!psCurrent() || psRun !== run) { frame.remove(); throw Error('Ergebnis geändert'); }
         frame.contentWindow.print(); toast('Druckdialog geöffnet; Speicherung bitte selbst prüfen', 's');
         setTimeout(() => frame.remove(), 60000);

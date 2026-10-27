@@ -15,3 +15,7 @@ export async function pdfText(file) {
     return pages.join('\n');
   } finally { await doc.destroy(); }
 }
+export async function pdfPageCount(file) {
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(fs.readFileSync(file)), isEvalSupported: false }).promise;
+  try { return doc.numPages; } finally { await doc.destroy(); }
+}

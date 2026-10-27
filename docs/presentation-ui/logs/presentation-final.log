@@ -1,0 +1,11 @@
+✔ Five local provider marks and an honest airplane tutorial support pause, reduced motion and narrow screens (1542.158762ms)
+✔ Branded preview and actual print view preserve JSON identity/hash, honest seal and one readable A4 page (1982.878677ms)
+✔ Long reports retain their last document across pages and user labels stay inert text (1726.752803ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5845.782601

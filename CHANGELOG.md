@@ -3,6 +3,12 @@
 Format: ein Abschnitt je Version, Überschrift `## [x.y.z] - JJJJ-MM-TT`. Der Release-Workflow übernimmt den Abschnitt
 der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.Y.Z").
 
+## [2.0.2] - 2026-10-27
+
+- Lokale Logos für ChatGPT, Claude, Gemini, Grok und DeepSeek.
+- Animierte Flugmodus-Anleitung mit ehrlichem Ressourcenstatus, Pause und reduzierter Bewegung; kein Zugriff auf Betriebssystemeinstellungen.
+- Hochwertiger Verarbeitungsnachweis mit Briefkopf arcangeli.eu / ReguSafe, strukturierter Übersicht und grafischem Siegel. Keine behauptete digitale Signatur oder Zertifizierung.
+
 ## [2.0.1] - 2026-10-27
 
 - Arbeitsvertrag-Profil mit gezieltem Schutz für Tarifgruppe, Berufsjahr, Team, Arbeitszeit, Urlaub, Probezeit/Befristung, Anrede und Abschluss. Allgemeine Vertragsbegriffe und Paragrafen bleiben in diesem Profil lesbar.

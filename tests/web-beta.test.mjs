@@ -117,14 +117,14 @@ const keine404 = () => assert.deepEqual([...nichtGefunden], [], 'lokale Pfade ni
 const kiEinschalten = (f) => f.evaluate(() => { loadTestDoc(); const t = document.getElementById('aiAutoToggle'); t.click(); return t.checked; });
 
 // Vom Werkzeug per <script> geladene lib-Dateien (ohne CLI- und Leser-Module, die es im Browser nicht gibt)
-const LIB = ['ai-services', 'employment', 'placeholder', 'coref', 'leakcheck', 'marks', 'report', 'policy', 'detect', 'history', 'review', 'hygiene', 'psmap', 'project', 'formats', 'officefmt'].map((n) => 'lib/' + n + '.js');
+const LIB = ['brand', 'ai-services', 'employment', 'placeholder', 'coref', 'leakcheck', 'marks', 'report', 'policy', 'detect', 'history', 'review', 'hygiene', 'psmap', 'project', 'formats', 'officefmt'].map((n) => 'lib/' + n + '.js');
 const MODELL_REV = 'c2a4dbf593c57f47004c5bc2d3770d311aee9c43';
 
 test('1 Bau: exakte Dateiliste, byteidentische Kopien, Browser-Worker mit Pin, Groessen, deterministisch', () => {
   const dateien = alleDateien(out);
   // erwartete Liste (Allowlist): Huelle, Shim, Anpassung, Worker, Werkzeug, Hinweise, Markerdatei, css, lib (nur geladene), vendor (ohne .map/.md)
   const vendor = alleDateien(path.join(ROOT, 'app', 'vendor')).filter((f) => !/\.(map|md)$/.test(f)).map((f) => 'vendor/' + f);
-  const erwartet = ['.web-beta-build', 'THIRD_PARTY_NOTICES.md', 'browser-api.js', 'css/tailwind.css', 'index.html', ...LIB, 'ui/build-identity.js', 'ui/evidence-ui.js', 'ui/local-status.js', 'offline-controller.js', 'offline-data.js', 'offline-worker.js', 'manifest.webmanifest', 'app-icon.png', 'ner-worker.js', 'privacy-shield.html', 'tool-anpassung.js', ...vendor].sort();
+  const erwartet = ['.web-beta-build', 'THIRD_PARTY_NOTICES.md', 'browser-api.js', 'css/tailwind.css', 'index.html', ...LIB, 'ui/build-identity.js', 'ui/evidence-document.js', 'ui/evidence-ui.js', 'ui/local-status.js', 'offline-controller.js', 'offline-data.js', 'offline-worker.js', 'manifest.webmanifest', 'app-icon.png', 'ner-worker.js', 'privacy-shield.html', 'tool-anpassung.js', ...vendor].sort();
   assert.deepEqual(dateien, erwartet, 'Dateiliste des Baus weicht von der Allowlist ab');
   const gleich = (rel, quelle) => assert.equal(hash(path.join(out, rel)), hash(path.join(ROOT, quelle)), rel + ' muss byteidentisch zu ' + quelle + ' sein');
   gleich('privacy-shield.html', 'app/privacy-shield.html');
@@ -454,7 +454,8 @@ test('10 Irrefuehrende Aussagen des Werkzeugs werden in der Huelle ersetzt (Orig
       assert.ok(!text.includes(norm(r.von)), 'noch sichtbar: ' + r.von);
       assert.ok(text.includes(norm(r.nach)), 'Ersatz fehlt: ' + r.nach);
     }
-    assert.doesNotMatch(text, /Flugmodus|Serverkontakt|Server-Kontakte|ohne Internet|aus der Installation|neu installieren|Virenschutz/, 'Rest irrefuehrender Aussagen');
+    // A preparation/airplane tutorial is now intentional; the old unconditional promises stay forbidden.
+    assert.doesNotMatch(text, /Flugmodus-tauglich|Flugmodus-Betrieb möglich|Serverkontakt|Server-Kontakte|ohne Internet|aus der Installation|neu installieren|Virenschutz/, 'Rest irrefuehrender Aussagen');
     // Update-Knopf der Fusszeile: nicht bedienbar; tote Testdokument-Links: nicht sichtbar
     assert.equal(await f.evaluate(() => { const b = document.getElementById('PS-VERSION-LABEL'); return b.disabled && !b.getAttribute('title'); }), true);
     assert.equal(await f.evaluate(() => [...document.querySelectorAll('a[href^="../tests/"]')].every((l) => l.getBoundingClientRect().width === 0)), true, 'Links ../tests/*.pdf ausgeblendet');
