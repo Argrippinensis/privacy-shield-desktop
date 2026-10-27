@@ -1,0 +1,62 @@
+{
+  "run": "https://github.com/Argrippinensis/privacy-shield-desktop/actions/runs/40554039251",
+  "analysis": [
+    {
+      "file": "proof.pdf",
+      "values": [
+        {
+          "value": "373287ae-7e4c-4132-a5d1-c74e88412567",
+          "oldReader": false,
+          "correctedReader": true,
+          "independentPoppler": true
+        },
+        {
+          "value": "7cf6abe7e598afc03d95e6ba83bcd94c80d99e69bcc42b74e7baa71c7deab608",
+          "oldReader": true,
+          "correctedReader": true,
+          "independentPoppler": true
+        },
+        {
+          "value": "ReguSafe",
+          "oldReader": false,
+          "correctedReader": true,
+          "independentPoppler": true
+        }
+      ]
+    },
+    {
+      "file": "long.pdf",
+      "values": [
+        {
+          "value": "Dokument 24",
+          "oldReader": false,
+          "correctedReader": true,
+          "independentPoppler": true
+        },
+        {
+          "value": "keine digitale Signatur",
+          "oldReader": false,
+          "correctedReader": true,
+          "independentPoppler": true
+        }
+      ]
+    },
+    {
+      "file": "unconfirmed.pdf",
+      "values": [
+        {
+          "value": "Pseudonymisierung",
+          "oldReader": false,
+          "correctedReader": true,
+          "independentPoppler": true
+        },
+        {
+          "value": "nicht bestätigt",
+          "oldReader": false,
+          "correctedReader": true,
+          "independentPoppler": true
+        }
+      ]
+    }
+  ]
+}

@@ -15,7 +15,8 @@ export async function pdfText(file) {
     for (let n = 1; n <= doc.numPages; n++) {
       const content = (await (await doc.getPage(n)).getTextContent()).items;
       items.push(content);
-      pages.push(content.map(i => i.str + (i.hasEOL ? '\n' : ' ')).join(''));
+      // PDF.js emits actual word spaces as text items; font fragments are not words.
+      pages.push(content.map(i => i.str + (i.hasEOL ? '\n' : '')).join(''));
     }
     const text = pages.join('\n');
     if (process.env.PS_PDF_ARTIFACTS) {
