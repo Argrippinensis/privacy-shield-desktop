@@ -22,3 +22,5 @@ Der Testleser übernimmt jetzt die vorhandenen Zeichen, Leerzeichen und echten Z
 - Aktueller synthetischer Arbeitsvertragsnachweis 2.0.3: unabhängige SHA-256, PDF-Text und eine A4-Seite bestätigt; persönliche Prüfung bleibt nicht bestätigt.
 
 Vollständige CI, gebaute/unter Windows installierte Programme und öffentliche HTTPS-/Download-/Offline-Prüfungen werden am verknüpften PR für den endgültigen Commit ergänzt. Physische iPhone-/Android-Geräte, native App-Übernahme, VoiceOver und Papierausdruck bleiben manuell abzunehmen.
+
+Ergänzung vor finalem Push: gesamte Unit-Suite 1142 Tests, 1139 bestanden, 0 Fehler, 2 bekannte Skips und 1 bestehendes TODO. Die bisherige statische Berechtigungsprüfung wurde ausdrücklich um ausschließlich actions:read im Release-Job ergänzt; alle verwendeten Actions bleiben unverändert. Auch der neue PDF-Workflow ist im YAML-Validierungstest enthalten.

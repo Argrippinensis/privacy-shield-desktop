@@ -20,7 +20,7 @@ function yamlSupport() {
 const HAS_YAML = yamlSupport();
 const SKIP_YAML = HAS_YAML ? false : 'python3 oder PyYAML fehlt: YAML-Pruefung uebersprungen';
 
-for (const name of ['build.yml', 'ci.yml']) {
+for (const name of ['build.yml', 'ci.yml', 'pdf-portability.yml']) {
   test(`${name} ist gueltiges YAML`, { skip: SKIP_YAML }, () => {
     const file = path.join(ROOT, '.github', 'workflows', name);
     const r = spawnSync('python3', ['-I', '-c', 'import yaml,sys; yaml.safe_load(open(sys.argv[1]))', file], { encoding: 'utf8' });
@@ -129,9 +129,9 @@ test('build.yml: bei Vorabversionen wird geprueft, dass releases/latest nicht de
   assert.match(all, /\[ "\$\w+" != "\$\{?(?:GITHUB_REF_NAME|TAG)\}?" \]|\[\[ "\$\w+" == "\$\{?(?:GITHUB_REF_NAME|TAG)\}?" \]\]/, 'Vergleich latest gegen neuen Tag fehlt');
 });
 
-test('build.yml: Release-Job ohne neue Berechtigungen oder Actions', { skip: SKIP_YAML }, () => {
+test('build.yml: Release-Job mit gezieltem CI-Leserecht und unveraenderten Actions', { skip: SKIP_YAML }, () => {
   const job = releaseJob();
-  assert.deepEqual(job.permissions, { contents: 'write' });
+  assert.deepEqual(job.permissions, { contents: 'write', actions: 'read' });
   assert.deepEqual(job.steps.filter((x) => x.uses).map((x) => x.uses),
     ['actions/checkout@v7', 'actions/setup-node@v7', 'actions/download-artifact@v8']);
 });
