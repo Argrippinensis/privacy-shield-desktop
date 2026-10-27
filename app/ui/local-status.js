@@ -34,7 +34,7 @@
     try {
       const s = await status();
       title.textContent = 'Verarbeitung auf diesem Gerät';
-      subtitle.textContent = (navigator.onLine ? 'Gerät meldet online' : 'Gerät meldet offline') + ' · ' + (s.core ? 'Offline vorbereitet' : 'Offline prüfen');
+      subtitle.textContent = (navigator.onLine ? 'Gerät meldet online' : 'Gerät meldet offline') + ' · ' + (s.core ? (s.model ? 'Inkl. KI offline vorbereitet' : 'Basis offline vorbereitet') : 'Offline prüfen');
       if (dialog?.open) {
         dialog.querySelector('[data-core]').textContent = 'Text, PDF/OCR, Word & Nachweis: ' + (s.core ? 'offline vorbereitet' : 'noch nicht vollständig vorbereitet');
         dialog.querySelector('[data-model]').textContent = 'Lokale KI-Erkennung: ' + (s.model ? 'offline vorbereitet' : 'Modell noch nicht vollständig im Cache');

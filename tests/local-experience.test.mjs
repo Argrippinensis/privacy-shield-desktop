@@ -60,6 +60,7 @@ test('Browser: first visit has no automatic preparation or model download; expli
   assert.equal((await p.evaluate(() => PSOffline.status())).core,true);
   const keys = await p.evaluate(() => caches.keys()); assert.ok(keys.includes('unrelated-tool-keep')); assert.ok(keys.includes('transformers-cache'));
   assert.equal((await p.evaluate(() => PSOffline.status())).model,false);
+  await f.waitForFunction(() => document.querySelector('.ps-local-pill').textContent.includes('Basis offline vorbereitet'));
   assert.ok(network.every(u => !/model_quantized|huggingface/.test(u)));
   await f.getByRole('button',{name:'Schließen',exact:true}).click();
   await work(f); await f.fill('#IT','Synthetisches Geheimnis: mail@example.invalid.'); await f.evaluate(() => anon());
