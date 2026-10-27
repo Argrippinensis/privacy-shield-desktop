@@ -1,0 +1,43 @@
+name: PDF portability
+on:
+  push:
+    branches: [codex/mac-pdf-portability]
+  pull_request:
+    paths:
+      - app/ui/evidence-*.js
+      - tests/pdf-text.mjs
+      - tests/presentation-ui.test.mjs
+      - tests/processing-evidence.test.mjs
+      - .github/workflows/pdf-portability.yml
+permissions:
+  contents: read
+concurrency:
+  group: pdf-portability-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  mac-pdf:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+      - uses: actions/cache@v6
+        with:
+          path: |
+            app/vendor
+            app/models
+          key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
+      - run: npm run fetch-vendor
+      - run: npx playwright-core install chromium
+      - name: Real branded PDF and multi-page evidence
+        env:
+          PS_PDF_ARTIFACTS: ${{ github.workspace }}/artifacts/pdf-portability
+        run: node --test --test-concurrency=1 tests/presentation-ui.test.mjs tests/processing-evidence.test.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mac-pdf-portability
+          path: artifacts/pdf-portability
