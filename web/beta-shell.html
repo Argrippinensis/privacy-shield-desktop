@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="app-icon.png">
   <link rel="icon" href="data:,">
-  <title>PrivacyShield 2.0 Beta (Browser)</title>
+  <title>PrivacyShield __PS_VERSION__ · Online-Beta</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #f5f5f5; color: #1f2933; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -69,14 +69,14 @@
 <body>
   <div id="app">
     <header class="bar">
-      <h1>PrivacyShield 2.0 Beta <span>(Browser)</span></h1>
+      <h1>PrivacyShield __PS_VERSION__ <span>(Online · Beta)</span></h1>
       <nav aria-label="Weitere Versionen">
-        <a href="/tools/privacyshield-redesigned.html">Alte stabile Webfassung</a>
-        <a href="/desktop/#neu">Desktop 2.0</a>
+        <a href="/desktop/#neu">Desktop-App</a>
+        <a href="/tools/privacyshield-redesigned.html">Frühere Webfassung</a>
       </nav>
     </header>
     <details class="note" id="hinweis">
-      <summary><span><strong>Vorabversion zum Ausprobieren, nicht für wichtige Dokumente.</strong> Ihre Dokumente bleiben im Browser; Bibliotheken und optional das KI-Modell werden separat geladen.</span></summary>
+      <summary><span><strong>Aktuelle Online-Version · Beta.</strong> Es können noch Fehler auftreten. Bitte Ergebnisse vor Weitergabe prüfen. Ihre Dokumente bleiben im Browser; Bibliotheken und optional das KI-Modell werden separat geladen.</span></summary>
       <div class="note-text">
         <p>Ihre Dokumente werden ausschließlich in Ihrem Browser verarbeitet und weder an uns noch an Dritte gesendet.</p>
         <p>Die KI-Erkennung ist zunächst ausgeschaltet. Sie schalten sie mit dem Häkchen im Panel „KI-Erkennung“ ein. Dann lädt Ihr Browser das Sprachmodell (ca. 135 MB, besser im WLAN) von huggingface.co. Dabei erfährt Hugging Face Ihre IP-Adresse, aber keine Inhalte. Das Modell wird danach in den Websitedaten dieses Browsers abgelegt und lässt sich in den Browsereinstellungen löschen; Browser können zwischengespeicherte Ressourcen eigenständig löschen. Ohne Modell arbeitet die Standard-Erkennung (Regeln und Wortlisten).</p>
