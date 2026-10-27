@@ -1,8 +1,8 @@
-✔ Actual Mac PDF retains complete words, exact DOM identity/hash and genuine word spaces (242.257523ms)
-✔ Actual multi-page Mac PDF retains document 24 and an inert custom label (283.242442ms)
-✔ Release gate requires successful CI for the exact commit and expected workflow (0.858463ms)
-✔ A newer pending or failed run never inherits an older passing result (0.246846ms)
-✔ Reruns, cancellation and unknown conclusions fail closed until actual success (0.270001ms)
+✔ Actual Mac PDF retains complete words, exact DOM identity/hash and genuine word spaces (194.815948ms)
+✔ Actual multi-page Mac PDF retains document 24 and an inert custom label (312.040267ms)
+✔ Release gate requires successful CI for the exact commit and expected workflow (0.783301ms)
+✔ A newer pending or failed run never inherits an older passing result (0.201809ms)
+✔ Reruns, cancellation and unknown conclusions fail closed until actual success (0.300305ms)
 ℹ tests 5
 ℹ suites 0
 ℹ pass 5
@@ -10,4 +10,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 694.46356
+ℹ duration_ms 647.722414

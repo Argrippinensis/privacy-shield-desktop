@@ -4,7 +4,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {setTimeout as delay} from 'node:timers/promises';
 export function sourceCIDecision(runs,sha){
- const matching=runs.filter(r=>r.head_sha===sha&&r.path==='.github/workflows/ci.yml').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)||(b.run_attempt||1)-(a.run_attempt||1));
+ const matching=runs.filter(r=>r.head_sha===sha&&r.path==='.github/workflows/ci.yml').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)||Number(b.id)-Number(a.id)||(b.run_attempt||1)-(a.run_attempt||1));
  const run=matching[0];
  if(!run||run.status!=='completed')return {state:'waiting',runId:run?.id??null};
  return {state:run.conclusion==='success'?'passed':'failed',runId:run.id,conclusion:run.conclusion,url:run.html_url};

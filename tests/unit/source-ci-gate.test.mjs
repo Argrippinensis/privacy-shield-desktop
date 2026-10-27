@@ -11,6 +11,7 @@ test('Release gate requires successful CI for the exact commit and expected work
 test('A newer pending or failed run never inherits an older passing result',()=>{
  const newer=run({id:2,created_at:'2026-10-27T11:00:00Z',status:'in_progress',conclusion:null});
  assert.equal(sourceCIDecision([run(),newer],sha).state,'waiting');
+ assert.equal(sourceCIDecision([run(),{...newer,created_at:run().created_at}],sha).state,'waiting','newer run ID also wins when timestamps tie');
  assert.equal(sourceCIDecision([run(),{...newer,status:'completed',conclusion:'failure'}],sha).state,'failed');
 });
 test('Reruns, cancellation and unknown conclusions fail closed until actual success',()=>{
