@@ -198,13 +198,14 @@ test('3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in 
       links: [...document.querySelectorAll('a')].map((l) => l.getAttribute('href')),
       iframe: { id: document.getElementById('tool-frame').id, title: document.getElementById('tool-frame').title },
     }));
-    assert.match(kopf.text, /PrivacyShield 2\.0 Beta \(Browser\)/);
-    assert.match(kopf.text, /Alte stabile Webfassung/);
-    assert.match(kopf.text, /Desktop 2.0/);
+    assert.ok(kopf.text.includes('PrivacyShield '+VERSION+' (Online · Beta)'));
+    assert.ok(kopf.titel.includes(VERSION));
+    assert.match(kopf.text, /Frühere Webfassung/);
+    assert.match(kopf.text, /Desktop-App/);
     assert.ok(kopf.links.includes('/tools/privacyshield-redesigned.html'));
     assert.ok(kopf.links.includes('/desktop/#neu'));
     assert.equal(kopf.iframe.title, 'PrivacyShield Werkzeug');
-    assert.ok(kopf.text.includes('Vorabversion zum Ausprobieren, nicht für wichtige Dokumente. Ihre Dokumente bleiben im Browser; Bibliotheken und optional das KI-Modell werden separat geladen.'), 'Zusammenfassung des Hinweises');
+    assert.ok(kopf.text.includes('Aktuelle Online-Version · Beta. Es können noch Fehler auftreten. Bitte Ergebnisse vor Weitergabe prüfen.'), 'Aktuelle Beta mit sichtbarem Fehler- und Prüfhinweis');
     for (const satz of [
       'Ihre Dokumente werden ausschließlich in Ihrem Browser verarbeitet und weder an uns noch an Dritte gesendet.',
       'ca. 135 MB, besser im WLAN',
