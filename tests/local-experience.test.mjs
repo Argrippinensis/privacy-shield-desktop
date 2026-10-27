@@ -38,7 +38,11 @@ test.before(async () => {
     if (corruptDownload && req.url.endsWith('/css/tailwind.css')) { res.setHeader('Content-Type','text/css'); return res.end('/* synthetic incomplete download */'); }
     if (req.url.startsWith('/test-model/')) { const file = path.join(root,'app/models',decodeURIComponent(req.url.slice('/test-model/'.length))); if (!fs.existsSync(file)) return res.writeHead(404).end(); res.setHeader('Access-Control-Allow-Origin','*'); res.setHeader('Content-Type','application/octet-stream'); return fs.createReadStream(file).pipe(res); }
     if (!req.url.startsWith(prefix)) return res.writeHead(404).end();
-    const rel = new URL(req.url,'http://local').pathname.slice(prefix.length) || 'index.html';
+    let rel = new URL(req.url,'http://local').pathname.slice(prefix.length) || 'index.html';
+    // Match production static-assets canonicalization, not only a file server with 200s.
+    if (req.url === prefix + 'index.html') return res.writeHead(301, { Location: prefix }).end();
+    if (rel === 'privacy-shield.html') return res.writeHead(301, { Location: prefix + 'privacy-shield' }).end();
+    if (rel === 'privacy-shield') rel = 'privacy-shield.html';
     const file = path.resolve(root,'dist-web-beta',rel);
     if (!file.startsWith(path.join(root,'dist-web-beta') + path.sep) || !fs.existsSync(file)) return res.writeHead(404).end();
     res.setHeader('Content-Type',mime[path.extname(file)] || 'application/octet-stream'); fs.createReadStream(file).pipe(res);

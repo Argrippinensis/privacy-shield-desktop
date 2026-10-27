@@ -127,7 +127,7 @@ function bauen(OUT) {
   const worker = erzeugeWorker(lies('app/ner-worker.js').toString('utf8'), REV);
   lege('ner-worker.js', worker);
   const offlineFiles = [...dateien.entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([path, bytes]) => ({ path, size: bytes.length, sha256: crypto.createHash('sha256').update(bytes).digest('hex') }));
-  const offlineId = crypto.createHash('sha256').update(JSON.stringify(offlineFiles)).digest('hex');
+  const offlineId = crypto.createHash('sha256').update(JSON.stringify(offlineFiles)).update(lies('web/offline-worker.js')).digest('hex');
   const model = modellDateien.map(f => ({ url: f.url, size: f.size, sha256: f.sha256 }));
   lege('offline-data.js', 'self.PS_OFFLINE = ' + JSON.stringify({ cache: 'ps2-beta-static-' + offlineId, files: offlineFiles, model }) + ';\n');
   lege('offline-worker.js', '// Package ' + offlineId + '\n' + lies('web/offline-worker.js').toString('utf8'));

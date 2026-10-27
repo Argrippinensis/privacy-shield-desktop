@@ -19,7 +19,13 @@ async function prepareAssets() {
         if (!response.ok || response.type === 'opaque') throw Error('Offline download failed');
         const bytes = await response.clone().arrayBuffer();
         if (bytes.byteLength !== f.size || hex(await crypto.subtle.digest('SHA-256', bytes)) !== f.sha256) throw Error('Offline asset checksum mismatch');
-        await cache.put(url, response);
+        // Hosting may redirect index.html and iframe HTML to canonical URLs. A cached
+        // redirected Response is invalid for navigations whose redirect mode is manual.
+        // Store verified decoded bytes as a fresh response, with matching size headers.
+        const headers = new Headers(response.headers);
+        headers.delete('Content-Encoding'); headers.delete('Transfer-Encoding');
+        headers.set('Content-Length', String(bytes.byteLength));
+        await cache.put(url, new Response(bytes, { status: response.status, statusText: response.statusText, headers }));
       }
       // Metadata belongs to the same complete package, but cannot include its own checksum.
       await cache.put(new URL('offline-data.js', BASE).href, new Response('self.PS_OFFLINE = ' + JSON.stringify(DATA) + ';\n', { headers: { 'Content-Type': 'text/javascript' } }));

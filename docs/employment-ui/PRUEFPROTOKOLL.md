@@ -34,3 +34,9 @@ Auf iOS nutzen die drei ursprünglichen Dienste und weitere unterstützte Anbiet
 Offen bleiben reale iPhone-/Android-App-Übernahme mit installierten und fehlenden KI-Apps, Flugmodus nach vollständigem Schließen aller Tabs (auch WLAN ausschalten), VoiceOver/hohe Schriftgröße und physischer Ausdruck. Ohne Original-PDF lässt sich nicht behaupten, dass jeder OCR-/Layoutfehler des gemeldeten Vertrags nachgestellt wurde. Bitte ausschließlich synthetische Dateien für diese Abnahmen verwenden.
 
 Die permanente Anzeige unterscheidet zusätzlich **„Basis offline vorbereitet“** von **„Inkl. KI offline vorbereitet“**, damit ein noch fehlender Modelldownload nicht als vollständige KI-Bereitschaft erscheint. Der vollständige Offline-Status-/Cache-/App-Lauf wurde danach erneut mit **6/6 bestanden** geprüft (`logs/offline-status-final.log`); das synthetische Beispiel wurde mit dem finalen Kern-Hash neu erzeugt.
+
+## Produktions-Weiterleitungen und Offline-Neustart
+
+Der erste reale HTTPS-Neustart deckte einen Hosting-Unterschied auf: `index.html` und das Werkzeug-HTML werden von Cloudflare auf kanonische Adressen umgeleitet. CacheStorage bewahrte das Redirect-Merkmal der Antwort; Chromium lehnt eine solche Antwort bei Navigation mit Redirect-Modus `manual` ab. Online-Vertragsverarbeitung und Dateiprüfsummen waren korrekt, der Offline-Neustart wurde dennoch nicht als bestanden gewertet.
+
+Der Worker speichert nun die bereits größen- und SHA-geprüften, dekodierten Bytes als neue Antwort mit passenden Größen-/Encoding-Headern. Auch der Worker-Quelltext selbst fließt in die Cache-Identität ein, damit Verhaltensänderungen eine eigene Version erhalten. Der Offline-Neustarttest bildet beide Produktionsweiterleitungen nach. Vollständiger zugehöriger Offline-/Browser-Paketlauf danach **19/19 bestanden** (`logs/canonical-offline.log`). Die erneute echte HTTPS-Prüfung erfolgt nach dem verknüpften Website-Hotfix; endgültiges Ergebnis steht im PR.
