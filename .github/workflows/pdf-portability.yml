@@ -1,7 +1,7 @@
 name: PDF portability
 on:
   push:
-    branches: [codex/mac-pdf-portability]
+    branches: [codex/mac-pdf-current-runner]
   pull_request:
     paths:
       - app/ui/evidence-*.js
@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   mac-pdf:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
