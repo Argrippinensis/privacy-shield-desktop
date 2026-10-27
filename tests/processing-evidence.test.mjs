@@ -23,8 +23,12 @@ test.before(async () => {
   browser = await chromium.launch({executablePath:process.env.PS_CHROMIUM || undefined,headless:true,args:['--no-sandbox']});
 });
 test.after(async()=>{await browser?.close(); await new Promise(r=>server?.close(r));});
-async function fresh() {
+async function fresh({pauseProtectionPolling=false}={}) {
   await page?.close(); page = await browser.newPage();
+  if(pauseProtectionPolling) await page.addInitScript(()=>{
+    const interval=window.setInterval.bind(window);
+    window.setInterval=(fn,delay,...args)=>interval(delay===150 && String(fn).includes('psSyncProtection') ? ()=>{} : fn,delay,...args);
+  });
   await page.route('**/*',r=>new URL(r.request().url()).hostname === '127.0.0.1' ? r.continue() : r.abort());
   await page.goto(base+'/'); f=page.frames().find(f=>f.url().endsWith('privacy-shield.html'));
   await f.waitForFunction(()=>typeof psCapture==='function' && typeof PSDetect!=='undefined');
@@ -134,6 +138,19 @@ test('F3 reload/tab close and aborted download confirmation retain unsaved prote
   await f.evaluate(async()=>{const c=window.confirm;window.confirm=()=>false;mapAfterSave(Promise.resolve(true),stateRev,'ok','failed');await new Promise(r=>setTimeout(r,0));window.confirm=c;});assert.equal(await f.evaluate(()=>psMapUnsaved()),true);
   await f.evaluate(()=>{mapSaved=true;psSyncProtection();});assert.equal(await f.evaluate(()=>psUnloadActive),false);
   await f.evaluate(()=>{stateTouch();psSyncProtection();});assert.equal(await f.evaluate(()=>psUnloadActive),true);
+});
+
+test('F3 browser warning is ready after rendering a mapping without waiting for polling',async()=>{
+  await fresh({pauseProtectionPolling:true});assert.equal(await f.evaluate(()=>psUnloadActive),false);await run();
+  assert.equal(await f.evaluate(()=>psMapUnsaved()),true);
+  assert.equal(await f.evaluate(()=>psUnloadActive),true,'rendered unsaved mapping must already have its unload listener');
+  await f.click('button[onclick="cpAnon()"]');
+  const pendingDialog=page.waitForEvent('dialog',{timeout:5000});
+  const reload=page.reload({timeout:3000}).catch(e=>assert.match(e.message,/ERR_ABORTED|Timeout/));
+  const dialog=await pendingDialog;assert.equal(dialog.type(),'beforeunload');await dialog.dismiss();await reload;
+  assert.equal(await f.evaluate(()=>psMapUnsaved()),true);
+  await f.evaluate(()=>{const original=confirm;window.confirm=()=>true;try{clrMap();}finally{window.confirm=original;}});
+  assert.equal(await f.evaluate(()=>psUnloadActive),false,'clearing the mapping removes the listener without polling');
 });
 
 test('fallback reason belongs to the completed run, including memory hint after a previous unrelated error',async()=>{

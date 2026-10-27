@@ -1,0 +1,43 @@
+{
+  "tag": "v2.0.1",
+  "url": "https://github.com/Argrippinensis/privacy-shield-desktop/releases/tag/v2.0.1",
+  "published": true,
+  "latestTag": "v2.0.1",
+  "files": [
+    {
+      "name": "PrivacyShield-Setup.exe",
+      "size": 212340100,
+      "httpStatus": 200,
+      "sha256": "f4ea6c930a807751e2cd923be1824233a4a43d29332720ba974fefaf62622ee4",
+      "githubDigestMatches": true
+    },
+    {
+      "name": "PrivacyShield-mac-arm64.zip",
+      "size": 236096655,
+      "httpStatus": 200,
+      "sha256": "6616f2d9574cd454d1f0f9f74aa663711eb54925c1e1f66a27e5beb8578a2131",
+      "githubDigestMatches": true
+    },
+    {
+      "name": "PrivacyShield-mac-x64.zip",
+      "size": 241707593,
+      "httpStatus": 200,
+      "sha256": "5c550ad2708f74eb357d5996d1304d815c95e55a261c878d9c15a0a66e372189",
+      "githubDigestMatches": true
+    },
+    {
+      "name": "PrivacyShield.AppImage",
+      "size": 233724548,
+      "httpStatus": 200,
+      "sha256": "713806422d90ce55fd16ba3ef940e644826c162d3b820a958dc065e45b30dd9e",
+      "githubDigestMatches": true
+    },
+    {
+      "name": "PrivacyShield.deb",
+      "size": 206313776,
+      "httpStatus": 200,
+      "sha256": "a7b7b66afde7304471389fff09a18d4e3ac328a4deb0013af300b54209e01c34",
+      "githubDigestMatches": true
+    }
+  ]
+}

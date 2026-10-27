@@ -1,0 +1,19 @@
+✔ F1: native, mixed, scan, blank, unclear graphic and corrupt real PDFs (24458.014232ms)
+✔ F2 and evidence: all setting groups, hashing race, immutable model history, private allowlist and PDF/JSON examples (11387.14528ms)
+✔ F6: actual main button with denied and absent API; manual fallback without unhandled rejection (3286.829355ms)
+✔ F3: outer link, stay/download/cancel and deliberate navigation; conditional beforeunload (1515.679636ms)
+✔ F5: missing PDF worker resource differs from damaged document; prepared offline import (1337.699283ms)
+✔ project revision: edits/removal/partial imports block proof, successful complete project yields neutral indexes (1046.477494ms)
+✔ released findings remain explicit; preview confirmation resets on relevant changes; print button opens same text (1188.448525ms)
+✔ F5 cache removal and download interruption remain resource failures (1245.422457ms)
+✔ F3 reload/tab close and aborted download confirmation retain unsaved protection (4115.946637ms)
+✔ F3 browser warning is ready after rendering a mapping without waiting for polling (4096.269896ms)
+✔ fallback reason belongs to the completed run, including memory hint after a previous unrelated error (922.35198ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 55229.744578
