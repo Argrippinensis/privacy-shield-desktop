@@ -1,0 +1,132 @@
+✔ axe Struktur: Ansicht "Willkommen", Frame Werkzeug: 0 Verstöße in allen Schweregraden (1159.201849ms)
+✔ axe Struktur: Ansicht "Willkommen", Frame Hülle: 0 Verstöße in allen Schweregraden (1096.946526ms)
+✔ axe Struktur: Ansicht "Arbeitsbereich leer", Frame Werkzeug: 0 Verstöße in allen Schweregraden (1145.898868ms)
+✔ axe Struktur: Ansicht "Arbeitsbereich leer", Frame Hülle: 0 Verstöße in allen Schweregraden (1068.585311ms)
+✔ axe Struktur: Ansicht "Mit Ergebnis", Frame Werkzeug: 0 Verstöße in allen Schweregraden (1266.299847ms)
+✔ axe Struktur: Ansicht "Mit Ergebnis", Frame Hülle: 0 Verstöße in allen Schweregraden (1215.895883ms)
+✔ axe Struktur: Ansicht "Gegenprüfungsliste", Frame Werkzeug: 0 Verstöße in allen Schweregraden (1191.001545ms)
+✔ axe Struktur: Ansicht "Gegenprüfungsliste", Frame Hülle: 0 Verstöße in allen Schweregraden (1062.650586ms)
+✔ axe Struktur: Ansicht "Prüfansicht", Frame Werkzeug: 0 Verstöße in allen Schweregraden (1299.150607ms)
+✔ axe Struktur: Ansicht "Prüfansicht", Frame Hülle: 0 Verstöße in allen Schweregraden (1153.382965ms)
+✔ axe Struktur: Ansicht "Passwortdialog", Frame Werkzeug: 0 Verstöße in allen Schweregraden (1306.533882ms)
+✔ axe Struktur: Ansicht "Passwortdialog", Frame Hülle: 0 Verstöße in allen Schweregraden (1229.854584ms)
+✔ axe Struktur: Ansicht "Info-Dialog", Frame Werkzeug: 0 Verstöße in allen Schweregraden (1258.874718ms)
+✔ axe Struktur: Ansicht "Info-Dialog", Frame Hülle: 0 Verstöße in allen Schweregraden (1211.533825ms)
+✔ axe Struktur: Ansicht "Projektliste", Frame Werkzeug: 0 Verstöße in allen Schweregraden (1172.57286ms)
+✔ axe Struktur: Ansicht "Projektliste", Frame Hülle: 0 Verstöße in allen Schweregraden (1174.143628ms)
+✔ axe Struktur: Ansicht "Eigene Regeln", Frame Werkzeug: 0 Verstöße in allen Schweregraden (2119.873072ms)
+✔ axe Struktur: Ansicht "Eigene Regeln", Frame Hülle: 0 Verstöße in allen Schweregraden (2154.220769ms)
+✔ Tastatur (a): Ansicht "Willkommen": jedes sichtbare bedienbare Element liegt in der Tab-Reihenfolge (1030.242493ms)
+✔ Tastatur (b): Ansicht "Willkommen": Fokusring nach Tastaturfokus mindestens 2 px (993.657875ms)
+✔ Tastatur (a): Ansicht "Arbeitsbereich leer": jedes sichtbare bedienbare Element liegt in der Tab-Reihenfolge (1272.999772ms)
+✔ Tastatur (b): Ansicht "Arbeitsbereich leer": Fokusring nach Tastaturfokus mindestens 2 px (1217.842139ms)
+✔ Tastatur (a): Ansicht "Mit Ergebnis": jedes sichtbare bedienbare Element liegt in der Tab-Reihenfolge (1499.515624ms)
+✔ Tastatur (b): Ansicht "Mit Ergebnis": Fokusring nach Tastaturfokus mindestens 2 px (1417.462448ms)
+✔ Tastatur (a): Ansicht "Gegenprüfungsliste": jedes sichtbare bedienbare Element liegt in der Tab-Reihenfolge (1411.502891ms)
+✔ Tastatur (b): Ansicht "Gegenprüfungsliste": Fokusring nach Tastaturfokus mindestens 2 px (1400.075574ms)
+✔ Tastatur (a): Ansicht "Prüfansicht": jedes sichtbare bedienbare Element liegt in der Tab-Reihenfolge (2311.553577ms)
+✔ Tastatur (b): Ansicht "Prüfansicht": Fokusring nach Tastaturfokus mindestens 2 px (2324.640384ms)
+✔ Tastatur (a): Ansicht "Passwortdialog": jedes sichtbare bedienbare Element liegt in der Tab-Reihenfolge (921.562774ms)
+✔ Tastatur (b): Ansicht "Passwortdialog": Fokusring nach Tastaturfokus mindestens 2 px (912.556641ms)
+✔ Tastatur (a): Ansicht "Info-Dialog": jedes sichtbare bedienbare Element liegt in der Tab-Reihenfolge (934.604695ms)
+✔ Tastatur (b): Ansicht "Info-Dialog": Fokusring nach Tastaturfokus mindestens 2 px (967.714031ms)
+✔ Tastatur (a): Ansicht "Projektliste": jedes sichtbare bedienbare Element liegt in der Tab-Reihenfolge (1302.407428ms)
+✔ Tastatur (b): Ansicht "Projektliste": Fokusring nach Tastaturfokus mindestens 2 px (1328.2427ms)
+✔ Tastatur (a): Ansicht "Eigene Regeln": jedes sichtbare bedienbare Element liegt in der Tab-Reihenfolge (2152.660336ms)
+✔ Tastatur (b): Ansicht "Eigene Regeln": Fokusring nach Tastaturfokus mindestens 2 px (2036.148141ms)
+✔ Tastatur (c): Passwortdialog: 25-mal Tab und Shift+Tab, der Fokus bleibt im Dialog (Fokusfalle) (1394.550225ms)
+✔ Tastatur (c): Passwortdialog: Esc schließt den Dialog, der Fokus liegt wieder auf dem auslösenden Knopf (1044.541902ms)
+✔ Tastatur (c): Info-Dialog: 25-mal Tab und Shift+Tab, der Fokus bleibt im Dialog (Fokusfalle) (1103.066718ms)
+✔ Tastatur (c): Info-Dialog: Esc schließt den Dialog, der Fokus liegt wieder auf dem auslösenden Knopf (904.561266ms)
+✔ Tastatur (d): reiner Tastaturablauf von "Jetzt starten" über "Dateien auswählen" und "Anonymisieren" bis "Kopieren" (1725.083393ms)
+✔ D49: Info-Dialog mit geöffneter Lizenzliste bei 1280 x 800: Aktionsknöpfe liegen im sichtbaren Bereich (1459.358759ms)
+✔ D49: Hintergrund ist bei geöffnetem Info-Dialog inert oder aria-hidden (auch die Leiste über dem Overlay) (927.362142ms)
+✔ D49: preload.js enthält keine doppelten Einträge (getAppInfo, getLicenses) (0.864942ms)
+✔ Optik: Willkommen-Überschrift bei 1280 x 800 wie in v2/main (höchstens 20 px, Gewicht 400, einzeilig, "Jetzt starten" sichtbar) (852.342454ms)
+✔ Optik: die 13 Panel-Titel (h2) behalten Größe und Gewicht der alten Panel-Überschriften (12 px, 600, 18 px) (828.734462ms)
+A11Y-BILANZ | Willkommen | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Willkommen", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1469.729097ms)
+A11Y-BILANZ | Willkommen | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Willkommen", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1322.40923ms)
+A11Y-BILANZ | Arbeitsbereich leer | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Arbeitsbereich leer", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1652.295807ms)
+A11Y-BILANZ | Arbeitsbereich leer | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Arbeitsbereich leer", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1191.787016ms)
+A11Y-BILANZ | Mit Ergebnis | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Mit Ergebnis", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1869.222746ms)
+A11Y-BILANZ | Mit Ergebnis | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Mit Ergebnis", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1392.702732ms)
+A11Y-BILANZ | Gegenprüfungsliste | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Gegenprüfungsliste", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1558.656543ms)
+A11Y-BILANZ | Gegenprüfungsliste | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Gegenprüfungsliste", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1380.239374ms)
+A11Y-BILANZ | Prüfansicht | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Prüfansicht", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (2042.341878ms)
+A11Y-BILANZ | Prüfansicht | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Prüfansicht", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1652.891625ms)
+A11Y-BILANZ | Passwortdialog | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: aria-allowed-role(minor):1
+✔ axe vollständig: Ansicht "Passwortdialog", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1822.247923ms)
+A11Y-BILANZ | Passwortdialog | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Passwortdialog", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1248.469975ms)
+A11Y-BILANZ | Info-Dialog | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Info-Dialog", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1432.051516ms)
+A11Y-BILANZ | Info-Dialog | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Info-Dialog", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1265.492158ms)
+A11Y-BILANZ | Projektliste | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Projektliste", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (1458.387878ms)
+A11Y-BILANZ | Projektliste | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Projektliste", Frame Hülle: 0 Verstöße mit Impact serious oder critical (1191.825195ms)
+A11Y-BILANZ | Eigene Regeln | Werkzeug | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Eigene Regeln", Frame Werkzeug: 0 Verstöße mit Impact serious oder critical (2470.442123ms)
+A11Y-BILANZ | Eigene Regeln | Hülle | serious/critical: keine | moderate/minor (WCAG-Tags): keine | best-practice-Lauf: keine
+✔ axe vollständig: Ansicht "Eigene Regeln", Frame Hülle: 0 Verstöße mit Impact serious oder critical (2110.262212ms)
+A11Y-BEWEGUNG | Willkommen | Werkzeug | geprüft 1995 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Willkommen", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (822.827076ms)
+A11Y-BEWEGUNG | Willkommen | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Willkommen", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (880.101062ms)
+A11Y-BEWEGUNG | Arbeitsbereich leer | Werkzeug | geprüft 2478 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Arbeitsbereich leer", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (888.184411ms)
+A11Y-BEWEGUNG | Arbeitsbereich leer | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Arbeitsbereich leer", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (883.556065ms)
+A11Y-BEWEGUNG | Mit Ergebnis | Werkzeug | geprüft 3534 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Mit Ergebnis", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (990.668793ms)
+A11Y-BEWEGUNG | Mit Ergebnis | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Mit Ergebnis", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1003.625262ms)
+A11Y-BEWEGUNG | Info-Dialog | Werkzeug | geprüft 1995 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Info-Dialog", Frame Werkzeug: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (1003.69007ms)
+A11Y-BEWEGUNG | Info-Dialog | Hülle | geprüft 288 (Element/Pseudo) | reduce aktiv: true | Verstöße: 0
+✔ Bewegung: Ansicht "Info-Dialog", Frame Hülle: bei prefers-reduced-motion hat kein Element eine Animations- oder Übergangsdauer über 0,01 s (961.505834ms)
+A11Y-ZOOM | Willkommen | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Willkommen", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1426.237842ms)
+A11Y-ZOOM | Arbeitsbereich leer | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Arbeitsbereich leer", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1505.368039ms)
+A11Y-ZOOM | Mit Ergebnis | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Mit Ergebnis", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1610.785369ms)
+A11Y-ZOOM | Prüfansicht | Werkzeug scrollWidth 632, clientWidth 632 (innerWidth 640) | Hülle scrollWidth 640, clientWidth 640
+✔ Zoom 200 %: Ansicht "Prüfansicht", Werkzeug-Frame: kein horizontales Scrollen bei 1280 x 800 (1689.110334ms)
+✔ Five local provider marks and an honest airplane tutorial support pause, reduced motion and narrow screens (1509.096841ms)
+✔ Branded preview and actual print view preserve JSON identity/hash, honest seal and one readable A4 page (2194.738129ms)
+✔ Long reports retain their last document across pages and user labels stay inert text (1801.552678ms)
+VIEWPORT {"display":{"width":1920,"height":1080},"content":{"x":320,"y":140,"width":1280,"height":800}}
+✔ Actual desktop renderer supports the requested 1280x800 viewport on smaller CI displays (1026.144529ms)
+✔ 1 Bau: exakte Dateiliste, byteidentische Kopien, Browser-Worker mit Pin, Groessen, deterministisch (358.145199ms)
+✔ 2 Shim deckt jede in preload.js freigegebene Funktion und jedes Ereignis ab (2.628416ms)
+✔ 3 Huelle laedt, Iframe laedt das Werkzeug, keine Seitenfehler, Version in der Fusszeile (893.775165ms)
+✔ 4 Handy-Breite 390x844: kein horizontales Scrollen, Hauptbedienelemente sichtbar (1424.108462ms)
+✔ 5 Ende-zu-Ende ohne Modell (Standard beim ersten Besuch): Platzhalter, Rueckuebersetzung (949.245513ms)
+✔ 6 Netzpolitik: erster Besuch ohne huggingface-Anfrage; nach Einschalten der KI nur GET an das gepinnte Modell, Standard-Erkennung laeuft weiter (4982.444435ms)
+✔ 7 Kopieren legt den anonymisierten Text in die Zwischenablage (oder ruft ersatzweise den Shim) (1645.172901ms)
+✔ 8 Handy-Layout 390x844: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich (1646.577078ms)
+✔ 8 Handy-Layout 360x740: jedes Bedienelement und die vier Schrittreiter liegen im sichtbaren Bereich (1672.259772ms)
+✔ 9 Erster Besuch: Hinweis aufgeklappt, KI aus (ps_ai_mode=off), danach eingeklappt und KI-Einstellung bleibt (2040.803964ms)
+✔ 10 Irrefuehrende Aussagen des Werkzeugs werden in der Huelle ersetzt (Originalsaetze existieren im Tool) (1559.064706ms)
+✔ 11 Bauskript: gefaehrliche --out-Ziele werden abgelehnt, nichts wird geloescht (nur Wegwerf-Verzeichnisse) (556.886129ms)
+✔ 12 Bauskript: Worker-Ersatz mit CRLF-Quelle (Windows-Checkout) und Aufruf ueber einen Symlink-Pfad (macOS-Temp-Ordner) (126.073598ms)
+ℹ tests 93
+ℹ suites 0
+ℹ pass 93
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 127406.634406

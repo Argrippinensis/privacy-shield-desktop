@@ -264,6 +264,13 @@
     // Wer das Update nicht installieren kann, darf die App trotzdem benutzen (gilt bis zum nächsten Start)
     let ignoreForced = false;
     if (window.electronAPI) window.electronAPI.getUpdateMode().then(function (m) { updateManual = !!m.manual; }).catch(function () {});
+    let reconnectCheckPending = false;
+    window.addEventListener('online', async () => {
+      if (!window.electronAPI || reconnectCheckPending) return;
+      reconnectCheckPending = true;
+      try { await window.electronAPI.checkForUpdates(); } catch { /* offline/errors never block documents */ }
+      finally { reconnectCheckPending = false; }
+    });
     function forcedAllowed() { return !updateManual && !ignoreForced; }
 
     function showBanner(version, dismissCount, notes) {

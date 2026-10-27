@@ -9,3 +9,5 @@ Prüfung: web-beta.test.mjs und version-label.test.mjs, 16/16 bestanden. Die Bro
 Windows- und Linux-Paketprüfungen für v2.0.2 bestanden. Der erste Mac-Lauf erhielt wegen GitHub-Kapazitätsmangel keinen Runner und wurde unverändert erneut gestartet. Veröffentlichung erst nach erfolgreicher vollständiger Paketprüfung; keine Teilveröffentlichung und kein Verschieben des Tags.
 
 Nachtrag: Der Desktop-Build 2.0.2 wurde aufgrund dreier Mac-PDF-Testfehler nicht veröffentlicht. Die belegte Korrektur des Testlesers und der aktuelle Nachweis 2.0.3 sind in ../mac-pdf/PRUEFPROTOKOLL.md dokumentiert.
+
+Aktueller Gesamtstand: Version 2.0.4 mit Annotationskorrektur, iOS-Anleitung und Desktop-Update-Hinweisen. Siehe ../annotation-ios/PRUEFPROTOKOLL.md; die Desktop-Zwischenfassungen 2.0.2 und 2.0.3 wurden nicht veröffentlicht.

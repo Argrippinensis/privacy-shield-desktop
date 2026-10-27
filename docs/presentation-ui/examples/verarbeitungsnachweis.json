@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "id": "4bb41e91-c288-4b8e-ae43-32919e189450",
-  "created": "2026-10-27T17:42:36.693Z",
+  "id": "67898d0c-ed97-4e10-944e-5730bf0f9d6e",
+  "created": "2026-10-27T22:33:49.808Z",
   "timezone": "UTC",
   "clock": "Zeitangabe dieses Geräts",
   "product": "PrivacyShield",
-  "version": "2.0.3",
-  "coreSha256": "a8870f775f50b7b1a1256f814861e1e0aaa1b3a665b9e13d9a62114bafed2a70",
+  "version": "2.0.4",
+  "coreSha256": "b0ca1f25ffb79902b011acf14a240fc9f3f5a144a06f6db1083388d04015a5c6",
   "operation": "Pseudonymisierung",
   "profile": "employment",
   "categories": [

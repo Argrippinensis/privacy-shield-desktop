@@ -1,10 +1,17 @@
-name: PDF portability
+name: Presentation portability
 on:
-  push:
-    branches: [codex/mac-pdf-portability]
+  workflow_dispatch:
   pull_request:
     paths:
-      - app/ui/evidence-*.js
+      - app/**
+      - main.js
+      - tests/helpers.mjs
+      - tests/fixtures/web-beta-main.cjs
+      - tests/annotation-toggle.test.mjs
+      - tests/updater.test.mjs
+      - tests/web-beta.test.mjs
+      - tests/a11y*.test.mjs
+      - tests/viewport.test.mjs
       - tests/pdf-text*.mjs
       - tests/fixtures/pdf-portability/**
       - tests/presentation-ui.test.mjs
@@ -17,8 +24,12 @@ concurrency:
   cancel-in-progress: true
 jobs:
   mac-pdf:
-    runs-on: macos-15-intel
-    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15-intel, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -33,12 +44,12 @@ jobs:
           key: vendor-${{ hashFiles('scripts/vendor.lock.json') }}
       - run: npm run fetch-vendor
       - run: npx playwright-core install chromium
-      - name: Real branded PDF and multi-page evidence
+      - name: Actual desktop viewports, annotations, updates and printed evidence
         env:
           PS_PDF_ARTIFACTS: ${{ github.workspace }}/artifacts/pdf-portability
-        run: node --test --test-concurrency=1 tests/pdf-text.test.mjs tests/presentation-ui.test.mjs tests/processing-evidence.test.mjs
+        run: node --test --test-concurrency=1 tests/viewport.test.mjs tests/pdf-text.test.mjs tests/presentation-ui.test.mjs tests/processing-evidence.test.mjs tests/annotation-toggle.test.mjs tests/updater.test.mjs tests/a11y.test.mjs tests/a11y-struktur.test.mjs tests/web-beta.test.mjs
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: mac-pdf-portability
+          name: mac-presentation-${{ matrix.os }}
           path: artifacts/pdf-portability

@@ -25,7 +25,7 @@ export async function launchApp({ offline = false, env = {}, appDir = ROOT, extr
   const args = [...(packaged ? [] : [appDir]), '--no-sandbox', `--user-data-dir=${userData}`, ...extraArgs];
   // Kein Netz: toter Proxy. Betrifft Chromium und electron-updater gleichermassen.
   if (offline) args.push('--proxy-server=http://127.0.0.1:9');
-  const app = await _electron.launch({ executablePath: packaged || electronPath, args, ...(cwd ? { cwd } : {}), env: { ...process.env, PS_BLOCK_EXTERNAL: '1', ...env } });
+  const app = await _electron.launch({ executablePath: packaged || electronPath, args, ...(cwd ? { cwd } : {}), env: { ...process.env, PS_BLOCK_EXTERNAL: '1', PS_TEST_VIEWPORT: process.platform === 'darwin' ? '1' : '0', ...env } });
   let win;
   try {
     win = await app.firstWindow();
@@ -204,17 +204,18 @@ export function makePdf(app, html) {
 
 // Lokaler Update-Server (Mock) fuer Updater-Tests: liefert latest*.yml, Installer-Dateien gibt es nicht (404).
 import http from 'http';
-export function startUpdateServer({ version = '99.0.0', notes = '' } = {}) {
+export function startUpdateServer({ version = '99.0.0', notes = '', metadataOnly = false, available = true } = {}) {
   const hits = [];
   const sha = Buffer.alloc(64, 1).toString('base64');
   const name = `PrivacyShield-${version}.AppImage`;
   const yml = `version: ${version}\nfiles:\n  - url: ${name}\n    sha512: ${sha}\n    size: 1000\npath: ${name}\nsha512: ${sha}\nreleaseDate: '2026-10-20T00:00:00.000Z'\n` + (notes ? `releaseNotes: ${JSON.stringify(notes)}\n` : '');
   const server = http.createServer((req, res) => {
     hits.push(req.url);
-    if (/latest.*\.yml$/.test(req.url.split('?')[0])) { res.writeHead(200, { 'Content-Type': 'text/yaml' }); return res.end(yml); }
+    if (req.url.split('?')[0] === '/release.json') { res.writeHead(available ? 200 : 503, {'Content-Type':'application/json'}); return res.end(JSON.stringify({tag_name:'v'+version,draft:false,prerelease:false,body:notes})); }
+    if (!metadataOnly && /latest.*\.yml$/.test(req.url.split('?')[0])) { res.writeHead(200, { 'Content-Type': 'text/yaml' }); return res.end(yml); }
     res.writeHead(404); res.end('nicht vorhanden');
   });
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ url: `http://127.0.0.1:${server.address().port}`, hits, close: () => new Promise((r) => server.close(r)) })));
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ url: `http://127.0.0.1:${server.address().port}`, hits, setAvailable: (value) => { available=value; }, close: () => new Promise((r) => server.close(r)) })));
 }
 
 // Kopie des Programms mit absichtlich beschaedigter Installation (fuer Fehlerdiagnose-Tests).

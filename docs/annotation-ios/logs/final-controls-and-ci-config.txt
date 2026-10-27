@@ -1,0 +1,32 @@
+✔ desktop: automatic whole entities release/remask without duplicate marks and keep evidence honest (2346.218103ms)
+✔ desktop: manual marks release, undo, redo and normalized duplicate prevention through real controls (2696.409048ms)
+✔ web: automatic whole entities release/remask without duplicate marks and keep evidence honest (2120.832457ms)
+✔ web: manual marks release, undo, redo and normalized duplicate prevention through real controls (2851.375456ms)
+✔ Five local provider marks and an honest airplane tutorial support pause, reduced motion and narrow screens (1346.523465ms)
+✔ Branded preview and actual print view preserve JSON identity/hash, honest seal and one readable A4 page (1595.70555ms)
+✔ Long reports retain their last document across pages and user labels stay inert text (1582.25794ms)
+✔ build.yml ist gueltiges YAML (39.603764ms)
+✔ ci.yml ist gueltiges YAML (33.049325ms)
+✔ pdf-portability.yml ist gueltiges YAML (31.312219ms)
+✔ ci.yml enthaelt den Schritt npm run test:unit (0.470778ms)
+✔ build.yml: workflow_dispatch-Eingabe break_model (boolean) (0.197703ms)
+✔ build.yml: Windows-Installationsschritt mit stiller Installation nach C:\PS-Test (0.253987ms)
+✔ build.yml: Modellgroesse 135359829 Bytes wird geprueft (0.189431ms)
+✔ build.yml: installierte App wird mit PS_INSTALLED=1 und tests/installed.test.mjs getestet (0.264963ms)
+✔ build.yml: kein ${{ inputs ... }} innerhalb eines run:-Blocks (Script-Injection, nur env:) (38.04406ms)
+✔ build.yml: die drei Installationsschritte laufen nur unter Windows mit shell: pwsh (36.812465ms)
+✔ build.yml: Release-Job legt bei Tags mit - das Release mit --prerelease an (36.486602ms)
+✔ build.yml: Veroeffentlichen behaelt bei Vorabversionen das Flag --prerelease (37.371024ms)
+✔ build.yml: Download-Pruefung ueber releases/latest nur fuer stabile Tags, sonst releases/download/<Tag> (37.057658ms)
+✔ build.yml: bei Vorabversionen wird geprueft, dass releases/latest nicht der neue Tag ist (39.319722ms)
+✔ build.yml: Release-Job mit gezieltem CI-Leserecht und unveraenderten Actions (42.152513ms)
+✔ build.yml: vor dem Veroeffentlichen wird die Vorabversion-Markierung gegen den Tag geprueft (38.925668ms)
+✔ build.yml: der latest-Check besteht nicht still bei API-Fehlern (nur 404 gilt als kein stabiles Release) (43.900379ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16069.740913
