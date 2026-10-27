@@ -1,6 +1,14 @@
 # Änderungsprotokoll
 
-Format: ein Abschnitt je Version, Überschrift `## [x.y.z] - JJJJ-MM-TT`. Der Release-Workflow übernimmt den Abschnitt
+Format: ein Abschnitt je Version, Überschrift `## [2.0.1] - 2026-10-27
+
+- Arbeitsvertrag-Profil mit gezieltem Schutz für Tarifgruppe, Berufsjahr, Team, Arbeitszeit, Urlaub, Probezeit/Befristung, Anrede und Abschluss. Allgemeine Vertragsbegriffe und Paragrafen bleiben in diesem Profil lesbar.
+- Arbeitgeber-Kurzformen und bekannte Varianten, mehrteilige Straßennamen und Vertragsorte werden verlässlicher geschützt. Falsche NER-Treffer für allgemeine Vertragsbegriffe und GeschGehG werden gefiltert. Eigene Markierungen bleiben möglich; keine Vollständigkeitsgarantie.
+- Direkter, bewusst geklickter App-Aufruf auf Mobilgeräten ohne vorgeschaltete Auswahl; Web-Ausweichweg und Zwischenablagefehler werden angezeigt. Zusätzlich Grok, DeepSeek, Mistral Le Chat, Perplexity und Microsoft Copilot als Übergabeziele. Kein Dokumenttext in Links, keine automatischen Prompts und keine zusätzlichen lokalen Modelle.
+- Dauerhafter lokaler Status mit reduzierbarer Animation sowie ausdrücklich vorbereitete Offline-Browserfassung inklusive PDF/OCR und optionalem geprüftem KI-Modell. Cache-Verlust wird erkannt und repariert. Desktop-Verarbeitung weiterhin technisch vom Netz getrennt; separate Update-Prüfung bleibt online.
+- Druckbarer Verarbeitungsnachweis mit Vorschau, PDF-Druck und inhaltsfreier JSON-Datei; konsistente Exporte und vollständigerer Scan-PDF-Import. Siehe verknüpfte Prüfprotokolle und synthetische Beispiele.
+
+## [x.y.z] - JJJJ-MM-TT`. Der Release-Workflow übernimmt den Abschnitt
 der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.Y.Z").
 
 ## [2.0.0] - 2026-10-26

@@ -1809,10 +1809,10 @@
                 </div>
                 <div class="tool-panel-body" style="padding: 12px">
                   <p style="font-size: 12px; color: #666; margin-bottom: 10px; line-height: 1.5">
-                    Klicke auf eine Schaltfläche — der anonymisierte Text wird in die Zwischenablage kopiert und der
-                    KI-Dienst lässt sich bevorzugt als App öffnen. In der nächsten Ansicht wählen Sie App oder Webzugang.
+                    Klicke auf einen Dienst: Die App-Öffnung wird direkt angefordert und der bereinigte Text parallel kopiert.
+                    Den Text selbst in der KI-App einfügen. Falls keine passende App-Verknüpfung vorhanden ist, den Webzugang wählen.
                   </p>
-                  <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                  <div id="ps-ai-services" style="display: flex; flex-wrap: wrap; gap: 8px">
                     <button
                       class="btn btn-ghost"
                       style="font-size: 12px; gap: 6px"
@@ -2234,7 +2234,7 @@
     <script src="vendor/jspdf/jspdf.umd.min.js"></script>
     <script src="vendor/jszip/jszip.min.js"></script>
     <script src="lib/placeholder.js"></script><script src="lib/coref.js"></script><script src="lib/leakcheck.js"></script><script src="lib/marks.js"></script><script src="lib/report.js"></script><script src="lib/policy.js"></script>
-    <script src="lib/detect.js"></script>
+    <script src="lib/ai-services.js"></script><script src="lib/employment.js"></script><script src="lib/detect.js"></script>
     <div id="PWDLG" role="dialog" aria-modal="true" aria-labelledby="PWTITLE" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(26, 58, 92, 0.45); align-items: center; justify-content: center">
       <form onsubmit="psPwOk(); return false" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 24px; width: min(420px, 92vw); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); text-align: left">
         <h2 id="PWTITLE" style="font-size: 15px; font-weight: 700; color: #1a3a5c; margin: 0 0 6px">Passwort</h2>
@@ -5048,7 +5048,7 @@
       // Externe Links (Website, Impressum, Datenschutz, KI-Anbieter) im System-Browser oeffnen, nicht im Tool-Frame.
       document.addEventListener("click", function (e) {
         const a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
-        if (!a) return;
+        if (!a || e.defaultPrevented || a.dataset.psService === "true") return;
         const href = a.getAttribute("href") || "";
         if (/^(https?:|mailto:)/i.test(href)) {
           e.preventDefault();

@@ -76,12 +76,7 @@
   }
   // Two deliberate steps preserve user activation for mobile Universal/App Links and clipboard permissions.
   window.psServiceDialog = async function (url) {
-    const services = {
-      'https://chatgpt.com': { id: 'chatgpt', name: 'ChatGPT', web: 'https://chatgpt.com/', app: 'https://chatgpt.com/', android: 'com.openai.chatgpt' },
-      'https://claude.ai': { id: 'claude', name: 'Claude', web: 'https://claude.ai/new', app: 'https://claude.ai/new', android: 'com.anthropic.claude' },
-      'https://gemini.google.com': { id: 'gemini', name: 'Gemini', web: 'https://gemini.google.com/app', app: 'https://gemini.google.com/app/download/mobile', android: 'com.google.android.apps.bard' }
-    };
-    const s = services[url]; if (!s || !psCurrent()) return;
+    const s = PSLib.aiServices.get(url); if (!s || !psCurrent()) return;
     const d = modal(s.name + ' öffnen');
     const run = psRun;
     const p = el('p', 'Bereinigter Text wird kopiert …'); p.setAttribute('role', 'status'); d.append(p);
@@ -97,7 +92,7 @@
     if (web()) {
       const android = /Android/i.test(navigator.userAgent);
       const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const appURL = android ? 'intent://' + s.web.replace('https://', '') + '#Intent;scheme=https;package=' + s.android + ';S.browser_fallback_url=' + encodeURIComponent(s.web) + ';end' : ios ? s.app : s.web;
+      const appURL = PSLib.aiServices.appURL(s.id, android ? 'android' : ios ? 'ios' : 'web');
       link('App bevorzugen', appURL).classList.add('ps-local-primary');
       link('Webversion öffnen', s.web);
       if (navigator.share) button(d, 'Über „Teilen“ an App …', async () => {
@@ -114,7 +109,59 @@
     }
     button(d, 'Schließen', () => d.close()); d.addEventListener('close', () => d.remove(), { once: true }); d.showModal();
   };
+  function platform() {
+    if (/Android/i.test(navigator.userAgent)) return 'android';
+    return /iPhone|iPad|iPod/.test(navigator.userAgent) || navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1 ? 'ios' : 'web';
+  }
+  function installServices() {
+    const box = document.getElementById('ps-ai-services'); if (!box) return;
+    box.replaceChildren();
+    const note = el('p'); note.id = 'ps-handoff-status'; note.setAttribute('role','status'); note.style.cssText='font-size:12px;line-height:1.5;margin-top:10px'; box.after(note);
+    const fallbacks = el('span'); note.after(fallbacks);
+    const more = el('details'), summary = el('summary','Weitere KI-Dienste'); summary.style.cssText='cursor:pointer;font-size:12px;padding:10px 0'; more.append(summary); box.after(more);
+    function current(e) { if (psCurrent()) return true; e.preventDefault(); toast('Ergebnis veraltet; erneut verarbeiten','e'); return false; }
+    function launch(e,s) {
+      if (!current(e)) return;
+      const run = psRun, text = document.getElementById('AT').value;
+      if (!text.trim()) { e.preventDefault(); return; }
+      note.textContent = 'App-Öffnung für '+s.name+' angefordert. Bereinigten Text selbst einfügen; die KI arbeitet online.';
+      fallbacks.replaceChildren();
+      const fallback = el('a',s.name+' im Web öffnen'); fallback.href=s.web; fallback.target='_blank'; fallback.rel='noopener noreferrer'; fallback.dataset.psService='true'; fallback.className='btn btn-ghost'; fallback.onclick=current; fallbacks.append(fallback);
+      // Do not await the clipboard before the direct link: iOS/Android need this user gesture.
+      psCopy(text).then(()=>{
+        if (psCurrent() && psRun===run) note.textContent='Bereinigter Text kopiert. In '+s.name+' selbst einfügen. Falls die App nicht öffnet, den Webzugang unten verwenden.';
+        else note.textContent='Ergebnis inzwischen geändert. Vor weiterer Übergabe erneut verarbeiten.';
+      }).catch(()=>{note.textContent='Kopieren nicht möglich. Bitte bereinigten Text selbst kopieren und in '+s.name+' einfügen.';});
+      if (!web()) {
+        e.preventDefault();
+        api().openAIService(s.id,true).catch(()=>{note.textContent='App konnte nicht geöffnet werden. Webzugang unten verwenden oder App selbst starten.';});
+      }
+      // Browser: the anchor's own default action opens the app in the original click.
+    }
+    for (const s of PSLib.aiServices.services) {
+      const a=el('a','→ '+s.name); a.href=PSLib.aiServices.appURL(s.id,platform()); a.target='_blank'; a.rel='noopener noreferrer'; a.dataset.psService='true'; a.dataset.psAi=s.id; a.className='btn btn-ghost'; a.style.cssText='font-size:12px;min-height:44px;display:inline-flex;align-items:center'; a.onclick=e=>launch(e,s);
+      (s.more?more:box).append(a);
+    }
+    if (navigator.share) {
+      const b=el('button','Bereinigten Text teilen …'); b.type='button'; b.className='btn btn-ghost'; b.onclick=async()=>{
+        if (!psCurrent()) return toast('Ergebnis veraltet; erneut verarbeiten','e');
+        try {await navigator.share({text:document.getElementById('AT').value});}
+        catch(e){if(e.name!=='AbortError')toast('Teilen nicht möglich; Text kopieren','e');}
+      }; more.append(b);
+    }
+  }
+  function installContractReview() {
+    const input=document.getElementById('IT');if(!input)return;
+    const d=el('details');d.id='ps-contract-review';d.style.cssText='font-size:12px;line-height:1.5;margin:8px 0';
+    d.append(el('summary','Arbeitsvertrag: indirekte Hinweise und Originaldatei prüfen'));
+    d.append(el('p','Tarifgruppe und Berufsjahr können das Gehalt verraten. Auch Team, Arbeitszeit, Urlaub, Probezeit, Befristungsdauer, Anrede und Abschluss können zusammen identifizieren. Das Profil „Arbeitsvertrag“ maskiert diese Angaben zusätzlich.'));
+    button(d,'Profil Arbeitsvertrag verwenden',()=>{document.querySelector('.profile-card[data-pid="employment"]').click();initEL();toast('Profil Arbeitsvertrag gewählt; bitte neu verarbeiten','s');});
+    d.append(el('p','Arbeitgeber-Kurzformen, Slogans und interne Marken prüfen; bekannte Aliaslisten sind nicht vollständig. Weitere Begriffe über eigene Regeln oder Markierungen ergänzen.'));
+    d.append(el('p','Dateiname, Metadaten, Logos und Unterschriftsbilder der Originaldatei separat prüfen. PrivacyShield erzeugt bereinigten Text und entfernt solche Inhalte nicht aus der Original-PDF. Ergebnis vor Weitergabe selbst prüfen.'));
+    input.before(d);
+  }
   window.addEventListener('DOMContentLoaded', () => {
+    installServices(); installContractReview();
     trigger = el('button'); trigger.type = 'button'; trigger.className = 'ps-local-pill'; trigger.setAttribute('aria-haspopup', 'dialog'); trigger.title = 'Offline-Status und Ressourcen anzeigen'; if (!web()) trigger.style.bottom = 'max(52px, env(safe-area-inset-bottom))';
     const dot = el('span'); dot.className = 'ps-local-orbit'; dot.setAttribute('aria-hidden', 'true');
     const text = el('span'); title = el('strong', 'Verarbeitung auf diesem Gerät'); subtitle = el('small', 'Offline-Bereitschaft wird geprüft'); text.append(title, subtitle); trigger.append(dot, text); trigger.onclick = showStatus; document.body.append(trigger);

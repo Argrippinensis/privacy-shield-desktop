@@ -1,5 +1,7 @@
 # Lokaler Status, Offline-Vorbereitung und App-Verknüpfungen
 
+**Historisches Protokoll der ersten Umsetzung.** Version 2.0.1 ersetzt die unten beschriebene zweistufige Übergabe durch den direkten ersten App-Klick und ergänzt das Arbeitsvertragsprofil sowie weitere Anbieter. Aktueller Abschluss: [../employment-ui/PRUEFPROTOKOLL.md](../employment-ui/PRUEFPROTOKOLL.md). Bestehende 2.0.0-Installer bleiben erhalten; ein neuer 2.0.1-Release wird gesondert gebaut und geprüft.
+
 Fortsetzung der vom Nutzer beauftragten und anschließend zur Veröffentlichung freigegebenen Arbeit an arcangeli.eu#1. Ausgangsstände: Desktop main 9ec75a1; Website main d9997df. Beide Arbeitsverzeichnisse waren sauber; origin wurde zuerst abgeglichen. Keine fremden Änderungen überschrieben.
 
 ## Verhalten

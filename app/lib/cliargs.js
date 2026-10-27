@@ -6,7 +6,7 @@
   'use strict';
   const TEXT = {
     noValue: (n) => 'Die Option ' + n + ' braucht einen Wert.',
-    badProfile: 'Ungueltiger Wert fuer --profile (erlaubt: standard, finance, medical, strict, maximal).',
+    badProfile: 'Ungueltiger Wert fuer --profile (erlaubt: standard, finance, medical, employment, strict, maximal).',
     badAi: 'Ungueltiger Wert fuer --ai (erlaubt: auto, off).',
     badEnv: 'Ungueltiger Variablenname fuer --password-env.',
     missing: (n) => 'Die Option ' + n + ' fehlt.',
@@ -19,7 +19,7 @@
     '--map': 'map', '--password-env': 'passwordEnv', '--log': 'log' };
   const FLAG = { '--report': 'report', '--password-stdin': 'passwordStdin', '--fail-on-findings': 'failOnFindings',
     '--recursive': 'recursive', '--quiet': 'quiet' };
-  const PROFILES = ['standard', 'finance', 'medical', 'strict'];
+  const PROFILES = ['standard', 'finance', 'medical', 'employment', 'strict'];
   // Diese Schalter gehoeren zu Electron/Chromium. Alle anderen unbekannten Schalter nach --cli sind wahrscheinlich Tippfehler.
   const RUNTIME_FLAGS = new Set(['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--enable-logging']);
   const RUNTIME_VALUES = new Set(['--inspect', '--remote-debugging-port', '--user-data-dir', '--lang']);

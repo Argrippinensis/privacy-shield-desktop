@@ -364,21 +364,16 @@ handle('get-app-version', () => app.getVersion());
 
 // Only fixed destinations, never document text, prompts or caller-provided URLs.
 handle('open-ai-service', async (event, service, preferApp) => {
-  const targets = {
-    chatgpt: { web: 'https://chatgpt.com/', app: 'chatgpt://' },
-    claude: { web: 'https://claude.ai/new', app: 'claude://claude.ai/new' },
-    gemini: { web: 'https://gemini.google.com/app' }
-  };
-  if (!Object.hasOwn(targets, service) || typeof preferApp !== 'boolean') throw invalidArg();
-  const target = targets[service];
+  const target = require('./app/lib/ai-services.js').get(service);
+  if (!target || typeof service !== 'string' || target.id !== service || typeof preferApp !== 'boolean') throw invalidArg();
   const launch = async (url) => {
     if (process.env.PS_BLOCK_EXTERNAL === '1') globalThis.__psExternal.push(url);
     else await shell.openExternal(url);
   };
-  if (preferApp && target.app) {
+  if (preferApp && target.desktop) {
     try {
-      if (app.getApplicationNameForProtocol(target.app)) {
-        await launch(target.app);
+      if (app.getApplicationNameForProtocol(target.desktop)) {
+        await launch(target.desktop);
         return { destination: 'app' };
       }
     } catch { /* No registered handler or launch failed: use the explicit web fallback. */ }
