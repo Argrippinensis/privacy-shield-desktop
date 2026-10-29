@@ -3,6 +3,13 @@
 Format: ein Abschnitt je Version, Überschrift `## [x.y.z] - JJJJ-MM-TT`. Der Release-Workflow übernimmt den Abschnitt
 der getaggten Version als Text des GitHub-Releases (Fallback: "PrivacyShield vX.Y.Z").
 
+## [2.0.6] - 2026-10-29
+
+- Weniger Fehlmarkierungen in Geschäftsdokumenten: allgemeine Fachbegriffe wie „Implementation Support“ und „Operating Model Transformation“ bleiben lesbar. Namen werden genauer von nachfolgenden Jobtiteln abgegrenzt; echte Firmen mit Rechtsform und ausdrückliche Markierungen bleiben geschützt.
+- Getrennte Namen werden nicht mehr über einen Zeilenumbruch zu einem großen Treffer verbunden. Vollständige Organisationstreffer des lokalen Modells können konkurrierende Namensregeln korrigieren.
+- Gemeinsame lokale Modellanbindung für Oberfläche und Kommandozeile. Wiederholte Wörter werden an der tatsächlichen Tokenposition zugeordnet; unsichere Wortfragmente werden nicht als vollständige Entität übernommen. Weiterhin vollständig lokale Dokumentverarbeitung, bestehendes Modell und konservative Erkennungsschwelle.
+- Zusätzliche Regressionen anhand des Beta-Feedbacks und Gegenprüfungen für echte Personen, Firmen und Kontaktdaten. Bestehende Qualitätsgrenzen bleiben bestehen; keine Garantie vollständiger oder fehlerfreier Anonymisierung.
+
 ## [2.0.5] - 2026-10-27
 
 - Annotieren schaltet erkannte und manuell markierte Werte gezielt zwischen Maskieren und Freigeben um. Ganze erkannte Begriffe bleiben zusammen; gleiche Werte derselben Kategorie gelten gemeinsam. Rückgängig/Wiederholen und Tastaturbedienung werden unterstützt. Wiederholte oder gleichwertige Markierungen erzeugen keine zusätzlichen Regeln.

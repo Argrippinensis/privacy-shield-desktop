@@ -117,7 +117,7 @@ const keine404 = () => assert.deepEqual([...nichtGefunden], [], 'lokale Pfade ni
 const kiEinschalten = (f) => f.evaluate(() => { loadTestDoc(); const t = document.getElementById('aiAutoToggle'); t.click(); return t.checked; });
 
 // Vom Werkzeug per <script> geladene lib-Dateien (ohne CLI- und Leser-Module, die es im Browser nicht gibt)
-const LIB = ['brand', 'ai-services', 'employment', 'placeholder', 'coref', 'leakcheck', 'marks', 'report', 'policy', 'detect', 'history', 'review', 'hygiene', 'psmap', 'project', 'formats', 'officefmt'].map((n) => 'lib/' + n + '.js');
+const LIB = ['brand', 'ai-services', 'employment', 'placeholder', 'coref', 'leakcheck', 'marks', 'report', 'policy', 'detect', 'ner', 'history', 'review', 'hygiene', 'psmap', 'project', 'formats', 'officefmt'].map((n) => 'lib/' + n + '.js');
 const MODELL_REV = 'c2a4dbf593c57f47004c5bc2d3770d311aee9c43';
 
 test('1 Bau: exakte Dateiliste, byteidentische Kopien, Browser-Worker mit Pin, Groessen, deterministisch', () => {

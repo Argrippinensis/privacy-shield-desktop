@@ -42,7 +42,7 @@ self.onmessage = async ({ data }) => {
       }
       self.postMessage({ type: 'ready', threads: env.backends.onnx.wasm.numThreads, isolated: !!self.crossOriginIsolated });
     } else if (data.type === 'run') {
-      const out = await ner(data.text);
+      const out = await ner(data.text, { ignore_labels: [] });
       self.postMessage({ type: 'result', id: data.id, out });
     }
   } catch (err) {

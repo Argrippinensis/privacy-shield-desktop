@@ -31,16 +31,24 @@
     let cur = null;
     for (const t of tokens) {
       const m = /^([BI])-([A-Z]+)$/.exec(t.entity || '');
-      const sub = typeof t.word === 'string' && t.word.indexOf('##') === 0;
-      if (!m || (t.score || 0) < 0.9) {
+      const sub = typeof t.word === 'string' && t.word.startsWith('##');
+      // Preserve the conservative token threshold. Lowering it increased false
+      // positives on the existing negative corpus; model scores are not calibrated.
+      if (!m || !Number.isFinite(t.score) || t.score < 0.9 || typeof t.word !== 'string') {
         if (cur) { ents.push(cur); cur = null; }
         continue;
       }
       const piece = sub ? t.word.slice(2) : t.word;
-      if (cur && cur.tag === m[2] && (m[1] === 'I' || sub)) cur.pieces.push({ piece: piece, sub: sub });
-      else {
+      if (cur && cur.tag === m[2] && (m[1] === 'I' || sub) &&
+          (t.index == null || cur.lastIndex == null || t.index === cur.lastIndex + 1)) {
+        cur.pieces.push({ piece, sub });
+        cur.score = Math.min(cur.score, t.score);
+        cur.end = t.end;
+        cur.lastIndex = t.index;
+      } else {
         if (cur) ents.push(cur);
-        cur = { tag: m[2], pieces: [{ piece: piece, sub: false }] };
+        cur = { tag: m[2], pieces: [{ piece, sub: false }], score: t.score,
+          start: t.start, end: t.end, lastIndex: t.index };
       }
     }
     if (cur) ents.push(cur);
@@ -67,16 +75,29 @@
     for (let ci = 0; ci < chunks.length; ci++) {
       if (beat) beat(ci + 1, chunks.length);
       const out = await run(chunks[ci].str);
+      // Align *all* tokens before confidence filtering, including O and low-score
+      // tokens. Otherwise a repeated entity can be attached to an earlier, non-
+      // entity occurrence of the same word. The worker supplies ignore_labels: [].
       let cursor = 0;
-      for (const ent of aggregate(out)) {
+      const aligned = [];
+      for (const token of out) {
+        const sub = typeof token.word === 'string' && token.word.startsWith('##');
+        if (typeof token.word !== 'string') continue;
+        const loc = locate(chunks[ci].str, [{ piece: sub ? token.word.slice(2) : token.word, sub: false }], cursor);
+        if (!loc) { aligned.push({ entity: 'O' }); continue; }
+        cursor = loc.end;
+        aligned.push({ ...token, ...loc });
+      }
+      for (const ent of aggregate(aligned)) {
         const t = AI_MAP[ent.tag];
         if (!t) continue;
-        const loc = locate(chunks[ci].str, ent.pieces, cursor);
-        if (!loc) continue;
-        cursor = loc.end;
-        const entityText = chunks[ci].str.slice(loc.start, loc.end).trim();
+        const str = chunks[ci].str;
+        // Do not publish a confident fragment of an otherwise uncertain word.
+        if ((ent.start > 0 && /[\p{L}\p{N}_]/u.test(str[ent.start - 1])) ||
+            (ent.end < str.length && /[\p{L}\p{N}_]/u.test(str[ent.end]))) continue;
+        const entityText = str.slice(ent.start, ent.end).trim();
         if (entityText.indexOf(' ') === -1 && (isStopword(entityText) || isStopword(entityText.toLowerCase()))) continue;
-        spans.push({ start: chunks[ci].off + loc.start, end: chunks[ci].off + loc.end, pfx: t.pfx, col: t.col });
+        spans.push({ start: chunks[ci].off + ent.start, end: chunks[ci].off + ent.end, pfx: t.pfx, col: t.col, score: ent.score });
       }
     }
     return spans;

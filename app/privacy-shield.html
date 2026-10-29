@@ -2238,7 +2238,7 @@
     <script src="vendor/jspdf/jspdf.umd.min.js"></script>
     <script src="vendor/jszip/jszip.min.js"></script>
     <script src="lib/placeholder.js"></script><script src="lib/coref.js"></script><script src="lib/leakcheck.js"></script><script src="lib/marks.js"></script><script src="lib/report.js"></script><script src="lib/policy.js"></script>
-    <script src="lib/brand.js"></script><script src="lib/ai-services.js"></script><script src="lib/employment.js"></script><script src="lib/detect.js"></script>
+    <script src="lib/brand.js"></script><script src="lib/ai-services.js"></script><script src="lib/employment.js"></script><script src="lib/detect.js"></script><script src="lib/ner.js"></script>
     <div id="PWDLG" role="dialog" aria-modal="true" aria-labelledby="PWTITLE" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(26, 58, 92, 0.45); align-items: center; justify-content: center">
       <form onsubmit="psPwOk(); return false" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 24px; width: min(420px, 92vw); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); text-align: left">
         <h2 id="PWTITLE" style="font-size: 15px; font-weight: 700; color: #1a3a5c; margin: 0 0 6px">Passwort</h2>
@@ -3562,86 +3562,13 @@
         el.style.display = "block";
         return true;
       }
-      function chunkTextForNER(text, maxLen) {
-        const chunks = [];
-        let start = 0;
-        while (start < text.length) {
-          let end = Math.min(start + maxLen, text.length);
-          if (end < text.length) {
-            const nl = text.lastIndexOf("\n", end);
-            if (nl > start) end = nl + 1;
-          }
-          chunks.push({ str: text.slice(start, end), off: start });
-          start = end;
-        }
-        return chunks;
-      }
-      function aggregateNER(tokens) {
-        const ents = [];
-        let cur = null;
-        for (const t of tokens) {
-          const m = /^([BI])-([A-Z]+)$/.exec(t.entity || "");
-          const sub = typeof t.word === "string" && t.word.indexOf("##") === 0;
-          if (!m || (t.score || 0) < 0.9) {
-            if (cur) {
-              ents.push(cur);
-              cur = null;
-            }
-            continue;
-          }
-          const piece = sub ? t.word.slice(2) : t.word;
-          if (cur && cur.tag === m[2] && (m[1] === "I" || sub)) {
-            cur.pieces.push({ piece: piece, sub: sub });
-          } else {
-            if (cur) ents.push(cur);
-            cur = { tag: m[2], pieces: [{ piece: piece, sub: false }] };
-          }
-        }
-        if (cur) ents.push(cur);
-        return ents;
-      }
-      function locateEntitySpan(chunkStr, pieces, cursor) {
-        let pat = "";
-        for (let i = 0; i < pieces.length; i++) {
-          const esc = pieces[i].piece.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          pat += (i === 0 ? "" : pieces[i].sub ? "" : "[ \\t]{0,3}") + esc;
-        }
-        let rx;
-        try {
-          rx = new RegExp(pat);
-        } catch (e) {
-          return null;
-        }
-        const m = chunkStr.slice(cursor).match(rx);
-        if (!m) return null;
-        return { start: cursor + m.index, end: cursor + m.index + m[0].length };
-      }
       async function ensureAISpans(text) {
         if (!nerPipeline || aiCache.key === text) return;
-        const aiMap = {
-          PER: { pfx: "NAME", col: "#f59e0b" },
-          ORG: { pfx: "ORG", col: "#8b5cf6" },
-          LOC: { pfx: "ORT", col: "#3b82f6" },
-        };
         const plain = PSDetect.maskHard(text, { ents: activeEntIds(), cvars: cvars, extraSpans: policySpans(text) }).replace(/\x00/g, " ");
-        const spans = [];
-        const chunks = chunkTextForNER(plain, 1e3);
         const progEl = document.getElementById("aiRunProgress");
-        for (let ci = 0; ci < chunks.length; ci++) {
-          if (progEl && chunks.length > 1) progEl.textContent = "Analyse " + (ci + 1) + "/" + chunks.length;
-          const out = await nerPipeline(chunks[ci].str);
-          let cursor = 0;
-          for (const ent of aggregateNER(out)) {
-            const t = aiMap[ent.tag];
-            if (!t) continue;
-            const loc = locateEntitySpan(chunks[ci].str, ent.pieces, cursor);
-            if (!loc) continue;
-            cursor = loc.end;
-            const entityText = chunks[ci].str.slice(loc.start, loc.end).trim();
-            if (entityText.indexOf(" ") === -1 && (PSDetect.isStopword(entityText) || PSDetect.isStopword(entityText.toLowerCase()))) continue;
-            spans.push({ start: chunks[ci].off + loc.start, end: chunks[ci].off + loc.end, pfx: t.pfx, col: t.col });
-          }
-        }
+        const spans = await PSLib.ner.collectSpans(plain, nerPipeline, PSDetect.isStopword, (current, total) => {
+          if (progEl && total > 1) progEl.textContent = "Analyse " + current + "/" + total;
+        });
         aiCache = { key: text, spans: spans };
       }
       function activeEntIds() {

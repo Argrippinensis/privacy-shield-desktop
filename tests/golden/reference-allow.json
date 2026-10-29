@@ -250,10 +250,10 @@
  {
   "mode": "w1",
   "key": "ga09",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
-  "outSha256": "58c496a897de70efc9282356cb71d9bfcb283ec63eb99d49d9a99bfef73adce7",
-  "storeSha256": "c623237df6fe60a385486a78c1c6971c51446555ac120c1e582dff62f799e14c",
-  "entities": 1
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md | Präzisionskorrektur: Namen über Zeilenumbrüche bleiben getrennte Treffer; alle Namen bleiben geschützt, Rückübersetzung exakt.",
+  "outSha256": "3e49e90dd1624f3a0fc1df98ad4478abe61ce4b04076450aa3d2fe5e128eb6af",
+  "storeSha256": "514aff29796f64097c358a3d99da8b1c66a35df6a6f6a511f093f802830f21ce",
+  "entities": 2
  },
  {
   "mode": "w1",
@@ -346,9 +346,9 @@
  {
   "mode": "w1",
   "key": "syn0",
-  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md",
-  "outSha256": "05aa5ab77efe2f5de9204b138e0a44e4cf97fa1593534966e531815dd5b9133a",
-  "storeSha256": "ac286ffcf0d8b436c9f063b359524b136470728ac2e1debc4bc9c46ce3fe249f",
+  "reason": "C1.1 Gruppe C1: Wortlisten finden jedes Vorkommen (nicht nur das erste), Namenswoerterbuch erweitert, Unicode-Wortgrenze; nur zusaetzliche Maskierung, siehe docs/erkennung-entscheidungen.md | Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "9c60ea3a2d0383af21c6b20a555d56258c0255d8e3df54f728726fdf8d80c8c0",
+  "storeSha256": "cb9ac3c5cbce3d5c787b326f3392dc50c3a8bfbef56f37d10895c7da2f9135f0",
   "entities": 9
  },
  {
@@ -486,14 +486,6 @@
   "outSha256": "2ba5eca6b7a1080706849d2e8a9de436401c2455169b27b410bce73a6bbb2bcd",
   "storeSha256": "9586e7b1d18e84f2ba3bf280dcf04d8c92e6751e4d718893b2128926c42858a1",
   "entities": 18
- },
- {
-  "mode": "ki",
-  "key": "o03",
-  "reason": "C1.2 Organisationsregel: \"Bundesagentur fuer ...\" wird als Organisation maskiert; vorher blieb \"Bundesagentur fuer\" im Klartext (nur zusaetzliche Maskierung)",
-  "outSha256": "4756f82901a79f40878b268f3f0b77c33b38fca36d9c470fc69091c17d222ece",
-  "storeSha256": "c129868a4b5077630287aec877a8418c100ce98498843c010ce18838080e5000",
-  "entities": 1
  },
  {
   "mode": "ki",
@@ -651,5 +643,189 @@
   "outSha256": "7168b3bca17fe3fb85d5c65130c489ead439fa33df4e96187f014ea26d9d8be2",
   "storeSha256": "77fb3bca0ccb1a445538166226187e31fc6044f9ddced54adcc956d88f21098d",
   "entities": 5
+ },
+ {
+  "mode": "w0",
+  "key": "ga09",
+  "reason": "Präzisionskorrektur: Namen über Zeilenumbrüche bleiben getrennte Treffer; alle Namen bleiben geschützt, Rückübersetzung exakt.",
+  "outSha256": "3e49e90dd1624f3a0fc1df98ad4478abe61ce4b04076450aa3d2fe5e128eb6af",
+  "storeSha256": "514aff29796f64097c358a3d99da8b1c66a35df6a6f6a511f093f802830f21ce",
+  "entities": 2
+ },
+ {
+  "mode": "w0",
+  "key": "syn0",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "dd67011c588590376b1e8e92d22ed1a82f7643af20880294a70e30d2e3770818",
+  "storeSha256": "a6f6be9f7b2ff4e4a8ed5301cb91bacfaf605a8fab7e9d9c20373bf8cdd34f9b",
+  "entities": 8
+ },
+ {
+  "mode": "w0",
+  "key": "syn5",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "5869f3f0e3f2fb48bd38c7274fc6c8a1e58abf0f91af32d3dc801e118fca6b9a",
+  "storeSha256": "3340932186b9ba72251f87ba3135392d3b46fc216f59d35d887aec1c9a8b51c5",
+  "entities": 7
+ },
+ {
+  "mode": "w0",
+  "key": "syn16",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "539e1a744833e7521e4b02127af9519eb7cfde5bcc92c29db2a72a839470aff3",
+  "storeSha256": "d26c2c44e7d420dfd1b674af97a7d92ae02dd2202d60c3c7c78ff766f7a1c3fe",
+  "entities": 7
+ },
+ {
+  "mode": "w0",
+  "key": "syn31",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "366f8949925a16f8a1a77d06b53d1ec1efee329bf51e79d857f53932d045b292",
+  "storeSha256": "e4d43762f7e69d13ab502cfb0e457b8c6643d5de1cf94d9625def4bea04e5cdd",
+  "entities": 7
+ },
+ {
+  "mode": "w1",
+  "key": "syn5",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "5869f3f0e3f2fb48bd38c7274fc6c8a1e58abf0f91af32d3dc801e118fca6b9a",
+  "storeSha256": "3340932186b9ba72251f87ba3135392d3b46fc216f59d35d887aec1c9a8b51c5",
+  "entities": 7
+ },
+ {
+  "mode": "w1",
+  "key": "syn16",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "539e1a744833e7521e4b02127af9519eb7cfde5bcc92c29db2a72a839470aff3",
+  "storeSha256": "d26c2c44e7d420dfd1b674af97a7d92ae02dd2202d60c3c7c78ff766f7a1c3fe",
+  "entities": 7
+ },
+ {
+  "mode": "w1",
+  "key": "syn31",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "366f8949925a16f8a1a77d06b53d1ec1efee329bf51e79d857f53932d045b292",
+  "storeSha256": "e4d43762f7e69d13ab502cfb0e457b8c6643d5de1cf94d9625def4bea04e5cdd",
+  "entities": 7
+ },
+ {
+  "mode": "ki",
+  "key": "o04",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "673639d3b0d504af60a56570f88b4c8ebb3101481a335cdedeb5e0560bde3a42",
+  "storeSha256": "be07ca131778e4c12a16746ef97f6b8d0dac61752a76d15588cc1899a9f65fb7",
+  "entities": 1
+ },
+ {
+  "mode": "ki",
+  "key": "o06",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "377c86aff10a914e114ce23ad9e561458396d6ad3261db70c12991227ca223c7",
+  "storeSha256": "da2cb808e521af81691efe4d07d854a55e56052ecebe8a618a9ee5b7401b509c",
+  "entities": 1
+ },
+ {
+  "mode": "ki",
+  "key": "ga09",
+  "reason": "Präzisionskorrektur: Namen über Zeilenumbrüche bleiben getrennte Treffer; alle Namen bleiben geschützt, Rückübersetzung exakt.",
+  "outSha256": "3e49e90dd1624f3a0fc1df98ad4478abe61ce4b04076450aa3d2fe5e128eb6af",
+  "storeSha256": "514aff29796f64097c358a3d99da8b1c66a35df6a6f6a511f093f802830f21ce",
+  "entities": 2
+ },
+ {
+  "mode": "ki",
+  "key": "gc02",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "d5e5d68f727666c7839ce060a13ac9deee44c4e3b0926e1c5286aeaacfaca800",
+  "storeSha256": "edbe37a23826bcb49d19ed24987269e48b970e0d3a1f6b879998dccfdb91f64f",
+  "entities": 4
+ },
+ {
+  "mode": "ki",
+  "key": "syn0",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "9c60ea3a2d0383af21c6b20a555d56258c0255d8e3df54f728726fdf8d80c8c0",
+  "storeSha256": "f033d41636559311853a359b478f3818eb19cbb2ab44600cc7ea6c1310cb58dd",
+  "entities": 9
+ },
+ {
+  "mode": "ki",
+  "key": "syn2",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "fa65940525cf34966662b2d99c509096b3ec7c52bc5694abcf2a58611f7dbc5f",
+  "storeSha256": "be9ef34609c5c8b177c1aa776f6c623c0d89026e39e3d9809ffae0c2bbabfa83",
+  "entities": 7
+ },
+ {
+  "mode": "ki",
+  "key": "syn3",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "70cc31f13f8821ea10b9bad3a640362841e0063fa4c5a8a2ed6fac11f873cfb4",
+  "storeSha256": "10e4a1a382865ccf25d99db71028cd80093b3540abe3f5c30f2700ae1b8f7ec3",
+  "entities": 7
+ },
+ {
+  "mode": "ki",
+  "key": "syn5",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "679887630a5f2df1baafb1c1968f82a845b2175d815944907b744722696946de",
+  "storeSha256": "44b69eacfff9866c27fada1510d40a8cd15ac783c8bed01979cab54997e05279",
+  "entities": 7
+ },
+ {
+  "mode": "ki",
+  "key": "syn15",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "b2bf54de97d63ff995102bb6813afd7ef60f9413a2c00b21a7641b2e56474deb",
+  "storeSha256": "f5e894ea9e444f3608e62ac24fbd308da58b4dd90c56815ebe14bc7abdc043e4",
+  "entities": 6
+ },
+ {
+  "mode": "ki",
+  "key": "syn16",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "232b00c498d718a765c7280624fae93b6224e8ccb10000952e15b760b53fc413",
+  "storeSha256": "1afe6790bf7a9a412528d890335b0da7309577c25f3d7b8e5c26a78bf0474a43",
+  "entities": 7
+ },
+ {
+  "mode": "ki",
+  "key": "syn26",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "e2a558102103c39a66ea2bef1ad18c6225e9f729f46b46266a9faa0ca38c75af",
+  "storeSha256": "e591c213cc2019d661f16b86a3cf948a1522e45146bdddfa3db54a71db3a459e",
+  "entities": 7
+ },
+ {
+  "mode": "ki",
+  "key": "syn31",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "366f8949925a16f8a1a77d06b53d1ec1efee329bf51e79d857f53932d045b292",
+  "storeSha256": "e4d43762f7e69d13ab502cfb0e457b8c6643d5de1cf94d9625def4bea04e5cdd",
+  "entities": 7
+ },
+ {
+  "mode": "ki",
+  "key": "syn33",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "e2a558102103c39a66ea2bef1ad18c6225e9f729f46b46266a9faa0ca38c75af",
+  "storeSha256": "210c0d5d4fa76b284648e5116a190f4922523b96f8a63a456d5ce5744812426c",
+  "entities": 7
+ },
+ {
+  "mode": "ki",
+  "key": "syn35",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "f4d9c6a0f92e092c8f54e2480bab6a40052fb1d17230e3a77235feab6d66f84f",
+  "storeSha256": "5dbb56a2ca54f419405d0edff2c2430a7b9d6a081c6fae0277415538ae8fe0fb",
+  "entities": 10
+ },
+ {
+  "mode": "ki",
+  "key": "syn37",
+  "reason": "Präzisionskorrektur: Firmen werden durch Kontext/Modell als ORG statt durch Großschreibung als NAME geführt; unveränderte Maskierungsabdeckung (zeichenweise geprüft).",
+  "outSha256": "c23f918acb9b66e16168df19085896c94d5cd9ec48687dcde012832440156440",
+  "storeSha256": "8a0e9e5450c46983c1d8c55ef92987a9e2a12ac6c3adb45277a2095652ce6fd4",
+  "entities": 7
  }
 ]

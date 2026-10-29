@@ -22,7 +22,7 @@ export async function launchApp({ offline = false, env = {}, appDir = ROOT, extr
   for (const [name, content] of Object.entries(files)) fs.writeFileSync(path.join(userData, name), content);
   // PS_PACKAGED_BIN=<Pfad zur gepackten Anwendung>: Tests gegen das fertige Paket statt gegen den Quellbaum.
   const packaged = process.env.PS_PACKAGED_BIN;
-  const args = [...(packaged ? [] : [appDir]), '--no-sandbox', `--user-data-dir=${userData}`, ...extraArgs];
+  const args = [...(packaged ? [] : [appDir]), ...(process.env.PS_HEADLESS === '1' ? ['--ozone-platform=headless'] : []), '--no-sandbox', `--user-data-dir=${userData}`, ...extraArgs];
   // Kein Netz: toter Proxy. Betrifft Chromium und electron-updater gleichermassen.
   if (offline) args.push('--proxy-server=http://127.0.0.1:9');
   const app = await _electron.launch({ executablePath: packaged || electronPath, args, ...(cwd ? { cwd } : {}), env: { ...process.env, PS_BLOCK_EXTERNAL: '1', PS_TEST_VIEWPORT: process.platform === 'darwin' ? '1' : '0', ...env } });

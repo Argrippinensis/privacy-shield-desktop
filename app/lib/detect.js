@@ -1320,6 +1320,52 @@
         "Kreiskrankenhaus",
         "Rehabilitationszentrum",
       ]);
+      // Business prose is often Title Case. Capitalization alone must not turn a
+      // heading, service or job title into a person (also applies to NER output).
+      // Keep this vocabulary separate from SW: words inside legal company names
+      // and explicitly marked values must remain eligible for masking.
+      const BUSINESS_WORDS = new Set((
+        "associate assistant chief consultant director engineer financial global group junior manager managing officer partner regional senior " +
+        "advanced agile automotive business change cloud consulting customer data delivery development digital engineering executive " +
+        "implementation innovation leader leadership lean management minimum model operating operations organization packaging platform " +
+        "portfolio president process product program project proposal quality restricted semiconductor service services software solution " +
+        "solutions strategy support system systems target tech technical technology transformation unit viable vice"
+      ).split(" "));
+      const ROLE_START = /^(?:(?:Executive|Senior|Junior|Global|Group|Regional|Managing|Associate|Assistant)[ \t]+)*(?:Vice[ \t]+President|President|Director|Manager|Partner|Consultant|Engineer|Chief[ \t]+(?:Executive|Technology|Operating|Financial)[ \t]+Officer)\b/i;
+      function businessWords(value) {
+        return value.toLowerCase().trim().split(/[\s-]+/);
+      }
+      function genericBusiness(value) {
+        const words = businessWords(value);
+        return words.length > 0 && words.every(w => BUSINESS_WORDS.has(w));
+      }
+      function explicitSpan(s) {
+        return s.id === "custom" || s.prio === 0 || s.meth === "Manuelle Markierung";
+      }
+      function refineBusinessSpan(text, s) {
+        if (explicitSpan(s) || !["NAME", "ORG"].includes(s.pfx)) return true;
+        const val = text.slice(s.start, s.end);
+        if (genericBusiness(val)) {
+          if (s.pfx === "NAME") return hasAnredeBefore(text, s.start);
+          return /(?:Firma|Unternehmen|Arbeitgeber|Auftraggeber|Kunde|Company|Employer|Client)[ \t]*[:=]?[ \t]+$/i.test(text.slice(Math.max(0, s.start - 40), s.start));
+        }
+        if (s.pfx !== "NAME") return true;
+        // Trim a business suffix only with person evidence or a recognizable job
+        // title: "Christoph Stich Executive Vice President" -> "Christoph Stich".
+        // Unknown branded headings ("Acme Proposal") are not person evidence.
+        const words = [...val.matchAll(/\S+/g)];
+        for (let i = 1; i < words.length; i++) {
+          const suffix = val.slice(words[i].index);
+          const role = ROLE_START.test(text.slice(s.start + words[i].index, s.start + words[i].index + 120));
+          if (!role && !genericBusiness(suffix)) continue;
+          const prefix = val.slice(0, words[i].index).trimEnd();
+          const person = hasAnredeBefore(text, s.start) || prefix.split(/[\s-]+/).some(w => LOCAL_NAMES.has(w));
+          if (!role && !person) return false;
+          s.end = s.start + prefix.length;
+          break;
+        }
+        return true;
+      }
       // GROSSGESCHRIEBENE Personennamen ("HANS MEIER"): nur wenn Vor- oder Nachname in den Wortlisten steht,
       // damit Ueberschriften ("KAUFVERTRAG ZWISCHEN") nicht als Name gelten.
       function isCapsPersonName(val) {
@@ -2297,6 +2343,22 @@
           !(["NAME", "ORG", "BETRAG"].includes(s.pfx) && EMP.isLegalReference(text.slice(s.start,s.end))) &&
           !(s.pfx === "NAME" && !hasAnredeBefore(text,s.start) && EMP.isGenericLabel(text.slice(s.start,s.end))) &&
           !(s.pfx === "ORG" && /^GeschGehG$/i.test(text.slice(s.start,s.end))));
+        cands = cands.filter(s => refineBusinessSpan(text, s));
+        // A model's explicit organization classification is stronger than
+        // a competing Title Case NAME rule. Absence of a model hit is not a veto.
+        const typed = cands.filter(s => s.meth === "KI (NER-Modell)" && s.pfx === "ORG" &&
+          !(s.end < text.length && /[\p{L}\p{N}_]/u.test(text[s.end])) &&
+          !(s.start > 0 && /[\p{L}\p{N}_]/u.test(text[s.start - 1])) &&
+          !hasAnredeBefore(text, s.start) &&
+          !text.slice(s.start, s.end).split(/[\s-]+/).some(w => LOCAL_NAMES.has(w) || LOCAL_SURNAMES.has(w)));
+        cands = cands.filter(s => {
+          if (s.pfx !== "NAME" || explicitSpan(s)) return true;
+          for (const t of typed) {
+            if (s.start >= t.start && s.start < t.end) return false;
+            if (s.start < t.start && s.end > t.start) s.end = text.slice(0, t.start).trimEnd().length;
+          }
+          return true;
+        });
         // Ueberlange Namensketten: der Rest ab der Abbruchstelle wird als eigener Treffer weitergefuehrt (je Anfang nur einmal),
         // damit kein Teil der Kette ungeschwaerzt bleibt.
         const nameStarts = new Set();
@@ -2333,7 +2395,7 @@
           if (m && m[0].length < s.end - s.start) s.start += m[0].length;
         }
         for (const s of cands) {
-          if (s.pfx !== "NAME") continue;
+          if (s.pfx !== "NAME" || explicitSpan(s)) continue;
           let m2;
           while (
             (m2 = text.slice(s.start, s.end).match(/^([A-ZÜÄÖÀÁÂÃÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕØÙÚÛÝŁŚŠŽČŘŇĎŤĆŃŹŻĄĘĞİŞŐŰŒ][A-Za-züäößàáâãåæçèéêëìíîïñòóôõøùúûýłśšžčřňďťćńźżąęğışőűœ\-]*)[ \t]+/)) &&
@@ -2343,7 +2405,9 @@
           }
           while (
             (m2 = vorWort(s.end)) &&
-            !SW.has(m2[1])
+            !SW.has(m2[1]) && !BUSINESS_WORDS.has(m2[1].toLowerCase()) &&
+            !ROLE_START.test(text.slice(s.end).trimStart()) &&
+            !typed.some(t => t.start < s.end + m2[0].length && t.end > s.end)
           ) {
             if (s.end - s.start + m2[0].length > MAX_NAME_SPAN) {
               weiter(s, s.end + m2[0].length - m2[1].length, m2[1].length);
@@ -2353,7 +2417,7 @@
           }
         }
         for (const s of cands) {
-          if (s.pfx !== "NAME") continue;
+          if (s.pfx !== "NAME" || explicitSpan(s)) continue;
           let mp;
           while (
             (mp = vorVon(s.end)) &&
@@ -2369,7 +2433,7 @@
           if (ml && !SW.has(ml[1])) s.start -= ml[0].length;
         }
         for (const s of cands) {
-          if (s.pfx !== "NAME") continue;
+          if (s.pfx !== "NAME" || explicitSpan(s)) continue;
           let mh;
           while (!s.rueck && (mh = vorBind(s.end))) {
             if (s.end - s.start + mh[0].length > MAX_NAME_SPAN) {
@@ -2417,7 +2481,7 @@
         valid.sort(function (a, b) {
           return a.start - b.start || b.end - a.end;
         });
-        const MERGE_GAP = { ADRESSE: /^[,\s]{1,6}$/, NAME: /^\s$/, ORG: /^[\s&,]{1,3}$/ };
+        const MERGE_GAP = { ADRESSE: /^[,\s]{1,6}$/, NAME: /^[ \t]$/, ORG: /^[\s&,]{1,3}$/ };
         const mergedSpans = [];
         for (const s of valid) {
           const last = mergedSpans[mergedSpans.length - 1];
